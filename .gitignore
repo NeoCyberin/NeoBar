@@ -7,3 +7,5 @@ profiles/
 logs/
 lang/template.lang
 language.ini
+
+*.cer
