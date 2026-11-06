@@ -18,11 +18,14 @@ if exist sign-config.bat (
   echo NOTE: sign-config.bat not found - building WITHOUT a signature.
 )
 
-set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
-if not exist "%ISCC%" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"
-if not exist "%ISCC%" set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
-if not exist "%ISCC%" (
-  echo Inno Setup 6 not found - installer skipped.
+set "ISCC="
+for %%V in (7 6) do (
+  if not defined ISCC if exist "%ProgramFiles%\Inno Setup %%V\ISCC.exe" set "ISCC=%ProgramFiles%\Inno Setup %%V\ISCC.exe"
+  if not defined ISCC if exist "%ProgramFiles(x86)%\Inno Setup %%V\ISCC.exe" set "ISCC=%ProgramFiles(x86)%\Inno Setup %%V\ISCC.exe"
+  if not defined ISCC if exist "%LOCALAPPDATA%\Programs\Inno Setup %%V\ISCC.exe" set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup %%V\ISCC.exe"
+)
+if not defined ISCC (
+  echo Inno Setup 6 or 7 not found - installer skipped.
   set "NOSETUP=1"
 ) else (
   if "%SIGNED%"=="1" (
