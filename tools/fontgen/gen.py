@@ -152,6 +152,9 @@ def polys(geom):
     return res
 
 
+_BASE_Y = {}
+
+
 def make_glyph(ch, strokes, st, bold, italic, seed):
     rnd = random.Random(seed * 7919 + ord(ch))
     w = st.w * (st.bold if bold else 1.0)
@@ -173,6 +176,13 @@ def make_glyph(ch, strokes, st, bold, italic, seed):
     G = unary_union(geoms)
     minx, miny, maxx, maxy = G.bounds
     # ефекти
+    if ch in SK.BASE:
+        # літера з діакритикою ріжеться там само, де її основа
+        if not _BASE_Y:
+            for k, strokes in SK.build().items():
+                _BASE_Y[k] = (min(p[1] for q in strokes for p in q), max(p[1] for q in strokes for p in q))
+        by = _BASE_Y[SK.BASE[ch]]
+        miny, maxy = by[0] - w / 2.0, by[1] + w / 2.0
     if st.stencil and (maxy - miny) > 380:
         ym = (miny + maxy) / 2.0 if miny > -60 else 350
         G = G.difference(box(minx - 5, ym - 12, maxx + 5, ym + 12))

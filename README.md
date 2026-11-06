@@ -11,7 +11,7 @@ A side panel for Windows 10/11: launch programs and games, widgets, desktop note
 - **Games** - overlay with FPS, frame times and sensors, frame limiter, borderless fullscreen; anti-cheat games are left alone unless you allow it.
 - **Wallpapers** - images, slideshows with transitions, live (video / GIF) wallpapers.
 - **Tools** - junk and registry cleanup with backups, file recovery, disk health (SMART) and formatting, firewall and Wi-Fi, security check, file encryption.
-- **Themes** - 9 themes, a custom one, festive themes; interface languages (and your own translations).
+- **Themes** - 9 themes, a custom one, festive themes; interface in 9 languages (Ukrainian, English, German, French, Spanish, Italian, Czech, Polish, Brazilian Portuguese) and your own translations.
 
 ## Download and install
 

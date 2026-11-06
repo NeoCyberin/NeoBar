@@ -253,7 +253,140 @@ def build():
     g['ю'] = [[(0, X), (0, 0)], [(0, 250), (140, 250)], ell(330, 250, 190, 250)]
     g['я'] = [[(400, 0), (400, X)], P((400, X), (200, X), arc(200, 385, 150, 115, 90, 270), (400, 270)), [(190, 270), (0, 0)]]
     g['ё'] = g['e'] + [dot(70, 650), dot(320, 650)]
+    # ---------------- ЛАТИНИЦЯ З ДІАКРИТИКОЮ (de, fr, es, it, pt, cs, pl) ----------------
+    compose(g)
     return g
+
+
+def _bounds(strokes):
+    xs = [p[0] for s in strokes for p in s]
+    ys = [p[1] for s in strokes for p in s]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+# знаки над літерою: (cx - центр, y - низ знака)
+def m_acute(cx, y):
+    return [[(cx - 55, y), (cx + 75, y + 150)]]
+
+
+def m_grave(cx, y):
+    return [[(cx + 55, y), (cx - 75, y + 150)]]
+
+
+def m_circ(cx, y):
+    return [[(cx - 115, y), (cx, y + 140), (cx + 115, y)]]
+
+
+def m_caron(cx, y):
+    return [[(cx - 115, y + 140), (cx, y), (cx + 115, y + 140)]]
+
+
+def m_uml(cx, y):
+    return [dot(cx - 95, y + 30), dot(cx + 95, y + 30)]
+
+
+def m_dot(cx, y):
+    return [dot(cx, y + 30)]
+
+
+def m_ring(cx, y):
+    return [ell(cx, y + 75, 70, 70)]
+
+
+def m_tilde(cx, y):
+    a = bez3((cx - 140, y + 30), (cx - 90, y + 150), (cx - 30, y + 110), (cx, y + 70), 8)
+    b = bez3((cx, y + 70), (cx + 30, y + 30), (cx + 90, y - 10), (cx + 140, y + 110), 8)
+    return [a + b[1:]]
+
+
+def m_cedilla(cx):
+    return [P((cx + 10, 0), (cx - 15, -75), bez3((cx - 15, -75), (cx + 120, -75), (cx + 110, -200), (cx - 70, -190), 10))]
+
+
+def m_ogonek(rx):
+    return [bez3((rx, 0), (rx - 120, -60), (rx - 90, -200), (rx + 40, -170), 10)]
+
+
+MARKS = {'acute': m_acute, 'grave': m_grave, 'circ': m_circ, 'caron': m_caron, 'uml': m_uml,
+         'dot': m_dot, 'ring': m_ring, 'tilde': m_tilde}
+
+# літера -> (основа, знак)
+ACCENTS = {}
+for _base, _list in (
+        ('a', 'á acute à grave â circ ä uml ã tilde å ring'),
+        ('e', 'é acute è grave ê circ ë uml ě caron'),
+        ('ı', 'í acute ì grave î circ ï uml'),
+        ('o', 'ó acute ò grave ô circ ö uml õ tilde'),
+        ('u', 'ú acute ù grave û circ ü uml ů ring'),
+        ('y', 'ý acute ÿ uml'),
+        ('n', 'ñ tilde ń acute ň caron'),
+        ('c', 'ć acute č caron'),
+        ('s', 'ś acute š caron'),
+        ('z', 'ź acute ž caron ż dot'),
+        ('r', 'ř caron'),
+        ('A', 'Á acute À grave Â circ Ä uml Ã tilde Å ring'),
+        ('E', 'É acute È grave Ê circ Ë uml Ě caron'),
+        ('I', 'Í acute Ì grave Î circ Ï uml'),
+        ('O', 'Ó acute Ò grave Ô circ Ö uml Õ tilde'),
+        ('U', 'Ú acute Ù grave Û circ Ü uml Ů ring'),
+        ('Y', 'Ý acute Ÿ uml'),
+        ('N', 'Ñ tilde Ń acute Ň caron'),
+        ('C', 'Ć acute Č caron'),
+        ('S', 'Ś acute Š caron'),
+        ('Z', 'Ź acute Ž caron Ż dot'),
+        ('R', 'Ř caron'),
+        ('D', 'Ď caron'),
+        ('T', 'Ť caron')):
+    _w = _list.split()
+    for _i in range(0, len(_w), 2):
+        ACCENTS[_w[_i]] = (_base, _w[_i + 1])
+
+# основа для ефектів (трафарет тощо): літера з діакритикою ріжеться так само, як без неї
+BASE = {}
+
+
+def compose(g):
+    g['ı'] = [[(0, 0), (0, X)]]
+    for ch, (base, mark) in ACCENTS.items():
+        b = g[base]
+        minx, miny, maxx, maxy = _bounds(b)
+        cx = (minx + maxx) / 2.0
+        if base in ('a',):
+            cx = 195
+        y = 790 if base.isupper() else 600
+        g[ch] = b + MARKS[mark](cx, y)
+        BASE[ch] = base
+    # седиль, огонек, риска
+    for ch, base in (('ç', 'c'), ('Ç', 'C')):
+        g[ch] = g[base] + m_cedilla(_bounds(g[base])[2] * 0.5 + 10)
+        BASE[ch] = base
+    for ch, base, rx in (('ą', 'a', 390), ('ę', 'e', 300), ('Ą', 'A', 560), ('Ę', 'E', 440)):
+        g[ch] = g[base] + m_ogonek(rx)
+        BASE[ch] = base
+    g['ł'] = g['l'] + [[(-110, 260), (130, 480)]]
+    g['Ł'] = g['L'] + [[(-110, 260), (190, 470)]]
+    BASE['ł'] = 'l'
+    BASE['Ł'] = 'L'
+    # ď ť: гачек - коротка риска праворуч від виносного елемента
+    g['ď'] = g['d'] + [[(540, ASC), (500, 590)]]
+    g['ť'] = g['t'] + [[(290, 760), (250, 610)]]
+    BASE['ď'] = 'd'
+    BASE['ť'] = 't'
+    # лігатури й особливі літери
+    g['ß'] = [P((0, 0), (0, 560), arc(185, 560, 185, 180, 180, -10), (210, 400), arc(210, 200, 190, 200, 90, -130))]
+    g['æ'] = g['a'] + shift(g['e'], 390, 0)
+    g['œ'] = g['o'] + shift(g['e'], 390, 0)
+    g['Æ'] = [[(0, 0), (380, C), (800, C)], [(380, C), (380, 0), (800, 0)], [(380, 350), (740, 350)], [(140, 260), (380, 260)]]
+    g['Œ'] = [P((780, C), (330, C), arc(330, 350, 330, 350, 90, 270), (780, 0)), [(470, C), (470, 0)], [(470, 350), (720, 350)]]
+    # лапки й перевернуті знаки
+    g['‘'] = [[(0, C), (40, 540)]]
+    g['“'] = [[(0, C), (40, 540)], [(150, C), (190, 540)]]
+    g['”'] = [[(40, C), (0, 540)], [(190, C), (150, 540)]]
+    g['‚'] = [[(40, 60), (0, -100)]]
+    g['„'] = [[(40, 60), (0, -100)], [(190, 60), (150, -100)]]
+    g['¡'] = rot180(g['!'], 0, 250)
+    g['¿'] = rot180(g['?'], 205, 250)
+    g['×'] = [[(0, 130), (300, 430)], [(0, 430), (300, 130)]]
 
 
 # повний перелік символів стилю
@@ -262,5 +395,6 @@ LATIN_LO = 'abcdefghijklmnopqrstuvwxyz'
 DIGITS = '0123456789'
 CYR_UP = 'АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯЪЫЭЁ'
 CYR_LO = 'абвгґдеєжзиіїйклмнопрстуфхцчшщьюяъыэё'
-PUNCT = ".,:;!?-–—_'’ʼ\"«»()[]/\\+=*<>|~#%°•…$₴€№&"
-ALL = LATIN_UP + LATIN_LO + DIGITS + CYR_UP + CYR_LO + PUNCT
+PUNCT = ".,:;!?-–—_'’ʼ\"«»()[]/\\+=*<>|~#%°•…$₴€№&‘“”‚„¡¿×"
+LATIN_EXT = ''.join(sorted(ACCENTS)) + 'çÇąęĄĘłŁďťßæœÆŒ'
+ALL = LATIN_UP + LATIN_LO + DIGITS + CYR_UP + CYR_LO + PUNCT + LATIN_EXT
