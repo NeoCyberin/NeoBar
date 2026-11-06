@@ -23,6 +23,7 @@ if not exist "%ISCC%" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"
 if not exist "%ISCC%" set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
 if not exist "%ISCC%" (
   echo Inno Setup 6 not found - installer skipped.
+  set "NOSETUP=1"
 ) else (
   if "%SIGNED%"=="1" (
     "%ISCC%" /Q "/DSIGN" "/Sneobar=cmd.exe /s /c $q$q%~dp0sign.bat$q $f$q" installer\NeoBar.iss || goto fail
@@ -38,7 +39,11 @@ rem checksums for the release page (users can verify downloads)
 powershell -NoProfile -Command "Get-ChildItem dist -File -Filter 'NeoBar-%VER%-*' | Get-FileHash -Algorithm SHA256 | ForEach-Object { $_.Hash.ToLower() + '  ' + (Split-Path $_.Path -Leaf) } | Set-Content -Encoding ascii 'dist\SHA256SUMS.txt'"
 
 echo.
-echo OK: dist\NeoBar-%VER%-setup.exe, %ZIP%, dist\SHA256SUMS.txt
+if "%NOSETUP%"=="1" (
+  echo DONE WITHOUT INSTALLER: %ZIP%, dist\SHA256SUMS.txt - install Inno Setup 6 and run again.
+) else (
+  echo OK: dist\NeoBar-%VER%-setup.exe, %ZIP%, dist\SHA256SUMS.txt
+)
 pause
 exit /b 0
 
