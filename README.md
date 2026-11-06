@@ -1,5 +1,7 @@
 # NeoBar
 
+<p align="center"><img src="docs/images/banner.png" alt="NeoBar" width="100%"></p>
+
 A side panel for Windows 10/11: launch programs and games, widgets, desktop notes, an in-game overlay, and tools for drives, network and security.
 
 [Українська](README.uk.md)
@@ -12,6 +14,27 @@ A side panel for Windows 10/11: launch programs and games, widgets, desktop note
 - **Wallpapers** - images, slideshows with transitions, live (video / GIF) wallpapers.
 - **Tools** - junk and registry cleanup with backups, file recovery, disk health (SMART) and formatting, firewall and Wi-Fi, security check, file encryption.
 - **Themes** - 9 themes, a custom one, festive themes; interface languages (and your own translations).
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/images/quick-setup.png" alt="Quick setup" width="49%">
+  <img src="docs/images/clock-light.png" alt="Clock and calendar" width="49%">
+</p>
+
+<p align="center"><img src="docs/images/settings-dark.png" alt="Settings: items of the panel" width="100%"></p>
+
+### Themes
+
+Nine built-in themes (dark, light, glass, cyberpunk, steampunk, urban, glamour, nature, artistic), a custom one and festive themes.
+
+<p align="center"><img src="docs/images/themes.png" alt="Themes" width="100%"></p>
+
+### Languages
+
+Ukrainian, English, German, French, Spanish, Italian, Czech, Polish and Brazilian Portuguese - or add your own.
+
+<p align="center"><img src="docs/images/languages.png" alt="Languages" width="100%"></p>
 
 ## Download and install
 

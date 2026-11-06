@@ -1,8 +1,31 @@
 ﻿# NeoBar
 
+<p align="center"><img src="docs/images/banner.uk.png" alt="NeoBar" width="100%"></p>
+
 [English](README.md)
 
 Бічна панель для Windows 10/11: запуск програм та ігор, віджети, нотатки, оверлей у іграх, засоби для дисків, мережі й безпеки.
+
+## Знімки екрана
+
+<p align="center">
+  <img src="docs/images/quick-setup.uk.png" alt="Швидке налаштування" width="49%">
+  <img src="docs/images/clock-light.uk.png" alt="Час і календар" width="49%">
+</p>
+
+<p align="center"><img src="docs/images/settings-dark.uk.png" alt="Налаштування: елементи панелі" width="100%"></p>
+
+### Теми
+
+Дев'ять вбудованих тем (темна, світла, скляна, кіберпанк, стімпанк, міська, гламур, природа, художня), власна й святкові.
+
+<p align="center"><img src="docs/images/themes.uk.png" alt="Теми" width="100%"></p>
+
+### Мови
+
+Українська, англійська, німецька, французька, іспанська, італійська, чеська, польська та бразильська португальська - або додайте свою.
+
+<p align="center"><img src="docs/images/languages.png" alt="Мови" width="100%"></p>
 
 ## Структура
 
