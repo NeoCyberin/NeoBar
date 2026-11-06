@@ -1,0 +1,16 @@
+name: Translation / Переклад
+description: New language or a fix in a translation / Нова мова чи виправлення перекладу
+labels: [translation]
+body:
+  - type: input
+    id: lang
+    attributes:
+      label: Language / Мова
+      placeholder: "nl, de, pt-BR…"
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details / Подробиці
+      description: For a new language, a pull request with res/lang/<code>.lang is best (see CONTRIBUTING.md). / Найкраще - pull request з res/lang/<код>.lang.

@@ -1,0 +1,19 @@
+# Text files: LF in the repository, normal Windows line endings on checkout
+* text=auto
+*.cs    text eol=crlf
+*.bat   text eol=crlf
+*.iss   text eol=crlf
+*.lang  text eol=crlf
+*.manifest text eol=crlf
+*.cpp   text
+*.h     text
+*.sh    text eol=lf
+*.md    text
+
+# Binaries
+*.dll binary
+*.exe binary
+*.bin binary
+*.ico binary
+*.png binary
+*.ttf binary

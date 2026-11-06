@@ -1,0 +1,14 @@
+name: Idea / Ідея
+description: Suggest an improvement / Запропонувати покращення
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like? / Що хочете?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is it useful? / Навіщо це?

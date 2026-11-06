@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b1f3b"/><stop offset="1" stop-color="#0b0d1a"/></linearGradient>
+ <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4de8ff"/><stop offset="1" stop-color="#7b5cff"/></linearGradient>
+ <filter id="gl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+</defs>
+<rect x="8" y="8" width="240" height="240" rx="56" fill="url(#bg)"/>
+<rect x="8.5" y="8.5" width="239" height="239" rx="55.5" fill="none" stroke="#ffffff" stroke-opacity=".10" stroke-width="3"/>
+<rect x="50" y="48" width="44" height="160" rx="22" fill="url(#bar)" filter="url(#gl)" opacity=".75"/>
+<rect x="50" y="48" width="44" height="160" rx="22" fill="url(#bar)"/>
+<rect x="116" y="56" width="92" height="36" rx="14" fill="#ffffff" fill-opacity=".92"/>
+<rect x="116" y="110" width="68" height="36" rx="14" fill="#ffffff" fill-opacity=".55"/>
+<rect x="116" y="164" width="80" height="36" rx="14" fill="#ffffff" fill-opacity=".30"/>
+</svg>

@@ -1,0 +1,26 @@
+name: Bug report / Помилка
+description: Something does not work / Щось не працює
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Що сталося?
+      description: Steps to reproduce and what you expected. / Кроки й очікуваний результат.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: NeoBar version / Версія NeoBar
+      placeholder: "1.0.0 (Properties of NeoBar.exe → Details)"
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version / Версія Windows
+      placeholder: "Windows 11 24H2"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Журнали
+      description: Settings → Diagnostics → logs, and neobar-error.log next to NeoBar.exe. Attach files if possible. / Налаштування → Діагностика → журнали, а також neobar-error.log поруч із NeoBar.exe.

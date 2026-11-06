@@ -1,0 +1,9 @@
+dist/
+sign-config.bat
+*.pfx
+native/obj*/
+# created when NeoBar runs from the source folder
+profiles/
+logs/
+lang/template.lang
+language.ini

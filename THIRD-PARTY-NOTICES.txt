@@ -1,0 +1,22 @@
+NeoBar uses the following third-party components. Their licenses are reproduced
+in the folders listed below (in the source code) or next to the files (in the program).
+
+MinHook - API hooking library (inside NeoBarFps32.dll / NeoBarFps64.dll)
+  Copyright (C) 2009-2017 Tsuda Kageyu. BSD 2-Clause License.
+  Source: https://github.com/TsudaKageyu/minhook  - license: native/minhook/LICENSE.txt
+
+Vulkan headers (used to build NeoBarFps32.dll / NeoBarFps64.dll)
+  Copyright 2015-2026 The Khronos Group Inc. Apache-2.0 / MIT.
+  Source: https://github.com/KhronosGroup/Vulkan-Headers  - license: native/vk/LICENSE.md
+
+d3d8to9 - Direct3D 8 to Direct3D 9 wrapper (d3d8to9\d3d8.dll)
+  Copyright (C) 2015 Patrick Mours. BSD 2-Clause License. Modified build (see d3d8to9\README.txt).
+  Source: https://github.com/crosire/d3d8to9  - license: d3d8to9\LICENSE.md
+
+cnc-ddraw - DirectDraw wrapper (cnc-ddraw\ddraw.dll)
+  Copyright (c) 2025 github.com/FunkyFr3sh. MIT License.
+  Source: https://github.com/FunkyFr3sh/cnc-ddraw  - license: cnc-ddraw\LICENSE
+
+Noto Color Emoji (pictures in the emoji.bin resource)
+  Copyright 2013 Google LLC. SIL Open Font License 1.1.
+  Source: https://github.com/googlefonts/noto-emoji
