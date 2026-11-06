@@ -1,0 +1,27 @@
+# FAQ
+
+**Windows says "Windows protected your PC" (SmartScreen).**
+A new program has no reputation yet. Check Properties → Digital Signatures, then More info → Run anyway. Releases include `SHA256SUMS.txt`. The signature is made with the author's own certificate, so Windows shows the publisher as unknown on other PCs - that is expected. Never import the certificate into your system.
+
+**Does NeoBar need administrator rights?**
+No for everyday use. FPS in games, CPU temperature, disk maintenance, the NTFS file index and time sync need them; NeoBar asks only when needed, or can always start elevated (Settings → Panel).
+
+**Is it safe to use in online games?**
+By default NeoBar does not inject into anti-cheat games; the overlay is then a window above the game. See [[Games and overlay]].
+
+**How much does it use?**
+It is designed to idle: no busy timers, slow work in the background, logs only when you turn them on.
+
+**Where do I find logs?**
+Settings → Diagnostics. A switched-on log writes files up to 2 MB; a switched-off one writes nothing. The error log is always written - send it together with a description of the problem.
+
+**How do I reset or move my settings?**
+Settings → Data: export/import a profile (`.nbpack`) or reset it; the old copy stays as `neobar.ini.bak`.
+
+**The panel does not appear in a fullscreen game.**
+That is intentional (Settings → Panel → Games and fullscreen programs).
+
+**How do I report a bug?**
+Open an [issue](https://github.com/NeoCyberin/NeoBar/issues) with your Windows version, what you did, and the error log.
+
+Back: [[Home]]

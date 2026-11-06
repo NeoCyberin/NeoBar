@@ -1,0 +1,1 @@
+NeoBar is free software under the [GPL-3.0](https://github.com/NeoCyberin/NeoBar/blob/main/LICENSE) · [Releases](https://github.com/NeoCyberin/NeoBar/releases) · [Issues](https://github.com/NeoCyberin/NeoBar/issues)
