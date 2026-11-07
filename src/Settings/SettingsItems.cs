@@ -22,7 +22,7 @@ sealed partial class SettingsForm
     // ---------- пакетне додавання ----------
 
     // Діалог із прапорцями; повертає індекси обраних
-    // have[i] == true - такий елемент уже є: його видно (з позначкою), але вибрати повторно не можна
+    // have[i] == true - такий елемент уже є: він відмічений прапорцем, який не знімається; повторно не додається
     static List<int> Pick(IWin32Window parent, string title, string hint, List<string> items, bool preCheck, List<bool> have = null)
     {
         List<int> res = new List<int>();
@@ -50,7 +50,7 @@ sealed partial class SettingsForm
             for (int hi = 0; hi < items.Count; hi++)
             {
                 bool dup = have != null && hi < have.Count && have[hi];
-                l.Items.Add(dup ? items[hi] + "  ·  " + L.T("вже додано") : items[hi], preCheck && !dup);
+                l.Items.Add(items[hi], dup || preCheck);
             }
             bool fixing = false;
             if (have != null)
@@ -58,14 +58,14 @@ sealed partial class SettingsForm
                 {
                     if (fixing) return;
                     fixing = true;
-                    for (int i = 0; i < l.Items.Count && i < have.Count; i++) if (have[i] && l.IsChecked(i)) l.SetChecked(i, false);
+                    for (int i = 0; i < l.Items.Count && i < have.Count; i++) if (have[i] && !l.IsChecked(i)) l.SetChecked(i, true);
                     fixing = false;
                 };
             int bh = SUi.S(36), by = H - p - bh;
             card.SetBounds(p, p + SUi.S(46), W - p * 2, by - SUi.S(14) - (p + SUi.S(46)));
             l.SetBounds(SUi.S(6), SUi.S(6), card.Width - SUi.S(12), card.Height - SUi.S(12));
-            Button all = Bt(L.T("Усі"), "ghost g:check", 84, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, !(have != null && i < have.Count && have[i])); });
-            Button none = Bt(L.T("Жодного"), "ghost g:close", 104, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, false); });
+            Button all = Bt(L.T("Усі"), "ghost g:check", 84, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, true); });
+            Button none = Bt(L.T("Жодного"), "ghost g:close", 104, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, have != null && i < have.Count && have[i]); });
             Button ok = Bt(L.T("Додати"), "primary g:plus", 116, null);
             ok.DialogResult = DialogResult.OK;
             Button cancel = Bt(L.T("Скасувати"), "", 116, null);
