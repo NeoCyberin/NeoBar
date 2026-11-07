@@ -900,6 +900,36 @@ sealed partial class NeoBar
     int dragIdx = -1, dropSlot = -1;
     bool dragging;
     Point dragAt;
+    Entry dropGroup;                 // група, на яку кинуть елемент (підсвічується рамкою)
+
+    // Елемент витягли з вікна групи (flyout): далі перетягування веде сама панель
+    public void BeginDragFromFlyout(Entry k)
+    {
+        int idx = entries.IndexOf(k);
+        if (idx < 0 || !CanDrag(k)) return;
+        dragIdx = idx;
+        dragging = true;
+        dropSlot = -1;
+        dropGroup = null;
+        Capture = true;
+        Cursor = Cursors.SizeAll;
+        tip.Hide(this);
+        Invalidate();
+    }
+
+    // група під курсором (заголовок або плитка згорнутої групи) і слот у ній: до кінця групи або одразу за заголовком
+    int GroupSlotAt(Point p, out Entry grp)
+    {
+        grp = null;
+        if (dragIdx < 0 || dragIdx >= entries.Count || entries[dragIdx].Kind != Kind.Item) return -1;
+        int hi = Hit(p);
+        if (hi < 0 || entries[hi].Kind != Kind.Header) return -1;
+        grp = entries[hi];
+        int s = hi + 1;
+        if (grp.Fold || grp.Collapsed)
+            while (s < entries.Count && entries[s].Kind == Kind.Item) s++;     // згорнута - у кінець групи
+        return s;
+    }
 
     bool CanDrag(Entry e) { return e.Kind == Kind.Item || e.Kind == Kind.Widget; }
 
@@ -934,6 +964,13 @@ sealed partial class NeoBar
         if (!dragging || dropSlot < 0 || dragIdx < 0 || dragIdx >= entries.Count) return;
         bool wdrag = entries[dragIdx].Kind == Kind.Widget;
         if (wdrag != fixedZone) return;
+        if (dropGroup != null)
+        {
+            // кидають на групу - підсвічуємо її рамкою
+            using (Pen gp = new Pen(Util.Opaque(T.Accent), Math.Max(2, Px(3))))
+                g.DrawRectangle(gp, Rectangle.Inflate(RectOf(dropGroup), -1, -1));
+            return;
+        }
         int a = (wdrag ? searchLen : Origin) + SlotPos(dropSlot);
         Color c = Util.Opaque(T.Accent);
         int th = Math.Max(2, Px(3));
@@ -947,7 +984,7 @@ sealed partial class NeoBar
     void FinishDrag()
     {
         int src = dragIdx, slot = dropSlot;
-        dragging = false; dragIdx = -1; dropSlot = -1;
+        dragging = false; dragIdx = -1; dropSlot = -1; dropGroup = null;
         Capture = false;
         Cursor = Cursors.Default;
         if (src < 0 || src >= entries.Count || slot < 0) { Invalidate(); return; }
@@ -983,7 +1020,11 @@ sealed partial class NeoBar
             int wn = Store.WidgetCount(entries);
             if (entries[dragIdx].Kind == Kind.Widget) s2 = Math.Min(s2, wn);
             else s2 = Math.Max(s2, wn > 0 ? wn + 1 : 0);
-            if (s2 != dropSlot) { dropSlot = s2; Invalidate(); }
+            // елемент над групою (плиткою чи заголовком) - перенести в неї
+            Entry grp;
+            int gs = GroupSlotAt(e.Location, out grp);
+            if (grp != null && gs >= 0) s2 = Math.Max(gs, wn > 0 ? wn + 1 : 0); else grp = null;
+            if (s2 != dropSlot || grp != dropGroup) { dropSlot = s2; dropGroup = grp; Invalidate(); }
             return;
         }
         UpdateHover(e.Location);

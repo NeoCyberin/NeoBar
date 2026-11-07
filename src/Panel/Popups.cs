@@ -212,9 +212,33 @@ sealed class FlyoutForm : Form
         return Head.GroupColor.IsEmpty ? Util.Opaque(t.Accent) : Head.GroupColor;
     }
 
+    int downCell = -1;
+    Point downAt;
+    bool dragStarted;
+
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        base.OnMouseDown(e);
+        downCell = e.Button == MouseButtons.Left ? HitCell(e.Location) : -1;
+        downAt = e.Location;
+    }
+
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
+        // потягнули елемент з вікна групи - далі його несе панель: можна кинути в іншу групу або на інше місце
+        if (downCell >= 0 && !dragStarted && (e.Button & MouseButtons.Left) != 0)
+        {
+            Size ds = SystemInformation.DragSize;
+            if (Math.Abs(e.X - downAt.X) >= ds.Width || Math.Abs(e.Y - downAt.Y) >= ds.Height)
+            {
+                dragStarted = true;
+                Entry k = kids[downCell];
+                owner.BeginDragFromFlyout(k);
+                Close();
+                return;
+            }
+        }
         int i = HitCell(e.Location);
         if (i == hover) return;
         hover = i;
@@ -232,6 +256,8 @@ sealed class FlyoutForm : Form
     protected override void OnMouseUp(MouseEventArgs e)
     {
         base.OnMouseUp(e);
+        downCell = -1;
+        if (dragStarted) return;
         int i = HitCell(e.Location);
         if (i < 0) return;
         Entry k = kids[i];
