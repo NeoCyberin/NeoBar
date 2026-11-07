@@ -398,7 +398,7 @@ sealed partial class SettingsForm
 
     void DoExport()
     {
-        if (!Apply()) return;
+        if (!Apply(true)) return;
         using (SaveFileDialog d = new SaveFileDialog())
         {
             d.Filter = L.T("Налаштування NeoBar (*.nbpack)|*.nbpack");

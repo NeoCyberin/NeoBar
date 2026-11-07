@@ -7405,8 +7405,8 @@
 < NeoBar - Налаштування
 > NeoBar - Einstellungen
 
-< Зміни набувають чинності після «Застосувати» або «Готово».
-> Änderungen werden nach «Übernehmen» oder «Fertig» wirksam.
+< «Застосувати» зберігає панель і поточну вкладку, «Готово» - усе.
+> «Übernehmen» speichert die Leiste und den aktuellen Reiter, «Fertig» alles.
 
 < Не вдалося зберегти
 > Speichern nicht möglich

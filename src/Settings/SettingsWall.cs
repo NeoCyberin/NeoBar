@@ -16,6 +16,7 @@ sealed partial class SettingsForm
     SCard wallGal, wallSrc, wallEco;
     WallGallery wallGallery;
     string wImage = "", wVideo = "";            // обрані в галереї зображення й відео
+    string wallSig = "";                        // що було застосовано востаннє: без змін шпалери не перезапускаються
 
     int WMode { get { return cbWMode == null ? 0 : Math.Max(0, cbWMode.SelectedIndex); } }
     int WFx { get { return cbWTrans == null ? 1 : Math.Max(0, cbWTrans.SelectedIndex); } }
@@ -173,9 +174,33 @@ sealed partial class SettingsForm
         loading = old;
         UpdateGallery();
         WallQueue();
+        wallSig = WallSignature();
     }
 
-    void ApplyWall()
+    // підпис усього, що впливає на шпалери: порівнюється із застосованим, щоб без змін шпалери не чіпати
+    string WallSignature()
+    {
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        sb.Append(WMode).Append('|').Append(wImage).Append('|').Append(wVideo).Append('|')
+          .Append(cbWFit.SelectedIndex).Append('|').Append(cbWInt.SelectedIndex).Append('|').Append(chWShuffle.Checked).Append('|')
+          .Append(WFx).Append('|').Append(tkWDur.Value).Append('|').Append(chWSound.Checked).Append('|').Append(chWAll.Checked).Append('|')
+          .Append(chWCover.Checked).Append('|').Append(chWBat.Checked);
+        if (WMode == 2)
+        {
+            // склад галереї слайд-шоу: додали чи видалили зображення - слайд-шоу треба перечитати
+            try
+            {
+                string dir = WallLib.Dir(WallLib.Slideshow);
+                if (Directory.Exists(dir))
+                    foreach (string f in Directory.GetFiles(dir)) sb.Append('|').Append(Path.GetFileName(f)).Append(File.GetLastWriteTimeUtc(f).Ticks);
+            }
+            catch { }
+        }
+        return sb.ToString();
+    }
+
+    // all: «Готово» (змінені шпалери з'являються обраним переходом); інакше - «Застосувати», і шпалери застосовуються лише з їхньої вкладки
+    void ApplyWall(bool animate)
     {
         if (cbWMode == null) return;
         WallCfg.Mode = WMode;
@@ -191,7 +216,12 @@ sealed partial class SettingsForm
         WallCfg.PauseCovered = chWCover.Checked;
         if (WallMgr.HasBattery) WallCfg.PauseBattery = chWBat.Checked;       // без батареї збережене значення не чіпаємо
         WallCfg.Save();
-        try { WallMgr.Apply(); } catch (Exception ex) { Util.ErrorLog(ex); }
+        string sig = WallSignature();
+        if (sig != wallSig)
+        {
+            wallSig = sig;
+            try { WallMgr.Apply(animate); } catch (Exception ex) { Util.ErrorLog(ex); }
+        }
         lWStatus.Text = WallMgr.Status;
         // рушій пише стан за мить після запуску - оновити підпис ще раз
         Timer st = new Timer();

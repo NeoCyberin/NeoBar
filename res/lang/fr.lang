@@ -7405,8 +7405,8 @@
 < NeoBar - Налаштування
 > NeoBar - Paramètres
 
-< Зміни набувають чинності після «Застосувати» або «Готово».
-> Les modifications prennent effet après «Appliquer» ou «Terminé».
+< «Застосувати» зберігає панель і поточну вкладку, «Готово» - усе.
+> «Appliquer» enregistre la barre et l'onglet actuel, «Terminé» enregistre tout.
 
 < Не вдалося зберегти
 > Impossible d'enregistrer

@@ -332,15 +332,15 @@ sealed partial class SettingsForm : Form, IGradHost
         Controls.Add(foot);
         Label hint = new Label();
         hint.AutoSize = false;
-        hint.Text = L.T("Зміни набувають чинності після «Застосувати» або «Готово».");
+        hint.Text = L.T("«Застосувати» зберігає панель і поточну вкладку, «Готово» - усе.");
         hint.ForeColor = FormTheme.Sub;
         hint.Font = SUi.Small;
         hint.TextAlign = ContentAlignment.MiddleLeft;
         foot.Controls.Add(hint);
         Festive.Clear(hint);
         Button bCancel = Bt(L.T("Скасувати"), "", 120, delegate { Close(); });
-        Button bApply = Bt(L.T("Застосувати"), "", 130, delegate { if (Apply() && ThemeSig() != themeAtOpen) Retheme(); });
-        Button bOk = Bt(L.T("Готово"), "primary g:check", 130, delegate { if (Apply()) Close(); });
+        Button bApply = Bt(L.T("Застосувати"), "", 130, delegate { if (Apply(false) && ThemeSig() != themeAtOpen) { Apply(true); Retheme(); } });
+        Button bOk = Bt(L.T("Готово"), "primary g:check", 130, delegate { if (Apply(true)) Close(); });
         foot.Controls.Add(bCancel); foot.Controls.Add(bApply); foot.Controls.Add(bOk);
         foot.Paint += delegate (object s, PaintEventArgs e)
         {
@@ -413,7 +413,8 @@ sealed partial class SettingsForm : Form, IGradHost
         }
     }
 
-    bool Apply()
+    // all: «Готово» (усе); інакше «Застосувати»: панель (елементи, вигляд, пошук тощо) і поточна вкладка
+    bool Apply(bool all)
     {
         NormalizePaths();
         RefreshSel(lb.SelectedIndex >= 0 && lb.SelectedIndex < rows.Count ? rows[lb.SelectedIndex] : null);
@@ -445,8 +446,8 @@ sealed partial class SettingsForm : Form, IGradHost
             return false;
         }
         NeoBar.SetAutostart(chAuto.Checked && !c.AlwaysAdmin);
-        ApplyStatics();
-        ApplyClock();
+        ApplyStatics(all);
+        if (all || OnPage(PgPlace)) ApplyClock();
         foreach (string wk in dropDesk) ClockData.RemoveDeskOf(wk);
         dropDesk.Clear();
         // «завжди від адміністратора»: створити/змінити/видалити завдання (один запит UAC)

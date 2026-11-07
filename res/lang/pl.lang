@@ -7405,8 +7405,8 @@
 < NeoBar - Налаштування
 > NeoBar - Ustawienia
 
-< Зміни набувають чинності після «Застосувати» або «Готово».
-> Zmiany zaczynają działać po «Zastosuj» lub «Gotowe».
+< «Застосувати» зберігає панель і поточну вкладку, «Готово» - усе.
+> «Zastosuj» zapisuje panel i bieżącą kartę, «Gotowe» zapisuje wszystko.
 
 < Не вдалося зберегти
 > Nie udało się zapisać

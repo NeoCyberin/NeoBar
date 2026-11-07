@@ -7405,8 +7405,8 @@
 < NeoBar - Налаштування
 > NeoBar - Configurações
 
-< Зміни набувають чинності після «Застосувати» або «Готово».
-> As alterações entram em vigor após «Aplicar» ou «Concluir».
+< «Застосувати» зберігає панель і поточну вкладку, «Готово» - усе.
+> «Aplicar» salva o painel e a aba atual, «Concluir» salva tudo.
 
 < Не вдалося зберегти
 > Não foi possível salvar
