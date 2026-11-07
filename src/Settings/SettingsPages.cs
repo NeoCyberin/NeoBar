@@ -530,7 +530,7 @@ sealed partial class SettingsForm
         h.Controls.Add(right);
         SCard k = right.Card(L.T("Оновлення"));
         chUpd = Tg();
-        k.Row(L.T("Перевіряти оновлення"), L.T("Під час запуску NeoBar дивиться на GitHub, чи вийшла новіша версія, і пропонує її завантажити. Сам нічого не завантажує й не встановлює."), chUpd);
+        k.Row(L.T("Перевіряти оновлення"), L.T("Під час запуску NeoBar дивиться на GitHub, чи вийшла новіша версія, і пропонує оновитися. Завантажує й встановлює лише після вашої згоди."), chUpd);
         Button bu = null;
         bu = Bt(L.T("Перевірити зараз"), "g:refresh", 170, delegate
         {

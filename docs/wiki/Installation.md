@@ -6,6 +6,10 @@ Download the latest files from [Releases](https://github.com/NeoCyberin/NeoBar/r
 - `NeoBar-x.y.z-portable.zip` - portable version. Extract the **whole archive** to any folder you can write to and run `NeoBar.exe`. Profiles and settings are kept next to the exe.
 - `SHA256SUMS.txt` - checksums to verify the downloads.
 
+## Updating
+
+At startup NeoBar checks GitHub for a newer release (Settings → Diagnostics → Updates) and offers to update. Only after you agree it downloads the matching file (installer or portable archive), verifies its SHA-256 against `SHA256SUMS.txt`, closes, installs the new version and starts again. Profiles and settings are kept. If the portable folder is write-protected, Windows asks for administrator confirmation once.
+
 Requirements: Windows 10 or 11 (64- or 32-bit) and .NET Framework 4.x, which is built into Windows.
 
 ## First start

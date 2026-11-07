@@ -44,6 +44,7 @@ Get the latest version from the [Releases](../../releases) page:
 - `NeoBar-x.y.z-portable.zip` - portable version: extract to any writable folder and run `NeoBar.exe`.
 
 `SHA256SUMS.txt` on the release page lets you check the downloaded files.
+NeoBar can also update itself: it offers a newer release at startup and, only after your consent, downloads it from GitHub, verifies the checksum, installs it and restarts.
 Requirements: Windows 10 or 11 (64- or 32-bit), .NET Framework 4.x (built into Windows).
 
 A new program may trigger a SmartScreen warning ("Windows protected your PC") until it gains reputation:

@@ -16,7 +16,7 @@ for %%f in (res\lang\*.lang) do call set "LANGRES=%%LANGRES%% /resource:res\lang
 "%CSC%" /nologo /optimize+ /target:winexe /codepage:65001 /out:"%OUT%\NeoBar.exe" ^
   /win32manifest:res\NeoBar.manifest /win32icon:res\NeoBar.ico ^
   /resource:res\NeoBar.ico,NeoBar.ico /resource:res\sbfonts.bin,sbfonts.bin /resource:res\emoji.bin,emoji.bin %LANGRES% ^
-  /r:System.Windows.Forms.dll /r:System.Drawing.dll /r:System.Data.dll /r:Microsoft.CSharp.dll ^
+  /r:System.Windows.Forms.dll /r:System.Drawing.dll /r:System.Data.dll /r:Microsoft.CSharp.dll /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll ^
   /recurse:src\*.cs
 if errorlevel 1 goto fail
 

@@ -9988,12 +9988,6 @@
 < Доступне оновлення NeoBar
 > Atualização do NeoBar disponível
 
-< Вийшла версія {0} (у вас {1}). Клікніть, щоб дізнатися більше.
-> A versão {0} foi lançada (instalada: {1}). Clique para saber mais.
-
-< Вийшла нова версія NeoBar: {0} (у вас {1}).\n\nПрограма не оновлюється сама: завантажте нову версію зі сторінки випуску.
-> Uma nova versão do NeoBar foi lançada: {0} (instalada: {1}).\n\nO aplicativo não se atualiza sozinho: baixe a nova versão na página do lançamento.
-
 < Відкрити сторінку
 > Abrir página
 
@@ -10002,9 +9996,6 @@
 
 < Перевіряти оновлення
 > Verificar atualizações
-
-< Під час запуску NeoBar дивиться на GitHub, чи вийшла новіша версія, і пропонує її завантажити. Сам нічого не завантажує й не встановлює.
-> Ao iniciar, o NeoBar consulta o GitHub para ver se há uma versão mais recente e oferece o download. Ele nunca baixa nem instala nada por conta própria.
 
 < Перевірити зараз
 > Verificar agora
@@ -10092,3 +10083,69 @@
 
 < Швидкий доступ до Цей ПК, Кошика, особистої папки, системних утиліт та інших місць Windows.
 > Acesso rápido a Este Computador, Lixeira, pasta pessoal, ferramentas do sistema e outros locais do Windows.
+
+< Вийшла версія {0} (у вас {1}). Клікніть, щоб оновити.
+> A versão {0} foi lançada (instalada: {1}). Clique para atualizar.
+
+< Вийшла нова версія NeoBar: {0} (у вас {1}).\n\nОновити зараз? Оновлення завантажиться з GitHub, його цілісність буде перевірено, після чого NeoBar сам закриється, встановить нову версію й запуститься знову. Ваші налаштування й дані збережуться.
+> Uma nova versão do NeoBar foi lançada: {0} (instalada: {1}).\n\nAtualizar agora? A atualização é baixada do GitHub e sua integridade é verificada; depois o NeoBar fecha sozinho, instala a nova versão e inicia novamente. Suas configurações e dados são mantidos.
+
+< Оновити зараз
+> Atualizar agora
+
+< Оновлення NeoBar
+> Atualização do NeoBar
+
+< Не вдалося оновити автоматично: {0}\n\nНову версію можна завантажити вручну зі сторінки випуску.
+> Falha na atualização automática: {0}\n\nVocê pode baixar a nova versão manualmente na página do lançamento.
+
+< Оновлення скасовано: без підтвердження прав адміністратора не можна змінити теку програми.
+> Atualização cancelada: sem a confirmação de permissões de administrador não é possível alterar a pasta do programa.
+
+< Отримання контрольних сум…
+> Obtendo somas de verificação…
+
+< у випуску немає файлу SHA256SUMS.txt
+> o lançamento não contém o arquivo SHA256SUMS.txt
+
+< у випуску немає файлу {0}
+> o lançamento não contém o arquivo {0}
+
+< Перевірка файлу…
+> Verificando o arquivo…
+
+< Контрольна сума файлу не збігається.
+> A soma de verificação do arquivo não confere.
+
+< адресу завантаження перенаправлено поза GitHub
+> o endereço de download foi redirecionado para fora do GitHub
+
+< файл завеликий
+> o arquivo é grande demais
+
+< Завантаження… {0} з {1} МБ
+> Baixando… {0} de {1} MB
+
+< Завантаження… {0} МБ
+> Baixando… {0} MB
+
+< файл завантажено не повністю
+> o arquivo não foi baixado por completo
+
+< Оновлення не вдалося: {0}
+> A atualização falhou: {0}
+
+< NeoBar не закрився вчасно.
+> O NeoBar não fechou a tempo.
+
+< Встановлювач не завершив роботу вчасно.
+> O instalador não terminou a tempo.
+
+< Встановлювач завершився з кодом {0}.
+> O instalador terminou com o código {0}.
+
+< Архів не схожий на пакет NeoBar.
+> O arquivo não parece um pacote do NeoBar.
+
+< Під час запуску NeoBar дивиться на GitHub, чи вийшла новіша версія, і пропонує оновитися. Завантажує й встановлює лише після вашої згоди.
+> Ao iniciar, o NeoBar verifica no GitHub se há uma versão mais nova e oferece a atualização. Só baixa e instala com o seu consentimento.
