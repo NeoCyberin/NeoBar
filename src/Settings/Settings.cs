@@ -71,7 +71,7 @@ sealed partial class SettingsForm : Form, IGradHost
     SNum nW, nGap;
     CheckBox chCompact, chFs, chAuto, chSearch, chHot, chFiles, chAdmin;
     HotkeyBox hkSearch;
-    CheckBox chSuggest, chWelcome;
+    CheckBox chSuggest, chWelcome, chUpd;
     Label lHkSearch;
     Keys searchKeyOk;
 

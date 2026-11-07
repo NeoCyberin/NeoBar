@@ -48,6 +48,7 @@ static class NetSources
         Add(L.T("Назва місця за координатами"), "BigDataCloud", delegate { Cfg c = C; return c == null || c.LocAllow; },
             "https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=50.45&longitude=30.52&localityLanguage=uk");
         Add(L.T("Свята"), "date.nager.at", delegate { return Holidays.Online; }, "https://date.nager.at/api/v3/AvailableCountries");
+        Add(L.T("Оновлення"), "GitHub", delegate { Cfg c = C; return c == null || c.UpdCheck; }, Updater.SourceUrl);
         Add(L.T("Карта"), "OpenStreetMap", null, "https://tile.openstreetmap.org/0/0/0.png");
         // місце за IP - лише в автоматичному режимі (коли служба розташування Windows не дала відповіді)
         Add(L.T("Місце за IP"), "ipwho.is, get.geojs.io, ip-api.com", delegate { Cfg c = C; return c == null || (c.LocAllow && c.LocMode == "auto"); },
