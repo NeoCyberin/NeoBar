@@ -10078,11 +10078,8 @@
 < Екранна лупа
 > Loupe
 
-< вже додано
-> déjà ajouté
-
-< Швидкий доступ до Цей ПК, Кошика, особистої папки, системних утиліт та інших місць Windows.
-> Accès rapide à Ce PC, à la Corbeille, au dossier personnel, aux outils système et à d'autres emplacements de Windows.
+< Місця й утиліти Windows. Позначені вже є на панелі - зніміть галку, щоб їх прибрати.
+> Emplacements et utilitaires Windows. Les éléments cochés sont déjà sur la barre - décochez pour les retirer.
 
 < Вийшла версія {0} (у вас {1}). Клікніть, щоб оновити.
 > La version {0} est disponible (installée : {1}). Cliquez pour mettre à jour.

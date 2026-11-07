@@ -22,8 +22,8 @@ sealed partial class SettingsForm
     // ---------- пакетне додавання ----------
 
     // Діалог із прапорцями; повертає індекси обраних
-    // have[i] == true - такий елемент уже є: його видно (з позначкою), але вибрати повторно не можна
-    static List<int> Pick(IWin32Window parent, string title, string hint, List<string> items, bool preCheck, List<bool> have = null)
+    // have[i] == true - такий елемент уже є: він відмічений; повторно не додається, а якщо галку знято - потрапляє в removed (його треба прибрати)
+    static List<int> Pick(IWin32Window parent, string title, string hint, List<string> items, bool preCheck, List<bool> have = null, List<int> removed = null)
     {
         List<int> res = new List<int>();
         using (Form f = new Form())
@@ -50,23 +50,14 @@ sealed partial class SettingsForm
             for (int hi = 0; hi < items.Count; hi++)
             {
                 bool dup = have != null && hi < have.Count && have[hi];
-                l.Items.Add(dup ? items[hi] + "  ·  " + L.T("вже додано") : items[hi], preCheck && !dup);
+                l.Items.Add(items[hi], dup || preCheck);
             }
-            bool fixing = false;
-            if (have != null)
-                l.CheckChanged += delegate
-                {
-                    if (fixing) return;
-                    fixing = true;
-                    for (int i = 0; i < l.Items.Count && i < have.Count; i++) if (have[i] && l.IsChecked(i)) l.SetChecked(i, false);
-                    fixing = false;
-                };
             int bh = SUi.S(36), by = H - p - bh;
             card.SetBounds(p, p + SUi.S(46), W - p * 2, by - SUi.S(14) - (p + SUi.S(46)));
             l.SetBounds(SUi.S(6), SUi.S(6), card.Width - SUi.S(12), card.Height - SUi.S(12));
-            Button all = Bt(L.T("Усі"), "ghost g:check", 84, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, !(have != null && i < have.Count && have[i])); });
-            Button none = Bt(L.T("Жодного"), "ghost g:close", 104, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, false); });
-            Button ok = Bt(L.T("Додати"), "primary g:plus", 116, null);
+            Button all = Bt(L.T("Усі"), "ghost g:check", 84, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, true); });
+            Button none = Bt(L.T("Жодного"), "ghost g:close", 104, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, have != null && i < have.Count && have[i]); });
+            Button ok = have != null ? Bt(L.T("Застосувати"), "primary g:check", 130, null) : Bt(L.T("Додати"), "primary g:plus", 116, null);
             ok.DialogResult = DialogResult.OK;
             Button cancel = Bt(L.T("Скасувати"), "", 116, null);
             cancel.DialogResult = DialogResult.Cancel;
@@ -80,7 +71,11 @@ sealed partial class SettingsForm
             FormTheme.Apply(f);
             if (f.ShowDialog(parent) != DialogResult.OK) return res;
             res = l.CheckedIndices;
-            if (have != null) res.RemoveAll(delegate (int i) { return i < have.Count && have[i]; });
+            if (have != null)
+            {
+                res.RemoveAll(delegate (int i) { return i < have.Count && have[i]; });
+                if (removed != null) for (int i = 0; i < l.Items.Count && i < have.Count; i++) if (have[i] && !l.IsChecked(i)) removed.Add(i);
+            }
         }
         return res;
     }
@@ -108,7 +103,15 @@ sealed partial class SettingsForm
         List<string> present = new List<string>();
         foreach (Entry pe in list) if (pe.Kind == Kind.Item) present.Add(TargetKey(pe.Target));
         foreach (string[] s in SysCatalog.Items) { names.Add(s[0]); have.Add(present.Contains(TargetKey(s[1]))); }
-        List<int> sel = Pick(this, L.T("Системні елементи"), L.T("Швидкий доступ до Цей ПК, Кошика, особистої папки, системних утиліт та інших місць Windows."), names, false, have);
+        List<int> gone = new List<int>();
+        List<int> sel = Pick(this, L.T("Системні елементи"), L.T("Місця й утиліти Windows. Позначені вже є на панелі - зніміть галку, щоб їх прибрати."), names, false, have, gone);
+        if (gone.Count > 0)
+        {
+            List<string> keys = new List<string>();
+            foreach (int gi in gone) keys.Add(TargetKey(SysCatalog.Items[gi][1]));
+            list.RemoveAll(delegate (Entry pe) { return pe.Kind == Kind.Item && !pe.Auto && keys.Contains(TargetKey(pe.Target)); });
+            RefreshSel(null);
+        }
         List<Entry> es = new List<Entry>();
         foreach (int i in sel)
         {

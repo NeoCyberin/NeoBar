@@ -10078,11 +10078,8 @@
 < Екранна лупа
 > Lupa
 
-< вже додано
-> již přidáno
-
-< Швидкий доступ до Цей ПК, Кошика, особистої папки, системних утиліт та інших місць Windows.
-> Rychlý přístup k Tento počítač, Koši, složce uživatele, systémovým nástrojům a dalším místům Windows.
+< Місця й утиліти Windows. Позначені вже є на панелі - зніміть галку, щоб їх прибрати.
+> Místa a nástroje Windows. Zaškrtnuté už jsou na liště - zrušte zaškrtnutí, chcete-li je odebrat.
 
 < Вийшла версія {0} (у вас {1}). Клікніть, щоб оновити.
 > Vyšla verze {0} (nainstalováno: {1}). Kliknutím aktualizujete.
