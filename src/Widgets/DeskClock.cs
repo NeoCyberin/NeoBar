@@ -650,6 +650,7 @@ sealed class DeskClock : LayeredForm
                     Fw.Overall(true);
                     Redraw();
                     ClockData.RedrawKind("fw");
+                    Fw.RaiseChanged();      // відкрите вікно «Мережа» теж одразу покаже новий стан
                 }));
             }
             catch { }
@@ -666,6 +667,8 @@ sealed class DeskClock : LayeredForm
         string small = fwBusy ? L.T("зачекайте") : (msg ? L.T("не вдалося") : (st == 2 ? L.T("клік - вимкнути") : (st >= 0 ? L.T("клік - увімкнути") : "")));
         int isz = U(36);
         Rectangle ir = new Rectangle((sz.Width - isz) / 2, U(6), isz, isz);
+        GraphicsState gst = g.Save();
+        if (small.Length == 0) g.TranslateTransform(0, U(7));
         using (SolidBrush zb = new SolidBrush(Color.FromArgb(1, 0, 0, 0))) g.FillRectangle(zb, Rectangle.Inflate(ir, U(6), U(6)));
         Ico.Draw(g, "shield", ir, c);
         using (Font ft = p.Font(8f * kk * Sc, FontStyle.Bold))
@@ -680,6 +683,7 @@ sealed class DeskClock : LayeredForm
             g.DrawString(big, fv, bf, new RectangleF(U(2), U(56), sz.Width - U(4), U(24)), cf);
             if (small.Length > 0) g.DrawString(small, fm, bs, new RectangleF(U(2), U(80), sz.Width - U(4), U(14)), cf);
         }
+        g.Restore(gst);
     }
 
     // раз на годину (і при першому показі) оновлюємо оцінку сміття, щоб на віджеті було актуальне число
@@ -750,6 +754,9 @@ sealed class DeskClock : LayeredForm
         Rectangle ir = new Rectangle((sz.Width - isz) / 2, U(6), isz, isz);
         long was = TrashFreed();
         string small = busy ? "" : (done ? (Cleaner.LastFreed > 0 ? L.T("Звільнено: ") + Cleaner.Size(Cleaner.LastFreed) : L.T("Вже було чисто")) : (was >= 0 ? L.T("Очищено: ") + Cleaner.Size(was) : ""));
+        // без нижнього рядка вміст нижчий - зсуваємо його, щоб він стояв по центру плитки
+        GraphicsState gst = g.Save();
+        if (small.Length == 0) g.TranslateTransform(0, U(7));
         // майже невидима тверда зона під іконкою: у прозорих місцях значка клік інакше проходив би «крізь» вікно
         using (SolidBrush zb = new SolidBrush(Color.FromArgb(1, 0, 0, 0))) g.FillRectangle(zb, Rectangle.Inflate(ir, U(6), U(6)));
         Ico.Draw(g, "trash", ir, busy ? p.Acc : (done ? p.Good : p.Fg));
@@ -765,6 +772,7 @@ sealed class DeskClock : LayeredForm
             g.DrawString(big, fv, bf, new RectangleF(U(2), U(56), sz.Width - U(4), U(24)), cf);
             if (small.Length > 0) g.DrawString(small, fm, bs, new RectangleF(U(2), U(80), sz.Width - U(4), U(14)), cf);
         }
+        g.Restore(gst);
     }
 
     void DrawNetBox(Graphics g, Size sz, Pal p, float kk)

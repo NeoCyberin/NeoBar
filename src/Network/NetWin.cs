@@ -225,7 +225,7 @@ sealed partial class NetWindow : ToolWindow
         Invalidate();
     }
 
-    protected override void OnTick() { base.OnTick(); Invalidate(); }
+    protected override void OnTick() { base.OnTick(); if (Tab == 3) FwSync(); Invalidate(); }
 
     protected override void PaintBody(Graphics g, Rectangle r)
     {
