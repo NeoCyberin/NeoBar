@@ -63,6 +63,8 @@ sealed partial class SettingsForm
     int lastReal = -1;
     Point wDownAt = Point.Empty;
     string wDownKind;
+    Entry eDown;                     // звичайний елемент (програма, група, роздільник), який почали тягнути
+    int dropRow = -1;                // рядок, перед яким з'явиться перетягуваний елемент (для лінії-підказки)
 
     Entry WidgetOf(string kind)
     {
@@ -182,9 +184,12 @@ sealed partial class SettingsForm
         lb.MouseDown += delegate (object s, MouseEventArgs e)
         {
             wDownKind = null;
+            eDown = null;
             if (e.Button != MouseButtons.Left) return;
             int i = lb.IndexFromPoint(e.Location);
             string k = KindOfRow(i);
+            Entry de = EntryAt(i);
+            if (i >= 0 && k.Length == 0 && de != null && !de.Auto && de.Kind != Kind.Widget) { eDown = de; wDownAt = e.Location; return; }
             if (i < 0 || k.Length == 0) return;
             Rectangle ib = lb.GetItemRectangle(i);
             if (ChipRect(ib).Contains(e.Location)) { ToggleWidget(k); return; }
@@ -208,21 +213,40 @@ sealed partial class SettingsForm
             bool chipHot = i >= 0 && k.Length > 0 && CanUse(k) && (ChipRect(lb.GetItemRectangle(i)).Contains(e.Location) ||
                            HasEye(i) && EyeRect(lb.GetItemRectangle(i)).Contains(e.Location));
             lb.Cursor = chipHot ? Cursors.Hand : (i >= 0 && k.Length > 0 && CanUse(k) && !IsInactiveRow(i) ? Cursors.SizeAll : Cursors.Default);
-            if (wDownKind == null || e.Button != MouseButtons.Left) return;
+            if (i >= 0 && k.Length == 0) { Entry me = EntryAt(i); if (me != null && !me.Auto && me.Kind != Kind.Widget) lb.Cursor = Cursors.SizeAll; }
+            if ((wDownKind == null && eDown == null) || e.Button != MouseButtons.Left) return;
             Size ds = SystemInformation.DragSize;
             if (Math.Abs(e.X - wDownAt.X) < ds.Width && Math.Abs(e.Y - wDownAt.Y) < ds.Height) return;
             string dk = wDownKind; wDownKind = null;
-            lb.DoDragDrop("sbwidget:" + dk, DragDropEffects.Move);
+            Entry dEnt = eDown; eDown = null;
+            if (dk != null) lb.DoDragDrop("sbwidget:" + dk, DragDropEffects.Move);
+            else if (dEnt != null) lb.DoDragDrop("sbentry:" + list.IndexOf(dEnt), DragDropEffects.Move);
+            SetDropRow(-1);
         };
-        lb.MouseUp += delegate { wDownKind = null; };
+        lb.MouseUp += delegate { wDownKind = null; eDown = null; };
+        lb.DragLeave += delegate { SetDropRow(-1); };
         lb.DragOver += delegate (object s, DragEventArgs e)
         {
             string d = e.Data.GetData(DataFormats.Text) as string;
+            if (d != null && d.StartsWith("sbentry:"))
+            {
+                Point pt = lb.PointToClient(new Point(e.X, e.Y));
+                if (pt.Y < 18) lb.ScrollBy(-SUi.S(10));                                // край списку - прокрутка
+                else if (pt.Y > lb.Height - 18) lb.ScrollBy(SUi.S(10));
+                int row;
+                EntryDropIndex(pt, out row);
+                SetDropRow(row);
+                e.Effect = DragDropEffects.Move;
+                return;
+            }
+            SetDropRow(-1);
             e.Effect = d != null && d.StartsWith("sbwidget:") ? DragDropEffects.Move : DragDropEffects.None;
         };
         lb.DragDrop += delegate (object s, DragEventArgs e)
         {
             string d = e.Data.GetData(DataFormats.Text) as string;
+            SetDropRow(-1);
+            if (d != null && d.StartsWith("sbentry:")) { DropEntry(d, lb.PointToClient(new Point(e.X, e.Y))); return; }
             if (d == null || !d.StartsWith("sbwidget:")) return;
             string k = d.Substring(9);
             if (!CanUse(k)) return;
@@ -244,7 +268,75 @@ sealed partial class SettingsForm
         };
     }
 
+    void SetDropRow(int r)
+    {
+        if (dropRow == r) return;
+        dropRow = r;
+        lb.Invalidate();
+    }
+
+    // куди вставити перетягуваний елемент: індекс у list і рядок, перед яким малюється лінія (rows.Count - у кінець)
+    int EntryDropIndex(Point pt, out int lineRow)
+    {
+        int i = lb.IndexFromPoint(pt);
+        if (i < 0) lineRow = rows.Count > 0 && pt.Y < lb.GetItemRectangle(0).Y ? 0 : rows.Count;     // над першим рядком або під останнім
+        else
+        {
+            Rectangle r = lb.GetItemRectangle(i);
+            lineRow = pt.Y > r.Y + r.Height / 2 ? i + 1 : i;
+        }
+        int first = FirstRestIndex();
+        int at;
+        if (lineRow >= rows.Count) at = list.Count;
+        else
+        {
+            Entry t = rows[lineRow] as Entry;
+            at = t != null ? list.IndexOf(t) : Store.WidgetCount(list);     // рядок неактивного віджета - це межа з основним списком
+        }
+        if (at < first) { at = first; lineRow = Math.Min(rows.Count, RowOfListIndex(first)); }
+        return at;
+    }
+
+    int RowOfListIndex(int li)
+    {
+        if (li >= list.Count) return rows.Count;
+        int r = RowOf(list[li]);
+        return r < 0 ? rows.Count : r;
+    }
+
+    // перенесення програми, групи (разом з її елементами) чи роздільника
+    void DropEntry(string data, Point pt)
+    {
+        int from;
+        if (!int.TryParse(data.Substring(8), out from) || from < 0 || from >= list.Count) return;
+        Entry cur = list[from];
+        if (cur.Auto || cur.Kind == Kind.Widget) return;
+        int row;
+        int at = EntryDropIndex(pt, out row);
+        // група їде разом з елементами, що йдуть за нею, до наступної групи, роздільника чи віджета
+        int to = from + 1;
+        if (cur.Kind == Kind.Header)
+            while (to < list.Count && list[to].Kind == Kind.Item) to++;
+        if (at >= from && at <= to) return;                       // кидають на саму себе
+        List<Entry> block = list.GetRange(from, to - from);
+        list.RemoveRange(from, to - from);
+        if (at > from) at -= block.Count;
+        list.InsertRange(Math.Max(0, Math.Min(at, list.Count)), block);
+        RefreshSel(cur);
+    }
+
     void DrawListRow(DrawItemEventArgs e)
+    {
+        DrawListRow0(e);
+        if (dropRow < 0 || e.Index < 0) return;
+        int y = -1;
+        if (e.Index == dropRow) y = e.Bounds.Top + 1;
+        else if (dropRow >= rows.Count && e.Index == rows.Count - 1) y = e.Bounds.Bottom - 2;
+        if (y < 0) return;
+        using (Pen p = new Pen(FormTheme.Acc, 2f)) e.Graphics.DrawLine(p, e.Bounds.X + 4, y, e.Bounds.Right - 4, y);
+    }
+
+    void DrawListRow0(DrawItemEventArgs e)
     {
         if (e.Index < 0) return;
         Graphics g = e.Graphics;
