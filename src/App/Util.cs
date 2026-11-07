@@ -349,6 +349,35 @@ static partial class Util
         catch { return spec; }
     }
 
+    // Видаляє власну копію іконки з папки icons, якщо на неї більше не посилається жоден профіль.
+    // Чужі файли (повні шляхи, %змінні%, theme:) і все поза папкою icons не чіпаються.
+    public static void DeleteIconIfUnused(string spec)
+    {
+        try
+        {
+            string s = (spec ?? "").Trim().Trim('"');
+            if (s.Length == 0 || s.StartsWith("theme:", StringComparison.OrdinalIgnoreCase) || IsUrl(s)) return;
+            if (Path.IsPathRooted(s) || s.IndexOf('%') >= 0) return;
+            string bd = AppDomain.CurrentDomain.BaseDirectory;
+            string dir = Path.GetFullPath(Path.Combine(bd, "icons")).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+            string full = Path.GetFullPath(Path.Combine(bd, s.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar)));
+            if (!full.StartsWith(dir, StringComparison.OrdinalIgnoreCase) || !File.Exists(full)) return;
+            if (full.IndexOf(Path.DirectorySeparatorChar, dir.Length) >= 0) return;            // лише файли просто в icons
+            string needle = "icons/" + Path.GetFileName(full);
+            List<string> inis = new List<string>(Directory.GetFiles(bd, "*.ini"));
+            string pd = Path.Combine(bd, "profiles");
+            if (Directory.Exists(pd)) inis.AddRange(Directory.GetFiles(pd, "*.ini", SearchOption.AllDirectories));
+            foreach (string f in inis)
+            {
+                string text;
+                try { text = File.ReadAllText(f, Encoding.UTF8); } catch { return; }          // не змогли перевірити - краще лишити
+                if (text.Replace('\\', '/').IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0) return;
+            }
+            File.Delete(full);
+        }
+        catch { }
+    }
+
     static bool SameBytes(byte[] a, byte[] b)
     {
         if (a.Length != b.Length) return false;
