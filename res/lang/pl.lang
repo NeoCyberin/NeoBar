@@ -10020,3 +10020,75 @@
 
 < У вас остання версія ({0}).
 > Masz najnowszą wersję ({0}).
+
+< Диспетчер пристроїв
+> Menedżer urządzeń
+
+< Керування дисками
+> Zarządzanie dyskami
+
+< Редактор реєстру
+> Edytor rejestru
+
+< Конфігурація системи
+> Konfiguracja systemu
+
+< Перегляд подій
+> Podgląd zdarzeń
+
+< Планувальник завдань
+> Harmonogram zadań
+
+< Керування комп'ютером
+> Zarządzanie komputerem
+
+< Монітор ресурсів
+> Monitor zasobów
+
+< Системний монітор
+> Monitor wydajności
+
+< Відомості про систему
+> Informacje o systemie
+
+< Діагностика DirectX
+> Diagnostyka DirectX
+
+< Очищення диска
+> Oczyszczanie dysku
+
+< Оптимізація дисків
+> Optymalizacja dysków
+
+< Мережеві підключення
+> Połączenia sieciowe
+
+< Електроживлення
+> Opcje zasilania
+
+< Дата й час
+> Data i godzina
+
+< Властивості системи
+> Właściwości systemu
+
+< Облікові записи користувачів
+> Konta użytkowników
+
+< Віддалений робочий стіл
+> Pulpit zdalny
+
+< Таблиця символів
+> Tabela znaków
+
+< Екранна клавіатура
+> Klawiatura ekranowa
+
+< Екранна лупа
+> Lupa
+
+< вже додано
+> już dodano
+
+< Швидкий доступ до Цей ПК, Кошика, особистої папки, системних утиліт та інших місць Windows.
+> Szybki dostęp do Tego komputera, Kosza, folderu osobistego, narzędzi systemowych i innych miejsc w systemie Windows.

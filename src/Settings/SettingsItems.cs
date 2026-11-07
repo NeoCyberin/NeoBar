@@ -22,7 +22,8 @@ sealed partial class SettingsForm
     // ---------- пакетне додавання ----------
 
     // Діалог із прапорцями; повертає індекси обраних
-    static List<int> Pick(IWin32Window parent, string title, string hint, List<string> items, bool preCheck)
+    // have[i] == true - такий елемент уже є: його видно (з позначкою), але вибрати повторно не можна
+    static List<int> Pick(IWin32Window parent, string title, string hint, List<string> items, bool preCheck, List<bool> have = null)
     {
         List<int> res = new List<int>();
         using (Form f = new Form())
@@ -46,11 +47,24 @@ sealed partial class SettingsForm
             l.CheckBoxes = true;
             l.ItemHeight = 32;
             card.Controls.Add(l);
-            foreach (string s in items) l.Items.Add(s, preCheck);
+            for (int hi = 0; hi < items.Count; hi++)
+            {
+                bool dup = have != null && hi < have.Count && have[hi];
+                l.Items.Add(dup ? items[hi] + "  ·  " + L.T("вже додано") : items[hi], preCheck && !dup);
+            }
+            bool fixing = false;
+            if (have != null)
+                l.CheckChanged += delegate
+                {
+                    if (fixing) return;
+                    fixing = true;
+                    for (int i = 0; i < l.Items.Count && i < have.Count; i++) if (have[i] && l.IsChecked(i)) l.SetChecked(i, false);
+                    fixing = false;
+                };
             int bh = SUi.S(36), by = H - p - bh;
             card.SetBounds(p, p + SUi.S(46), W - p * 2, by - SUi.S(14) - (p + SUi.S(46)));
             l.SetBounds(SUi.S(6), SUi.S(6), card.Width - SUi.S(12), card.Height - SUi.S(12));
-            Button all = Bt(L.T("Усі"), "ghost g:check", 84, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, true); });
+            Button all = Bt(L.T("Усі"), "ghost g:check", 84, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, !(have != null && i < have.Count && have[i])); });
             Button none = Bt(L.T("Жодного"), "ghost g:close", 104, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, false); });
             Button ok = Bt(L.T("Додати"), "primary g:plus", 116, null);
             ok.DialogResult = DialogResult.OK;
@@ -66,8 +80,16 @@ sealed partial class SettingsForm
             FormTheme.Apply(f);
             if (f.ShowDialog(parent) != DialogResult.OK) return res;
             res = l.CheckedIndices;
+            if (have != null) res.RemoveAll(delegate (int i) { return i < have.Count && have[i]; });
         }
         return res;
+    }
+
+    static string TargetKey(string t)
+    {
+        string s = (t ?? "").Trim().Trim('"');
+        try { s = Environment.ExpandEnvironmentVariables(s); } catch { }
+        return s.TrimEnd('\\', '/').ToLowerInvariant();
     }
 
     void AddMany(List<Entry> es)
@@ -82,8 +104,11 @@ sealed partial class SettingsForm
     void AddSystem()
     {
         List<string> names = new List<string>();
-        foreach (string[] s in SysCatalog.Items) names.Add(s[0]);
-        List<int> sel = Pick(this, L.T("Системні елементи"), L.T("Швидкий доступ до Цей ПК, Кошика, особистої папки та інших місць Windows."), names, false);
+        List<bool> have = new List<bool>();
+        List<string> present = new List<string>();
+        foreach (Entry pe in list) if (pe.Kind == Kind.Item) present.Add(TargetKey(pe.Target));
+        foreach (string[] s in SysCatalog.Items) { names.Add(s[0]); have.Add(present.Contains(TargetKey(s[1]))); }
+        List<int> sel = Pick(this, L.T("Системні елементи"), L.T("Швидкий доступ до Цей ПК, Кошика, особистої папки, системних утиліт та інших місць Windows."), names, false, have);
         List<Entry> es = new List<Entry>();
         foreach (int i in sel)
         {

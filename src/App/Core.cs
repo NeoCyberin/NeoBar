@@ -163,7 +163,37 @@ static class SysCatalog
         new string[] { L.T("Калькулятор"), "calc.exe", "calc" },
         new string[] { L.T("Блокнот"), "notepad.exe", "edit" },
         new string[] { L.T("Програми та компоненти"), "appwiz.cpl", "settings" },
-        new string[] { L.T("Заблокувати ПК"), "rundll32.exe user32.dll,LockWorkStation", "lock" }
+        new string[] { L.T("Заблокувати ПК"), "rundll32.exe user32.dll,LockWorkStation", "lock" },
+        // системні утиліти (є у Windows 11 і Windows 10; більшість - ще з Windows XP)
+        new string[] { L.T("Диспетчер пристроїв"), "devmgmt.msc", "pc" },
+        new string[] { L.T("Керування дисками"), "diskmgmt.msc", "save" },
+        new string[] { L.T("Редактор реєстру"), "regedit.exe", "code" },
+        new string[] { L.T("Конфігурація системи"), "msconfig.exe", "settings" },
+        new string[] { L.T("Служби"), "services.msc", "settings" },
+        new string[] { L.T("Перегляд подій"), "eventvwr.msc", "history" },
+        new string[] { L.T("Планувальник завдань"), "taskschd.msc", "calendar" },
+        new string[] { L.T("Керування комп'ютером"), "compmgmt.msc", "admin" },
+        new string[] { L.T("Монітор ресурсів"), "resmon.exe", "taskmgr" },
+        new string[] { L.T("Системний монітор"), "perfmon.exe", "taskmgr" },
+        new string[] { L.T("Відомості про систему"), "msinfo32.exe", "pc" },
+        new string[] { L.T("Діагностика DirectX"), "dxdiag.exe", "game" },
+        new string[] { L.T("Очищення диска"), "cleanmgr.exe", "bin" },
+        new string[] { L.T("Оптимізація дисків"), "dfrgui.exe", "save" },
+        new string[] { L.T("Брандмауер Windows"), "wf.msc", "lock" },
+        new string[] { L.T("Мережеві підключення"), "ncpa.cpl", "wifi" },
+        new string[] { L.T("Звук"), "mmsys.cpl", "volume" },
+        new string[] { L.T("Електроживлення"), "powercfg.cpl", "power" },
+        new string[] { L.T("Дата й час"), "timedate.cpl", "calendar" },
+        new string[] { L.T("Властивості системи"), "sysdm.cpl", "pc" },
+        new string[] { L.T("Облікові записи користувачів"), "netplwiz.exe", "user" },
+        new string[] { L.T("Віддалений робочий стіл"), "mstsc.exe", "desktop" },
+        new string[] { "PowerShell", "powershell.exe", "terminal" },
+        new string[] { L.T("Таблиця символів"), "charmap.exe", "edit" },
+        new string[] { L.T("Екранна клавіатура"), "osk.exe", "keyboard" },
+        new string[] { L.T("Екранна лупа"), "magnify.exe", "search" },
+        new string[] { "Paint", "mspaint.exe", "photo" },
+        new string[] { "Windows Update", "ms-settings:windowsupdate", "download" },
+        new string[] { L.T("Безпека Windows"), "windowsdefender:", "lock" }
     };
 
     // CSIDL для системних папок (щоб показувати справжні іконки Windows)
