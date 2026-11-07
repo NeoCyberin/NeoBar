@@ -10,6 +10,8 @@ static class Program
     {
         // мова інтерфейсу - найперше (і в помічниках: їхній вивід показується у вікнах)
         try { L.Init(); } catch { }
+        // папка програми для шляхів у налаштуваннях (%NEOBAR_DIR%\links\… - власні копії ярликів)
+        try { Environment.SetEnvironmentVariable("NEOBAR_DIR", AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\', '/')); } catch { }
         // підвищений помічник (SMART, літера диска, перевірка, оптимізація) - окремий короткий процес
         if (args.Length > 0 && args[0] == "--helper") return Helper.Run(args);
         // встановлювач перед видаленням програми: прибрати її сліди в системі

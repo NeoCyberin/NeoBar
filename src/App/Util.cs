@@ -378,6 +378,69 @@ static partial class Util
         catch { }
     }
 
+    // Ярлик (.lnk, .url) з Робочого столу чи іншого місця копіюється в папку links поруч із програмою, щоб панель
+    // не зламалась, коли оригінал видалять. У елементі зберігається %NEOBAR_DIR%\\links\\ім'я (змінну задає Program.Main).
+    // Повертає нове значення цілі або вихідне, якщо копіювати не треба чи не вдалося.
+    public const string LinksRef = "%NEOBAR_DIR%\\links\\";
+
+    public static string ImportLink(string target)
+    {
+        try
+        {
+            string s = (target ?? "").Trim().Trim('"');
+            if (s.Length == 0 || IsUrl(s)) return target;
+            string full = Environment.ExpandEnvironmentVariables(s);
+            if (!Path.IsPathRooted(full)) return target;
+            string ext = Path.GetExtension(full).ToLowerInvariant();
+            if (ext != ".lnk" && ext != ".url") return target;
+            string src = Path.GetFullPath(full);
+            string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "links");
+            string dirSep = Path.GetFullPath(dir).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+            if (src.StartsWith(dirSep, StringComparison.OrdinalIgnoreCase)) return target;       // це вже наша копія
+            FileInfo fi = new FileInfo(src);
+            if (!fi.Exists || fi.Length > 1024 * 1024) return target;
+            byte[] data = File.ReadAllBytes(src);
+            Directory.CreateDirectory(dir);
+            string name = Path.GetFileNameWithoutExtension(src);
+            foreach (char c in Path.GetInvalidFileNameChars()) name = name.Replace(c, '_');
+            for (int i = 1; i < 100; i++)
+            {
+                string cand = Path.Combine(dir, name + (i == 1 ? "" : "-" + i) + ext);
+                if (!File.Exists(cand)) { File.WriteAllBytes(cand, data); return LinksRef + Path.GetFileName(cand); }
+                if (SameBytes(File.ReadAllBytes(cand), data)) return LinksRef + Path.GetFileName(cand);      // така сама копія вже є
+            }
+            return target;
+        }
+        catch { return target; }
+    }
+
+    // Видаляє нашу копію ярлика, якщо на неї більше не посилається жоден профіль (чужі файли не чіпає).
+    public static void DeleteLinkIfUnused(string target)
+    {
+        try
+        {
+            string s = (target ?? "").Trim().Trim('"');
+            if (!s.StartsWith(LinksRef, StringComparison.OrdinalIgnoreCase)) return;
+            string file = s.Substring(LinksRef.Length);
+            if (file.Length == 0 || file.IndexOfAny(new char[] { '\\', '/' }) >= 0) return;
+            string bd = AppDomain.CurrentDomain.BaseDirectory;
+            string full = Path.Combine(bd, "links", file);
+            if (!File.Exists(full)) return;
+            string needle = ("%NEOBAR_DIR%/links/" + file).ToLowerInvariant();
+            List<string> inis = new List<string>(Directory.GetFiles(bd, "*.ini"));
+            string pd = Path.Combine(bd, "profiles");
+            if (Directory.Exists(pd)) inis.AddRange(Directory.GetFiles(pd, "*.ini", SearchOption.AllDirectories));
+            foreach (string f in inis)
+            {
+                string text;
+                try { text = File.ReadAllText(f, Encoding.UTF8); } catch { return; }          // не змогли перевірити - краще лишити
+                if (text.Replace('\\', '/').ToLowerInvariant().IndexOf(needle, StringComparison.Ordinal) >= 0) return;
+            }
+            File.Delete(full);
+        }
+        catch { }
+    }
+
     static bool SameBytes(byte[] a, byte[] b)
     {
         if (a.Length != b.Length) return false;
