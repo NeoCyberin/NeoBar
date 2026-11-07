@@ -290,7 +290,7 @@ static class Widgets
             {
                 List<string> pt = new List<string>();
                 if (PerfCpu) pt.Add(L.T("ЦП ") + Sensors.F0(Sensors.Cpu, "%"));
-                if (PerfGpu) pt.Add(L.T("ГП ") + Sensors.F0(Sensors.GpuLoad, "%"));
+                if (PerfGpu) pt.Add(L.T("ГП ") + Sensors.F0(Sensors.GpuLoad, "%") + (float.IsNaN(Sensors.GpuTemp) ? "" : ", " + Sensors.F0(Sensors.GpuTemp, "°") + (float.IsNaN(Sensors.Hotspot) ? "" : " (hotspot " + Sensors.F0(Sensors.Hotspot, "°") + ")")));
                 if (PerfRam) pt.Add(L.T("ОЗП ") + Sensors.F0(Sensors.Ram, "%"));
                 return string.Join(", ", pt.ToArray()) + L.T("\nКлік - монітор системи");
             }
