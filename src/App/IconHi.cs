@@ -97,6 +97,23 @@ static class IconHi
         return null;
     }
 
+    // куди веде ярлик (.lnk): повний шлях цілі або null (напр., для додатків Microsoft Store шляху немає)
+    public static string LinkTarget(string path)
+    {
+        IShellLinkW link = null;
+        try
+        {
+            link = (IShellLinkW)new ShellLinkCoClass();
+            ((IPersistFile)link).Load(path, 0);
+            StringBuilder tg = new StringBuilder(1024);
+            link.GetPath(tg, tg.Capacity, IntPtr.Zero, 0);
+            string t = tg.ToString().Trim();
+            return t.Length > 0 ? t : null;
+        }
+        catch { return null; }
+        finally { if (link != null) try { Marshal.ReleaseComObject(link); } catch { } }
+    }
+
     // інтернет-ярлик: рядки IconFile= та IconIndex=
     static Bitmap FromUrl(string path)
     {

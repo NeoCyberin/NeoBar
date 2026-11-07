@@ -288,8 +288,31 @@ sealed partial class NeoBar
             raw = IconFactory.Make(T, null, e.Name, sl);
             themed = true;
         }
-        if (themed) return raw;
-        return CenterIn(Fit(raw, px), sl);
+        e.Gone = Gone.Is(e);
+        Bitmap res = themed ? raw : CenterIn(Fit(raw, px), sl);
+        return e.Gone ? Dim(res) : res;
+    }
+
+    // програму видалено: іконка бліда й сіра
+    static Bitmap Dim(Bitmap src)
+    {
+        Bitmap b = new Bitmap(src.Width, src.Height, PixelFormat.Format32bppArgb);
+        using (Graphics g = Graphics.FromImage(b))
+        using (ImageAttributes ia = new ImageAttributes())
+        {
+            float[][] m =
+            {
+                new float[] { 0.30f, 0.30f, 0.30f, 0, 0 },
+                new float[] { 0.59f, 0.59f, 0.59f, 0, 0 },
+                new float[] { 0.11f, 0.11f, 0.11f, 0, 0 },
+                new float[] { 0, 0, 0, 0.4f, 0 },
+                new float[] { 0, 0, 0, 0, 1 }
+            };
+            ia.SetColorMatrix(new ColorMatrix(m));
+            g.DrawImage(src, new Rectangle(0, 0, b.Width, b.Height), 0, 0, src.Width, src.Height, GraphicsUnit.Pixel, ia);
+        }
+        src.Dispose();
+        return b;
     }
 
     static Bitmap Fit(Bitmap src, int px)
@@ -895,6 +918,7 @@ sealed partial class NeoBar
             return;
         }
         string t = e.Name + "\n" + e.Full;
+        if (e.Gone) t += "\n" + L.T("Не знайдено - програму чи гру, мабуть, видалено.");
         if (e.TagsText().Length > 0) t += "\n" + e.TagsText();
         ShowTipText(t, RectOf(e));
     }

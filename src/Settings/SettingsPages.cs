@@ -41,6 +41,10 @@ sealed partial class SettingsForm
         // «Видалити» - окремо й червоним, щоб не натиснути випадково
         bDel = Bt(L.T("Видалити"), "danger g:trash", 112, delegate { DeleteSel(); });
         left.Controls.Add(bUp); left.Controls.Add(bDown); left.Controls.Add(bDel);
+        // програми, яких уже немає на диску: з'являється лише коли такі є
+        bGone = Bt(L.T("Прибрати зниклі"), "ghost g:trash", 190, delegate { RemoveGone(); });
+        bGone.Visible = false;
+        left.Controls.Add(bGone);
         ToolTip tt = new ToolTip();
         tt.SetToolTip(bUp, L.T("Вище")); tt.SetToolTip(bDown, L.T("Нижче"));
         Label la = new Label();
@@ -66,6 +70,7 @@ sealed partial class SettingsForm
             bDel.SetBounds(r.Width - p - bDel.Width, p, bDel.Width, bh);
             bDown.SetBounds(bDel.Left - S(6) - bw, p, bw, bh);
             bUp.SetBounds(bDown.Left - S(4) - bw, p, bw, bh);
+            bGone.SetBounds(bUp.Left - S(10) - bGone.Width, p, bGone.Width, bh);
             int cols = 3, gap = S(6);
             int cw = (r.Width - p * 2 - gap * (cols - 1)) / cols;
             int rowsN = (adds.Length + cols - 1) / cols;

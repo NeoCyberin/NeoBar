@@ -57,7 +57,7 @@ sealed partial class SettingsForm : Form, IGradHost
 
     // «Елементи»
     SList lb;
-    Button bUp, bDown, bDel, bBrowseFile, bBrowseFolder, bBrowseIcon, bFavicon, bColor, bColorReset, bCopy;
+    Button bUp, bDown, bDel, bGone, bBrowseFile, bBrowseFolder, bBrowseIcon, bFavicon, bColor, bColorReset, bCopy;
     Label lStatus;
     TextBox tbName, tbTarget, tbIconFile, tbTags;
     SCombo cbIconMode, cbThemeIcon, cbGMode;

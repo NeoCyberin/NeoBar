@@ -184,7 +184,32 @@ sealed partial class SettingsForm
         if (e.Kind == Kind.Header) return "▼ " + e.Name + " " + L.T("   (група)").Trim();
         if (e.Kind == Kind.Separator) return e.Auto ? L.T("роздільник віджетів (автоматичний)") : L.T("-------  роздільник  -------");
         if (e.Kind == Kind.Widget) return "◆ " + WidgetCatalog.Title(e.Target) + " " + L.T("   (віджет)").Trim();
-        return "      " + e.Name;
+        return "      " + e.Name + (Gone.Is(e) ? "   ⚠ " + L.T("не знайдено") : "");
+    }
+
+    // кнопка «Прибрати зниклі (N)» видна, лише коли в списку є елементи, чиїх програм уже немає
+    void UpdateGone()
+    {
+        if (bGone == null) return;
+        int n = Gone.Count(list);
+        bGone.Visible = n > 0;
+        if (n > 0) bGone.Text = L.F("Прибрати зниклі ({0})", n);
+    }
+
+    void RemoveGone()
+    {
+        List<string> names = new List<string>();
+        foreach (Entry e in list) if (Gone.Is(e)) names.Add(e.Name);
+        if (names.Count == 0) { UpdateGone(); return; }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < names.Count && i < 8; i++) sb.Append("\n• ").Append(names[i]);
+        if (names.Count > 8) sb.Append("\n…");
+        int r = SbDialog.Show(owner, this, L.T("Прибрати зниклі"),
+            L.F("Буде прибрано елементів: {0}. Це ті, чиїх програм чи файлів уже немає на диску. Самі програми не чіпаються.", names.Count) + "\n" + sb.ToString(),
+            L.T("Прибрати"), L.T("Скасувати"));
+        if (r != 0) return;
+        Gone.Remove(list);
+        RefreshSel(null);
     }
 
     Entry Sel()
@@ -226,6 +251,7 @@ sealed partial class SettingsForm
         if (r >= 0 && r < rows.Count) lb.SelectedIndex = r;
         loading = false;
         LoadSel();
+        UpdateGone();
     }
 
     void AddEntry(Entry e)
