@@ -108,6 +108,15 @@ sealed class SList : Control
     int BarSpace { get { return bar.Need ? ThinBar.W : 0; } }
     void ScrollTo(int v) { top = v; bar.Pos = top; }
 
+    // прокрутка на dy пікселів (наприклад, коли тягнуть елемент до краю списку)
+    public void ScrollBy(int dy)
+    {
+        if (!bar.Need) return;
+        top = bar.Clamp(top + dy);
+        bar.Pos = top;
+        Invalidate();
+    }
+
     public Rectangle GetItemRectangle(int i) { return new Rectangle(SUi.S(4), PadY + i * ih - top, Math.Max(1, ClientSize.Width - SUi.S(8) - BarSpace), ih); }
 
     public int IndexFromPoint(Point p)
