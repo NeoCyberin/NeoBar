@@ -324,7 +324,7 @@ class ToolWindow : SbWindow
 
     void Init()
     {
-        AllowDrop = true;
+        DropFiles.Prepare(this);
         DragEnter += delegate (object s, DragEventArgs e) { if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy; };
         DragDrop += delegate (object s, DragEventArgs e)
         {
@@ -334,6 +334,19 @@ class ToolWindow : SbWindow
     }
 
     protected virtual void Dropped(string[] files) { }
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        DropFiles.Register(this);
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        string[] f = DropFiles.Take(ref m);
+        if (f != null) { if (f.Length > 0) Dropped(f); return; }
+        base.WndProc(ref m);
+    }
 
     protected override CreateParams CreateParams
     {

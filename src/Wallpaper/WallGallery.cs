@@ -306,7 +306,7 @@ sealed class WallGallery : Control
     {
         SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.Selectable | ControlStyles.Opaque, true);
         TabStop = true;
-        AllowDrop = true;
+        DropFiles.Prepare(this);
         Font = SUi.Small;
         WallThumbs.Ready += OnThumb;
     }
@@ -596,6 +596,19 @@ sealed class WallGallery : Control
     {
         if (kind < 0) return;
         try { System.Diagnostics.Process.Start("explorer.exe", "\"" + WallLib.Dir(kind) + "\""); } catch (Exception ex) { Util.ErrorLog(ex); }
+    }
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        DropFiles.Register(this);
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        string[] f = DropFiles.Take(ref m);
+        if (f != null) { AddFiles(f); return; }
+        base.WndProc(ref m);
     }
 
     protected override void OnDragEnter(DragEventArgs e)

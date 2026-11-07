@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -430,6 +430,8 @@ sealed partial class SettingsForm : Form, IGradHost
         NeoBar.SetAutostart(chAuto.Checked && !c.AlwaysAdmin);
         ApplyStatics();
         ApplyClock();
+        foreach (string wk in dropDesk) ClockData.RemoveDeskOf(wk);
+        dropDesk.Clear();
         // «завжди від адміністратора»: створити/змінити/видалити завдання (один запит UAC)
         if (c.AlwaysAdmin != adminWas || (c.AlwaysAdmin && chAuto.Checked != autoWas))
             owner.ConfigureAdmin(c.AlwaysAdmin, chAuto.Checked);

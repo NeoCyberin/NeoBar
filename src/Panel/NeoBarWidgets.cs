@@ -534,10 +534,12 @@ sealed partial class NeoBar
         Widgets.PerfSet(cfg);
         bool panelPerf = false;
         foreach (Entry pe in entries) if (pe.Kind == Kind.Widget && pe.Target == "perf") panelPerf = true;
-        Sensors.Use("panel", panelPerf ? (Widgets.PerfGpu ? 2 : 1) : 0);          // відеокарті потрібен повний збір даних
-        Sensors.Use("desk", ClockData.DeskHas("perf") ? (ClockData.DeskPerfGpu() ? 2 : 1) : 0);
+        // у грі/повноекранній програмі датчики панелі й столу та пінг на паузі (датчики гри - окремо, «game»)
+        bool pz = suspended;
+        Sensors.Use("panel", panelPerf && !pz ? (Widgets.PerfGpu ? 2 : 1) : 0);          // відеокарті потрібен повний збір даних
+        Sensors.Use("desk", ClockData.DeskHas("perf") && !pz ? (ClockData.DeskPerfGpu() ? 2 : 1) : 0);
         Entry ne = FirstWidget("net");
-        PingMon.Configure(ne != null ? ne.Opt : "", ne != null || ClockData.DeskHas("net"));
+        PingMon.Configure(ne != null ? ne.Opt : "", !pz && (ne != null || ClockData.DeskHas("net")));
         if (!pingHooked) { pingHooked = true; PingMon.Updated += delegate { foreach (Entry x in entries) if (x.Kind == Kind.Widget && x.Target == "net") { x.Sig = ""; Invalidate(RectOf(x)); } }; }
         if (!disksHooked)
         {
