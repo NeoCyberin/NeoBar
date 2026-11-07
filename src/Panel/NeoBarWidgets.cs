@@ -69,7 +69,11 @@ sealed partial class NeoBar
         wins[key] = nw;
         nw.FormClosed += delegate { SbWindow cur; if (wins.TryGetValue(key, out cur) && cur == nw) wins.Remove(key); };
         Rectangle tile = anchor != null && entries.Contains(anchor) ? RectangleToScreen(RectOf(anchor)) : RectangleToScreen(ClientRectangle);
-        nw.ShowNear(tile, cfg.Side);
+        // вікно притиснуте впритул до панелі: уздовж краю - по плитці віджета, упоперек - від краю самої панелі
+        Rectangle pb = Bounds;
+        if (cfg.Side == "top" || cfg.Side == "bottom") tile = new Rectangle(tile.X, pb.Y, tile.Width, pb.Height);
+        else tile = new Rectangle(pb.X, tile.Y, pb.Width, tile.Height);
+        nw.ShowNear(tile, cfg.Side, 0);
         return nw;
     }
 
@@ -539,6 +543,7 @@ sealed partial class NeoBar
         bool pz = suspended;
         Sensors.Use("panel", panelPerf && !pz ? (Widgets.PerfGpu ? 2 : 1) : 0);          // відеокарті потрібен повний збір даних
         Sensors.Use("desk", ClockData.DeskHas("perf") && !pz ? (ClockData.DeskPerfGpu() ? 2 : 1) : 0);
+        try { TrayTemps.Configure(cfg, this, !pz); } catch (Exception ex) { Util.ErrorLog(ex); }
         Entry ne = FirstWidget("net");
         PingMon.Configure(ne != null ? ne.Opt : "", !pz && (ne != null || ClockData.DeskHas("net")));
         if (!pingHooked) { pingHooked = true; PingMon.Updated += delegate { foreach (Entry x in entries) if (x.Kind == Kind.Widget && x.Target == "net") { x.Sig = ""; Invalidate(RectOf(x)); } }; }

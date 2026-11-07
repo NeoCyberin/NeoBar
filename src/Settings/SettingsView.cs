@@ -119,6 +119,31 @@ sealed partial class SettingsForm
         UpdateSwatches();
     }
 
+    void UpdateTraySwatches()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (bTrayCol[i] == null) continue;
+            Color op = Util.Opaque(trayCol[i]);
+            bTrayCol[i].UseVisualStyleBackColor = false;
+            bTrayCol[i].FlatStyle = FlatStyle.Flat;
+            bTrayCol[i].BackColor = op;
+            bTrayCol[i].ForeColor = Util.Lum(op) > 140 ? Color.Black : Color.White;
+            bTrayCol[i].Invalidate();
+        }
+    }
+
+    void PickTrayColor(int i)
+    {
+        using (ColorDialog d = new ColorDialog())
+        {
+            d.Color = Util.Opaque(trayCol[i]);
+            d.FullOpen = true;
+            if (d.ShowDialog(this) == DialogResult.OK) trayCol[i] = d.Color;
+        }
+        UpdateTraySwatches();
+    }
+
     void FillView()
     {
         loading = true;
@@ -146,6 +171,9 @@ sealed partial class SettingsForm
         cbMode.SelectedIndex = c.Mode == "autohide" ? 1 : 0;
         nGap.Value = Math.Max(nGap.Minimum, Math.Min(nGap.Maximum, c.CornerGap));
         chFs.Checked = c.FsHide;
+        chTray[0].Checked = c.TrayCpu; chTray[1].Checked = c.TrayGpu; chTray[2].Checked = c.TrayHot;
+        trayCol[0] = c.TrayCpuCol; trayCol[1] = c.TrayGpuCol; trayCol[2] = c.TrayHotCol;
+        UpdateTraySwatches();
         chHot.Checked = c.Hotkeys;
         chSuggest.Checked = c.SearchSuggest;
         chWelcome.Checked = !c.Welcomed;
@@ -246,6 +274,8 @@ sealed partial class SettingsForm
         c.Mode = cbMode.SelectedIndex == 1 ? "autohide" : "fixed";
         c.CornerGap = (int)nGap.Value;
         c.FsHide = chFs.Checked;
+        c.TrayCpu = chTray[0].Checked; c.TrayGpu = chTray[1].Checked; c.TrayHot = chTray[2].Checked;
+        c.TrayCpuCol = trayCol[0]; c.TrayGpuCol = trayCol[1]; c.TrayHotCol = trayCol[2];
         c.SearchSuggest = chSuggest.Checked;
         c.UpdCheck = chUpd.Checked;
         c.Hotkeys = chHot.Checked && (searchKeyOk & Keys.KeyCode) != Keys.None;

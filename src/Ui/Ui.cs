@@ -496,13 +496,16 @@ class SbWindow : Form
     protected virtual void HeadButtons(Graphics g, ref int right) { }
 
     // Розміщення біля віджета на панелі
-    public void ShowNear(Rectangle tile, string side)
+    public void ShowNear(Rectangle tile, string side) { ShowNear(tile, side, -1); }
+
+    // gap: проміжок до плитки, px (-1 - стандартний)
+    public void ShowNear(Rectangle tile, string side, int gapPx)
     {
         Rectangle wa = Screen.FromRectangle(tile).WorkingArea;
         // невеликий екран (ноутбук 1366×768): вікно не вище й не ширше за робочу область - інакше низ ховається за панеллю завдань
         if (Height > wa.Height - 12 || Width > wa.Width - 12)
             ClientSize = new Size(Math.Min(ClientSize.Width, wa.Width - 12), Math.Min(ClientSize.Height, wa.Height - 12));
-        int gap = Px(8), x, y;
+        int gap = gapPx >= 0 ? gapPx : Px(8), x, y;
         switch (side)
         {
             case "left": x = tile.Right + gap; y = tile.Top; break;
