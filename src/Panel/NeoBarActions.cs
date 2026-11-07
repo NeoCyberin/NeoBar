@@ -97,10 +97,23 @@ sealed partial class NeoBar
         if (autohide) SetExpanded(true);
     }
 
+    // над панеллю показуємо, куди потрапить елемент: лінія між елементами або рамка навколо групи
+    protected override void OnDragOver(DragEventArgs e)
+    {
+        base.OnDragOver(e);
+        bool ok = e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.Text);
+        e.Effect = ok ? DragDropEffects.Copy : DragDropEffects.None;
+        if (!ok || dragging) return;
+        Entry grp;
+        int s = ExtDropSlot(PointToClient(new Point(e.X, e.Y)), out grp);
+        if (s != dropSlot || grp != dropGroup) { dropSlot = s; dropGroup = grp; Invalidate(); }
+    }
+
     protected override void OnDragLeave(EventArgs e)
     {
         base.OnDragLeave(e);
         dragOver = false;
+        if (!dragging) { dropSlot = -1; dropGroup = null; Invalidate(); }
     }
 
     // Під час перетягування з Провідника той чекає, поки панель прийме файли, тому тут лише забираємо дані,
@@ -109,14 +122,25 @@ sealed partial class NeoBar
     {
         base.OnDragDrop(e);
         dragOver = false;
+        Entry dg;
+        int slot = ExtDropSlot(PointToClient(new Point(e.X, e.Y)), out dg);
+        dropSlot = -1; dropGroup = null;
+        Invalidate();
         string[] files = null;
         string text = null;
         try { files = e.Data.GetData(DataFormats.FileDrop) as string[]; } catch { }
         if (files == null) try { text = e.Data.GetData(DataFormats.Text) as string; } catch { }
-        BeginInvoke(new Action(delegate { AddDropped(files, text); }));
+        BeginInvoke(new Action(delegate { AddDropped(files, text, slot); }));
     }
 
-    void AddDropped(string[] files, string t)
+    // слот під курсором у момент скидання (для шляху WM_DROPFILES, де немає подій перетягування)
+    int CursorDropSlot()
+    {
+        try { Entry g; return ExtDropSlot(PointToClient(Cursor.Position), out g); } catch { return -1; }
+    }
+
+    // slot - індекс у списку елементів, куди вставити (у групу/між елементами); -1 - у кінець
+    void AddDropped(string[] files, string t, int slot)
     {
         StringBuilder sb = new StringBuilder();
         if (files != null)
@@ -143,8 +167,28 @@ sealed partial class NeoBar
         if (sb.Length == 0) return;
         try
         {
+            int before = entries.Count;
             File.AppendAllText(cfgPath, Environment.NewLine + sb.ToString(), new UTF8Encoding(true));
             Reload();
+            // нові елементи зчитано в кінець - переносимо туди, куди їх кинули (у потрібну групу й місце)
+            int added = entries.Count - before;
+            if (slot >= 0 && slot < before && added > 0)
+            {
+                List<Entry> ne = entries.GetRange(before, added);
+                bool allItems = true;
+                foreach (Entry x in ne) if (x.Kind != Kind.Item) allItems = false;
+                if (allItems)
+                {
+                    entries.RemoveRange(before, added);
+                    entries.InsertRange(Math.Min(slot, entries.Count), ne);
+                    hover = -1;
+                    DoLayout();
+                    BuildFolderIcons();
+                    RebuildDiskIds();
+                    SaveCfg();
+                    Invalidate();
+                }
+            }
         }
         catch (Exception ex)
         {

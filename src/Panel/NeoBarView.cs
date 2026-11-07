@@ -944,10 +944,10 @@ sealed partial class NeoBar
     }
 
     // група під курсором (заголовок або плитка згорнутої групи) і слот у ній: до кінця групи або одразу за заголовком
-    int GroupSlotAt(Point p, out Entry grp)
+    int GroupSlotAt(Point p, out Entry grp, bool ext = false)
     {
         grp = null;
-        if (dragIdx < 0 || dragIdx >= entries.Count || entries[dragIdx].Kind != Kind.Item) return -1;
+        if (!ext && (dragIdx < 0 || dragIdx >= entries.Count || entries[dragIdx].Kind != Kind.Item)) return -1;
         int hi = Hit(p);
         if (hi < 0 || entries[hi].Kind != Kind.Header) return -1;
         grp = entries[hi];
@@ -985,10 +985,23 @@ sealed partial class NeoBar
         return 0;
     }
 
+    // файли з Провідника: слот вставки й група під курсором (клієнтські координати панелі)
+    int ExtDropSlot(Point p, out Entry grp)
+    {
+        int wn = Store.WidgetCount(entries);
+        int floor = wn > 0 ? wn + 1 : 0;
+        int s = Math.Max(SlotAt(p), floor);
+        int gs = GroupSlotAt(p, out grp, true);
+        if (grp != null && gs >= 0) s = Math.Max(gs, floor); else grp = null;
+        return s;
+    }
+
     void DrawDropMark(Graphics g, bool fixedZone)
     {
-        if (!dragging || dropSlot < 0 || dragIdx < 0 || dragIdx >= entries.Count) return;
-        bool wdrag = entries[dragIdx].Kind == Kind.Widget;
+        bool ext = dragOver && dragIdx < 0;
+        if (!(dragging || ext) || dropSlot < 0) return;
+        if (!ext && (dragIdx < 0 || dragIdx >= entries.Count)) return;
+        bool wdrag = !ext && entries[dragIdx].Kind == Kind.Widget;
         if (wdrag != fixedZone) return;
         if (dropGroup != null)
         {

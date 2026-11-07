@@ -461,7 +461,7 @@ sealed partial class NeoBar : Form
         string[] dropped = DropFiles.Take(ref m);
         if (dropped != null)
         {
-            if (dropped.Length > 0) BeginInvoke(new Action(delegate { AddDropped(dropped, null); }));
+            if (dropped.Length > 0) BeginInvoke(new Action(delegate { AddDropped(dropped, null, CursorDropSlot()); }));
             return;
         }
         if (runMsg != 0 && m.Msg == (int)runMsg)

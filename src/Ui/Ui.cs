@@ -307,7 +307,7 @@ class SbWindow : Form
         HeadH = Px(46);
         ClientSize = new Size(Px(w), Px(h));
         Ticker.Interval = 1000;
-        Ticker.Tick += delegate { if (!NeoBar.Paused) OnTick(); };
+        Ticker.Tick += delegate { if (!NeoBar.Paused) OnTick(); if (AutoClose && focusTimer == null) FocusCheck(); };
     }
 
     void MakeFonts()
@@ -422,10 +422,52 @@ class SbWindow : Form
         showAnim.Start();
     }
 
+    // Розширене вікно віджета закривається, коли втрачає фокус (клік по робочому столу, іншій програмі чи панелі).
+    // Власні діалоги й спливні вікна цього ж вікна його не закривають.
+    public bool AutoClose;
+    bool wasActive;
+    Timer focusTimer;
+
+    protected override void OnActivated(EventArgs e)
+    {
+        base.OnActivated(e);
+        wasActive = true;
+    }
+
     protected override void OnDeactivate(EventArgs e)
     {
         base.OnDeactivate(e);
         LeftAt = DateTime.Now;
+        if (!AutoClose || !wasActive || focusTimer != null) return;
+        // коротка пауза: клік по віджету на панелі може одразу повернути фокус цьому ж вікну
+        focusTimer = new Timer();
+        focusTimer.Interval = 150;
+        focusTimer.Tick += delegate
+        {
+            focusTimer.Stop(); focusTimer.Dispose(); focusTimer = null;
+            FocusCheck();
+        };
+        focusTimer.Start();
+    }
+
+    void FocusCheck()
+    {
+        if (!AutoClose || !wasActive || IsDisposed || !IsHandleCreated || !Visible) return;
+        Form af = Form.ActiveForm;
+        if (af == this) return;
+        if (af != null && af != Bar) return;             // відкрито власний діалог чи інше вікно програми
+        if (af == null)
+        {
+            // фокус поза програмою (стільниця, інша програма) - закрити; власне системне вікно (відкриття файлу, MessageBox) - ні
+            try
+            {
+                uint pid;
+                Win.GetWindowThreadProcessId(Win.GetForegroundWindow(), out pid);
+                if (pid == (uint)System.Diagnostics.Process.GetCurrentProcess().Id) return;
+            }
+            catch { return; }
+        }
+        Close();
     }
 
     protected override void OnResize(EventArgs e)
