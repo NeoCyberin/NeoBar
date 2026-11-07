@@ -14,6 +14,8 @@ static class Program
         if (args.Length > 0 && args[0] == "--helper") return Helper.Run(args);
         // встановлювач перед видаленням програми: прибрати її сліди в системі
         if (args.Length > 0 && args[0] == "--uninstall") return Uninstall.Run();
+        // автооновлення: копія програми з тимчасової теки ставить нову версію, поки основна закрита
+        if (args.Length > 0 && args[0] == "--update") return UpdateHelper.Run(args);
         // пункт контекстного меню файлів (хеш, шифрування, перевірка) - окреме легке вікно без панелі
         if (args.Length >= 3 && args[0] == "--tool")
         {

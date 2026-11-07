@@ -79,6 +79,9 @@ SmartScreen і далі скаже «невідомий видавець». Пі
    ```
    gh release create v1.0.0 dist\NeoBar-1.0.0-setup.exe dist\NeoBar-1.0.0-portable.zip dist\SHA256SUMS.txt --title "NeoBar 1.0.0" --notes "Що нового: …"
    ```
+   **Важливо для автооновлення:** до випуску мають бути додані всі три файли, а ім'я тегу - `v<версія>` (як `AppVersion`).
+   NeoBar бере `NeoBar-<версія>-setup.exe` (встановлена копія) або `NeoBar-<версія>-portable.zip` (портативна) і звіряє SHA-256
+   зі `SHA256SUMS.txt`; без цих файлів автооновлення запропонує лише відкрити сторінку випуску.
 
 ## 6. Як люди встановлюють
 
