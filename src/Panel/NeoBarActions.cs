@@ -218,6 +218,14 @@ sealed partial class NeoBar
         return h.Collapsed ? 0f : 1f;
     }
 
+    // компактна панель має довжину за вмістом: коли група розгорнулась/згорнулась, вікно одразу підлаштовується
+    void FitCompact()
+    {
+        if (!IsHandleCreated || !Rounded) return;
+        PlaceWindow();
+        UpdateShape();
+    }
+
     bool GroupAnimating(Entry h) { return h != null && grpT.ContainsKey(h); }
 
     void ToggleGroup(Entry e)
@@ -241,6 +249,7 @@ sealed partial class NeoBar
                         if (Math.Abs(tg - v) < 0.09f) grpT.Remove(h); else grpT[h] = v;
                     }
                     DoLayout();
+                    FitCompact();
                     ClampScroll();
                     Invalidate();
                     if (grpT.Count == 0) { grpTimer.Stop(); BuildFolderIcons(); if (IsHandleCreated) Trim(); }
@@ -249,6 +258,7 @@ sealed partial class NeoBar
             grpTimer.Start();
         }
         DoLayout();
+        FitCompact();
         BuildFolderIcons();
         ClampScroll();
         hover = -1;

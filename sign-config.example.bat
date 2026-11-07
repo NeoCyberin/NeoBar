@@ -5,7 +5,7 @@ rem (for Certum: insert the card, proCertum CardManager registers the certificat
 
 rem Either the certificate thumbprint (preferred, exact):
 set "SIGN_THUMBPRINT="
-rem ...or the subject name as shown in the certificate (e.g. Open Source Developer, Vadym ...):
+rem ...or the subject name as shown in the certificate (e.g. Open Source Developer, NeoCyberin ...):
 set "SIGN_SUBJECT="
 
 rem Timestamp server of your certificate authority (signature stays valid after the certificate expires)

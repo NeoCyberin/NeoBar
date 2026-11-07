@@ -1,7 +1,7 @@
 ﻿# NeoBar: create a SELF-SIGNED code signing certificate for the current Windows user
 # and write sign-config.bat so that release.bat / sign.bat use it.
 # Run through make-cert.bat. Nothing leaves this computer.
-param([string]$Name = "NeoBar (self-signed)", [int]$Years = 5)
+param([string]$Name = "NeoCyberin", [int]$Years = 5)
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
