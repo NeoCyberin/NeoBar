@@ -821,7 +821,7 @@ sealed class DeskClock : LayeredForm
             g.DrawString(L.T("Монітор системи (") + string.Join(", ", hn.ToArray()) + ")", ft, bs, new RectangleF(U(8), U(6), sz.Width - U(16), U(20)), cf);
             string cpuSub = float.IsNaN(Sensors.CpuTemp) ? "" : Sensors.F0(Sensors.CpuTemp, "°");
             string ramSub = Sensors.RamTotalGb > 0 ? Sensors.RamUsedGb.ToString("0.0", Widgets.UK) + " / " + Sensors.RamTotalGb.ToString("0.0", Widgets.UK) + L.T(" ГБ") : "";
-            string gpuSub = !float.IsNaN(Sensors.GpuTemp) ? Sensors.F0(Sensors.GpuTemp, "°") :
+            string gpuSub = !float.IsNaN(Sensors.GpuTemp) ? Sensors.F0(Sensors.GpuTemp, "°") + (float.IsNaN(Sensors.Hotspot) ? "" : " (hotspot " + Sensors.F0(Sensors.Hotspot, "°") + ")") :
                             (Sensors.VramTotalGb > 0 ? Sensors.VramUsedGb.ToString("0.0", Widgets.UK) + " / " + Sensors.VramTotalGb.ToString("0", Widgets.UK) + L.T(" ГБ") : "");
             int ry = U(28), step = U(38);
             if (ps[0]) { PerfRow(g, p, kk, ry, L.T("ЦП"), Sensors.Cpu, cpuSub, sz.Width, fv, fs, lf, rf, bf, bs); ry += step; }
