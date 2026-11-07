@@ -10020,3 +10020,75 @@
 
 < У вас остання версія ({0}).
 > You have the latest version ({0}).
+
+< Диспетчер пристроїв
+> Device Manager
+
+< Керування дисками
+> Disk Management
+
+< Редактор реєстру
+> Registry Editor
+
+< Конфігурація системи
+> System Configuration
+
+< Перегляд подій
+> Event Viewer
+
+< Планувальник завдань
+> Task Scheduler
+
+< Керування комп'ютером
+> Computer Management
+
+< Монітор ресурсів
+> Resource Monitor
+
+< Системний монітор
+> Performance Monitor
+
+< Відомості про систему
+> System Information
+
+< Діагностика DirectX
+> DirectX Diagnostics
+
+< Очищення диска
+> Disk Cleanup
+
+< Оптимізація дисків
+> Optimize Drives
+
+< Мережеві підключення
+> Network Connections
+
+< Електроживлення
+> Power Options
+
+< Дата й час
+> Date and Time
+
+< Властивості системи
+> System Properties
+
+< Облікові записи користувачів
+> User Accounts
+
+< Віддалений робочий стіл
+> Remote Desktop
+
+< Таблиця символів
+> Character Map
+
+< Екранна клавіатура
+> On-Screen Keyboard
+
+< Екранна лупа
+> Magnifier
+
+< вже додано
+> already added
+
+< Швидкий доступ до Цей ПК, Кошика, особистої папки, системних утиліт та інших місць Windows.
+> Quick access to This PC, Recycle Bin, your personal folder, system tools and other places in Windows.
