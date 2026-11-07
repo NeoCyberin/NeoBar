@@ -223,6 +223,9 @@ sealed partial class NeoBar
     static Bitmap LoadFileIcon(string path, int px)
     {
         string ext = Path.GetExtension(path).ToLowerInvariant();
+        // великий розмір з файлу (exe, ico, ярлик): панель сама стисне його чітко, а не розтягне 32 px
+        Bitmap hi = IconHi.FromFile(path);
+        if (hi != null) return hi;
         if (ext == ".ico")
         {
             using (Icon ic = new Icon(path, new Size(px, px))) return ic.ToBitmap();
