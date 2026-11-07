@@ -382,6 +382,7 @@ sealed partial class SettingsForm : Form, IGradHost
     {
         s = (s ?? "").Trim();
         if (s.Length == 0 || s.StartsWith("theme:", StringComparison.OrdinalIgnoreCase)) return s;
+        s = Util.ImportIcon(s);          // картинку з Робочого столу тощо копіюємо в icons - щоб не загубити
         string rel = Util.ToRelative(s);
         return rel != s ? rel : Util.Collapse(s);
     }
