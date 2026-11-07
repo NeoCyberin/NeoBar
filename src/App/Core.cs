@@ -587,8 +587,42 @@ static class Store
         return sb.ToString();
     }
 
+    // ярлики елементів копіюються в links (див. Util.ImportLink); true - щось змінилося
+    public static bool ImportLinks(List<Entry> list)
+    {
+        bool ch = false;
+        foreach (Entry e in list)
+        {
+            if (e.Kind != Kind.Item) continue;
+            string nt = Util.ImportLink(e.Target);
+            if (nt != e.Target) { e.Target = nt; ch = true; }
+        }
+        return ch;
+    }
+
+    static List<string> LinkRefs(string path)
+    {
+        List<string> r = new List<string>();
+        try
+        {
+            if (!File.Exists(path)) return r;
+            Cfg c0 = new Cfg();
+            List<Entry> l0 = new List<Entry>();
+            Load(path, c0, l0);
+            foreach (Entry e in l0)
+            {
+                string s = (e.Target ?? "").Trim();
+                if (e.Kind == Kind.Item && s.StartsWith(Util.LinksRef, StringComparison.OrdinalIgnoreCase) && !r.Contains(s)) r.Add(s);
+            }
+        }
+        catch { }
+        return r;
+    }
+
     public static void Save(string path, Cfg c, List<Entry> list)
     {
+        ImportLinks(list);
+        List<string> oldLinks = LinkRefs(path);            // ярлики, що були в попередньому файлі
         List<string> old = IconRefs(path);                 // іконки, що були в попередньому файлі
         File.WriteAllText(path, Serialize(c, list), new UTF8Encoding(true));
         try
@@ -599,6 +633,10 @@ static class Store
             foreach (string s in old)
                 if (!now.Exists(delegate (string x) { return string.Equals(x, s, StringComparison.OrdinalIgnoreCase); }))
                     Util.DeleteIconIfUnused(s);
+            // так само для копій ярликів
+            foreach (string s in oldLinks)
+                if (!list.Exists(delegate (Entry x) { return x.Kind == Kind.Item && string.Equals((x.Target ?? "").Trim(), s, StringComparison.OrdinalIgnoreCase); }))
+                    Util.DeleteLinkIfUnused(s);
         }
         catch { }
     }

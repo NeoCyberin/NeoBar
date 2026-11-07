@@ -910,6 +910,8 @@ sealed partial class NeoBar : Form
         cfg = new Cfg();
         entries = new List<Entry>();
         Store.Load(cfgPath, cfg, entries);
+        // ярлики, що ще лежать на Робочому столі чи деінде, копіюємо в links - щоб панель не зламалась, коли їх видалять
+        if (Store.ImportLinks(entries)) try { Store.Save(cfgPath, cfg, entries); } catch { }
         if (firstLoad && Seasons.Expire(cfg)) try { Store.Save(cfgPath, cfg, entries); } catch { }   // святкова тема відслужила
         ApplyTheme();
         themeDirty = true;
