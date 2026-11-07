@@ -10167,3 +10167,24 @@
 
 < Буде прибрано ігор зі списку: {0}. Це ті, чиїх тек уже немає на диску. Самі файли не чіпаються, а налаштування цих ігор буде втрачено.
 > {0} jogo(s) serão removidos da lista. As pastas deles não existem mais no disco. Os arquivos não são tocados, mas as configurações desses jogos serão perdidas.
+
+< Температури в треї
+> Temperaturas na bandeja
+
+< Температура ЦП
+> Temperatura da CPU
+
+< Температура ГП
+> Temperatura da GPU
+
+< Температура ГП: hotspot
+> Temperatura da GPU: hotspot
+
+< Окремий значок біля годинника Windows із числом у градусах. Для температури процесора часто потрібні права адміністратора.
+> Um ícone separado perto do relógio do Windows com o número em graus. A temperatura da CPU muitas vezes exige direitos de administrador.
+
+< Окремий значок біля годинника Windows із числом у градусах.
+> Um ícone separado perto do relógio do Windows com o número em graus.
+
+< Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).
+> O ponto mais quente do chip gráfico; nem toda placa o informa (o ícone mostra então um traço).

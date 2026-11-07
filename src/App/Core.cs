@@ -117,6 +117,9 @@ sealed class Cfg
     public string Country = "";        // код країни місця (для свят), визначається автоматично
     public bool Fahrenheit, Clock24 = true, ClockSec;
     public bool PerfCpu = true, PerfGpu = true, PerfRam = true;
+    // температури в треї: окремий значок на кожну, зі своїм кольором
+    public bool TrayCpu, TrayGpu, TrayHot;
+    public Color TrayCpuCol = Color.FromArgb(70, 170, 255), TrayGpuCol = Color.FromArgb(90, 200, 110), TrayHotCol = Color.FromArgb(255, 150, 60);
     public bool Welcomed, QuickDone;      // QuickDone - швидке налаштування вже показано
     // свята
     public string EasterRite = "";        // Великдень для святкової теми: "" - за країною, "orthodox" - православний, "catholic" - католицький
@@ -363,6 +366,12 @@ static class Store
             case "fahrenheit": cfg.Fahrenheit = B(val); break;
             case "clock24": cfg.Clock24 = B(val); break;
             case "clocksec": cfg.ClockSec = B(val); break;
+            case "traycpu": cfg.TrayCpu = B(val); break;
+            case "traygpu": cfg.TrayGpu = B(val); break;
+            case "trayhot": cfg.TrayHot = B(val); break;
+            case "traycpucol": col = Util.ParseColor(val); if (!col.IsEmpty) cfg.TrayCpuCol = col; break;
+            case "traygpucol": col = Util.ParseColor(val); if (!col.IsEmpty) cfg.TrayGpuCol = col; break;
+            case "trayhotcol": col = Util.ParseColor(val); if (!col.IsEmpty) cfg.TrayHotCol = col; break;
             case "perfcpu": cfg.PerfCpu = B(val); break;
             case "perfgpu": cfg.PerfGpu = B(val); break;
             case "perfram": cfg.PerfRam = B(val); break;
@@ -545,6 +554,12 @@ static class Store
         sb.AppendLine("@fahrenheit " + Yn(c.Fahrenheit));
         sb.AppendLine("@clock24 " + Yn(c.Clock24));
         sb.AppendLine("@clocksec " + Yn(c.ClockSec));
+        sb.AppendLine("@traycpu " + Yn(c.TrayCpu));
+        sb.AppendLine("@traygpu " + Yn(c.TrayGpu));
+        sb.AppendLine("@trayhot " + Yn(c.TrayHot));
+        sb.AppendLine("@traycpucol " + Util.Hex(c.TrayCpuCol));
+        sb.AppendLine("@traygpucol " + Util.Hex(c.TrayGpuCol));
+        sb.AppendLine("@trayhotcol " + Util.Hex(c.TrayHotCol));
         sb.AppendLine("@perfcpu " + Yn(c.PerfCpu));
         sb.AppendLine("@perfgpu " + Yn(c.PerfGpu));
         sb.AppendLine("@perfram " + Yn(c.PerfRam));

@@ -10167,3 +10167,24 @@
 
 < Буде прибрано ігор зі списку: {0}. Це ті, чиїх тек уже немає на диску. Самі файли не чіпаються, а налаштування цих ігор буде втрачено.
 > Ze seznamu bude odebráno her: {0}. Jejich složky už na disku neexistují. Samotné soubory se nemění, ale nastavení těchto her bude ztraceno.
+
+< Температури в треї
+> Teploty v oznamovací oblasti
+
+< Температура ЦП
+> Teplota procesoru
+
+< Температура ГП
+> Teplota grafické karty
+
+< Температура ГП: hotspot
+> Teplota grafické karty: hotspot
+
+< Окремий значок біля годинника Windows із числом у градусах. Для температури процесора часто потрібні права адміністратора.
+> Samostatná ikona vedle hodin Windows s číslem ve stupních. Teplota procesoru často vyžaduje práva správce.
+
+< Окремий значок біля годинника Windows із числом у градусах.
+> Samostatná ikona vedle hodin Windows s číslem ve stupních.
+
+< Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).
+> Nejžhavější bod grafického čipu; ne každá karta ho hlásí (ikona pak ukazuje pomlčku).

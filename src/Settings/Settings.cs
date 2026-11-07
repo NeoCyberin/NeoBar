@@ -70,6 +70,9 @@ sealed partial class SettingsForm : Form, IGradHost
     SCombo cbSide, cbMonitor, cbMode;
     SNum nW, nGap;
     CheckBox chCompact, chFs, chAuto, chSearch, chHot, chFiles, chAdmin;
+    CheckBox[] chTray = new CheckBox[3];                  // температури в треї: ЦП, ГП, hotspot
+    Button[] bTrayCol = new Button[3];
+    Color[] trayCol = new Color[3];
     HotkeyBox hkSearch;
     CheckBox chSuggest, chWelcome, chUpd;
     Label lHkSearch;
