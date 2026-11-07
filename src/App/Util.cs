@@ -316,6 +316,46 @@ static partial class Util
         return p;
     }
 
+    // Власна картинка-іконка зберігається в папці icons поруч із програмою, щоб її не втратити, якщо
+    // оригінал (з Робочого столу, Завантажень…) видалять. Повертає шлях до копії або вихідне значення.
+    // .exe/.dll не копіюються: з них іконка береться «наживо».
+    public static string ImportIcon(string spec)
+    {
+        try
+        {
+            string s = (spec ?? "").Trim().Trim('"');
+            if (s.Length == 0 || s.StartsWith("theme:", StringComparison.OrdinalIgnoreCase) || IsUrl(s)) return spec;
+            if (!Path.IsPathRooted(s) && s.IndexOf('%') < 0) return spec;             // уже відносний шлях (у папці програми)
+            string ext = Path.GetExtension(s).ToLowerInvariant();
+            if (ext != ".png" && ext != ".jpg" && ext != ".jpeg" && ext != ".bmp" && ext != ".ico" && ext != ".gif") return spec;
+            string src = Path.GetFullPath(Environment.ExpandEnvironmentVariables(s));
+            string bd = AppDomain.CurrentDomain.BaseDirectory;
+            if (src.StartsWith(bd, StringComparison.OrdinalIgnoreCase)) return spec;
+            FileInfo fi = new FileInfo(src);
+            if (!fi.Exists || fi.Length > 20 * 1024 * 1024) return spec;
+            string dir = Path.Combine(bd, "icons");
+            Directory.CreateDirectory(dir);
+            string name = Path.GetFileNameWithoutExtension(src), dest = null;
+            byte[] data = File.ReadAllBytes(src);
+            for (int i = 1; i < 100; i++)
+            {
+                string cand = Path.Combine(dir, name + (i == 1 ? "" : "-" + i) + ext);
+                if (!File.Exists(cand)) { File.WriteAllBytes(cand, data); dest = cand; break; }
+                FileInfo ci = new FileInfo(cand);
+                if (ci.Length == data.Length && SameBytes(File.ReadAllBytes(cand), data)) { dest = cand; break; }     // така сама копія вже є
+            }
+            return dest != null ? ToRelative(dest) : spec;
+        }
+        catch { return spec; }
+    }
+
+    static bool SameBytes(byte[] a, byte[] b)
+    {
+        if (a.Length != b.Length) return false;
+        for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
+        return true;
+    }
+
     public static string ToRelative(string file)
     {
         string b = AppDomain.CurrentDomain.BaseDirectory;
