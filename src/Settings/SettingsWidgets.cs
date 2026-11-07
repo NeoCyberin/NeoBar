@@ -74,7 +74,9 @@ sealed partial class SettingsForm
     {
         inactive.Clear();
         foreach (string[] it in WidgetCatalog.Items)
-            if (WidgetOf(it[0]) == null) inactive.Add(it[0]);
+            if (WidgetOf(it[0]) == null && CanUse(it[0])) inactive.Add(it[0]);
+        foreach (string[] it in WidgetCatalog.Items)           // недоступні (напр. батарея на ПК) - в самому кінці
+            if (WidgetOf(it[0]) == null && !CanUse(it[0])) inactive.Add(it[0]);
     }
 
     // рядки: активні віджети, неактивні, автороздільник, решта

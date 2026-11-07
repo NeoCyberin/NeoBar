@@ -363,6 +363,10 @@ static class Store
             if (e.Kind == Kind.Widget) w.Add(e); else rest.Add(e);
         }
         if (w.Count > 0) while (rest.Count > 0 && rest[0].Kind == Kind.Separator) rest.RemoveAt(0);   // роздільник уже є автоматичний
+        // спершу показані на панелі, потім приховані (порядок усередині кожної групи зберігається)
+        List<Entry> shown = new List<Entry>(), hid = new List<Entry>();
+        foreach (Entry e in w) (e.Off ? hid : shown).Add(e);
+        w.Clear(); w.AddRange(shown); w.AddRange(hid);
         list.Clear();
         list.AddRange(w);
         if (w.Count > 0) { Entry s = new Entry(); s.Kind = Kind.Separator; s.Auto = true; list.Add(s); }
