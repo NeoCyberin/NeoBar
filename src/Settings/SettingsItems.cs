@@ -53,15 +53,22 @@ sealed partial class SettingsForm
                 l.Items.Add(items[hi], dup || preCheck);
             }
             int bh = SUi.S(36), by = H - p - bh;
-            card.SetBounds(p, p + SUi.S(46), W - p * 2, by - SUi.S(14) - (p + SUi.S(46)));
-            l.SetBounds(SUi.S(6), SUi.S(6), card.Width - SUi.S(12), card.Height - SUi.S(12));
             Button all = Bt(L.T("Усі"), "ghost g:check", 84, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, true); });
             Button none = Bt(L.T("Жодного"), "ghost g:close", 104, delegate { for (int i = 0; i < l.Items.Count; i++) l.SetChecked(i, have != null && i < have.Count && have[i]); });
             Button ok = have != null ? Bt(L.T("Застосувати"), "primary g:check", 130, null) : Bt(L.T("Додати"), "primary g:plus", 116, null);
             ok.DialogResult = DialogResult.OK;
             Button cancel = Bt(L.T("Скасувати"), "", 116, null);
             cancel.DialogResult = DialogResult.Cancel;
-            foreach (Button b in new Button[] { all, none, ok, cancel }) f.Controls.Add(b);
+            // кнопки підлаштовуються під текст (переклади бувають довшими), діалог розширюється, якщо вони не вміщаються
+            foreach (Button b in new Button[] { all, none, ok, cancel })
+            {
+                f.Controls.Add(b);
+                b.Width = Math.Max(b.Width, TextRenderer.MeasureText(b.Text, f.Font).Width + SUi.S(64));
+            }
+            int need = all.Width + none.Width + ok.Width + cancel.Width + SUi.S(6 + 8 + 16) + p * 2;
+            if (need > W) { f.ClientSize = new Size(need, H); W = need; lh.Width = W - p * 2; }
+            card.SetBounds(p, p + SUi.S(46), W - p * 2, by - SUi.S(14) - (p + SUi.S(46)));
+            l.SetBounds(SUi.S(6), SUi.S(6), card.Width - SUi.S(12), card.Height - SUi.S(12));
             all.SetBounds(p, by, all.Width, bh);
             none.SetBounds(all.Right + SUi.S(6), by, none.Width, bh);
             cancel.SetBounds(W - p - cancel.Width, by, cancel.Width, bh);
