@@ -917,6 +917,32 @@ sealed partial class NeoBar
         Invalidate();
     }
 
+    // зміна порядку всередині групи (з вікна групи): k стає перед before, null - у кінець групи
+    public void MoveWithinGroup(Entry head, Entry k, Entry before)
+    {
+        if (k == before) return;
+        int from = entries.IndexOf(k);
+        if (from < 0 || k.Head != head) return;
+        if (before != null && before.Head != head) return;
+        entries.RemoveAt(from);
+        int at;
+        if (before != null) at = entries.IndexOf(before);
+        else
+        {
+            at = entries.IndexOf(head) + 1;
+            while (at < entries.Count && entries[at].Kind == Kind.Item) at++;
+        }
+        if (at < 0) at = entries.Count;
+        if (at == from) { entries.Insert(from, k); return; }          // на те саме місце
+        entries.Insert(at, k);
+        hover = -1;
+        DoLayout();
+        BuildFolderIcons();
+        RebuildDiskIds();
+        SaveCfg();
+        Invalidate();
+    }
+
     // група під курсором (заголовок або плитка згорнутої групи) і слот у ній: до кінця групи або одразу за заголовком
     int GroupSlotAt(Point p, out Entry grp)
     {

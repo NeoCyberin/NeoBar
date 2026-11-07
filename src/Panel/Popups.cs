@@ -198,6 +198,8 @@ sealed class FlyoutForm : Form
                 TextRenderer.DrawText(g, k.Name, f, new Rectangle(cr.X + Px(3), r.Y + Px(8) + sl + 1, cr.Width - Px(6), f.Height + 2), txt,
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
         }
+        if (dragStarted && dropSlot >= 0 && kids.Count > 0)
+            using (SolidBrush lb = new SolidBrush(col)) g.FillRectangle(lb, SlotLine(dropSlot));
         using (Pen ep = new Pen(Color.FromArgb(200, t.Edge), Math.Max(1, Px(t.EdgeW))))
         {
             if (t.Radius > 1 && !t.Sketchy)
@@ -212,9 +214,31 @@ sealed class FlyoutForm : Form
         return Head.GroupColor.IsEmpty ? Util.Opaque(t.Accent) : Head.GroupColor;
     }
 
-    int downCell = -1;
+    int downCell = -1, dropSlot = -1;
     Point downAt;
     bool dragStarted;
+
+    // слот вставки в межах групи (0..kids.Count) за положенням курсора
+    int SlotAtPoint(Point p)
+    {
+        int n = kids.Count;
+        if (n == 0) return 0;
+        int row = Math.Max(0, Math.Min(rows - 1, (p.Y - pad - titleH) / cellH));
+        int col = Math.Max(0, Math.Min(cols - 1, (p.X - pad) / cellW));
+        int idx = row * cols + col;
+        if (idx >= n) return n;
+        Rectangle r = CellRect(idx);
+        return p.X > r.X + r.Width / 2 ? idx + 1 : idx;
+    }
+
+    Rectangle SlotLine(int s)
+    {
+        int n = kids.Count;
+        int idx = Math.Min(s, n - 1);
+        Rectangle r = CellRect(Math.Max(0, idx));
+        int x = s >= n ? r.Right : r.X;
+        return new Rectangle(x - Px(1), r.Y + Px(4), Math.Max(2, Px(3)), r.Height - Px(8));
+    }
 
     protected override void OnMouseDown(MouseEventArgs e)
     {
@@ -233,11 +257,23 @@ sealed class FlyoutForm : Form
             if (Math.Abs(e.X - downAt.X) >= ds.Width || Math.Abs(e.Y - downAt.Y) >= ds.Height)
             {
                 dragStarted = true;
+                Capture = true;
+                Cursor = Cursors.SizeAll;
+            }
+        }
+        if (dragStarted && downCell >= 0 && downCell < kids.Count)
+        {
+            if (!ClientRectangle.Contains(e.Location))
+            {
+                // вийшли за межі вікна групи - далі елемент несе панель (інша група чи інше місце)
                 Entry k = kids[downCell];
                 owner.BeginDragFromFlyout(k);
                 Close();
                 return;
             }
+            int s = SlotAtPoint(e.Location);
+            if (s != dropSlot) { dropSlot = s; Invalidate(); }
+            return;
         }
         int i = HitCell(e.Location);
         if (i == hover) return;
@@ -256,6 +292,19 @@ sealed class FlyoutForm : Form
     protected override void OnMouseUp(MouseEventArgs e)
     {
         base.OnMouseUp(e);
+        if (dragStarted && downCell >= 0 && downCell < kids.Count)
+        {
+            // відпустили всередині вікна групи - змінити порядок у групі
+            Entry moved = kids[downCell];
+            Entry before = dropSlot >= 0 && dropSlot < kids.Count ? kids[dropSlot] : null;
+            int slot = dropSlot;
+            downCell = -1; dragStarted = false; dropSlot = -1;
+            Capture = false;
+            Cursor = Cursors.Default;
+            if (slot >= 0) owner.MoveWithinGroup(Head, moved, before);
+            Invalidate();
+            return;
+        }
         downCell = -1;
         if (dragStarted) return;
         int i = HitCell(e.Location);
