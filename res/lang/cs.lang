@@ -10161,3 +10161,9 @@
 
 < Буде прибрано елементів: {0}. Це ті, чиїх програм чи файлів уже немає на диску. Самі програми не чіпаються.
 > Položek k odebrání: {0}. Jsou to ty, jejichž programy nebo soubory už na disku nejsou. Samotné programy se nijak nemění.
+
+< Зниклих ігор немає.
+> Žádné chybějící hry.
+
+< Буде прибрано ігор зі списку: {0}. Це ті, чиїх тек уже немає на диску. Самі файли не чіпаються, а налаштування цих ігор буде втрачено.
+> Ze seznamu bude odebráno her: {0}. Jejich složky už na disku neexistují. Samotné soubory se nemění, ale nastavení těchto her bude ztraceno.

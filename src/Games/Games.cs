@@ -273,6 +273,18 @@ static class Games
         return added;
     }
 
+    // гру видалили: її теки вже немає на диску, який зараз підключений (відключена флешка чи мережа - не «зникла»)
+    public static bool IsGone(Game g)
+    {
+        try
+        {
+            string d = (g.Dir ?? "").Trim();
+            if (d.Length == 0 || !Gone.Reachable(d)) return false;
+            return !Directory.Exists(d);
+        }
+        catch { return false; }
+    }
+
     public static void AddManual(string dirOrExe)
     {
         Load();

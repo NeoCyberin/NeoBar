@@ -10161,3 +10161,9 @@
 
 < Буде прибрано елементів: {0}. Це ті, чиїх програм чи файлів уже немає на диску. Самі програми не чіпаються.
 > Items to be removed: {0}. These are the ones whose programs or files no longer exist on the disk. The programs themselves are not touched.
+
+< Зниклих ігор немає.
+> No missing games.
+
+< Буде прибрано ігор зі списку: {0}. Це ті, чиїх тек уже немає на диску. Самі файли не чіпаються, а налаштування цих ігор буде втрачено.
+> {0} game(s) will be removed from the list. Their folders no longer exist on the disk. The files themselves are not touched, and these games' settings will be lost.

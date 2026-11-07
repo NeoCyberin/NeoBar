@@ -21,6 +21,7 @@ sealed class GameRow
     public double Fps;                 // 0 - за частотою монітора
     public int MonHz;                  // частота монітора, на якому гра працювала востаннє (0 - невідомо)
     public string Ac = "";             // що знайдено: античіт, VAC тощо
+    public bool Gone;                  // теки гри вже немає на диску (гру видалили)
     public bool Integr { get { return IntRaw == 1 || (IntRaw < 0 && Ac.Length == 0); } }
 }
 
@@ -426,8 +427,9 @@ sealed class GameList : Panel
             // позначки праворуч
             int rx = hr.Right - Px(10);
             if (r.Ac.Length > 0) rx = Chip(g, rx, hr, "⚠", FormTheme.Warn);
+            if (r.Gone) rx = Chip(g, rx, hr, L.T("не знайдено"), FormTheme.Warn);
             Rectangle nr = new Rectangle(hr.X + Px(28), hr.Y, Math.Max(10, rx - hr.X - Px(34)), hh);
-            TextRenderer.DrawText(g, r.G.Name + "   ", Font, nr, FormTheme.Fg,
+            TextRenderer.DrawText(g, r.G.Name + "   ", Font, nr, r.Gone ? FormTheme.Sub : FormTheme.Fg,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
             if (sel)
             {

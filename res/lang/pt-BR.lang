@@ -10161,3 +10161,9 @@
 
 < Буде прибрано елементів: {0}. Це ті, чиїх програм чи файлів уже немає на диску. Самі програми не чіпаються.
 > Itens a remover: {0}. São aqueles cujos programas ou arquivos não existem mais no disco. Os programas em si não são alterados.
+
+< Зниклих ігор немає.
+> Nenhum jogo ausente.
+
+< Буде прибрано ігор зі списку: {0}. Це ті, чиїх тек уже немає на диску. Самі файли не чіпаються, а налаштування цих ігор буде втрачено.
+> {0} jogo(s) serão removidos da lista. As pastas deles não existem mais no disco. Os arquivos não são tocados, mas as configurações desses jogos serão perdidas.
