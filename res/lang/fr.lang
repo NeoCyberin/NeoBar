@@ -9981,3 +9981,42 @@
 
 < ОЗП 88%
 > RAM 88%
+
+< Оновлення
+> Mises à jour
+
+< Доступне оновлення NeoBar
+> Mise à jour de NeoBar disponible
+
+< Вийшла версія {0} (у вас {1}). Клікніть, щоб дізнатися більше.
+> La version {0} est disponible (installée : {1}). Cliquez pour en savoir plus.
+
+< Вийшла нова версія NeoBar: {0} (у вас {1}).\n\nПрограма не оновлюється сама: завантажте нову версію зі сторінки випуску.
+> Une nouvelle version de NeoBar est disponible : {0} (installée : {1}).\n\nL'application ne se met pas à jour seule : téléchargez la nouvelle version depuis la page de la publication.
+
+< Відкрити сторінку
+> Ouvrir la page
+
+< Пропустити цю версію
+> Ignorer cette version
+
+< Перевіряти оновлення
+> Rechercher les mises à jour
+
+< Під час запуску NeoBar дивиться на GitHub, чи вийшла новіша версія, і пропонує її завантажити. Сам нічого не завантажує й не встановлює.
+> Au démarrage, NeoBar consulte GitHub pour savoir si une version plus récente existe et propose de la télécharger. Il ne télécharge ni n'installe jamais rien de lui-même.
+
+< Перевірити зараз
+> Vérifier maintenant
+
+< Перевірити оновлення
+> Rechercher les mises à jour
+
+< Поточна версія: {0}
+> Version actuelle : {0}
+
+< Не вдалося перевірити оновлення. Перевірте інтернет і спробуйте пізніше.
+> Impossible de rechercher les mises à jour. Vérifiez la connexion Internet et réessayez plus tard.
+
+< У вас остання версія ({0}).
+> Vous avez la dernière version ({0}).

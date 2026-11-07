@@ -96,6 +96,7 @@ sealed class Cfg
     public int CornerGap = 48;         // автосховок: відступ від кутів екрана, px
     public bool ShowSearch = true;
     public bool FsHide = true;         // ховатися під час повноекранних програм
+    public bool UpdCheck = true;       // при запуску дивитися на GitHub, чи вийшла нова версія
     public bool Hotkeys = true;
     public bool SearchSuggest = true;       // пошук пропонує додати знайдені програми на панель
     public int SearchKey = (int)(System.Windows.Forms.Keys.S | System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Shift);   // гаряча клавіша пошуку
@@ -302,6 +303,7 @@ static class Store
                 break;
             case "search": cfg.ShowSearch = B(val); break;
             case "fshide": cfg.FsHide = B(val); break;
+            case "updcheck": cfg.UpdCheck = B(val); break;
             case "hotkeys": cfg.Hotkeys = B(val); break;
             case "searchsuggest": cfg.SearchSuggest = B(val); break;
             case "searchkey": { int sk; if (int.TryParse(val.Trim(), out sk) && sk != 0) cfg.SearchKey = sk; } break;
@@ -474,6 +476,7 @@ static class Store
         sb.AppendLine("@secwatch " + Yn(c.SecWatch));
         sb.AppendLine("@secused " + Yn(c.SecUsed));
         sb.AppendLine("@fshide " + Yn(c.FsHide));
+        sb.AppendLine("@updcheck " + Yn(c.UpdCheck));
         sb.AppendLine("@hotkeys " + Yn(c.Hotkeys));
         sb.AppendLine("@searchsuggest " + Yn(c.SearchSuggest));
         sb.AppendLine("@searchkey " + c.SearchKey);

@@ -969,6 +969,7 @@ sealed partial class NeoBar : Form
         CheckFullscreen();
         InitWidgetSystems();
         LocateAtStart();
+        try { Updater.StartupCheck(this); } catch { }
         try
         {
             Notes.Changed += delegate { foreach (Entry e in entries) e.Sig = ""; Invalidate(); };

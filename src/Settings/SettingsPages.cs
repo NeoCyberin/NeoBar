@@ -528,7 +528,30 @@ sealed partial class SettingsForm
 
         SPage right = new SPage();
         h.Controls.Add(right);
-        SCard k = right.Card(L.T("Перший запуск"));
+        SCard k = right.Card(L.T("Оновлення"));
+        chUpd = Tg();
+        k.Row(L.T("Перевіряти оновлення"), L.T("Під час запуску NeoBar дивиться на GitHub, чи вийшла новіша версія, і пропонує її завантажити. Сам нічого не завантажує й не встановлює."), chUpd);
+        Button bu = null;
+        bu = Bt(L.T("Перевірити зараз"), "g:refresh", 170, delegate
+        {
+            bu.Enabled = false;
+            Updater.CheckNow(delegate (string msg, string tag)
+            {
+                try
+                {
+                    BeginInvoke(new Action(delegate
+                    {
+                        bu.Enabled = true;
+                        if (tag != null) Updater.OfferFromSettings(owner, this, tag);
+                        else SbDialog.Show(owner, this, L.T("Оновлення"), msg, L.T("Гаразд"));
+                    }));
+                }
+                catch { }
+            });
+        });
+        k.Row(L.T("Перевірити оновлення"), L.F("Поточна версія: {0}", Updater.CurrentText), bu);
+
+        k = right.Card(L.T("Перший запуск"));
         chWelcome = Tg();
         k.Row(L.T("Вікно привітання"), L.T("Під час запуску, до появи панелі: перевірка системи й поради"), chWelcome);
         k.Row(L.T("Швидке налаштування"), L.T("Край екрана, режим, тема, віджети й пошук - в одному вікні (як під час першого запуску)"), Bt(L.T("Відкрити"), "g:view", 130, delegate { OpenQuick(); }));

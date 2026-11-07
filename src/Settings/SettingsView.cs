@@ -149,6 +149,7 @@ sealed partial class SettingsForm
         chHot.Checked = c.Hotkeys;
         chSuggest.Checked = c.SearchSuggest;
         chWelcome.Checked = !c.Welcomed;
+        chUpd.Checked = c.UpdCheck;
         searchKeyOk = (Keys)c.SearchKey;
         hkSearch.SetValue(searchKeyOk);
         hkSearch.Enabled = c.Hotkeys;
@@ -246,6 +247,7 @@ sealed partial class SettingsForm
         c.CornerGap = (int)nGap.Value;
         c.FsHide = chFs.Checked;
         c.SearchSuggest = chSuggest.Checked;
+        c.UpdCheck = chUpd.Checked;
         c.Hotkeys = chHot.Checked && (searchKeyOk & Keys.KeyCode) != Keys.None;
         if ((searchKeyOk & Keys.KeyCode) != Keys.None) c.SearchKey = (int)searchKeyOk;
         c.ShowSearch = chSearch.Checked;
