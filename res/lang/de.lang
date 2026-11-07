@@ -10078,8 +10078,8 @@
 < Екранна лупа
 > Bildschirmlupe
 
-< Швидкий доступ до Цей ПК, Кошика, особистої папки, системних утиліт та інших місць Windows.
-> Schnellzugriff auf Dieser PC, Papierkorb, den persönlichen Ordner, Systemprogramme und andere Orte in Windows.
+< Місця й утиліти Windows. Позначені вже є на панелі - зніміть галку, щоб їх прибрати.
+> Windows-Orte und -Hilfsprogramme. Markierte sind schon in der Leiste - Haken entfernen, um sie zu entfernen.
 
 < Вийшла версія {0} (у вас {1}). Клікніть, щоб оновити.
 > Version {0} ist erschienen (installiert: {1}). Zum Aktualisieren klicken.

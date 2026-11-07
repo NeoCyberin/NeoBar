@@ -10078,8 +10078,8 @@
 < Екранна лупа
 > Lupa
 
-< Швидкий доступ до Цей ПК, Кошика, особистої папки, системних утиліт та інших місць Windows.
-> Acceso rápido a Este equipo, la Papelera de reciclaje, la carpeta personal, las herramientas del sistema y otros lugares de Windows.
+< Місця й утиліти Windows. Позначені вже є на панелі - зніміть галку, щоб їх прибрати.
+> Ubicaciones y utilidades de Windows. Los marcados ya están en la barra: desmarque para quitarlos.
 
 < Вийшла версія {0} (у вас {1}). Клікніть, щоб оновити.
 > Ha salido la versión {0} (instalada: {1}). Haga clic para actualizar.
