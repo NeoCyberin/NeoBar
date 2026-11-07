@@ -23,7 +23,7 @@ sealed class ScreenPicker : Form
     Point cur = new Point(-100, -100);
     readonly Action<Color> pick;
     readonly Action end;
-    bool done;
+    bool done, disposed;
     bool downOk, isDown;     // кнопку натиснуто на піпетці: результат віддаємо лише після відпускання
     Color downColor;
     const int Cells = 11, Zoom = 11;
@@ -75,12 +75,14 @@ sealed class ScreenPicker : Form
 
     Color At(Point p)
     {
+        if (disposed) return Color.Black;       // вікно вже закрите: знімок звільнено
         if (p.X < 0 || p.Y < 0 || p.X >= shot.Width || p.Y >= shot.Height) return Color.Black;
         return Color.FromArgb(255, shot.GetPixel(p.X, p.Y));
     }
 
     protected override void OnPaint(PaintEventArgs e)
     {
+        if (disposed) return;
         Graphics g = e.Graphics;
         g.DrawImage(shot, e.ClipRectangle, e.ClipRectangle, GraphicsUnit.Pixel);
         if (cur.X < -50) return;
@@ -163,7 +165,7 @@ sealed class ScreenPicker : Form
 
     protected override void OnDeactivate(EventArgs e) { base.OnDeactivate(e); Finish(false); }
 
-    void Finish(bool ok) { Finish(ok, At(cur)); }
+    void Finish(bool ok) { if (done) return; Finish(ok, At(cur)); }
 
     void Finish(bool ok, Color c)
     {
@@ -177,6 +179,7 @@ sealed class ScreenPicker : Form
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         base.OnFormClosed(e);
+        disposed = true;
         shot.Dispose();
         if (end != null) end();
     }
