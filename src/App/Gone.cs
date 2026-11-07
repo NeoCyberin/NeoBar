@@ -61,7 +61,7 @@ static class Gone
     }
 
     // повний шлях на локальному диску, який зараз підключений: лише про такі можна впевнено сказати «немає»
-    static bool Reachable(string p)
+    public static bool Reachable(string p)
     {
         if (string.IsNullOrEmpty(p) || !Path.IsPathRooted(p) || p.StartsWith(@"\\")) return false;
         if (Util.SlowPath(p)) return false;

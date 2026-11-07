@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Text;
 using System.Windows.Forms;
 
 // ======================================================================
@@ -986,7 +987,8 @@ sealed partial class SettingsForm
             Games.Save();
             FillGames();
         });
-        SRow tr = top.Stacked(L.T("Ігри"), L.T("Клацніть гру, щоб розгорнути її налаштування. Оверлей увімкнено в усіх іграх. «Інтеграція в гру» (хуки, ліміт кадрів, показ у повноекрані) за замовчуванням увімкнена в іграх без античіта й вимкнена в іграх з ним. Ліміт кадрів вимкнено в усіх. «Власний вигляд оверлею» дає грі свій вигляд і набір показників."), bFind, bAdd, bRem);
+        Button bGoneG = Bt(L.T("Прибрати зниклі"), "ghost g:trash", 190, delegate { RemoveGoneGames(); });
+        SRow tr = top.Stacked(L.T("Ігри"), L.T("Клацніть гру, щоб розгорнути її налаштування. Оверлей увімкнено в усіх іграх. «Інтеграція в гру» (хуки, ліміт кадрів, показ у повноекрані) за замовчуванням увімкнена в іграх без античіта й вимкнена в іграх з ним. Ліміт кадрів вимкнено в усіх. «Власний вигляд оверлею» дає грі свій вигляд і набір показників."), bFind, bAdd, bRem, bGoneG);
         tr.Flex = -1;
         lLimStatus = Note();
         lLimStatus.ForeColor = FormTheme.Acc;
@@ -1006,6 +1008,25 @@ sealed partial class SettingsForm
             gl.SetBounds(0, th + S(12), r.Width, Math.Max(S(80), r.Height - th - S(12)));
         };
         top.NeedLayout += delegate { h.Relayout(); };
+    }
+
+    // видалені ігри (теки вже немає) лишаються в списку, поки користувач сам їх не прибере
+    void RemoveGoneGames()
+    {
+        SaveGames();
+        List<Game> gone = new List<Game>();
+        foreach (Game g in Games.List) if (Games.IsGone(g)) gone.Add(g);
+        if (gone.Count == 0) { LimMsg(L.T("Зниклих ігор немає.")); return; }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < gone.Count && i < 8; i++) sb.Append("\n• ").Append(gone[i].Name);
+        if (gone.Count > 8) sb.Append("\n…");
+        int k = SbDialog.Show(owner, this, L.T("Прибрати зниклі"),
+            L.F("Буде прибрано ігор зі списку: {0}. Це ті, чиїх тек уже немає на диску. Самі файли не чіпаються, а налаштування цих ігор буде втрачено.", gone.Count) + "\n" + sb.ToString(),
+            L.T("Прибрати"), L.T("Скасувати"));
+        if (k != 0) return;
+        foreach (Game g in gone) Games.List.Remove(g);
+        Games.Save();
+        FillGames();
     }
 
     // «Інтеграція в гру» для гри з античітом: попередження про ризик; вибір за користувачем
@@ -1035,6 +1056,7 @@ sealed partial class SettingsForm
             r.MonHz = g.MonHz;
             r.Mode = g.ModeSel == 0 || g.ModeSel == 1 ? g.ModeSel : 3;
             r.Ac = AntiCheat.ForGame(g);
+            r.Gone = Games.IsGone(g);
             rows.Add(r);
         }
         gl.SetRows(rows);
