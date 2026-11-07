@@ -10146,3 +10146,18 @@
 
 < Під час запуску NeoBar дивиться на GitHub, чи вийшла новіша версія, і пропонує оновитися. Завантажує й встановлює лише після вашої згоди.
 > On startup NeoBar checks GitHub for a newer version and offers to update. It downloads and installs only with your consent.
+
+< Не знайдено - програму чи гру, мабуть, видалено.
+> Not found - the program or game was probably uninstalled.
+
+< не знайдено
+> not found
+
+< Прибрати зниклі
+> Remove missing
+
+< Прибрати зниклі ({0})
+> Remove missing ({0})
+
+< Буде прибрано елементів: {0}. Це ті, чиїх програм чи файлів уже немає на диску. Самі програми не чіпаються.
+> Items to be removed: {0}. These are the ones whose programs or files no longer exist on the disk. The programs themselves are not touched.

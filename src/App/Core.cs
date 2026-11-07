@@ -30,6 +30,7 @@ sealed class Entry
     public string Sig = "";           // підпис віджета (для виявлення змін)
     public GroupSpan Gs;              // (розрахунок) смуга розгорнутої групи
     public Entry Head;                // (розрахунок) заголовок групи, до якої належить елемент
+    public bool Gone;                 // (розрахунок) програму чи файл видалено - елемент приглушується
     public List<Entry> Kids = new List<Entry>(); // (розрахунок) елементи групи
 
     public string Full
