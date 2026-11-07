@@ -227,6 +227,18 @@ sealed partial class SettingsForm
         lb.DragLeave += delegate { SetDropRow(-1); };
         lb.DragOver += delegate (object s, DragEventArgs e)
         {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                // файли з Провідника: лінія показує, куди потрапить програма (у групу чи між елементами)
+                Point fp = lb.PointToClient(new Point(e.X, e.Y));
+                if (fp.Y < 18) lb.ScrollBy(-SUi.S(10));
+                else if (fp.Y > lb.Height - 18) lb.ScrollBy(SUi.S(10));
+                int frow;
+                EntryDropIndex(fp, out frow);
+                SetDropRow(frow);
+                e.Effect = DragDropEffects.Copy;
+                return;
+            }
             string d = e.Data.GetData(DataFormats.Text) as string;
             if (d != null && d.StartsWith("sbentry:"))
             {
@@ -244,6 +256,15 @@ sealed partial class SettingsForm
         };
         lb.DragDrop += delegate (object s, DragEventArgs e)
         {
+            string[] fs = null;
+            try { fs = e.Data.GetData(DataFormats.FileDrop) as string[]; } catch { }
+            if (fs != null)
+            {
+                SetDropRow(-1);
+                Point dp = lb.PointToClient(new Point(e.X, e.Y));
+                BeginInvoke(new Action(delegate { AddFilesAt(fs, dp); }));     // Провідник чекає, поки ми приймемо файли
+                return;
+            }
             string d = e.Data.GetData(DataFormats.Text) as string;
             SetDropRow(-1);
             if (d != null && d.StartsWith("sbentry:")) { DropEntry(d, lb.PointToClient(new Point(e.X, e.Y))); return; }
@@ -266,6 +287,23 @@ sealed partial class SettingsForm
             list.Insert(Math.Max(0, Math.Min(at, Store.WidgetCount(list))), cur);
             RefreshSel(cur);
         };
+    }
+
+    // програми, папки й ярлики з Провідника: додаються туди, куди їх кинули
+    void AddFilesAt(string[] files, Point pt)
+    {
+        int row;
+        int at = EntryDropIndex(pt, out row);
+        Entry last = null;
+        foreach (string f in files)
+        {
+            string n = Directory.Exists(f) ? Path.GetFileName(f.TrimEnd('\\')) : Path.GetFileNameWithoutExtension(f);
+            if (string.IsNullOrEmpty(n)) n = f;
+            Entry e = MakeEntry(Kind.Item, n, Util.Collapse(f));
+            list.Insert(Math.Max(0, Math.Min(at++, list.Count)), e);
+            last = e;
+        }
+        if (last != null) RefreshSel(last);
     }
 
     void SetDropRow(int r)

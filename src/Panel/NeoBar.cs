@@ -295,6 +295,7 @@ sealed partial class NeoBar : Form
     protected override void OnShown(EventArgs e)
     {
         base.OnShown(e);
+        DropFiles.Register(this);          // повторно: після показу вікна стиль приймання файлів має стояти
         Trim();
         AfterShown();
         Seasons.Start(this);
@@ -461,6 +462,7 @@ sealed partial class NeoBar : Form
         string[] dropped = DropFiles.Take(ref m);
         if (dropped != null)
         {
+            SbLog.W(SbLog.Panel, "перетягування файлів на панель (WM_DROPFILES): " + dropped.Length);
             if (dropped.Length > 0) BeginInvoke(new Action(delegate { AddDropped(dropped, null, CursorDropSlot()); }));
             return;
         }

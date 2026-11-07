@@ -272,6 +272,22 @@ sealed partial class SettingsForm : Form, IGradHost
     {
         base.OnHandleCreated(e);
         FormTheme.Title(this);
+        DropFiles.Register(this);          // від адміністратора файли з Провідника приходять старим способом (WM_DROPFILES)
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        string[] dropped = DropFiles.Take(ref m);
+        if (dropped != null)
+        {
+            if (dropped.Length > 0 && lb != null && lb.Visible && lb.IsHandleCreated)
+            {
+                Point dp = lb.PointToClient(Cursor.Position);
+                BeginInvoke(new Action(delegate { AddFilesAt(dropped, dp); }));
+            }
+            return;
+        }
+        base.WndProc(ref m);
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
