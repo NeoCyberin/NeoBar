@@ -696,6 +696,25 @@ static class ClockData
         if (bar != null) bar.RefreshDataNeeds();
     }
 
+    // який віджет панелі «володіє» віджетом на столі цього виду
+    public static string OwnerOf(string deskKind)
+    {
+        switch (deskKind)
+        {
+            case "analog": case "timer": case "stopwatch": case "alarm": case "calendar": case "clockcal": return "clock";
+            case "fw": return "net";
+            case "trash": return "clean";
+            default: return deskKind;
+        }
+    }
+
+    // віджет прибрано з панелі («−» у налаштуваннях) - разом із його копіями на робочому столі
+    public static void RemoveDeskOf(string widgetKind)
+    {
+        foreach (DeskSpec d in new List<DeskSpec>(Desk))
+            if (OwnerOf(d.Kind) == widgetKind) RemoveDesk(d);
+    }
+
     // нова тема панелі - перемалювати віджети
     public static void RedrawKind(string kind)
     {

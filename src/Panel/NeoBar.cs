@@ -66,7 +66,7 @@ sealed partial class NeoBar : Form
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.Manual;
         TopMost = true;
-        AllowDrop = true;
+        DropFiles.Prepare(this);
         Text = "NeoBar";
 
         using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) scale = g.DpiX / 96f;
@@ -453,10 +453,17 @@ sealed partial class NeoBar : Form
         base.OnHandleCreated(e);
         // панель від адміністратора має отримати повідомлення й від звичайної копії (інакше UIPI його відкине)
         try { if (runMsg != 0) Win.ChangeWindowMessageFilterEx(Handle, runMsg, 1, IntPtr.Zero); } catch { }
+        DropFiles.Register(this);
     }
 
     protected override void WndProc(ref Message m)
     {
+        string[] dropped = DropFiles.Take(ref m);
+        if (dropped != null)
+        {
+            if (dropped.Length > 0) BeginInvoke(new Action(delegate { AddDropped(dropped, null); }));
+            return;
+        }
         if (runMsg != 0 && m.Msg == (int)runMsg)
         {
             BeginInvoke(new Action(delegate
@@ -590,7 +597,7 @@ sealed partial class NeoBar : Form
                 else if (++leave >= 3) { leave = 0; SetExpanded(false); }
             }
         }
-        if (pollN % 5 == 0 && cfg.FsHide) CheckFullscreen();
+        if (pollN % 5 == 0 && (cfg.FsHide || suspended)) CheckFullscreen();
     }
 
     int fsHits;
@@ -600,8 +607,10 @@ sealed partial class NeoBar : Form
         // гра й повноекранні програми, що повідомили про себе (AppBar), ховають панель одразу;
         // решту (повноекранне вікно, стан «не турбувати») підтверджує друга перевірка поспіль - короткі накладки
         // на кшталт знімка екрана панель не ховають
-        bool sure = cfg.FsHide && (fsAbn || Games.InForeground);
-        bool maybe = cfg.FsHide && !sure && (Nat.FullscreenBusy() || Nat.ForegroundCovers(true, IsHandleCreated ? Handle : IntPtr.Zero));
+        // опцію вимкнули, поки панель була схована - повернути її
+        if (!cfg.FsHide) { fsHits = 0; SetSuspended(false); return; }
+        bool sure = fsAbn || Games.InForeground;
+        bool maybe = !sure && (Nat.FullscreenBusy() || Nat.ForegroundCovers(true, IsHandleCreated ? Handle : IntPtr.Zero));
         fsHits = maybe ? fsHits + 1 : 0;
         SetSuspended(sure || (suspended ? maybe : fsHits >= 2));
     }
@@ -637,6 +646,7 @@ sealed partial class NeoBar : Form
         suspended = s;
         Paused = s;
         PauseDesk(s);
+        AfterReloadWidgets();      // датчики й пінг на паузу / знову працювати
         if (s)
         {
             // гра чи повноекранна програма: працює лише ігровий оверлей, решта на паузі

@@ -58,6 +58,7 @@ sealed partial class SettingsForm
     // кружок з перекресленням.
 
     readonly List<string> inactive = new List<string>();
+    readonly List<string> dropDesk = new List<string>();     // віджети, прибрані з панелі: їхні копії на столі видаляються при «Застосувати»
     readonly List<object> rows = new List<object>();     // рядок списку: Entry або string (вид віджета не на панелі)
     int lastReal = -1;
     Point wDownAt = Point.Empty;
@@ -302,10 +303,12 @@ sealed partial class SettingsForm
         if (cur != null)
         {
             list.Remove(cur);
+            if (!dropDesk.Contains(kind)) dropDesk.Add(kind);
             RefreshSel(kind);
             return;
         }
         if (!CanUse(kind)) return;
+        dropDesk.Remove(kind);
         Entry ne = WidgetEntry(kind);
         list.Insert(Store.WidgetCount(list), ne);
         RefreshSel(ne);
