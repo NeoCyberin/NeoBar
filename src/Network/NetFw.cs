@@ -104,6 +104,10 @@ static class Fw
     static DateTime ovAt = DateTime.MinValue;
     static int ovVal = -1;
 
+    // стан змінили (віджетом на столі або вікном «Мережа») - решта показів має перечитати його
+    public static int Rev;
+    public static void RaiseChanged() { Rev++; ovAt = DateTime.MinValue; }
+
     public static int Overall(bool fresh)
     {
         if (!fresh && (DateTime.Now - ovAt).TotalSeconds < 3) return ovVal;

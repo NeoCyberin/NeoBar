@@ -15,6 +15,7 @@ sealed partial class NetWindow
 {
     readonly bool[] fwOn = new bool[3], fwMan = new bool[3];
     bool fwRead, fwLoading, fwDenied, fwAsk;
+    int fwRev = Fw.Rev;                    // версія стану, яку показує вікно (змінюється, коли хтось інший перемкнув брандмауер)
     List<FwRule> fwRules = new List<FwRule>();
     readonly List<FwRule> fwView = new List<FwRule>();
     string fwViewKey = "";
@@ -40,6 +41,20 @@ sealed partial class NetWindow
     }
 
     // ---------- читання ----------
+    // раз на секунду: стан профілів міг змінитися поза вікном - віджетом на столі, Захисником Windows тощо
+    void FwSync()
+    {
+        if (!fwRead || fwLoading || busy) return;
+        if (fwRev != Fw.Rev) { fwRev = Fw.Rev; FwReload(); return; }
+        bool[] on = new bool[3], man = new bool[3];
+        if (!Fw.Read(on, man)) return;
+        bool diff = false;
+        for (int i = 0; i < 3; i++) if (on[i] != fwOn[i] || man[i] != fwMan[i]) diff = true;
+        if (!diff) return;
+        for (int i = 0; i < 3; i++) { fwOn[i] = on[i]; fwMan[i] = man[i]; }
+        Invalidate();
+    }
+
     void FwReload()
     {
         if (fwLoading) return;
@@ -116,6 +131,8 @@ sealed partial class NetWindow
                 if (t == null) Say(err, true);
                 else if (bad > 0) Say((ok > 0 ? L.T("Застосовано частково: ") : L.T("Не застосовано: ")) + fe, true);
                 else { Say(okMsg, false); if (goBack) { fwPage = 0; AdHide(); } }
+                Fw.RaiseChanged();
+                fwRev = Fw.Rev;
                 FwReload();
                 ClockData.RedrawKind("fw");
             });
