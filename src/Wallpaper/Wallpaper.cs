@@ -481,6 +481,7 @@ static class WallMgr
     static readonly Random rnd = new Random();
     static bool paused, inited, engine;
     static string msg = "", liveCmd;
+    static bool fadeIn;                     // перше зображення після Apply(true) з'являється з анімацією
     static int restarts, failChecks, ackTries;
     static DateTime restartWindow = DateTime.MinValue;
     public static string CurrentFile = "";
@@ -520,9 +521,13 @@ static class WallMgr
     }
 
     // застосувати поточні WallCfg (після запуску й після «Застосувати» в налаштуваннях)
-    public static void Apply()
+    public static void Apply() { Apply(false); }
+
+    // animate: нові шпалери змінюють поточні обраним переходом (якщо рушій уже показує зображення), а не різко
+    public static void Apply(bool animate)
     {
         Init();
+        fadeIn = animate && engine && WallEngine.Alive && CurrentFile.Length > 0 && liveCmd != null && !liveCmd.StartsWith("video");
         Stop(false);
         msg = "";
         CurrentFile = "";
@@ -653,7 +658,8 @@ static class WallMgr
             msg += L.T(" - зображення поставлено засобами Windows; після виходу з NeoBar повернуться попередні шпалери");
             return;
         }
-        liveCmd = "image\t" + f + "\t" + WallCfg.Fit + "\t-1\t" + WallCfg.TransMs;
+        liveCmd = "image\t" + f + "\t" + WallCfg.Fit + "\t" + (fadeIn && WallCfg.Fx > 0 ? WallCfg.Fx - 1 : -1) + "\t" + WallCfg.TransMs;
+        fadeIn = false;
         WallEngine.Send(liveCmd);
         CurrentFile = f;
         tick.Start();
@@ -678,7 +684,8 @@ static class WallMgr
             msg += L.T(" - слайд-шоу йде засобами Windows, без анімацій");
         }
         idx = -1;
-        Next(false);
+        Next(fadeIn);
+        fadeIn = false;
         tick.Start();
         string head = L.T("Слайдів: ") + files.Count;
         msg = msg.Length > 0 ? head + "\n" + msg : head;

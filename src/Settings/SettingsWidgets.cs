@@ -454,15 +454,19 @@ sealed partial class SettingsForm
         FillWall();
     }
 
-    void ApplyStatics()
+    // all - «Готово»: застосувати все; інакше («Застосувати») - лише оверлей і шпалери з їхніх вкладок
+    void ApplyStatics(bool all)
     {
-        ApplyOverlay();
-        ApplyWall();
-        SaveGames();
-        // вигляд для гри, що зараз на екрані (загальний або власний)
-        bool ed = OverlayCfg.Editing; OverlayCfg.Editing = false;
-        try { OverlayCfg.UseGame(Games.Current); } catch { }
-        OverlayCfg.Editing = ed;
+        if (all || OnPage(PgOverlay))
+        {
+            ApplyOverlay();
+            SaveGames();
+            // вигляд для гри, що зараз на екрані (загальний або власний)
+            bool ed = OverlayCfg.Editing; OverlayCfg.Editing = false;
+            try { OverlayCfg.UseGame(Games.Current); } catch { }
+            OverlayCfg.Editing = ed;
+        }
+        if (all || OnPage(PgWall)) ApplyWall(all);
         // повторне збереження з урахуванням ігор і оверлея
         try { Store.Save(owner.CfgPath, c, list); } catch { }
     }

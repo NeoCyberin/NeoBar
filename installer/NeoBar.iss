@@ -3,7 +3,7 @@
 ; тому тека має бути доступна для запису - Program Files для цього не годиться.
 
 #define AppName "NeoBar"
-#define AppVersion "1.4.8"
+#define AppVersion "1.4.9"
 #define AppPublisher "NeoCyberin"
 #define AppExe "NeoBar.exe"
 #ifndef SrcDir
