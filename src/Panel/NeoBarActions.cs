@@ -94,6 +94,7 @@ sealed partial class NeoBar
         bool ok = e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.Text);
         e.Effect = ok ? DragDropEffects.Copy : DragDropEffects.None;
         dragOver = true;
+        SbLog.W(SbLog.Panel, "перетягування над панеллю (OLE)");
         if (autohide) SetExpanded(true);
     }
 

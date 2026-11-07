@@ -16,7 +16,10 @@ static class DropFiles
     [DllImport("shell32.dll")] static extern void DragAcceptFiles(IntPtr h, bool accept);
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern uint DragQueryFile(IntPtr hDrop, uint i, StringBuilder buf, int cch);
     [DllImport("shell32.dll")] static extern void DragFinish(IntPtr hDrop);
-    [DllImport("user32.dll")] static extern bool ChangeWindowMessageFilter(uint msg, uint flag);
+    [DllImport("user32.dll", SetLastError = true)] static extern bool ChangeWindowMessageFilter(uint msg, uint flag);
+    [DllImport("user32.dll", SetLastError = true)] static extern bool ChangeWindowMessageFilterEx(IntPtr h, uint msg, uint action, IntPtr info);
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongW")] static extern int GetExStyleLong(IntPtr h, int i);
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongW")] static extern int SetExStyleLong(IntPtr h, int i, int v);
 
     // чи вікно приймає файли через WM_DROPFILES (замість OLE)
     public static bool Legacy { get { return elevated; } }
@@ -27,18 +30,27 @@ static class DropFiles
         c.AllowDrop = !elevated;
     }
 
-    // в OnHandleCreated вікна
+    // в OnHandleCreated вікна (і повторно, коли вікно показали: ця дія безпечна й кількаразова)
     public static void Register(Control c)
     {
         if (!elevated) return;
         try
         {
+            IntPtr h = c.Handle;
+            string log = c.GetType().Name + ": ";
             foreach (uint msg in new uint[] { WM_DROPFILES, 0x4A, 0x49 })            // WM_DROPFILES, WM_COPYDATA, WM_COPYGLOBALDATA
             {
-                try { ChangeWindowMessageFilter(msg, 1); } catch { }
-                try { Win.ChangeWindowMessageFilterEx(c.Handle, msg, 1, IntPtr.Zero); } catch { }
+                bool a = false, b = false;
+                try { a = ChangeWindowMessageFilter(msg, 1); } catch { }
+                try { b = ChangeWindowMessageFilterEx(h, msg, 1, IntPtr.Zero); } catch { }
+                log += "0x" + msg.ToString("X") + (a ? " +" : " -") + (b ? "+" : "-") + "; ";
             }
-            DragAcceptFiles(c.Handle, true);
+            DragAcceptFiles(h, true);
+            // прапорець WS_EX_ACCEPTFILES (0x10) має стояти на вікні: якщо щось його зняло - ставимо самі
+            int ex = GetExStyleLong(h, -20);
+            if ((ex & 0x10) == 0) { SetExStyleLong(h, -20, ex | 0x10); ex = GetExStyleLong(h, -20); }
+            log += "exstyle 0x" + ex.ToString("X");
+            SbLog.W(SbLog.Panel, "перетягування файлів (від адміністратора), фільтр UIPI: " + log);
         }
         catch { }
     }
