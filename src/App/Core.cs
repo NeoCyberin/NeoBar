@@ -559,7 +559,37 @@ static class Store
 
     public static void Save(string path, Cfg c, List<Entry> list)
     {
+        List<string> old = IconRefs(path);                 // іконки, що були в попередньому файлі
         File.WriteAllText(path, Serialize(c, list), new UTF8Encoding(true));
+        try
+        {
+            // елемент видалили або змінили іконку: власну копію в icons, якої більше ніхто не використовує, прибираємо
+            List<string> now = new List<string>();
+            foreach (Entry e in list) if (e.IconSpec != null) now.Add(e.IconSpec.Trim());
+            foreach (string s in old)
+                if (!now.Exists(delegate (string x) { return string.Equals(x, s, StringComparison.OrdinalIgnoreCase); }))
+                    Util.DeleteIconIfUnused(s);
+        }
+        catch { }
+    }
+
+    static List<string> IconRefs(string path)
+    {
+        List<string> r = new List<string>();
+        try
+        {
+            if (!File.Exists(path)) return r;
+            Cfg c0 = new Cfg();
+            List<Entry> l0 = new List<Entry>();
+            Load(path, c0, l0);
+            foreach (Entry e in l0)
+            {
+                string s = (e.IconSpec ?? "").Trim();
+                if (s.Length > 0 && !r.Contains(s)) r.Add(s);
+            }
+        }
+        catch { }
+        return r;
     }
 
     // ---------- імпорт / експорт (один текстовий файл .nbpack: ini + використані іконки) ----------
