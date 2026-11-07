@@ -146,9 +146,9 @@ sealed partial class SettingsForm
 
     static string LabelOf(Entry e)
     {
-        if (e.Kind == Kind.Header) return "▼ " + e.Name + L.T("   (група)");
+        if (e.Kind == Kind.Header) return "▼ " + e.Name + " " + L.T("   (група)").Trim();
         if (e.Kind == Kind.Separator) return e.Auto ? L.T("роздільник віджетів (автоматичний)") : L.T("-------  роздільник  -------");
-        if (e.Kind == Kind.Widget) return "◆ " + WidgetCatalog.Title(e.Target) + L.T("   (віджет)");
+        if (e.Kind == Kind.Widget) return "◆ " + WidgetCatalog.Title(e.Target) + " " + L.T("   (віджет)").Trim();
         return "      " + e.Name;
     }
 
@@ -182,7 +182,7 @@ sealed partial class SettingsForm
         foreach (object o in rows)
         {
             Entry e = o as Entry;
-            lb.Items.Add(e != null ? LabelOf(e) : "◆ " + WidgetCatalog.Title((string)o) + L.T("   (віджет)"));
+            lb.Items.Add(e != null ? LabelOf(e) : "◆ " + WidgetCatalog.Title((string)o) + " " + L.T("   (віджет)").Trim());
         }
         lb.EndUpdate();
         int r = RowOf(sel);
