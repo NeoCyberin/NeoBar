@@ -4,21 +4,23 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 // ======================================================================
-//  Вкладка «Процеси» монітора системи: розширений диспетчер завдань.
-//  Розділи як у Диспетчері завдань (програми, фонові, служби, процеси Windows), кожен своїм кольором; однакові процеси
-//  згорнуті в групу. Процеси з ознаками аномальної поведінки винесено нагору, причину видно в підказці й у деталях.
-//  Лише показ: нічого не завершує й не блокує.
+//  Вкладка «Процеси» монітора системи: розширений диспетчер завдань і служб.
+//  Процеси - розділами, як у Диспетчері завдань (програми, фонові, служби, процеси Windows), кожен своїм кольором;
+//  однакові процеси згорнуті в групу. Служби - окремим списком (працюють / зупинені) із запуском, зупинкою й типом
+//  запуску. Завершення, перезапуск і зміни служб - лише за підтвердженням. Аналіз підозрілого - у «Безпеці».
 // ======================================================================
 sealed partial class PerfWindow
 {
     sealed class PLine
     {
         public int Type;                 // 0 - заголовок розділу, 1 - група однакових процесів, 2 - процес
-        public int Sec, Count, Level, Net;
+        public int Sec, Count, Net;
         public ProcRow P;
         public string Name = "", Key = "", Ctl = "";
         public float Cpu;
@@ -27,8 +29,15 @@ sealed partial class PerfWindow
         public bool Child, Open;
     }
 
-    const int SecOdd = 0;                // розділи: 0 - аномалії, далі 1 + ProcRow.Kind
+    int pview;                           // 0 - процеси, 1 - служби
     int procScroll, procSort, selPid;    // сортування: 0 назва, 1 PID, 2 ЦП, 3 пам'ять, 4 диск, 5 мережа, 6 хто керує
+    bool procDesc;
+    List<PLine> lines = new List<PLine>();
+    readonly HashSet<string> openGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    readonly HashSet<int> shutSecs = new HashSet<int>();
+    int procTick;
+    string procCopied = "";
+    DateTime procCopiedAt = DateTime.MinValue;
     volatile bool actBusy;               // виконується дія (завершення, перезапуск, служба)
     string actNote = "";
     bool actBad;
@@ -40,35 +49,13 @@ sealed partial class PerfWindow
     readonly Dictionary<string, int> modeCache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
     DateTime modeAt = DateTime.MinValue;
 
-    string BlockedCached(ProcRow p)
+    static string SecName(int k)
     {
-        if (p.Pid != blockPid || p.Created != blockCreated) { blockPid = p.Pid; blockCreated = p.Created; blockText = ProcAct.Blocked(p); }
-        return blockText;
-    }
-
-    int ModeCached(string svc)
-    {
-        if ((DateTime.Now - modeAt).TotalSeconds > 5) { modeCache.Clear(); modeAt = DateTime.Now; }
-        int m;
-        if (!modeCache.TryGetValue(svc, out m)) { m = ProcAct.StartMode(svc); modeCache[svc] = m; }
-        return m;
-    }
-    bool procDesc, onlyOdd;
-    List<PLine> lines = new List<PLine>();
-    readonly HashSet<string> openGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    readonly HashSet<int> shutSecs = new HashSet<int>();
-    int procTick;
-    string procCopied = "";
-    DateTime procCopiedAt = DateTime.MinValue;
-
-    static string SecName(int s)
-    {
-        switch (s)
+        switch (k)
         {
-            case SecOdd: return L.T("Аномалії");
-            case 1 + ProcRow.KApp: return L.T("Програми");
-            case 1 + ProcRow.KBg: return L.T("Фонові процеси");
-            case 1 + ProcRow.KSvc: return L.T("Служби");
+            case ProcRow.KApp: return L.T("Програми");
+            case ProcRow.KBg: return L.T("Фонові процеси");
+            case ProcRow.KSvc: return L.T("Служби");
             default: return L.T("Процеси Windows");
         }
     }
@@ -97,9 +84,19 @@ sealed partial class PerfWindow
         }
     }
 
-    Color SecColor(int s) { return s == SecOdd ? P.Bad : KindColor(s - 1); }
+    string BlockedCached(ProcRow p)
+    {
+        if (p.Pid != blockPid || p.Created != blockCreated) { blockPid = p.Pid; blockCreated = p.Created; blockText = ProcAct.Blocked(p); }
+        return blockText;
+    }
 
-    Color LevelColor(int lev) { return lev >= 2 ? P.Bad : (lev == 1 ? P.Warn : P.Sub); }
+    int ModeCached(string svc)
+    {
+        if ((DateTime.Now - modeAt).TotalSeconds > 5) { modeCache.Clear(); modeAt = DateTime.Now; }
+        int m;
+        if (!modeCache.TryGetValue(svc, out m)) { m = ProcAct.StartMode(svc); modeCache[svc] = m; }
+        return m;
+    }
 
     void EnterProcs()
     {
@@ -107,11 +104,13 @@ sealed partial class PerfWindow
         procTick = 0;
         ProcMon.Sample();
         RebuildView();
+        if (pview == 1) LoadSvcs();
     }
 
     void TickProcs()
     {
         if ((procTick++ & 1) == 0) { ProcMon.Sample(); RebuildView(); }
+        if (pview == 1 && (DateTime.Now - svcAt).TotalSeconds >= 10 && !actBusy) LoadSvcs();
         Invalidate();
     }
 
@@ -119,7 +118,7 @@ sealed partial class PerfWindow
     {
         PLine l = new PLine();
         l.Type = 2; l.Sec = sec; l.P = r; l.Name = r.Name; l.Child = child; l.Count = 1;
-        l.Cpu = r.Cpu; l.Ws = r.Ws; l.Io = r.Io; l.Net = r.NetEst; l.Level = r.Level; l.Ctl = CtlShort(r);
+        l.Cpu = r.Cpu; l.Ws = r.Ws; l.Io = r.Io; l.Net = r.NetEst; l.Ctl = CtlShort(r);
         return l;
     }
 
@@ -144,21 +143,16 @@ sealed partial class PerfWindow
 
     void RebuildView()
     {
-        List<ProcRow>[] secs = new List<ProcRow>[5];
-        for (int s = 0; s < 5; s++) secs[s] = new List<ProcRow>();
-        foreach (ProcRow r in ProcMon.Rows)
-        {
-            int s = r.Level > 0 ? SecOdd : 1 + r.Kind;
-            if (onlyOdd && s != SecOdd) continue;
-            secs[s].Add(r);
-        }
+        List<ProcRow>[] secs = new List<ProcRow>[4];
+        for (int s = 0; s < 4; s++) secs[s] = new List<ProcRow>();
+        foreach (ProcRow r in ProcMon.Rows) secs[Math.Max(0, Math.Min(3, r.Kind))].Add(r);
         List<PLine> outl = new List<PLine>();
-        for (int s = 0; s < 5; s++)
+        for (int s = 0; s < 4; s++)
         {
             if (secs[s].Count == 0) continue;
             PLine h = new PLine();
             h.Type = 0; h.Sec = s; h.Name = SecName(s); h.Count = secs[s].Count;
-            foreach (ProcRow r in secs[s]) { h.Cpu += r.Cpu; h.Ws += r.Ws; h.Io += r.Io; h.Net += r.NetEst; h.Level = Math.Max(h.Level, r.Level); }
+            foreach (ProcRow r in secs[s]) { h.Cpu += r.Cpu; h.Ws += r.Ws; h.Io += r.Io; h.Net += r.NetEst; }
             h.Open = !shutSecs.Contains(s);
             outl.Add(h);
             if (!h.Open) continue;
@@ -166,7 +160,6 @@ sealed partial class PerfWindow
             Dictionary<string, List<ProcRow>> byName = new Dictionary<string, List<ProcRow>>(StringComparer.OrdinalIgnoreCase);
             foreach (ProcRow r in secs[s])
             {
-                if (s == SecOdd) { items.Add(Of(r, s, false)); continue; }         // аномалії - кожна окремо
                 List<ProcRow> l;
                 if (!byName.TryGetValue(r.Name, out l)) { l = new List<ProcRow>(); byName[r.Name] = l; }
                 l.Add(r);
@@ -180,7 +173,6 @@ sealed partial class PerfWindow
                 g.Ctl = CtlShort(kv.Value[0]);
                 foreach (ProcRow r in kv.Value) if (CtlShort(r) != g.Ctl) { g.Ctl = L.T("різні"); break; }
                 g.Open = openGroups.Contains(g.Key);
-                g.P = null;
                 items.Add(g);
             }
             items.Sort(Cmp);
@@ -200,7 +192,7 @@ sealed partial class PerfWindow
     void SortBy(int col)
     {
         if (procSort == col) procDesc = !procDesc;
-        else { procSort = col; procDesc = col >= 2; }
+        else { procSort = col; procDesc = col >= 2 && col <= 5; }
         RebuildView();
         Invalidate();
     }
@@ -244,70 +236,85 @@ sealed partial class PerfWindow
         using (SolidBrush b = new SolidBrush(c)) g.FillPolygon(b, p);
     }
 
+    // заголовок колонки з сортуванням
+    void Head(Graphics g, Rectangle hr, string text, bool right, bool act, bool desc, Action click)
+    {
+        Color hc = act ? P.Acc : (Over(hr) ? P.Fg : P.Sub);
+        Rectangle tr = right ? new Rectangle(hr.X + Px(4), hr.Y, hr.Width - Px(12), hr.Height) : new Rectangle(hr.X + Px(16), hr.Y, hr.Width - Px(18), hr.Height);
+        if (right) TxtR(g, text, act ? FB : FS, tr, hc); else TxtL(g, text, act ? FB : FS, tr, hc);
+        if (act)
+        {
+            int ax = hr.X + Px(7), ay = hr.Y + hr.Height / 2, s = Px(3);
+            Point[] tri = desc ? new Point[] { new Point(ax - s, ay - s / 2), new Point(ax + s, ay - s / 2), new Point(ax, ay + s) }
+                               : new Point[] { new Point(ax - s, ay + s / 2), new Point(ax + s, ay + s / 2), new Point(ax, ay - s) };
+            using (SolidBrush ab = new SolidBrush(P.Acc)) g.FillPolygon(ab, tri);
+        }
+        Hot(hr, click);
+    }
+
+    // червона кнопка небезпечної дії
+    void DangerBtn(Graphics g, Rectangle r, string text, Action click, bool on)
+    {
+        bool h = on && Over(r);
+        using (SolidBrush b = new SolidBrush(Util.Blend(P.Card, P.Bad, !on ? 0.08f : (h ? 0.32f : 0.18f)))) Util.FillRound(g, b, r, Math.Min(P.Rad, r.Height / 2));
+        TxtC(g, text, FB, r, on ? P.Bad : Util.Blend(P.Card, P.Bad, 0.5f));
+        if (on) Hot(r, click);
+    }
+
     void PaintProcs(Graphics g, Rectangle r)
     {
         if (ProcMon.Error.Length > 0) { TxtC(g, ProcMon.Error, F, r, P.Sub); return; }
-        int odd = 0, total = ProcMon.Rows.Count, thr = 0;
-        foreach (ProcRow p in ProcMon.Rows) { if (p.Level > 0) odd++; thr += p.Threads; }
 
-        // верхній рядок: підсумок і фільтр
-        Rectangle chipA = new Rectangle(r.Right - Px(130), r.Y + Px(3), Px(130), Px(28));
-        Rectangle chipB = new Rectangle(chipA.X - Px(8) - Px(110), chipA.Y, Px(110), Px(28));
-        Chip(g, chipB, L.T("Усі"), !onlyOdd, delegate { onlyOdd = false; procScroll = 0; RebuildView(); Invalidate(); });
-        Chip(g, chipA, L.T("Аномалії") + (odd > 0 ? " · " + odd : ""), onlyOdd, delegate { onlyOdd = true; procScroll = 0; RebuildView(); Invalidate(); });
-        string sum = float.IsNaN(Sensors.Cpu) ? L.F("Процесів: {0} · потоків: {1}", total, thr) : L.F("Процесів: {0} · потоків: {1} · ЦП: {2}%", total, thr, Math.Round(Sensors.Cpu));
+        // верхній рядок: процеси / служби, підсумок, нове завдання
+        Rectangle cP = new Rectangle(r.X, r.Y + Px(3), Px(110), Px(28));
+        Rectangle cS = new Rectangle(cP.Right + Px(6), cP.Y, Px(110), Px(28));
+        Chip(g, cP, L.T("Процеси"), pview == 0, delegate { pview = 0; Invalidate(); });
+        Chip(g, cS, L.T("Служби"), pview == 1, delegate { if (pview != 1) { pview = 1; svcScroll = 0; LoadSvcs(); } Invalidate(); });
+        Rectangle bNew = new Rectangle(r.Right - Px(170), cP.Y, Px(170), Px(28));
+        Btn(g, bNew, L.T("Нове завдання…"), NewTask, 0, true);
+        Tip(bNew, L.T("Запустити програму, документ, теку чи команду - як «Виконати» або «Нове завдання» в Диспетчері завдань"));
+        Rectangle sumR = new Rectangle(cS.Right + Px(16), cP.Y, bNew.X - cS.Right - Px(24), Px(28));
         bool noteOn = actBusy || (actNote.Length > 0 && (DateTime.Now - actAt).TotalSeconds < 10);
-        Rectangle sumR = new Rectangle(r.X + Px(4), r.Y + Px(3), chipB.X - r.X - Px(12), Px(28));
         if (noteOn)
         {
             string nt = actBusy ? L.T("Виконується…") : actNote;
             TxtL(g, nt, actBusy ? F : FB, sumR, actBusy ? P.Sub : (actBad ? P.Bad : P.Good));
             if (!actBusy && TextRenderer.MeasureText(nt, FB).Width > sumR.Width) Tip(sumR, nt);
         }
-        else TxtL(g, sum, F, sumR, P.Sub);
+        else if (pview == 0)
+        {
+            int total = ProcMon.Rows.Count, thr = 0;
+            foreach (ProcRow p in ProcMon.Rows) thr += p.Threads;
+            TxtL(g, float.IsNaN(Sensors.Cpu) ? L.F("Процесів: {0} · потоків: {1}", total, thr) : L.F("Процесів: {0} · потоків: {1} · ЦП: {2}%", total, thr, Math.Round(Sensors.Cpu)), F, sumR, P.Sub);
+        }
+        else
+        {
+            int run = 0;
+            foreach (SvcInfo s in svcs) if (s.State == 4) run++;
+            TxtL(g, L.F("Служб: {0} · працюють: {1}", svcs.Count, run), F, sumR, P.Sub);
+        }
+        Rectangle body = new Rectangle(r.X, r.Y + Px(38), r.Width, r.Height - Px(38));
+        if (pview == 1) { PaintSvcList(g, body); return; }
 
         // колонки
-        int wPid = Px(62), wCpu = Px(66), wMem = Px(96), wIo = Px(92), wNet = Px(70), sb = Px(10);
+        int wPid = Px(62), wCpu = Px(66), wMem = Px(96), wIo = Px(92), wNet = Px(70), sb = Px(10), wCtl = Px(132);
         int wName = r.Width - wPid - wCpu - wMem - wIo - wNet - sb;
         int[] cx = new int[7];
         cx[0] = r.X;
         cx[1] = cx[0] + wName; cx[2] = cx[1] + wPid; cx[3] = cx[2] + wCpu; cx[4] = cx[3] + wMem; cx[5] = cx[4] + wIo; cx[6] = cx[5] + wNet;
+        int xCtl = cx[1] - wCtl;
         string[] hd = { L.T("Назва"), "PID", L.T("ЦП"), L.T("Пам'ять"), L.T("Диск"), L.T("Мережа") };
-        int hy = r.Y + Px(38), hh = Px(24);
+        int hy = body.Y, hh = Px(24);
         for (int c = 0; c < 6; c++)
         {
-            Rectangle hr = new Rectangle(cx[c], hy, (c == 0 ? cx[1] - Px(132) : cx[c + 1]) - cx[c], hh);
-            bool act = procSort == c;
-            Rectangle tr = new Rectangle(hr.X + Px(c == 0 ? 28 : 4), hr.Y, hr.Width - Px(c == 0 ? 32 : 12), hr.Height);
-            Color hc = act ? P.Acc : (Over(hr) ? P.Fg : P.Sub);
-            if (c == 0) TxtL(g, hd[c], act ? FB : FS, tr, hc); else TxtR(g, hd[c], act ? FB : FS, tr, hc);
-            if (act)
-            {
-                int ax = c == 0 ? hr.X + Px(14) : hr.X + Px(6), ay = hr.Y + hh / 2, s = Px(3);
-                Point[] tri = procDesc ? new Point[] { new Point(ax - s, ay - s / 2), new Point(ax + s, ay - s / 2), new Point(ax, ay + s) }
-                                       : new Point[] { new Point(ax - s, ay + s / 2), new Point(ax + s, ay + s / 2), new Point(ax, ay - s) };
-                using (SolidBrush ab = new SolidBrush(P.Acc)) g.FillPolygon(ab, tri);
-            }
             int col = c;
-            Hot(hr, delegate { SortBy(col); });
+            Rectangle hr = new Rectangle(cx[c], hy, (c == 0 ? xCtl : cx[c + 1]) - cx[c], hh);
+            if (c == 0) hr = new Rectangle(hr.X + Px(12), hr.Y, hr.Width - Px(12), hr.Height);
+            Head(g, hr, hd[c], c > 0, procSort == c, procDesc, delegate { SortBy(col); });
         }
-
-        // «Керує» - права частина колонки назви
-        int wCtl = Px(132), xCtl = cx[1] - wCtl;
-        {
-            Rectangle hr = new Rectangle(xCtl, hy, wCtl, hh);
-            bool act = procSort == 6;
-            TxtL(g, L.T("Керує"), act ? FB : FS, new Rectangle(xCtl + Px(14), hy, wCtl - Px(14), hh), act ? P.Acc : (Over(hr) ? P.Fg : P.Sub));
-            if (act)
-            {
-                int ax = xCtl + Px(6), ay = hy + hh / 2, s = Px(3);
-                Point[] tri = procDesc ? new Point[] { new Point(ax - s, ay - s / 2), new Point(ax + s, ay - s / 2), new Point(ax, ay + s) }
-                                       : new Point[] { new Point(ax - s, ay + s / 2), new Point(ax + s, ay + s / 2), new Point(ax, ay - s) };
-                using (SolidBrush ab = new SolidBrush(P.Acc)) g.FillPolygon(ab, tri);
-            }
-            Hot(hr, delegate { SortBy(6); });
-            Tip(hr, L.T("Хто запускає процес і стежить за ним: служба, автозапуск, планувальник завдань, користувач, інша програма чи сама Windows"));
-        }
+        Rectangle hCtl = new Rectangle(xCtl, hy, wCtl, hh);
+        Head(g, hCtl, L.T("Керує"), false, procSort == 6, procDesc, delegate { SortBy(6); });
+        Tip(hCtl, L.T("Хто запускає процес і стежить за ним: служба, автозапуск, планувальник завдань, користувач, інша програма чи сама Windows"));
 
         // деталі вибраного процесу
         ProcRow sel = selPid != 0 ? Find(selPid) : null;
@@ -336,15 +343,14 @@ sealed partial class PerfWindow
             Rectangle rr = new Rectangle(r.X, y, r.Width - sb, rowH);
             Rectangle vis = Rectangle.Intersect(rr, list);
             bool hv = !vis.IsEmpty && Over(vis);
-            Color sc = SecColor(ln.Sec);
+            Color sc = KindColor(ln.Sec);
             if (ln.Type == 0)
             {
                 // заголовок розділу: колір, назва, кількість, підсумки
                 if (hv) using (SolidBrush b = new SolidBrush(Util.Blend(P.Bg, P.Fg, 0.06f))) Util.FillRound(g, b, rr, Px(4));
                 Tri(g, rr.X + Px(10), rr.Y + rowH / 2, ln.Open, sc);
                 using (SolidBrush b = new SolidBrush(sc)) g.FillEllipse(b, new Rectangle(rr.X + Px(20), rr.Y + rowH / 2 - Px(4), Px(8), Px(8)));
-                string ht = ln.Name + "  " + ln.Count;
-                TxtL(g, ht, FB, new Rectangle(cx[0] + Px(34), rr.Y, wName - Px(36), rowH), sc);
+                TxtL(g, ln.Name + "  " + ln.Count, FB, new Rectangle(cx[0] + Px(34), rr.Y, wName - Px(36), rowH), sc);
                 TxtR(g, CpuText(ln.Cpu), FS, new Rectangle(cx[2], rr.Y, wCpu - Px(8), rowH), P.Sub);
                 TxtR(g, Cleaner.Size(ln.Ws), FS, new Rectangle(cx[3], rr.Y, wMem - Px(8), rowH), P.Sub);
                 TxtR(g, Rate(ln.Io), FS, new Rectangle(cx[4], rr.Y, wIo - Px(8), rowH), P.Sub);
@@ -359,32 +365,29 @@ sealed partial class PerfWindow
             }
             ProcRow p = ln.P;
             bool isSel = p != null && p.Pid == selPid;
-            Color lc = LevelColor(ln.Level);
-            Color stripe = ln.Level > 0 ? lc : sc;
-            Color bg = Util.Blend(i % 2 == 0 ? P.Card : Util.Blend(P.Card, P.Bg, 0.5f), stripe, ln.Level > 0 ? 0.16f : 0.06f);
+            Color bg = Util.Blend(i % 2 == 0 ? P.Card : Util.Blend(P.Card, P.Bg, 0.5f), sc, 0.06f);
             if (isSel) bg = Util.Blend(P.Card, P.Acc, 0.30f);
             else if (hv) bg = Util.Blend(bg, P.Fg, 0.08f);
             Rectangle rb = Rectangle.Inflate(rr, 0, -1);
             using (SolidBrush b = new SolidBrush(bg)) Util.FillRound(g, b, rb, Px(4));
-            using (SolidBrush b = new SolidBrush(stripe)) Util.FillRound(g, b, new Rectangle(rb.X, rb.Y + Px(3), Px(3), rb.Height - Px(6)), Px(1));
+            using (SolidBrush b = new SolidBrush(sc)) Util.FillRound(g, b, new Rectangle(rb.X, rb.Y + Px(3), Px(3), rb.Height - Px(6)), Px(1));
             int nx = cx[0] + Px(14) + (ln.Child ? Px(22) : 0);
             if (ln.Type == 1) Tri(g, nx + Px(4), rr.Y + rowH / 2, ln.Open, P.Sub);
-            if (ln.Level > 0 && ln.Type == 2) using (SolidBrush b = new SolidBrush(lc)) g.FillEllipse(b, new Rectangle(nx, rr.Y + rowH / 2 - Px(4), Px(8), Px(8)));
             nx += Px(14);
             string nm = ln.Name.Length > 0 ? ln.Name : "—";
             int nameW = xCtl - nx - Px(4);
-            TxtL(g, ln.Ctl, FS, new Rectangle(xCtl + Px(14), rr.Y, wCtl - Px(16), rowH), ln.Ctl == L.T("Автозапуск") ? KindColor(ProcRow.KApp) : P.Sub);
+            TxtL(g, ln.Ctl, FS, new Rectangle(xCtl + Px(16), rr.Y, wCtl - Px(18), rowH), ln.Ctl == L.T("Автозапуск") ? KindColor(ProcRow.KApp) : P.Sub);
             if (ln.Type == 1)
             {
                 int tw = Math.Min(nameW - Px(40), TextRenderer.MeasureText(nm, F).Width);
                 TxtL(g, nm, F, new Rectangle(nx, rr.Y, tw + Px(4), rowH), P.Fg);
                 TxtL(g, "×" + ln.Count, FS, new Rectangle(nx + tw + Px(6), rr.Y, Px(40), rowH), P.Sub);
             }
-            else TxtL(g, nm, ln.Level > 0 ? FB : F, new Rectangle(nx, rr.Y, nameW, rowH), ln.Child ? P.Sub : P.Fg);
+            else TxtL(g, nm, F, new Rectangle(nx, rr.Y, nameW, rowH), ln.Child ? P.Sub : P.Fg);
             if (p != null) TxtR(g, p.Pid.ToString(), F, new Rectangle(cx[1], rr.Y, wPid - Px(8), rowH), P.Sub);
             TxtR(g, CpuText(ln.Cpu), F, new Rectangle(cx[2], rr.Y, wCpu - Px(8), rowH), ln.Cpu >= 60 ? P.Warn : P.Fg);
             TxtR(g, Cleaner.Size(ln.Ws), F, new Rectangle(cx[3], rr.Y, wMem - Px(8), rowH), P.Fg);
-            TxtR(g, Rate(ln.Io), F, new Rectangle(cx[4], rr.Y, wIo - Px(8), rowH), ln.Io >= 30 * 1048576.0 ? P.Warn : P.Fg);
+            TxtR(g, Rate(ln.Io), F, new Rectangle(cx[4], rr.Y, wIo - Px(8), rowH), P.Fg);
             TxtR(g, ln.Net > 0 ? ln.Net.ToString() : "—", F, new Rectangle(cx[5], rr.Y, wNet - Px(8), rowH), P.Fg);
             if (vis.IsEmpty) continue;
             if (ln.Type == 1)
@@ -396,12 +399,10 @@ sealed partial class PerfWindow
             {
                 int pid = p.Pid;
                 Hot(vis, delegate { selPid = selPid == pid ? 0 : pid; Invalidate(); });
-                if (p.Why.Count > 0) Tip(vis, string.Join("\n", p.Why.ToArray()));
             }
         }
         g.Clip = old;
-        if (lines.Count == 0)
-            TxtC(g, onlyOdd ? L.T("Аномальної поведінки не помічено.") : L.T("Збираю дані…"), F, list, P.Sub);
+        if (lines.Count == 0) TxtC(g, L.T("Збираю дані…"), F, list, P.Sub);
         Wheel(list, delegate (int d) { procScroll -= d * rowH * 3; });
         VBar(g, new Rectangle(list.Right - Px(6), list.Y, Px(4), list.Height), content, list.Height, procScroll, delegate (int v) { procScroll = v; Invalidate(); });
 
@@ -414,14 +415,14 @@ sealed partial class PerfWindow
     int DetailH(ProcRow p)
     {
         int n = Math.Min(p.Svcs.Count, SvcMax);
-        return Px(42) + Px(19) * (6 + Math.Min(p.Why.Count, 4)) + (n > 0 ? Px(8) + Px(20) + n * Px(32) + (p.Svcs.Count > SvcMax ? Px(18) : 0) : 0) + Px(10);
+        return Px(42) + Px(19) * 6 + (n > 0 ? Px(8) + Px(20) + n * Px(32) + (p.Svcs.Count > SvcMax ? Px(18) : 0) : 0) + Px(10);
     }
 
     void PaintProcDetail(Graphics g, Rectangle d, ProcRow p)
     {
         Card(g, d);
         int pad = Px(12), lh = Px(19);
-        Color kc = p.Level > 0 ? LevelColor(p.Level) : KindColor(p.Kind);
+        Color kc = KindColor(p.Kind);
         using (SolidBrush b = new SolidBrush(kc)) Util.FillRound(g, b, new Rectangle(d.X, d.Y + Px(10), Px(4), Px(22)), Px(2));
         // дії: завершити, перезапустити, тека, шлях
         int bw = Px(122), bh = Px(28), gap = Px(6);
@@ -434,13 +435,7 @@ sealed partial class PerfWindow
         string pth = p.Path;
         int ppid = p.Pid;
         bool can = !actBusy && BlockedCached(p).Length == 0;
-        // «Завершити» - червона, як інші небезпечні дії
-        {
-            bool h = !actBusy && Over(bEnd);
-            using (SolidBrush b = new SolidBrush(Util.Blend(P.Card, P.Bad, actBusy ? 0.08f : (h ? 0.32f : 0.18f)))) Util.FillRound(g, b, bEnd, Math.Min(P.Rad, bh / 2));
-            TxtC(g, L.T("Завершити"), FB, bEnd, actBusy ? Util.Blend(P.Card, P.Bad, 0.5f) : P.Bad);
-            if (!actBusy) Hot(bEnd, delegate { AskEnd(ppid, false); });
-        }
+        DangerBtn(g, bEnd, L.T("Завершити"), delegate { AskEnd(ppid, false); }, !actBusy);
         Btn(g, bRe, L.T("Перезапустити"), delegate { AskEnd(ppid, true); }, 0, can && (has || p.Svcs.Count > 0));
         Btn(g, bDir, L.T("Показати теку"), delegate
         {
@@ -458,15 +453,18 @@ sealed partial class PerfWindow
         int lw = Px(92);
         int full = d.Width - pad * 2;
         ProcRow par = Find(p.Parent);
+        // підпис - лише для вибраного, у фоні (з каталогами Windows, як у «Безпеці»)
         string sig;
+        ProcMon.SigInfo si = has ? ProcMon.SigOf(p.Path) : null;
         if (!has) sig = ProcMon.Quiet ? L.T("не збирається (працює античіт)") : L.T("немає доступу до шляху");
-        else if (!p.SigDone) sig = L.T("перевіряється…");
-        else if (p.SigKind == Sig.Ok) sig = p.Signer.Length > 0 ? L.F("підписаний: {0}", p.Signer) : L.T("підписаний");
-        else if (p.SigKind == Sig.Bad) sig = L.T("підпис недійсний");
-        else if (p.SigKind == Sig.Expired) sig = p.Signer.Length > 0 ? L.F("підпис прострочений: {0}", p.Signer) : L.T("підпис прострочений");
+        else if (si == null || !si.Done) sig = L.T("перевіряється…");
+        else if (si.Kind == Sig.Ok) sig = si.Signer.Length > 0 ? L.F("підписаний: {0}", si.Signer) : L.T("підписаний");
+        else if (si.Kind == Sig.Bad) sig = L.T("підпис недійсний");
+        else if (si.Kind == Sig.Expired) sig = si.Signer.Length > 0 ? L.F("підпис прострочений: {0}", si.Signer) : L.T("підпис прострочений");
+        else if (si.Kind == Sig.Unknown) sig = "—";
         else sig = L.T("без підпису");
 
-        string file = has ? (p.Exists ? p.Path : L.F("{0} (видалено)", p.Path)) : "—";
+        string file = has ? (File.Exists(p.Path) ? p.Path : L.F("{0} (видалено)", p.Path)) : "—";
         Field(g, new Rectangle(d.X + pad, y, full, lh), lw, L.T("Файл"), file); y += lh;
         Field(g, new Rectangle(d.X + pad, y, full, lh), lw, L.T("Команда"), p.Cmd.Length > 0 ? p.Cmd : "—"); y += lh;
         int half = (full - Px(16)) / 2;
@@ -491,16 +489,46 @@ sealed partial class PerfWindow
             Field(g, new Rectangle(x2, y, half, lh), lw, right[i][0], right[i][1]);
             y += lh;
         }
-        int n = 0;
-        foreach (string w in p.Why)
-        {
-            if (n++ >= 4) break;
-            Rectangle wr = new Rectangle(d.X + pad, y, full, lh);
-            TxtL(g, "• " + w, FS, wr, LevelColor(p.Level));
-            Tip(wr, w);
-            y += lh;
-        }
         if (p.Svcs.Count > 0) PaintSvcs(g, new Rectangle(d.X + pad, y + Px(8), full, d.Bottom - y - Px(8)), p);
+    }
+
+    static string StateText(int st)
+    {
+        switch (st)
+        {
+            case 4: return L.T("працює");
+            case 2: return L.T("запускається");
+            case 3: return L.T("зупиняється");
+            case 5: case 6: case 7: return L.T("призупинена");
+            default: return L.T("зупинена");
+        }
+    }
+
+    Color StateColor(int st) { return st == 4 ? P.Good : (st == 1 ? P.Sub : P.Warn); }
+
+    static string ModeText(int m)
+    {
+        switch (m)
+        {
+            case 0: return L.T("Вручну");
+            case 1: return L.T("Автоматично");
+            case 2: return L.T("Із затримкою");
+            case 3: return L.T("Вимкнено");
+            default: return L.T("Системна");
+        }
+    }
+
+    // тип запуску: чотири перемикачі
+    void ModeChips(Graphics g, int x, int y, int cw, string sn, string sd, int mode)
+    {
+        int cg = Px(4);
+        for (int k = 0; k < 4; k++)
+        {
+            int kk = k;
+            Rectangle cr = new Rectangle(x + k * (cw + cg), y, cw, Px(28));
+            Chip(g, cr, ModeText(k), mode == k, delegate { if (!actBusy) AskMode(sn, sd, kk); });
+        }
+        if (mode < 0) Tip(new Rectangle(x, y, cw * 4 + cg * 3, Px(28)), L.T("Особливий тип запуску (завантажувальна чи системна служба)"));
     }
 
     // служби в процесі: стан, тип запуску, зупинка / запуск
@@ -509,7 +537,6 @@ sealed partial class PerfWindow
         using (Pen pn = new Pen(P.Line, 1f)) g.DrawLine(pn, r.X, r.Y - Px(4), r.Right, r.Y - Px(4));
         TxtL(g, p.Svcs.Count == 1 ? L.T("Служба в цьому процесі") : L.F("Служби в цьому процесі: {0}", p.Svcs.Count), FS, new Rectangle(r.X, r.Y, r.Width, Px(20)), P.Sub);
         int y = r.Y + Px(20);
-        string[] modes = { L.T("Вручну"), L.T("Автоматично"), L.T("Із затримкою"), L.T("Вимкнено") };
         int cw = Px(98), bw = Px(104), sw = Px(84), cg = Px(4);
         for (int i = 0; i < p.Svcs.Count && i < SvcMax; i++)
         {
@@ -522,28 +549,24 @@ sealed partial class PerfWindow
             TxtL(g, s.Display, F, nm, P.Fg);
             Tip(nm, s.Display + " (" + s.Name + ")");
             bool run = s.State == 4;
-            TxtL(g, run ? L.T("працює") : (s.State == 2 ? L.T("запускається") : (s.State == 3 ? L.T("зупиняється") : L.T("зупинена"))), FS, st, run ? P.Good : P.Warn);
-            bool crit = ProcAct.IsCriticalSvc(s.Name);
+            TxtL(g, StateText(s.State), FS, st, StateColor(s.State));
             string sn = s.Name, sd = s.Display;
-            if (crit)
-            {
+            if (ProcAct.IsCriticalSvc(s.Name))
                 TxtL(g, L.T("ключова служба Windows - не змінюється"), FS, new Rectangle(chipsX, rowY, cw * 4 + cg * 3 + Px(10) + bw, Px(28)), P.Sub);
-            }
             else
             {
-                int mode = ModeCached(s.Name);
-                for (int k = 0; k < 4; k++)
-                {
-                    int kk = k;
-                    Rectangle cr = new Rectangle(chipsX + k * (cw + cg), rowY, cw, Px(28));
-                    Chip(g, cr, modes[k], mode == k, delegate { if (!actBusy) AskMode(sn, sd, kk); });
-                }
-                if (mode < 0) Tip(new Rectangle(chipsX, rowY, cw * 4 + cg * 3, Px(28)), L.T("Особливий тип запуску (завантажувальна чи системна служба)"));
-                Btn(g, btn, run ? L.T("Зупинити") : L.T("Запустити"), delegate { if (run) AskSvcStop(sn, sd); else RunAct(delegate { string e = ProcAct.SvcStart(sn); return e.Length > 0 ? "!" + e : L.F("Службу «{0}» запущено.", sd); }); }, 0, !actBusy);
+                ModeChips(g, chipsX, rowY, cw, sn, sd, ModeCached(s.Name));
+                Btn(g, btn, run ? L.T("Зупинити") : L.T("Запустити"), delegate { SvcToggle(sn, sd, run); }, 0, !actBusy);
             }
             y += Px(32);
         }
-        if (p.Svcs.Count > SvcMax) TxtL(g, L.F("і ще {0} - див. «Служби» Windows", p.Svcs.Count - SvcMax), FS, new Rectangle(r.X, y, r.Width, Px(18)), P.Sub);
+        if (p.Svcs.Count > SvcMax) TxtL(g, L.F("і ще {0} - див. «Служби» вгорі", p.Svcs.Count - SvcMax), FS, new Rectangle(r.X, y, r.Width, Px(18)), P.Sub);
+    }
+
+    void SvcToggle(string name, string display, bool running)
+    {
+        if (running) AskSvcStop(name, display);
+        else RunAct(delegate { string e = ProcAct.SvcStart(name); return e.Length > 0 ? "!" + e : L.F("Службу «{0}» запущено.", display); });
     }
 
     // дія у фоні; результат - рядок ("!" на початку - помилка)
@@ -569,6 +592,7 @@ sealed partial class PerfWindow
                     actAt = DateTime.Now;
                     ProcMon.Sample();
                     RebuildView();
+                    if (pview == 1) LoadSvcs();
                     Invalidate();
                 }));
             }
@@ -612,7 +636,7 @@ sealed partial class PerfWindow
         int a = SbDialog.Show(Bar, this, title, t.ToString().TrimEnd(), btns);
         if (a < 0 || a >= btns.Length - 1) return;
         bool links = a == 0;
-        if (restart) RunAct(delegate { string res = ProcAct.Restart(k); return res; });
+        if (restart) RunAct(delegate { return ProcAct.Restart(k); });
         else RunAct(delegate { return ProcAct.End(k, links); });
         if (!restart && selPid == pid) selPid = 0;
     }
@@ -626,12 +650,24 @@ sealed partial class PerfWindow
         RunAct(delegate { string e = ProcAct.SvcStop(name); return e.Length > 0 ? "!" + e : L.F("Службу «{0}» зупинено.", display); });
     }
 
+    void AskSvcRestart(string name, string display)
+    {
+        if (SbDialog.Show(Bar, this, L.T("Служба"), L.F("Перезапустити службу «{0}»?", display), L.T("Перезапустити"), L.T("Скасувати")) != 0) return;
+        RunAct(delegate
+        {
+            List<string> dep = ProcAct.DependentsOf(name);
+            string e = ProcAct.SvcStop(name);
+            if (e.Length == 0) e = ProcAct.SvcStart(name);
+            for (int i = dep.Count - 1; i >= 0 && e.Length == 0; i--) ProcAct.SvcStart(dep[i]);
+            return e.Length > 0 ? "!" + e : L.F("Службу перезапущено: {0}.", display);
+        });
+    }
+
     void AskMode(string name, string display, int mode)
     {
         string[] names = { L.T("вручну"), L.T("автоматично"), L.T("автоматично із затримкою"), L.T("вимкнено") };
-        string path = "";
-        foreach (ProcRow r in ProcMon.Rows) foreach (SvcInfo s in r.Svcs) if (s.Name == name) path = r.Path;
-        bool win = path.Length == 0 || path.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.Windows), StringComparison.OrdinalIgnoreCase);
+        string path = SvcImage(name);
+        bool win = path.Length == 0 || path.IndexOf(Environment.GetFolderPath(Environment.SpecialFolder.Windows), StringComparison.OrdinalIgnoreCase) >= 0 || path.IndexOf("%systemroot%", StringComparison.OrdinalIgnoreCase) >= 0 || path.StartsWith(@"\SystemRoot", StringComparison.OrdinalIgnoreCase);
         string t = L.F("Тип запуску служби «{0}»: {1}?", display, names[mode]) + "\n\n" +
                    (mode == 3 ? L.T("Вимкнена служба не запуститься, доки її не ввімкнуть знову. ") : "") +
                    (win ? L.T("Це служба Windows: невдала зміна може порушити роботу системи. ") : "") +
@@ -647,5 +683,334 @@ sealed partial class PerfWindow
         Rectangle vr = new Rectangle(r.X + lw, r.Y, r.Width - lw, r.Height);
         TxtL(g, value, F, vr, P.Fg);
         if (TextRenderer.MeasureText(value, F).Width > vr.Width) Tip(vr, value);
+    }
+
+    // ================= служби =================
+    List<SvcInfo> svcs = new List<SvcInfo>();
+    DateTime svcAt = DateTime.MinValue;
+    int svcScroll, svcSort;                  // 0 назва, 1 ім'я, 2 стан, 3 тип запуску, 4 PID
+    bool svcDesc;
+    string selSvc = "";
+    readonly HashSet<int> shutSvc = new HashSet<int>();
+    readonly Dictionary<string, string[]> svcInfo = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);   // шлях, опис
+
+    void LoadSvcs()
+    {
+        svcAt = DateTime.Now;
+        svcs = ProcMon.AllServices();
+    }
+
+    int SvcCmp(SvcInfo a, SvcInfo b)
+    {
+        int c = 0;
+        switch (svcSort)
+        {
+            case 1: c = string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase); break;
+            case 2: c = a.State.CompareTo(b.State); break;
+            case 3: c = a.Mode.CompareTo(b.Mode); break;
+            case 4: c = a.Pid.CompareTo(b.Pid); break;
+            default: c = string.Compare(a.Display, b.Display, StringComparison.CurrentCultureIgnoreCase); break;
+        }
+        if (svcDesc) c = -c;
+        if (c == 0) c = string.Compare(a.Display, b.Display, StringComparison.CurrentCultureIgnoreCase);
+        return c;
+    }
+
+    void SvcSortBy(int col)
+    {
+        if (svcSort == col) svcDesc = !svcDesc;
+        else { svcSort = col; svcDesc = false; }
+        Invalidate();
+    }
+
+    [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)] static extern int SHLoadIndirectString(string src, StringBuilder buf, int size, IntPtr reserved);
+
+    // шлях до файла служби й опис (з реєстру; опис буває посиланням на ресурс DLL)
+    string[] SvcMeta(string name)
+    {
+        string[] v;
+        if (svcInfo.TryGetValue(name, out v)) return v;
+        v = new string[] { "", "" };
+        try
+        {
+            using (RegistryKey root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+            using (RegistryKey k = root.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\" + name))
+            {
+                if (k != null)
+                {
+                    v[0] = Convert.ToString(k.GetValue("ImagePath", "", RegistryValueOptions.DoNotExpandEnvironmentNames));
+                    string d = Convert.ToString(k.GetValue("Description", ""));
+                    if (d.StartsWith("@"))
+                    {
+                        StringBuilder sb = new StringBuilder(1024);
+                        if (SHLoadIndirectString(d, sb, sb.Capacity, IntPtr.Zero) == 0) d = sb.ToString(); else d = "";
+                    }
+                    v[1] = d;
+                }
+            }
+        }
+        catch { }
+        svcInfo[name] = v;
+        return v;
+    }
+
+    string SvcImage(string name) { return SvcMeta(name)[0]; }
+
+    SvcInfo FindSvc(string name)
+    {
+        foreach (SvcInfo s in svcs) if (string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase)) return s;
+        return null;
+    }
+
+    void PaintSvcList(Graphics g, Rectangle r)
+    {
+        int sb = Px(10);
+        int wName = Px(210), wState = Px(110), wMode = Px(130), wPid = Px(70);
+        int wDisp = r.Width - wName - wState - wMode - wPid - sb;
+        int[] cx = { r.X, r.X + wDisp, r.X + wDisp + wName, r.X + wDisp + wName + wState, r.X + wDisp + wName + wState + wMode, r.Right - sb };
+        string[] hd = { L.T("Назва"), L.T("Ім'я служби"), L.T("Стан"), L.T("Запуск"), "PID" };
+        int hy = r.Y, hh = Px(24);
+        for (int c = 0; c < 5; c++)
+        {
+            int col = c;
+            Rectangle hr = new Rectangle(cx[c] + (c == 0 ? Px(12) : 0), hy, cx[c + 1] - cx[c] - (c == 0 ? Px(12) : 0), hh);
+            Head(g, hr, hd[c], c == 4, svcSort == c, svcDesc, delegate { SvcSortBy(col); });
+        }
+        SvcInfo sel = selSvc.Length > 0 ? FindSvc(selSvc) : null;
+        int detH = sel != null ? Px(42) + Px(19) * 4 + Px(36) + Px(10) : 0;
+        int ly = hy + hh + Px(2);
+        Rectangle list = new Rectangle(r.X, ly, r.Width, r.Bottom - ly - (detH > 0 ? detH + Px(8) : 0));
+
+        // розділи: працюють / зупинені
+        List<SvcInfo> run = new List<SvcInfo>(), stop = new List<SvcInfo>();
+        foreach (SvcInfo s in svcs) (s.State == 1 ? stop : run).Add(s);
+        run.Sort(SvcCmp);
+        stop.Sort(SvcCmp);
+        List<object> rows = new List<object>();
+        rows.Add(0);
+        if (!shutSvc.Contains(0)) foreach (SvcInfo s in run) rows.Add(s);
+        rows.Add(1);
+        if (!shutSvc.Contains(1)) foreach (SvcInfo s in stop) rows.Add(s);
+
+        int rowH = Px(25);
+        int content = rows.Count * rowH;
+        svcScroll = Math.Max(0, Math.Min(svcScroll, Math.Max(0, content - list.Height)));
+        Region old = g.Clip;
+        g.SetClip(list);
+        int i0 = Math.Max(0, svcScroll / rowH);
+        int y = list.Y - svcScroll + i0 * rowH;
+        for (int i = i0; i < rows.Count && y < list.Bottom; i++, y += rowH)
+        {
+            Rectangle rr = new Rectangle(r.X, y, r.Width - sb, rowH);
+            Rectangle vis = Rectangle.Intersect(rr, list);
+            bool hv = !vis.IsEmpty && Over(vis);
+            if (rows[i] is int)
+            {
+                int sec = (int)rows[i];
+                Color sc = sec == 0 ? P.Good : P.Sub;
+                if (hv) using (SolidBrush b = new SolidBrush(Util.Blend(P.Bg, P.Fg, 0.06f))) Util.FillRound(g, b, rr, Px(4));
+                Tri(g, rr.X + Px(10), rr.Y + rowH / 2, !shutSvc.Contains(sec), sc);
+                TxtL(g, (sec == 0 ? L.T("Працюють") : L.T("Зупинені")) + "  " + (sec == 0 ? run.Count : stop.Count), FB, new Rectangle(rr.X + Px(24), rr.Y, rr.Width / 2, rowH), sc);
+                using (Pen pn = new Pen(Util.Blend(P.Bg, sc, 0.45f), 1f)) g.DrawLine(pn, rr.X, rr.Bottom - 1, rr.Right, rr.Bottom - 1);
+                if (!vis.IsEmpty) Hot(vis, delegate { if (!shutSvc.Remove(sec)) shutSvc.Add(sec); Invalidate(); });
+                continue;
+            }
+            SvcInfo s = (SvcInfo)rows[i];
+            bool isSel = string.Equals(s.Name, selSvc, StringComparison.OrdinalIgnoreCase);
+            Color stc = StateColor(s.State);
+            Color bg = i % 2 == 0 ? P.Card : Util.Blend(P.Card, P.Bg, 0.5f);
+            if (isSel) bg = Util.Blend(P.Card, P.Acc, 0.30f);
+            else if (hv) bg = Util.Blend(bg, P.Fg, 0.08f);
+            Rectangle rb = Rectangle.Inflate(rr, 0, -1);
+            using (SolidBrush b = new SolidBrush(bg)) Util.FillRound(g, b, rb, Px(4));
+            using (SolidBrush b = new SolidBrush(stc)) Util.FillRound(g, b, new Rectangle(rb.X, rb.Y + Px(3), Px(3), rb.Height - Px(6)), Px(1));
+            TxtL(g, s.Display, F, new Rectangle(cx[0] + Px(16), rr.Y, cx[1] - cx[0] - Px(20), rowH), P.Fg);
+            TxtL(g, s.Name, FS, new Rectangle(cx[1] + Px(16), rr.Y, cx[2] - cx[1] - Px(20), rowH), P.Sub);
+            TxtL(g, StateText(s.State), FS, new Rectangle(cx[2] + Px(16), rr.Y, cx[3] - cx[2] - Px(20), rowH), stc);
+            TxtL(g, ModeText(s.Mode), FS, new Rectangle(cx[3] + Px(16), rr.Y, cx[4] - cx[3] - Px(20), rowH), s.Mode == 3 ? P.Warn : P.Sub);
+            TxtR(g, s.Pid > 0 ? s.Pid.ToString() : "—", F, new Rectangle(cx[4], rr.Y, cx[5] - cx[4] - Px(8), rowH), P.Sub);
+            if (!vis.IsEmpty)
+            {
+                string nm = s.Name;
+                Hot(vis, delegate { selSvc = string.Equals(selSvc, nm, StringComparison.OrdinalIgnoreCase) ? "" : nm; Invalidate(); });
+            }
+        }
+        g.Clip = old;
+        if (svcs.Count == 0) TxtC(g, L.T("Збираю дані…"), F, list, P.Sub);
+        Wheel(list, delegate (int d) { svcScroll -= d * rowH * 3; });
+        VBar(g, new Rectangle(list.Right - Px(6), list.Y, Px(4), list.Height), content, list.Height, svcScroll, delegate (int v) { svcScroll = v; Invalidate(); });
+
+        if (sel != null) PaintSvcDetail(g, new Rectangle(r.X, r.Bottom - detH, r.Width, detH), sel);
+        else selSvc = "";
+    }
+
+    void PaintSvcDetail(Graphics g, Rectangle d, SvcInfo s)
+    {
+        Card(g, d);
+        int pad = Px(12), lh = Px(19), lw = Px(110);
+        Color stc = StateColor(s.State);
+        using (SolidBrush b = new SolidBrush(stc)) Util.FillRound(g, b, new Rectangle(d.X, d.Y + Px(10), Px(4), Px(22)), Px(2));
+        bool crit = ProcAct.IsCriticalSvc(s.Name);
+        bool run = s.State == 4;
+        string sn = s.Name, sd = s.Display;
+        int pid = s.Pid;
+        int bw = Px(130), bh = Px(28), gap = Px(6);
+        Rectangle b3 = new Rectangle(d.Right - pad - bw, d.Y + Px(8), bw, bh);
+        Rectangle b2 = new Rectangle(b3.X - gap - bw, b3.Y, bw, bh);
+        Rectangle b1 = new Rectangle(b2.X - gap - bw, b3.Y, bw, bh);
+        if (run) DangerBtn(g, b1, L.T("Зупинити"), delegate { AskSvcStop(sn, sd); }, !actBusy && !crit);
+        else Btn(g, b1, L.T("Запустити"), delegate { SvcToggle(sn, sd, false); }, 1, !actBusy && s.State == 1 && s.Mode != 3);
+        if (!run && s.Mode == 3) Tip(b1, L.T("Служба вимкнена - спершу виберіть інший тип запуску"));
+        Btn(g, b2, L.T("Перезапустити"), delegate { AskSvcRestart(sn, sd); }, 0, !actBusy && run && !crit);
+        Btn(g, b3, L.T("До процесу"), delegate { pview = 0; selPid = pid; Invalidate(); }, 0, pid > 0);
+        TxtL(g, s.Display, FB, new Rectangle(d.X + pad, d.Y + Px(9), b1.X - d.X - pad - Px(8), Px(24)), P.Fg);
+
+        int y = d.Y + Px(42);
+        int full = d.Width - pad * 2;
+        string[] meta = SvcMeta(s.Name);
+        ProcRow host = pid > 0 ? Find(pid) : null;
+        Field(g, new Rectangle(d.X + pad, y, full, lh), lw, L.T("Ім'я служби"), s.Name + "  ·  " + StateText(s.State) + (pid > 0 ? "  ·  " + (host != null ? host.Name + " " : "") + "PID " + pid : "")); y += lh;
+        Field(g, new Rectangle(d.X + pad, y, full, lh), lw, L.T("Файл"), meta[0].Length > 0 ? meta[0] : "—"); y += lh;
+        TxtL(g, L.T("Опис"), FS, new Rectangle(d.X + pad, y, lw, lh), P.Sub);
+        Rectangle dr = new Rectangle(d.X + pad + lw, y + Px(1), full - lw, lh * 2);
+        TxtW(g, meta[1].Length > 0 ? meta[1] : "—", FS, dr, P.Fg);
+        if (meta[1].Length > 0) Tip(dr, meta[1]);
+        y += lh * 2;
+        TxtL(g, L.T("Запуск"), FS, new Rectangle(d.X + pad, y + Px(4), lw, Px(28)), P.Sub);
+        if (crit) TxtL(g, L.T("ключова служба Windows - не змінюється"), FS, new Rectangle(d.X + pad + lw, y + Px(4), full - lw, Px(28)), P.Sub);
+        else ModeChips(g, d.X + pad + lw, y + Px(4), Px(110), sn, sd, s.Mode);
+    }
+
+    // ================= нове завдання =================
+    static string lastTask = "";
+
+    void NewTask()
+    {
+        bool admin;
+        string cmd = RunTaskDialog.Ask(Bar, this, lastTask, out admin);
+        if (cmd == null || cmd.Trim().Length == 0) return;
+        lastTask = cmd.Trim();
+        string err = TaskLauncher.Run(lastTask, admin);
+        actBad = err.Length > 0;
+        actNote = actBad ? err : L.F("Запущено: {0}", lastTask);
+        actAt = DateTime.Now;
+        Invalidate();
+    }
+}
+
+// запуск команди, програми, документа чи теки - як «Виконати»
+static class TaskLauncher
+{
+    // поділ рядка на файл і параметри: «"C:\x y\a.exe" -p», «C:\x y\a.exe» (наявний файл), «notepad a.txt»
+    public static void Split(string line, out string file, out string args)
+    {
+        string l = line.Trim();
+        file = l; args = "";
+        if (l.StartsWith("\""))
+        {
+            int q = l.IndexOf('"', 1);
+            if (q > 0) { file = l.Substring(1, q - 1); args = l.Substring(q + 1).Trim(); }
+            return;
+        }
+        string ex = Environment.ExpandEnvironmentVariables(l);
+        try { if (File.Exists(ex) || Directory.Exists(ex)) { file = l; return; } } catch { }
+        int sp = l.IndexOf(' ');
+        if (sp > 0) { file = l.Substring(0, sp); args = l.Substring(sp + 1).Trim(); }
+    }
+
+    // "" - запущено, інакше текст помилки
+    public static string Run(string line, bool admin)
+    {
+        string file, args;
+        Split(line, out file, out args);
+        file = Environment.ExpandEnvironmentVariables(file);
+        try
+        {
+            if (!admin && Elevated.IsAdmin)
+            {
+                // NeoBar працює від адміністратора, а завдання - зі звичайними правами (як із Провідника)
+                if (UserLaunch.Shell(file, args).Length > 0) return "";
+                return L.T("Не вдалося запустити зі звичайними правами.");
+            }
+            ProcessStartInfo psi = new ProcessStartInfo(file, args);
+            psi.UseShellExecute = true;
+            if (admin && !Elevated.IsAdmin) psi.Verb = "runas";
+            try { string dir = Path.GetDirectoryName(file); if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir)) psi.WorkingDirectory = dir; } catch { }
+            using (Process p = Process.Start(psi)) { }
+            return "";
+        }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            if (ex.NativeErrorCode == 1223) return L.T("Скасовано.");
+            if (ex.NativeErrorCode == 2 || ex.NativeErrorCode == 3) return L.F("Не знайдено: {0}", file);
+            return ex.Message;
+        }
+        catch (Exception ex) { return ex.Message; }
+    }
+}
+
+// вікно «Нове завдання»: рядок команди, огляд, права адміністратора; файл можна перетягнути
+sealed class RunTaskDialog : SbWindow
+{
+    readonly TextBox tb;
+    bool admin, ok;
+
+    RunTaskDialog(NeoBar bar, string value) : base(bar, L.T("Нове завдання"), 560, 268)
+    {
+        Glyph = "\uE7C4";
+        TopMost = true;
+        tb = MakeInput();
+        tb.Text = value ?? "";
+        tb.KeyDown += delegate (object s, KeyEventArgs e) { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Ok(); } };
+    }
+
+    protected override bool AcceptsFiles { get { return true; } }
+
+    protected override void FilesDropped(string[] files)
+    {
+        if (files.Length == 0) return;
+        string f = files[0];
+        tb.Text = f.IndexOf(' ') >= 0 ? "\"" + f + "\"" : f;
+        tb.SelectionStart = tb.Text.Length;
+        Activate();
+        Invalidate();
+    }
+
+    void Ok() { if (tb.Text.Trim().Length == 0) return; ok = true; Close(); }
+
+    void Browse()
+    {
+        using (OpenFileDialog d = new OpenFileDialog())
+        {
+            d.Title = L.T("Нове завдання");
+            d.Filter = L.T("Програми|*.exe;*.bat;*.cmd;*.com;*.msc;*.lnk|Усі файли|*.*");
+            if (d.ShowDialog(this) != DialogResult.OK) return;
+            tb.Text = d.FileName.IndexOf(' ') >= 0 ? "\"" + d.FileName + "\"" : d.FileName;
+        }
+    }
+
+    protected override void PaintBody(Graphics g, Rectangle r)
+    {
+        TxtW(g, L.T("Введіть ім'я програми, теки, документа чи адресу - Windows відкриє їх. Файл можна перетягнути в це вікно."), F, new Rectangle(r.X, r.Y, r.Width, Px(44)), P.Fg);
+        Rectangle br = new Rectangle(r.Right - Px(110), r.Y + Px(52), Px(110), Px(34));
+        PlaceInput(g, tb, new Rectangle(r.X, br.Y, br.X - r.X - Px(8), Px(34)));
+        Btn(g, br, L.T("Огляд…"), Browse, 0, true);
+        Switch(g, new Rectangle(r.X, br.Bottom + Px(12), r.Width, Px(28)), L.T("Створити з правами адміністратора"), admin, delegate { admin = !admin; Invalidate(); });
+        Btn(g, new Rectangle(r.Right - Px(130), r.Bottom - Px(36), Px(130), Px(36)), L.T("Запустити"), Ok, 1, true);
+        Btn(g, new Rectangle(r.Right - Px(270), r.Bottom - Px(36), Px(130), Px(36)), L.T("Скасувати"), delegate { Close(); }, 0, true);
+    }
+
+    // null - скасовано
+    public static string Ask(NeoBar bar, Form owner, string value, out bool admin)
+    {
+        admin = false;
+        using (RunTaskDialog d = new RunTaskDialog(bar, value))
+        {
+            Rectangle ob = owner != null ? owner.Bounds : Screen.PrimaryScreen.WorkingArea;
+            d.Location = new Point(ob.Left + (ob.Width - d.Width) / 2, ob.Top + Math.Max(0, (ob.Height - d.Height) / 2));
+            d.ShowDialog(owner);
+            admin = d.admin;
+            return d.ok ? d.tb.Text.Trim() : null;
+        }
     }
 }

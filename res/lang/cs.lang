@@ -10204,27 +10204,6 @@
 < Запущено з «{0}»: документ чи PDF запускає командний рядок або скрипт - типова ознака шкідливого макросу.
 > Spuštěno z „{0}“: dokument nebo PDF spouští příkazový řádek či skript – typický příznak škodlivého makra.
 
-< Понад дві хвилини навантажує процесор ({0}%).
-> Zatěžuje procesor déle než dvě minuty ({0} %).
-
-< Хвилину й довше інтенсивно читає чи пише (понад 30 МБ/с).
-> Minutu a déle intenzivně čte nebo zapisuje (přes 30 MB/s).
-
-< Пам'ять швидко росте: +{0} МБ за {1} хв (можливий витік).
-> Paměť rychle roste: +{0} MB za {1} min (možný únik).
-
-< Дуже багато відкритих дескрипторів ({0}) - так виглядає витік ресурсів.
-> Velmi mnoho otevřených handlů ({0}) – tak vypadá únik prostředků.
-
-< Не підписаний файл з теки користувача відкрив порт для вхідних підключень.
-> Nepodepsaný soubor z uživatelské složky otevřel port pro příchozí spojení.
-
-< Не підписаний файл з теки користувача має з'єднання з мережею.
-> Nepodepsaný soubor z uživatelské složky má síťové spojení.
-
-< Аномалії
-> Anomálie
-
 < Процесів: {0} · потоків: {1}
 > Procesů: {0} · vláken: {1}
 
@@ -10236,9 +10215,6 @@
 
 < Працює античіт ({0}) - шляхи та підписи тимчасово не збираються.
 > Běží anti-cheat ({0}) – cesty a podpisy se dočasně nesbírají.
-
-< Аномальної поведінки не помічено.
-> Nepodezřelé chování nezjištěno.
 
 < Збираю дані…
 > Sbírám data…
@@ -10408,9 +10384,6 @@
 < Службу «{0}» запущено.
 > Služba „{0}“ spuštěna.
 
-< і ще {0} - див. «Служби» Windows
-> a dalších {0} – viz „Služby“ Windows
-
 <  і ще {0}
 >  a dalších {0}
 
@@ -10569,3 +10542,66 @@
 
 < Тип запуску служби «{0}»: {1}
 > Typ spuštění služby „{0}“: {1}
+
+< Нове завдання…
+> Nová úloha…
+
+< Запустити програму, документ, теку чи команду - як «Виконати» або «Нове завдання» в Диспетчері завдань
+> Spustit program, dokument, složku nebo příkaz – jako „Spustit“ nebo „Nová úloha“ ve Správci úloh
+
+< Служб: {0} · працюють: {1}
+> Služeb: {0} · běží: {1}
+
+< призупинена
+> pozastavena
+
+< Системна
+> Systémová
+
+< і ще {0} - див. «Служби» вгорі
+> a dalších {0} – viz „Služby“ nahoře
+
+< Перезапустити службу «{0}»?
+> Restartovat službu „{0}“?
+
+< Ім'я служби
+> Název služby
+
+< Працюють
+> Běží
+
+< Зупинені
+> Zastavené
+
+< Служба вимкнена - спершу виберіть інший тип запуску
+> Služba je zakázaná – nejdřív vyberte jiný typ spuštění
+
+< До процесу
+> K procesu
+
+< Опис
+> Popis
+
+< Запущено: {0}
+> Spuštěno: {0}
+
+< Не вдалося запустити зі звичайними правами.
+> S běžnými právy se spustit nepodařilo.
+
+< Скасовано.
+> Zrušeno.
+
+< Не знайдено: {0}
+> Nenalezeno: {0}
+
+< Нове завдання
+> Nová úloha
+
+< Програми|*.exe;*.bat;*.cmd;*.com;*.msc;*.lnk|Усі файли|*.*
+> Programy|*.exe;*.bat;*.cmd;*.com;*.msc;*.lnk|Všechny soubory|*.*
+
+< Введіть ім'я програми, теки, документа чи адресу - Windows відкриє їх. Файл можна перетягнути в це вікно.
+> Zadejte název programu, složky, dokumentu nebo adresu – Windows je otevře. Soubor můžete také přetáhnout do tohoto okna.
+
+< Створити з правами адміністратора
+> Vytvořit s právy správce

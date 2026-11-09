@@ -7,7 +7,7 @@ using System.Threading;
 
 // ======================================================================
 //  Монітор процесів (вкладка «Процеси» в «Моніторі системи»): знімок усіх процесів, навантаження, пам'ять,
-//  дескриптори, мережа і позначки аномальної поведінки. Лише показ: нічого не змінює й не блокує.
+//  дескриптори, мережа, хто керує процесом, служби. Аналіз підозрілої поведінки - у «Безпеці», тут лише показ.
 //
 //  Дані - одним системним викликом NtQuerySystemInformation (так робить і Диспетчер завдань): жодного
 //  дескриптора процесу не відкривається. Шлях і командний рядок читаються один раз на процес із правом
@@ -19,6 +19,7 @@ sealed class SvcInfo
     public string Name = "", Display = "";
     public int State;                       // 1 зупинено, 2 запускається, 3 зупиняється, 4 працює, 5-7 пауза
     public int Pid;
+    public int Mode = -1;                   // тип запуску (ProcAct.StartMode), для списку служб
 }
 
 sealed class ProcRow
@@ -40,17 +41,9 @@ sealed class ProcRow
     public int Threads, Handles;
     public double Io;                       // байт/с (усі операції введення-виведення)
     public int NetEst, NetListen;           // з'єднання назовні, порти для вхідних
-    public int Level;                       // 0 - звичайний, 1 - зверніть увагу, 2 - підозріло
-    public readonly List<string> Why = new List<string>();
-    public string Signer = "";
-    public int SigKind = Sig.Unknown, Place = SecHeur.POther;
-    public bool SigDone, Exists = true, Fresh;
     internal bool PathTried;
     internal long LastCpu, LastIo;
-    internal DateTime HighCpuSince = DateTime.MinValue, HighIoSince = DateTime.MinValue, LastHist = DateTime.MinValue;
-    internal readonly List<KeyValuePair<DateTime, long>> CommitHist = new List<KeyValuePair<DateTime, long>>();
 
-    public double AgeSec { get { return Created > 0 ? Math.Max(0, (DateTime.UtcNow - DateTime.FromFileTimeUtc(Created)).TotalSeconds) : 0; } }
     public DateTime Started { get { return Created > 0 ? DateTime.FromFileTimeUtc(Created).ToLocalTime() : DateTime.MinValue; } }
 }
 
@@ -74,58 +67,34 @@ static class ProcMon
     [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool QueryFullProcessImageNameW(IntPtr h, int flags, StringBuilder sb, ref int size);
 
-    // ---------- статичний аналіз файлів (підпис, місце, ім'я) - у фоні, по одному ----------
-    sealed class SInfo
+    // ---------- цифровий підпис - лише для вибраного процесу, у фоні ----------
+    public sealed class SigInfo
     {
         public volatile bool Done;
-        public int SigKind = Sig.Unknown, Score, Place = SecHeur.POther;
+        public int Kind = Sig.Unknown;
         public string Signer = "";
-        public bool Exists = true;
-        public readonly List<string> Why = new List<string>();
     }
-    static readonly Dictionary<string, SInfo> stat = new Dictionary<string, SInfo>(StringComparer.OrdinalIgnoreCase);
-    static readonly Queue<string> queue = new Queue<string>();
-    static Thread worker;
+    static readonly Dictionary<string, SigInfo> sigs = new Dictionary<string, SigInfo>(StringComparer.OrdinalIgnoreCase);
 
-    static SInfo Static(string path)
+    public static SigInfo SigOf(string path)
     {
-        SInfo s;
-        lock (stat)
+        if (string.IsNullOrEmpty(path)) return null;
+        SigInfo s;
+        lock (sigs)
         {
-            if (stat.TryGetValue(path, out s)) return s;
-            if (stat.Count > 1500) return null;
-            s = new SInfo();
-            stat[path] = s;
-            queue.Enqueue(path);
-            if (worker == null || !worker.IsAlive)
-            {
-                worker = new Thread(Work);
-                worker.IsBackground = true;
-                worker.Priority = ThreadPriority.BelowNormal;
-                worker.Start();
-            }
+            if (sigs.TryGetValue(path, out s)) return s;
+            if (sigs.Count > 400) sigs.Clear();
+            s = new SigInfo();
+            sigs[path] = s;
         }
-        return s;
-    }
-
-    static void Work()
-    {
-        while (true)
+        SigInfo ss = s;
+        ThreadPool.QueueUserWorkItem(delegate
         {
-            string p;
-            lock (stat) { if (queue.Count == 0) { worker = null; return; } p = queue.Dequeue(); }
-            SInfo s;
-            lock (stat) s = stat[p];
-            try
-            {
-                Finding f = SecScan.AnalyzeFile(p);
-                s.SigKind = f.SigKind; s.Signer = f.Signer; s.Place = f.Place; s.Score = f.Score;
-                s.Exists = File.Exists(p);
-                foreach (string w in f.Why) s.Why.Add(w);
-            }
+            try { string sg = ""; ss.Kind = File.Exists(path) ? Sig.Check(path, out sg) : Sig.Unknown; ss.Signer = sg ?? ""; }     // з каталогами Windows
             catch { }
-            s.Done = true;
-        }
+            ss.Done = true;
+        });
+        return s;
     }
 
     public static void Reset()
@@ -263,7 +232,7 @@ static class ProcMon
                 List<SvcInfo> sl;
                 r.Svcs = svcByPid.TryGetValue(r.Pid, out sl) ? sl : new List<SvcInfo>();
             }
-            Evaluate(rows, now);
+            Classify(rows);
             Rows = rows;
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
@@ -497,93 +466,55 @@ static class ProcMon
     }
 
     // ---------- аномалії ----------
-    static void Flag(ProcRow r, int lev, string why)
-    {
-        if (lev > r.Level) r.Level = lev;
-        if (!r.Why.Contains(why)) r.Why.Add(why);
-    }
-
-    static readonly string[] Office = { "winword.exe", "excel.exe", "powerpnt.exe", "outlook.exe", "onenote.exe", "mspub.exe", "msaccess.exe", "visio.exe", "acrord32.exe", "acrobat.exe", "foxitreader.exe", "wordpad.exe" };
-    static readonly string[] Shells = { "cmd.exe", "powershell.exe", "pwsh.exe", "wscript.exe", "cscript.exe", "mshta.exe", "rundll32.exe", "regsvr32.exe", "certutil.exe", "bitsadmin.exe", "wmic.exe" };
-    static readonly string[] Single = { "lsass.exe", "services.exe", "wininit.exe" };         // у системі лише по одному
-    static readonly Dictionary<string, string> Parents = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-    {
-        { "svchost.exe", "services.exe" }, { "services.exe", "wininit.exe" }, { "lsass.exe", "wininit.exe" },
-        { "taskhostw.exe", "svchost.exe" }, { "runtimebroker.exe", "svchost.exe" }, { "sihost.exe", "svchost.exe" }
-    };
-
-    static void Evaluate(List<ProcRow> rows, DateTime now)
+    // вид і хто керує
+    static void Classify(List<ProcRow> rows)
     {
         Dictionary<int, ProcRow> by = new Dictionary<int, ProcRow>();
-        Dictionary<string, int> cnt = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (ProcRow r in rows) by[r.Pid] = r;
         foreach (ProcRow r in rows)
         {
-            by[r.Pid] = r;
-            int c; cnt.TryGetValue(r.Name, out c); cnt[r.Name] = c + 1;
-        }
-        foreach (ProcRow r in rows)
-        {
-            r.Level = 0;
-            r.Why.Clear();
-            r.Fresh = r.AgeSec < 120;
-
-            // файл: підпис, місце, ім'я, пакувальник (аналіз у фоні)
-            if (r.Path.Length > 0)
-            {
-                SInfo s = Static(r.Path);
-                if (s != null && s.Done)
-                {
-                    r.SigKind = s.SigKind; r.Signer = s.Signer; r.Place = s.Place; r.SigDone = true; r.Exists = s.Exists;
-                    if (s.Score >= 3) foreach (string w in s.Why) Flag(r, s.Score >= 5 ? 2 : 1, w);
-                }
-            }
-
-            string nm = r.Name.ToLowerInvariant();
             ProcRow par;
             bool parOk = by.TryGetValue(r.Parent, out par) && par.Created <= r.Created && r.Parent != r.Pid;
             r.Kind = KindOf(r, parOk ? par : null);
             Controller(r, parOk ? par : null);
-
-            // системний процес запущено не тим, ким треба
-            string want;
-            if (parOk && Parents.TryGetValue(nm, out want) && !string.Equals(par.Name, want, StringComparison.OrdinalIgnoreCase) && (r.Path.Length == 0 || SecHeur.InSys32(r.Path)))
-                Flag(r, 2, L.F("«{0}» зазвичай запускає {1}, а тут - «{2}» (PID {3}).", r.Name, want, par.Name, par.Pid));
-            if (Array.IndexOf(Single, nm) >= 0 && cnt[r.Name] > 1)
-                Flag(r, 2, L.F("Другий екземпляр «{0}»: у Windows він один - підроблені копії часто видають себе за нього.", r.Name));
-            if (parOk && Array.IndexOf(Office, par.Name.ToLowerInvariant()) >= 0 && Array.IndexOf(Shells, nm) >= 0)
-                Flag(r, 2, L.F("Запущено з «{0}»: документ чи PDF запускає командний рядок або скрипт - типова ознака шкідливого макросу.", par.Name));
-
-            // поведінка в часі
-            if (r.Cpu >= 60) { if (r.HighCpuSince == DateTime.MinValue) r.HighCpuSince = now; }
-            else r.HighCpuSince = DateTime.MinValue;
-            if (r.HighCpuSince != DateTime.MinValue && (now - r.HighCpuSince).TotalSeconds >= 120)
-                Flag(r, 1, L.F("Понад дві хвилини навантажує процесор ({0}%).", Math.Round(r.Cpu)));
-
-            if (r.Io >= 30 * 1048576.0) { if (r.HighIoSince == DateTime.MinValue) r.HighIoSince = now; }
-            else r.HighIoSince = DateTime.MinValue;
-            if (r.HighIoSince != DateTime.MinValue && (now - r.HighIoSince).TotalSeconds >= 60)
-                Flag(r, 1, L.T("Хвилину й довше інтенсивно читає чи пише (понад 30 МБ/с)."));
-
-            if ((now - r.LastHist).TotalSeconds >= 15)
-            {
-                r.LastHist = now;
-                r.CommitHist.Add(new KeyValuePair<DateTime, long>(now, r.Commit));
-                if (r.CommitHist.Count > 40) r.CommitHist.RemoveAt(0);
-            }
-            if (r.CommitHist.Count > 0)
-            {
-                KeyValuePair<DateTime, long> old = r.CommitHist[0];
-                double mins = (now - old.Key).TotalMinutes;
-                long grow = r.Commit - old.Value;
-                if (mins >= 4 && grow > 300L * 1048576 && r.Commit > old.Value * 1.5)
-                    Flag(r, 1, L.F("Пам'ять швидко росте: +{0} МБ за {1} хв (можливий витік).", grow / 1048576, Math.Round(mins)));
-            }
-            if (r.Handles >= 10000) Flag(r, 1, L.F("Дуже багато відкритих дескрипторів ({0}) - так виглядає витік ресурсів.", r.Handles));
-
-            // мережа від непідписаного файла з теки користувача
-            bool shady = r.SigDone && r.SigKind != Sig.Ok && r.Place == SecHeur.PUser;
-            if (shady && r.NetListen > 0) Flag(r, 2, L.T("Не підписаний файл з теки користувача відкрив порт для вхідних підключень."));
-            else if (shady && r.NetEst > 0) Flag(r, 1, L.T("Не підписаний файл з теки користувача має з'єднання з мережею."));
         }
+    }
+
+    // усі служби Windows (і зупинені) - для списку служб
+    public static List<SvcInfo> AllServices()
+    {
+        List<SvcInfo> r = new List<SvcInfo>();
+        IntPtr scm = OpenSCManager(null, null, 0x0005);
+        if (scm == IntPtr.Zero) return r;
+        IntPtr b = IntPtr.Zero;
+        try
+        {
+            int need, count, resume = 0;
+            EnumServicesStatusEx(scm, 0, 0x30, 3, IntPtr.Zero, 0, out need, out count, ref resume, null);
+            if (need <= 0 || need > 8 << 20) return r;
+            need += 8192;
+            b = Marshal.AllocHGlobal(need);
+            resume = 0;
+            if (!EnumServicesStatusEx(scm, 0, 0x30, 3, b, need, out need, out count, ref resume, null)) return r;
+            int sz = Marshal.SizeOf(typeof(ESSP));
+            for (int i = 0; i < count; i++)
+            {
+                ESSP e = (ESSP)Marshal.PtrToStructure(new IntPtr(b.ToInt64() + (long)i * sz), typeof(ESSP));
+                SvcInfo s = new SvcInfo();
+                s.Name = Marshal.PtrToStringUni(e.Name) ?? "";
+                s.Display = Marshal.PtrToStringUni(e.Display) ?? s.Name;
+                s.State = e.State;
+                s.Pid = e.Pid;
+                s.Mode = ProcAct.StartMode(s.Name);
+                r.Add(s);
+            }
+        }
+        catch (Exception ex) { Util.ErrorLog(ex); }
+        finally
+        {
+            if (b != IntPtr.Zero) Marshal.FreeHGlobal(b);
+            CloseServiceHandle(scm);
+        }
+        return r;
     }
 }
