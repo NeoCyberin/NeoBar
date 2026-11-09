@@ -154,7 +154,7 @@ sealed partial class NetWindow
             for (int i = 0; i < n; i++)
             {
                 int k = i;
-                Thread t = new Thread(delegate () { double ms; res[k] = NetTools.TcpProbe(ip, ports[k], 1200, out ms); tm[k] = ms; });
+                Thread t = new Thread(delegate () { try { double ms; res[k] = NetTools.TcpProbe(ip, ports[k], 1200, out ms); tm[k] = ms; } catch { res[k] = 2; } });
                 t.IsBackground = true;
                 t.Start();
                 th.Add(t);

@@ -11,26 +11,25 @@ using System.Windows.Forms;
 // ======================================================================
 //  Перетягування файлів у NeoBar, запущений від імені адміністратора.
 //  Windows (UIPI) не пускає перетягування зі звичайного Провідника у вікна з вищими правами - курсор стає
-//  «заборонено». Тому поруч працює маленький помічник зі звичайними правами (та сама NeoBar.exe з --drop):
-//  коли кнопку миші затиснули поза NeoBar і з нею заходять на вікно NeoBar, помічник ставить над цим вікном
-//  невидиме вікно-приймач, отримує файли звичайним перетягуванням і передає їхні шляхи панелі (WM_COPYDATA,
-//  дозволене фільтром UIPI лише для власного приймача). Панель перевіряє, що надіслала саме її копія.
-//  Вікна, які приймають файли, позначені властивістю NeoBarDropZone. Без прав адміністратора помічник не потрібен.
+//  «заборонено». Тому поруч працює маленький помічник зі звичайними правами (та сама NeoBar.exe з --drop).
+//  Стежить сама NeoBar (процесу з вищими правами Windows показує стан миші завжди, а звичайному - ні, коли активне
+//  вікно NeoBar): кнопку затиснули поза NeoBar і з нею зайшли на вікно, що приймає файли, - NeoBar просить помічника
+//  поставити над цим вікном невидиме вікно-приймач. Помічник отримує файли звичайним перетягуванням і передає їхні
+//  шляхи панелі (WM_COPYDATA, дозволене фільтром UIPI лише для власного приймача). Панель перевіряє, що надіслала
+//  саме її копія. Без прав адміністратора помічник не потрібен.
 // ======================================================================
 static class DropBridge
 {
-    const string Prop = "NeoBarDropZone";
-    const int WM_COPYDATA = 0x4A, WM_DROPFILES = 0x233;
+    const int WM_COPYDATA = 0x4A, WM_DROPFILES = 0x233, MsgShow = 0x8000 + 0x61, MsgHide = 0x8000 + 0x62;
     static readonly IntPtr Magic = new IntPtr(0x4E42444E);
 
     [StructLayout(LayoutKind.Sequential)] struct COPYDATA { public IntPtr Data; public int Size; public IntPtr Ptr; }
     [StructLayout(LayoutKind.Sequential)] struct RECT { public int L, T, R, B; }
     [StructLayout(LayoutKind.Sequential)] struct POINT { public int X, Y; }
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool SetProp(IntPtr h, string name, IntPtr data);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr GetProp(IntPtr h, string name);
     [DllImport("user32.dll")] static extern bool ChangeWindowMessageFilterEx(IntPtr h, uint msg, uint action, IntPtr info);
     [DllImport("user32.dll")] static extern bool PostMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindow(string cls, string title);
     [DllImport("user32.dll", SetLastError = true)] static extern IntPtr SendMessageTimeout(IntPtr h, int msg, IntPtr w, ref COPYDATA l, int flags, int timeout, out IntPtr res);
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
     [DllImport("user32.dll")] static extern bool IsWindow(IntPtr h);
@@ -58,14 +57,13 @@ static class DropBridge
     static readonly HashSet<IntPtr> zones = new HashSet<IntPtr>();
     static bool launched;
 
-    // вікно приймає файли: позначити його для помічника (викликається з DropFiles.Register, кількаразово - безпечно)
+    // вікно приймає файли: запам'ятати його як місце для скидання (викликається з DropFiles.Register, кількаразово - безпечно)
     public static void Add(Control c)
     {
         if (!Elevated.IsAdmin) return;
         try
         {
             IntPtr h = c.Handle;
-            SetProp(h, Prop, new IntPtr(1));
             if (zones.Add(h)) { IntPtr hh = h; c.HandleDestroyed += delegate { zones.Remove(hh); }; }
             Start();
         }
@@ -80,6 +78,72 @@ static class DropBridge
         string exe = Application.ExecutablePath;
         string how = UserLaunch.Run(exe, "--drop " + recv.Handle.ToInt64());
         SbLog.W(SbLog.Panel, "перетягування від адміністратора: помічник зі звичайними правами - " + (how.Length > 0 ? how : "не запустився"));
+        if (how.Length == 0) return;
+        poll = new System.Windows.Forms.Timer();
+        poll.Interval = 50;
+        poll.Tick += delegate { Watch(); };
+        poll.Start();
+    }
+
+    // ---------- стеження за перетягуванням (у NeoBar) ----------
+    static System.Windows.Forms.Timer poll;
+    static IntPtr helper = IntPtr.Zero, shownZone = IntPtr.Zero;
+    static bool wasDown, pressOutside;
+    static readonly uint selfPid = (uint)System.Diagnostics.Process.GetCurrentProcess().Id;
+
+    static IntPtr Helper()
+    {
+        if (helper != IntPtr.Zero && IsWindow(helper)) return helper;
+        helper = recv != null ? FindWindow(null, "NeoBarDrop " + recv.Handle.ToInt64()) : IntPtr.Zero;
+        return helper;
+    }
+
+    static IntPtr RootAt(POINT pt)
+    {
+        IntPtr w = WindowFromPoint(pt);
+        if (w == IntPtr.Zero) return IntPtr.Zero;
+        IntPtr root = GetAncestor(w, 2);
+        return root != IntPtr.Zero ? root : w;
+    }
+
+    static void Watch()
+    {
+        try
+        {
+            if (NeoBar.Paused) { Hide(); wasDown = false; return; }         // гра на весь екран - не стежимо
+            bool down = (GetAsyncKeyState(GetSystemMetrics(23) != 0 ? 0x02 : 0x01) & 0x8000) != 0;
+            POINT pt;
+            if (!GetCursorPos(out pt)) return;
+            if (down && !wasDown)
+            {
+                // натиснули на власному вікні NeoBar - це її дії (перетягування значків тощо), не чіпаємо
+                uint pid;
+                IntPtr root = RootAt(pt);
+                pressOutside = shownZone == IntPtr.Zero && (root == IntPtr.Zero || GetWindowThreadProcessId(root, out pid) == 0 || pid != selfPid);
+            }
+            wasDown = down;
+            if (!down || !pressOutside) { Hide(); return; }
+            if (shownZone != IntPtr.Zero)
+            {
+                RECT rc;
+                if (IsWindow(shownZone) && IsWindowVisible(shownZone) && GetWindowRect(shownZone, out rc) && pt.X >= rc.L && pt.X < rc.R && pt.Y >= rc.T && pt.Y < rc.B) return;
+                Hide();
+            }
+            IntPtr z = RootAt(pt);
+            if (z == IntPtr.Zero || !zones.Contains(z) || !IsWindowVisible(z)) return;
+            IntPtr h = Helper();
+            if (h == IntPtr.Zero) return;
+            if (PostMessage(h, MsgShow, z, IntPtr.Zero)) shownZone = z;
+        }
+        catch (Exception ex) { Util.ErrorLog(ex); }
+    }
+
+    static void Hide()
+    {
+        if (shownZone == IntPtr.Zero) return;
+        shownZone = IntPtr.Zero;
+        IntPtr h = Helper();
+        if (h != IntPtr.Zero) PostMessage(h, MsgHide, IntPtr.Zero, IntPtr.Zero);
     }
 
     sealed class Receiver : NativeWindow
@@ -197,8 +261,8 @@ static class DropBridge
     {
         readonly IntPtr target;
         readonly System.Windows.Forms.Timer tm = new System.Windows.Forms.Timer();
-        bool wasDown, pressOutside, shown;
         IntPtr zone = IntPtr.Zero;
+        bool logged;
 
         public Overlay(IntPtr t)
         {
@@ -210,12 +274,13 @@ static class DropBridge
             BackColor = Color.Black;
             Opacity = 0.01;                 // невидиме, але приймає мишу й перетягування
             AllowDrop = true;
-            Text = "NeoBarDrop";
+            Text = "NeoBarDrop " + t.ToInt64();          // за цим заголовком NeoBar знаходить помічника
             DragEnter += OnDrag;
             DragOver += OnDrag;
             DragDrop += OnDrop;
-            tm.Interval = 60;
-            tm.Tick += delegate { Tick(); };
+            // NeoBar закрилася - помічник теж
+            tm.Interval = 1000;
+            tm.Tick += delegate { if (!IsWindow(target)) { tm.Stop(); Application.ExitThread(); } };
             tm.Start();
         }
 
@@ -231,50 +296,25 @@ static class DropBridge
             }
         }
 
-        static IntPtr ZoneAt(POINT pt)
+        // команди від NeoBar: показати приймач над вікном / сховати
+        protected override void WndProc(ref Message m)
         {
-            IntPtr w = WindowFromPoint(pt);
-            if (w == IntPtr.Zero) return IntPtr.Zero;
-            IntPtr root = GetAncestor(w, 2);
-            if (root == IntPtr.Zero) root = w;
-            return GetProp(root, Prop) != IntPtr.Zero && IsWindowVisible(root) ? root : IntPtr.Zero;
+            if (m.Msg == MsgShow) { On(m.WParam); return; }
+            if (m.Msg == MsgHide) { Off(); return; }
+            base.WndProc(ref m);
         }
-
-        void Tick()
-        {
-            if (!IsWindow(target)) { tm.Stop(); Application.ExitThread(); return; }
-            bool down = (GetAsyncKeyState(GetSystemMetrics(23) != 0 ? 0x02 : 0x01) & 0x8000) != 0;
-            POINT pt;
-            if (!GetCursorPos(out pt)) return;
-            // натискання саме на вікні NeoBar - це її власні дії (перетягування значків тощо), не чіпаємо
-            if (down && !wasDown) pressOutside = !shown && ZoneAt(pt) == IntPtr.Zero;
-            wasDown = down;
-            if (!down || !pressOutside) { if (shown) Off(); return; }
-            if (shown)
-            {
-                RECT rc;
-                if (IsWindow(zone) && IsWindowVisible(zone) && GetWindowRect(zone, out rc) && pt.X >= rc.L && pt.X < rc.R && pt.Y >= rc.T && pt.Y < rc.B) return;
-                Off();
-            }
-            IntPtr z = ZoneAt(pt);
-            if (z != IntPtr.Zero) On(z);
-        }
-
-        bool logged;
 
         void On(IntPtr z)
         {
             RECT rc;
-            if (!GetWindowRect(z, out rc)) return;
+            if (!IsWindow(z) || !GetWindowRect(z, out rc)) return;
             if (!logged) { logged = true; SbLog.W(SbLog.Panel, "помічник перетягування: перетягування над вікном NeoBar " + rc.L + "," + rc.T + " " + (rc.R - rc.L) + "x" + (rc.B - rc.T)); }
             zone = z;
-            shown = true;
             SetWindowPos(Handle, new IntPtr(-1), rc.L, rc.T, rc.R - rc.L, rc.B - rc.T, 0x0010 | 0x0040);      // TOPMOST, NOACTIVATE | SHOWWINDOW
         }
 
         void Off()
         {
-            shown = false;
             ShowWindow(Handle, 0);
         }
 

@@ -33,7 +33,7 @@ sealed partial class PerfWindow : SbWindow
 
     public PerfWindow(NeoBar bar, int tab) : base(bar, L.T("Монітор системи"), 880, 740)
     { Glyph = "\uE9D9";
-        Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики"), L.T("Процеси") };
+        Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики"), L.T("Завдання") };
         Tab = Math.Max(0, Math.Min(2, tab));
         Sensors.Use("perfwin", 2);
         Sensors.Updated += OnData;
@@ -62,6 +62,7 @@ sealed partial class PerfWindow : SbWindow
         scroll = 0;
         if (Tab == 1) HwInfo.Load(false);
         if (Tab == 2) EnterProcs();
+        if (search != null) search.Visible = Tab == 2;
     }
 
     protected override void OnTick() { if (Tab == 2) TickProcs(); else if (Tab == 1 && (HwInfo.Loading || (DateTime.Now - copiedAt).TotalMilliseconds < 1800)) Invalidate(); }

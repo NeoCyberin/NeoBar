@@ -176,14 +176,18 @@ static class AntiCheat
         if (w.Length > 0) return w;
         try
         {
-            foreach (Process p in Process.GetProcesses())
+            Process[] all = Process.GetProcesses();
+            try
             {
-                string n;
-                try { n = p.ProcessName.ToLowerInvariant(); } catch { continue; }
-                finally { p.Dispose(); }
-                foreach (string a in AcProcesses) if (n == a) { w = L.T("працює служба античіта (") + n + ")"; break; }
-                if (w.Length > 0) break;
+                foreach (Process p in all)
+                {
+                    string n;
+                    try { n = p.ProcessName.ToLowerInvariant(); } catch { continue; }
+                    foreach (string a in AcProcesses) if (n == a) { w = L.T("працює служба античіта (") + n + ")"; break; }
+                    if (w.Length > 0) break;
+                }
             }
+            finally { foreach (Process p in all) p.Dispose(); }       // і ті, до яких цикл не дійшов
         }
         catch { }
         if (w.Length == 0)

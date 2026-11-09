@@ -484,7 +484,7 @@ sealed class ProfileWindow : SbWindow
         Row(g, new Rectangle(r.X, y, r.Width, rh), "#switch", L.T("Змінити профіль"), false, delegate { Close(); Bar.SwitchProfile(); }); y += rh + Px(2);
         Row(g, new Rectangle(r.X, y, r.Width, rh), "trash", L.T("Видалити профіль"), true, delegate { Close(); Bar.DeleteProfile(); }); y += rh + Px(10);
         using (Pen lp = new Pen(P.Line, 1f)) g.DrawLine(lp, r.X + Px(6), y - Px(5), r.Right - Px(6), y - Px(5));
-        Row(g, new Rectangle(r.X, y, r.Width, rh), "sync", L.T("Перезавантажити панель"), false, delegate { Close(); Bar.Reload(); }); y += rh + Px(2);
+        Row(g, new Rectangle(r.X, y, r.Width, rh), "sync", L.T("Перезапустити NeoBar"), false, delegate { Close(); Bar.RestartApp(); }); y += rh + Px(2);
         Row(g, new Rectangle(r.X, y, r.Width, rh), "#power", L.T("Вийти з NeoBar"), false, delegate { Close(); Bar.Close(); });
     }
 

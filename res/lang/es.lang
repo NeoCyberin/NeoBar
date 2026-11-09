@@ -7273,9 +7273,6 @@
 < Налаштування
 > Ajustes
 
-< Перезавантажити панель
-> Recargar panel
-
 < Увімкнути автосховок
 > Activar ocultación automática
 
@@ -10207,9 +10204,6 @@
 < Процесів: {0} · потоків: {1}
 > Procesos: {0} · hilos: {1}
 
-< Процесів: {0} · потоків: {1} · ЦП: {2}%
-> Procesos: {0} · hilos: {1} · CPU: {2} %
-
 < Пам'ять
 > Memoria
 
@@ -10605,3 +10599,12 @@
 
 < Створити з правами адміністратора
 > Crear con permisos de administrador
+
+< Пошук: ім'я або PID
+> Buscar: nombre o PID
+
+< Завдання
+> Tareas
+
+< Перезапустити NeoBar
+> Reiniciar NeoBar
