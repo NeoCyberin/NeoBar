@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
@@ -25,7 +26,7 @@ static class TrayTemps
 
     static readonly Slot[] slots = { new Slot(), new Slot(), new Slot() };
     static NeoBar bar;
-    static bool hooked, updHooked, running;
+    static bool hooked, updHooked, running, one;
 
     [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr h);
 
@@ -44,14 +45,17 @@ static class TrayTemps
         bool any = false, gpu = false;
         for (int i = 0; i < 3; i++) if (slots[i].On) { any = true; if (i > 0) gpu = true; }
         running = any && run;
+        one = c.TrayOne;
         Sensors.Use("tray", running ? (gpu ? 2 : 1) : 0);
         if (!updHooked) { updHooked = true; Sensors.Updated += OnData; }
         if (!hooked) { hooked = true; Application.ApplicationExit += delegate { RemoveAll(); }; }
         for (int i = 0; i < 3; i++)
         {
-            if (running && slots[i].On) Show(i);
+            if (one) { if (i > 0) Remove(slots[i]); }
+            else if (running && slots[i].On) Show(i);
             else Remove(slots[i]);
         }
+        if (one) { if (running) ShowOne(); else Remove(slots[0]); }
     }
 
     static void OnData()
@@ -67,7 +71,51 @@ static class TrayTemps
 
     static void Refresh()
     {
+        if (one) { if (running) ShowOne(); return; }
         for (int i = 0; i < 3; i++) if (running && slots[i].On) Show(i);
+    }
+
+    static string Num(float v) { return float.IsNaN(v) ? "–" : Math.Round(v).ToString(); }
+
+    // один значок: обрані температури одна під одною
+    static void ShowOne()
+    {
+        Slot s = slots[0];
+        List<string> tx = new List<string>();
+        List<Color> cl = new List<Color>();
+        string sig = "", tip = "";
+        for (int i = 0; i < 3; i++)
+        {
+            if (!slots[i].On) continue;
+            float v = Value(i);
+            tx.Add(Num(v)); cl.Add(slots[i].Col);
+            sig += Num(v) + "|" + slots[i].Col.ToArgb() + ";";
+            tip += (tip.Length > 0 ? " · " : "") + slots[i].Name + " " + (float.IsNaN(v) ? "—" : Num(v) + "°");
+        }
+        if (tx.Count == 0) { Remove(s); return; }
+        if (s.Ni != null && s.Shown == sig) return;
+        try
+        {
+            Icon ico = Make(tx.ToArray(), cl.ToArray());
+            if (s.Ni == null)
+            {
+                s.Ni = new NotifyIcon();
+                ContextMenuStrip m = new ContextMenuStrip();
+                ToolStripMenuItem open = new ToolStripMenuItem(L.T("Монітор системи"));
+                open.Font = new Font(open.Font, FontStyle.Bold);
+                open.Click += delegate { Open(); };
+                m.Items.Add(open);
+                s.Ni.ContextMenuStrip = m;
+                s.Ni.MouseClick += delegate (object o, MouseEventArgs e) { if (e.Button == MouseButtons.Left) Open(); };
+            }
+            s.Ni.Icon = ico;
+            s.Ni.Text = tip.Length > 60 ? tip.Substring(0, 60) : tip;
+            s.Ni.Visible = true;
+            if (s.Ico != null) s.Ico.Dispose();
+            s.Ico = ico;
+            s.Shown = sig;
+        }
+        catch (Exception ex) { Util.ErrorLog(ex); }
     }
 
     static void Show(int i)
@@ -79,7 +127,7 @@ static class TrayTemps
         if (s.Ni != null && s.Shown == t && s.ColArgb == col) return;
         try
         {
-            Icon ico = Make(t, s.Col);
+            Icon ico = Make(new string[] { t }, new Color[] { s.Col });
             if (s.Ni == null)
             {
                 s.Ni = new NotifyIcon();
@@ -126,43 +174,49 @@ static class TrayTemps
         foreach (Slot s in slots) Remove(s);
     }
 
-    // число у кольорі на прозорому тлі, з тонкою темною обводкою, щоб читалося і на світлій, і на темній панелі завдань
-    static Icon Make(string text, Color col)
+    // числа у своїх кольорах на прозорому тлі, одне під одним, з тонкою темною обводкою, щоб читалося і на світлій, і на темній панелі завдань
+    static Icon Make(string[] text, Color[] col)
     {
         int s = Math.Max(16, SystemInformation.SmallIconSize.Width);
+        int n = text.Length;
         using (Bitmap bmp = new Bitmap(s, s, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
         using (Graphics g = Graphics.FromImage(bmp))
         {
             g.Clear(Color.Transparent);
             g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-            float px = text.Length >= 3 ? s * 0.58f : s * 0.80f;
+            float rowH = s / (float)n;
             using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic))
             {
                 sf.Alignment = StringAlignment.Center;
                 sf.LineAlignment = StringAlignment.Center;
                 sf.FormatFlags |= StringFormatFlags.NoWrap | StringFormatFlags.NoClip;
-                Font f = new Font("Segoe UI", px, FontStyle.Bold, GraphicsUnit.Pixel);
-                try
+                for (int i = 0; i < n; i++)
                 {
-                    // не ширше за значок
-                    while (f.Size > 6 && g.MeasureString(text, f, 1000, sf).Width > s)
+                    string tx = text[i];
+                    float px = n == 1 ? (tx.Length >= 3 ? s * 0.58f : s * 0.80f) : rowH * 1.02f;
+                    Font f = new Font("Segoe UI", px, FontStyle.Bold, GraphicsUnit.Pixel);
+                    try
                     {
-                        Font n = new Font("Segoe UI", f.Size - 1, FontStyle.Bold, GraphicsUnit.Pixel);
-                        f.Dispose(); f = n;
+                        // не ширше за значок
+                        while (f.Size > 5 && g.MeasureString(tx, f, 1000, sf).Width > s)
+                        {
+                            Font nf = new Font("Segoe UI", f.Size - 1, FontStyle.Bold, GraphicsUnit.Pixel);
+                            f.Dispose(); f = nf;
+                        }
+                        RectangleF r = new RectangleF(0, i * rowH - (n == 1 ? s * 0.04f : 0), s, rowH);
+                        float o = n > 1 ? (s >= 32 ? 1f : 0.6f) : (s >= 24 ? 1.5f : 1f);
+                        using (SolidBrush sh = new SolidBrush(Color.FromArgb(170, 0, 0, 0)))
+                        {
+                            g.DrawString(tx, f, sh, new RectangleF(r.X + o, r.Y, r.Width, r.Height), sf);
+                            g.DrawString(tx, f, sh, new RectangleF(r.X - o, r.Y, r.Width, r.Height), sf);
+                            g.DrawString(tx, f, sh, new RectangleF(r.X, r.Y + o, r.Width, r.Height), sf);
+                            g.DrawString(tx, f, sh, new RectangleF(r.X, r.Y - o, r.Width, r.Height), sf);
+                        }
+                        using (SolidBrush b = new SolidBrush(Color.FromArgb(255, col[i].R, col[i].G, col[i].B)))
+                            g.DrawString(tx, f, b, r, sf);
                     }
-                    RectangleF r = new RectangleF(0, -s * 0.04f, s, s);
-                    using (SolidBrush sh = new SolidBrush(Color.FromArgb(170, 0, 0, 0)))
-                    {
-                        float o = s >= 24 ? 1.5f : 1f;
-                        g.DrawString(text, f, sh, new RectangleF(r.X + o, r.Y, r.Width, r.Height), sf);
-                        g.DrawString(text, f, sh, new RectangleF(r.X - o, r.Y, r.Width, r.Height), sf);
-                        g.DrawString(text, f, sh, new RectangleF(r.X, r.Y + o, r.Width, r.Height), sf);
-                        g.DrawString(text, f, sh, new RectangleF(r.X, r.Y - o, r.Width, r.Height), sf);
-                    }
-                    using (SolidBrush b = new SolidBrush(Color.FromArgb(255, col.R, col.G, col.B)))
-                        g.DrawString(text, f, b, r, sf);
+                    finally { f.Dispose(); }
                 }
-                finally { f.Dispose(); }
             }
             IntPtr h = bmp.GetHicon();
             try { using (Icon tmp = Icon.FromHandle(h)) return (Icon)tmp.Clone(); }

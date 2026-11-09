@@ -191,6 +191,17 @@ static class SecScan
         }
     }
 
+    // аналіз файла запущеного процесу (підпис, місце, ім'я, пакувальник): для вкладки «Процеси» монітора системи
+    public static Finding AnalyzeFile(string path)
+    {
+        Finding f = new Finding();
+        f.Area = "proc";
+        f.Title = Path.GetFileName(path ?? "");
+        Analyze(f, path, "", false);
+        if (!File.Exists(path)) f.Add(5, L.T("Файл, з якого запущено процес, уже видалено з диска - так іноді ховаються шкідливі програми (але й оновлення програм)."));
+        return f;
+    }
+
     static readonly Dictionary<string, PeInfo> peCache = new Dictionary<string, PeInfo>(StringComparer.OrdinalIgnoreCase);
     static PeInfo PeCache(string path)
     {
@@ -264,7 +275,7 @@ static class SecScan
     }
 
     // мережа: для кожного процесу - порти, відкриті назовні, і кількість з'єднань не з цим комп'ютером
-    static void Tcp(Dictionary<uint, int[]> map, List<KeyValuePair<int, uint>> listens)
+    internal static void Tcp(Dictionary<uint, int[]> map, List<KeyValuePair<int, uint>> listens)
     {
         foreach (int af in new int[] { 2, 23 })
         {

@@ -15,7 +15,7 @@ using System.Windows.Forms;
 // ----------------------------------------------------------------------
 //  Вікно монітора
 // ----------------------------------------------------------------------
-sealed class PerfWindow : SbWindow
+sealed partial class PerfWindow : SbWindow
 {
     int scroll;
     // показники, позначені повзунком «На столі»: ними заповнюється віджет, коли натиснути кнопку з дисплеєм
@@ -33,8 +33,8 @@ sealed class PerfWindow : SbWindow
 
     public PerfWindow(NeoBar bar, int tab) : base(bar, L.T("Монітор системи"), 560, 740)
     { Glyph = "\uE9D9";
-        Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики") };
-        Tab = Math.Max(0, Math.Min(1, tab));
+        Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики"), L.T("Процеси") };
+        Tab = Math.Max(0, Math.Min(2, tab));
         Sensors.Use("perfwin", 2);
         Sensors.Updated += OnData;
         OnTab();
@@ -42,7 +42,7 @@ sealed class PerfWindow : SbWindow
 
     void OnData() { if (!IsDisposed) Invalidate(); }
 
-    public void SetTab(int t) { Tab = Math.Max(0, Math.Min(1, t)); OnTab(); Invalidate(); }
+    public void SetTab(int t) { Tab = Math.Max(0, Math.Min(2, t)); OnTab(); Invalidate(); }
 
     protected override void HeadButtons(Graphics g, ref int right)
     {
@@ -60,21 +60,24 @@ sealed class PerfWindow : SbWindow
     protected override void OnTab()
     {
         scroll = 0;
+        ResizeFor(Tab == 2 ? 880 : 560);
         if (Tab == 1) HwInfo.Load(false);
+        if (Tab == 2) EnterProcs();
     }
 
-    protected override void OnTick() { if (Tab == 1 && (HwInfo.Loading || (DateTime.Now - copiedAt).TotalMilliseconds < 1800)) Invalidate(); }
+    protected override void OnTick() { if (Tab == 2) TickProcs(); else if (Tab == 1 && (HwInfo.Loading || (DateTime.Now - copiedAt).TotalMilliseconds < 1800)) Invalidate(); }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         Sensors.Updated -= OnData;
         Sensors.Use("perfwin", 0);
+        ProcMon.Reset();
         base.OnFormClosed(e);
     }
 
     protected override void PaintBody(Graphics g, Rectangle r)
     {
-        if (Tab == 1) PaintSpecs(g, r); else PaintMonitor(g, r);
+        if (Tab == 2) PaintProcs(g, r); else if (Tab == 1) PaintSpecs(g, r); else PaintMonitor(g, r);
     }
 
     // ---------- характеристики ----------

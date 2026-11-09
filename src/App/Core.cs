@@ -118,7 +118,7 @@ sealed class Cfg
     public bool Fahrenheit, Clock24 = true, ClockSec;
     public bool PerfCpu = true, PerfGpu = true, PerfRam = true;
     // температури в треї: окремий значок на кожну, зі своїм кольором
-    public bool TrayCpu, TrayGpu, TrayHot;
+    public bool TrayCpu, TrayGpu, TrayHot, TrayOne;       // TrayOne - усі обрані температури в одному значку, одна під одною
     public Color TrayCpuCol = Color.FromArgb(70, 170, 255), TrayGpuCol = Color.FromArgb(90, 200, 110), TrayHotCol = Color.FromArgb(255, 150, 60);
     public bool Welcomed, QuickDone;      // QuickDone - швидке налаштування вже показано
     // свята
@@ -366,6 +366,7 @@ static class Store
             case "fahrenheit": cfg.Fahrenheit = B(val); break;
             case "clock24": cfg.Clock24 = B(val); break;
             case "clocksec": cfg.ClockSec = B(val); break;
+            case "trayone": cfg.TrayOne = B(val); break;
             case "traycpu": cfg.TrayCpu = B(val); break;
             case "traygpu": cfg.TrayGpu = B(val); break;
             case "trayhot": cfg.TrayHot = B(val); break;
@@ -554,6 +555,7 @@ static class Store
         sb.AppendLine("@fahrenheit " + Yn(c.Fahrenheit));
         sb.AppendLine("@clock24 " + Yn(c.Clock24));
         sb.AppendLine("@clocksec " + Yn(c.ClockSec));
+        sb.AppendLine("@trayone " + Yn(c.TrayOne));
         sb.AppendLine("@traycpu " + Yn(c.TrayCpu));
         sb.AppendLine("@traygpu " + Yn(c.TrayGpu));
         sb.AppendLine("@trayhot " + Yn(c.TrayHot));
@@ -709,6 +711,35 @@ static class Store
                 if (!files.Contains(rel)) files.Add(rel);
             }
         }
+        // копії ярликів, на які посилаються елементи панелі (links\), - інакше на іншому ПК ці елементи порожні
+        foreach (Entry e in l)
+        {
+            string tg = (e.Target ?? "").Trim().Trim('"');
+            if (!tg.StartsWith(Util.LinksRef, StringComparison.OrdinalIgnoreCase)) continue;
+            string nm = tg.Substring(Util.LinksRef.Length);
+            if (nm.Length == 0 || nm.IndexOfAny(new char[] { '\\', '/' }) >= 0) continue;
+            string rel = "links/" + nm;
+            if (!files.Contains(rel)) files.Add(rel);
+        }
+        // збережені іконки програм (щоб елементи мали справжню іконку навіть там, де програми ще немає)
+        string icd = Path.Combine(baseDir, "cache", "icons");
+        if (Directory.Exists(icd))
+            foreach (string f in Directory.GetFiles(icd, "*.png")) files.Add("cache/icons/" + Path.GetFileName(f));
+        // власні мелодії сигналів (не більше 25 МБ разом)
+        string snd = Path.Combine(baseDir, "sounds");
+        if (Directory.Exists(snd))
+        {
+            long tot = 0;
+            foreach (string f in Directory.GetFiles(snd))
+            {
+                string ex = Path.GetExtension(f).ToLowerInvariant();
+                if (ex != ".mp3" && ex != ".wav" && ex != ".wma") continue;
+                long len = new FileInfo(f).Length;
+                if (tot + len > 25L * 1024 * 1024) continue;
+                tot += len;
+                files.Add("sounds/" + Path.GetFileName(f));
+            }
+        }
 
         StringBuilder sb = new StringBuilder();
         sb.AppendLine(PackHead);
@@ -747,9 +778,13 @@ static class Store
             bool isIni = string.Equals(rel, iniName, StringComparison.OrdinalIgnoreCase);
             if (!isIni)
             {
-                // із пакета беремо лише зображення (ніколи не програми)
+                // із пакета беремо зображення, копії ярликів (лише в links\) і мелодії (лише в sounds\); ніколи не програми
                 string ext = Path.GetExtension(rel).ToLowerInvariant();
-                if (ext != ".png" && ext != ".ico" && ext != ".jpg" && ext != ".jpeg" && ext != ".bmp" && ext != ".gif") continue;
+                string top = rel.Replace('\\', '/').Split('/')[0].ToLowerInvariant();
+                bool img = ext == ".png" || ext == ".ico" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".gif";
+                bool lnk = top == "links" && (ext == ".lnk" || ext == ".url");
+                bool snd = top == "sounds" && (ext == ".mp3" || ext == ".wav" || ext == ".wma");
+                if (!img && !lnk && !snd) continue;
             }
             string dir = Path.GetDirectoryName(full);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);

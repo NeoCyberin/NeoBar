@@ -29,6 +29,8 @@ sealed class SecWindow : VtWindow
     // файли, перетягнуті у вікно, - на перевірку
     protected override void Dropped(string[] files) { foreach (string f in files) if (File.Exists(f)) Details(f); }
 
+    const int TabFile = 5;
+
     void PickCheck()
     {
         using (OpenFileDialog d = new OpenFileDialog())
@@ -71,13 +73,14 @@ sealed class SecWindow : VtWindow
     {
         List<Finding>[] ls = { SecScan.Proc, SecScan.Auto, SecScan.Svc, SecScan.Sys };
         string[] nm = { L.T("Процеси"), L.T("Автозапуск"), L.T("Служби"), L.T("Система") };
-        string[] t = new string[5];
+        string[] t = new string[6];
         for (int i = 0; i < 4; i++)
         {
             int n = SecScan.LastAt == DateTime.MinValue ? 0 : Flagged(ls[i]);
             t[i] = nm[i] + (n > 0 ? " · " + n : "");
         }
         t[4] = L.T("Списки");
+        t[TabFile] = L.T("Файл");
         Tabs = t;
     }
 
@@ -443,23 +446,39 @@ sealed class SecWindow : VtWindow
         VBar(g, new Rectangle(list.Right - Px(5), list.Y, Px(4), list.Height), total, list.Height, sc, delegate (int v) { scroll[4] = v; Invalidate(); });
     }
 
-    FileCheckWindow check;
-
-    // довільний файл (кнопка «Перевірити файл…», перетягування) - у вікні перевірки файлів
+    // довільний файл (кнопка «Перевірити файл…», перетягування) - у вкладці «Файл»
     void Details(string path)
     {
-        if (check == null || check.IsDisposed)
+        AddReport(path, false);
+        Tab = TabFile;
+        Invalidate();
+    }
+
+    // вкладка «Файл»: зона перетягування й звіти про перевірені файли
+    void PaintFileTab(Graphics g, Rectangle r)
+    {
+        Rectangle dz = new Rectangle(r.X, r.Y, r.Width, Px(112));
+        Card(g, dz);
+        using (Pen pn = new Pen(Util.Blend(P.Card, P.Sub, 0.55f), 1.5f))
+        using (GraphicsPath gp = Util.Round(Rectangle.Inflate(dz, -Px(7), -Px(7)), Px(10)))
         {
-            check = new FileCheckWindow(Bar);
-            check.Location = new Point(Math.Max(0, Left - Px(40)), Top + Px(40));
+            pn.DashStyle = DashStyle.Dash;
+            g.DrawPath(pn, gp);
         }
-        check.Add(path);
-        check.Show();
-        check.Activate();
+        TxtC(g, L.T("Перетягніть файли сюди"), FH, new Rectangle(dz.X, dz.Y + Px(16), dz.Width, Px(30)), P.Fg);
+        TxtC(g, L.T("або"), FS, new Rectangle(dz.X, dz.Y + Px(46), dz.Width, Px(18)), P.Sub);
+        Btn(g, new Rectangle(dz.X + (dz.Width - Px(200)) / 2, dz.Y + Px(66), Px(200), Px(34)), L.T("Перевірити файл…"), PickCheck, 1, true);
+        int y = dz.Bottom + Px(10);
+        Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y - Px(44));
+        int total = PaintReports(g, list);
+        string foot = NoteLive ? Note : L.T("Евристики без бази сигнатур: це підказка, а не вирок антивіруса. Файл нікуди не надсилається без вашої згоди.");
+        TxtW(g, foot, FS, new Rectangle(r.X, r.Bottom - Px(38), r.Width, Px(38)), NoteLive ? (NoteBad ? P.Bad : P.Good) : P.Sub);
+        FitTo(r, list.Y + Math.Min(Math.Max(total, Px(130)), Px(540)) + Px(44), Px(470));
     }
 
     protected override void PaintBody(Graphics g, Rectangle r)
     {
+        if (Tab == TabFile) { PaintFileTab(g, r); return; }
         int y = r.Y;
         Rectangle top = new Rectangle(r.X, y, r.Width, Px(90));
         Card(g, top);

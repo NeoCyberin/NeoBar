@@ -399,6 +399,7 @@ sealed partial class CleanWindow : SbWindow
     // зліва направо: «на робочий стіл» (віджет-кошик), закрити
     protected override void HeadButtons(Graphics g, ref int right)
     {
+        if (Tab == 1) return;          // у вкладці «Реєстр» кошик на стіл не потрібен
         Rectangle rr = new Rectangle(right - Px(32), Px(7), Px(32), Px(32));
         IconBtn(g, rr, "desk", delegate { ClockData.AddDesk("trash"); }, false);
         right = rr.Left - Px(4);

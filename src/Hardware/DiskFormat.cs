@@ -926,6 +926,18 @@ sealed class RecoverPickWindow : SbWindow
         right = rr.Left - Px(4);
     }
 
+    protected override bool AcceptsFiles { get { return true; } }
+
+    // папку (або файл - тоді його теку) кинули у вікно
+    protected override void FilesDropped(string[] files)
+    {
+        string p = files[0];
+        try { if (File.Exists(p)) p = Path.GetDirectoryName(p); } catch { }
+        tab = 2;
+        if (loading) { note = L.T("Диски ще читаються, повторіть за мить."); Invalidate(); return; }
+        OpenFolder(p);
+    }
+
     void PickFolder()
     {
         string path;
@@ -936,6 +948,11 @@ sealed class RecoverPickWindow : SbWindow
             if (d.ShowDialog(this) != DialogResult.OK) return;
             path = d.SelectedPath;
         }
+        OpenFolder(path);
+    }
+
+    void OpenFolder(string path)
+    {
         string root = Path.GetPathRoot(path) ?? "";
         if (root.Length < 3 || root[1] != ':') { note = L.T("Підтримуються лише локальні диски з літерою."); Invalidate(); return; }
         Vol v = null;
@@ -974,8 +991,8 @@ sealed class RecoverPickWindow : SbWindow
             Btn(g, new Rectangle(r.X, y, r.Width, Px(40)), L.T("Вибрати папку…"), PickFolder, 1, !loading);
             y += Px(50);
             if (note.Length > 0) TxtW(g, note, FS, new Rectangle(r.X, y, r.Width, Px(40)), P.Acc);
-            else TxtW(g, L.T("Підійде папка на будь-якому локальному чи знімному диску з NTFS, exFAT або FAT. Мережеві папки не підтримуються."), FS, new Rectangle(r.X, y, r.Width, Px(40)), P.Sub);
-            FitTo(r, y + Px(48), Px(300));
+            else TxtW(g, L.T("Підійде папка на будь-якому локальному чи знімному диску з NTFS, exFAT або FAT. Мережеві папки не підтримуються.") + L.T(" Папку можна й перетягнути з Провідника в це вікно."), FS, new Rectangle(r.X, y, r.Width, Px(60)), P.Sub);
+            FitTo(r, y + Px(68), Px(300));
             return;
         }
         int rowH = Px(68);

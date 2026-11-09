@@ -10188,3 +10188,133 @@
 
 < Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).
 > Il punto più caldo del chip grafico; non tutte le schede lo riportano (l'icona mostra allora un trattino).
+
+< Диски ще читаються, повторіть за мить.
+> I dischi sono ancora in lettura, riprova tra un momento.
+
+<  Папку можна й перетягнути з Провідника в це вікно.
+>  Puoi anche trascinare una cartella da Esplora risorse in questa finestra.
+
+< Перетягніть файли сюди
+> Trascina qui i file
+
+< або
+> oppure
+
+< Один значок для всіх
+> Un’icona per tutto
+
+< Обрані температури в одному значку, одна під одною, кожна своїм кольором. На малих значках (100% масштабу) три числа дрібні: тоді краще обрати дві.
+> Le temperature scelte in una sola icona, una sotto l’altra, ciascuna del proprio colore. Sulle icone piccole (scala 100%) tre numeri sono minuscoli: meglio sceglierne due.
+
+< Вкладка «Процеси» працює лише в 64-розрядному NeoBar.
+> La scheda Processi funziona solo con NeoBar a 64 bit.
+
+< «{0}» зазвичай запускає {1}, а тут - «{2}» (PID {3}).
+> «{0}» di norma è avviato da {1}, qui invece da «{2}» (PID {3}).
+
+< Другий екземпляр «{0}»: у Windows він один - підроблені копії часто видають себе за нього.
+> Seconda istanza di «{0}»: in Windows ce n’è una sola e le copie false spesso si spacciano per essa.
+
+< Запущено з «{0}»: документ чи PDF запускає командний рядок або скрипт - типова ознака шкідливого макросу.
+> Avviato da «{0}»: un documento o PDF lancia un prompt dei comandi o uno script, segno tipico di una macro dannosa.
+
+< Понад дві хвилини навантажує процесор ({0}%).
+> Carica il processore da oltre due minuti ({0}%).
+
+< Хвилину й довше інтенсивно читає чи пише (понад 30 МБ/с).
+> Legge o scrive intensamente (oltre 30 MB/s) da un minuto o più.
+
+< Пам'ять швидко росте: +{0} МБ за {1} хв (можливий витік).
+> La memoria cresce rapidamente: +{0} MB in {1} min (possibile perdita).
+
+< Дуже багато відкритих дескрипторів ({0}) - так виглядає витік ресурсів.
+> Moltissimi handle aperti ({0}): così appare una perdita di risorse.
+
+< Не підписаний файл з теки користувача відкрив порт для вхідних підключень.
+> Un file non firmato della cartella utente ha aperto una porta per connessioni in entrata.
+
+< Не підписаний файл з теки користувача має з'єднання з мережею.
+> Un file non firmato della cartella utente ha una connessione di rete.
+
+< Аномалії
+> Anomalie
+
+< Процесів: {0} · потоків: {1}
+> Processi: {0} · thread: {1}
+
+< Процесів: {0} · потоків: {1} · ЦП: {2}%
+> Processi: {0} · thread: {1} · CPU: {2}%
+
+< Пам'ять
+> Memoria
+
+< Натисніть, щоб відсортувати
+> Clicca per ordinare
+
+< Працює античіт ({0}) - шляхи та підписи тимчасово не збираються.
+> È attivo un anti-cheat ({0}): percorsi e firme per ora non vengono raccolti.
+
+< Аномальної поведінки не помічено.
+> Nessun comportamento anomalo rilevato.
+
+< Збираю дані…
+> Raccolta dei dati…
+
+< Показати теку
+> Mostra cartella
+
+< Копіювати шлях
+> Copia percorso
+
+< не збирається (працює античіт)
+> non raccolto (anti-cheat attivo)
+
+< немає доступу до шляху
+> nessun accesso al percorso
+
+< перевіряється…
+> verifica in corso…
+
+< підписаний: {0}
+> firmato: {0}
+
+< підписаний
+> firmato
+
+< підпис недійсний
+> firma non valida
+
+< підпис прострочений: {0}
+> firma scaduta: {0}
+
+< підпис прострочений
+> firma scaduta
+
+< без підпису
+> non firmato
+
+< {0} (видалено)
+> {0} (eliminato)
+
+< Команда
+> Comando
+
+< Запустив
+> Avviato da
+
+< PID {0} (завершився)
+> PID {0} (terminato)
+
+< Старт
+> Avvio
+
+< Підпис
+> Firma
+
+< Ресурси
+> Risorse
+
+< дескрипторів {0}, потоків {1}, виділено {2}, з'єднань {3}, портів {4}
+> handle {0}, thread {1}, allocata {2}, connessioni {3}, porte {4}
+

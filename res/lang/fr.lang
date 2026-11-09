@@ -10188,3 +10188,133 @@
 
 < Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).
 > Le point le plus chaud de la puce graphique ; toutes les cartes ne l'indiquent pas (l'icône affiche alors un tiret).
+
+< Диски ще читаються, повторіть за мить.
+> Les disques sont encore en cours de lecture, réessayez dans un instant.
+
+<  Папку можна й перетягнути з Провідника в це вікно.
+>  Vous pouvez aussi faire glisser un dossier depuis l’Explorateur dans cette fenêtre.
+
+< Перетягніть файли сюди
+> Déposez les fichiers ici
+
+< або
+> ou
+
+< Один значок для всіх
+> Une seule icône pour tout
+
+< Обрані температури в одному значку, одна під одною, кожна своїм кольором. На малих значках (100% масштабу) три числа дрібні: тоді краще обрати дві.
+> Les températures choisies dans une seule icône, l’une sous l’autre, chacune de sa couleur. Sur les petites icônes (échelle 100 %), trois nombres sont minuscules : choisissez-en plutôt deux.
+
+< Вкладка «Процеси» працює лише в 64-розрядному NeoBar.
+> L’onglet Processus ne fonctionne qu’avec NeoBar 64 bits.
+
+< «{0}» зазвичай запускає {1}, а тут - «{2}» (PID {3}).
+> « {0} » est normalement lancé par {1}, mais ici par « {2} » (PID {3}).
+
+< Другий екземпляр «{0}»: у Windows він один - підроблені копії часто видають себе за нього.
+> Seconde instance de « {0} » : Windows n’en a qu’une, et les fausses copies se font souvent passer pour elle.
+
+< Запущено з «{0}»: документ чи PDF запускає командний рядок або скрипт - типова ознака шкідливого макросу.
+> Lancé depuis « {0} » : un document ou un PDF lance une invite de commandes ou un script, signe typique d’une macro malveillante.
+
+< Понад дві хвилини навантажує процесор ({0}%).
+> Charge le processeur depuis plus de deux minutes ({0} %).
+
+< Хвилину й довше інтенсивно читає чи пише (понад 30 МБ/с).
+> Lit ou écrit intensément (plus de 30 Mo/s) depuis une minute ou plus.
+
+< Пам'ять швидко росте: +{0} МБ за {1} хв (можливий витік).
+> La mémoire augmente vite : +{0} Mo en {1} min (fuite possible).
+
+< Дуже багато відкритих дескрипторів ({0}) - так виглядає витік ресурсів.
+> Très grand nombre de handles ouverts ({0}) : c’est à cela que ressemble une fuite de ressources.
+
+< Не підписаний файл з теки користувача відкрив порт для вхідних підключень.
+> Un fichier non signé du dossier utilisateur a ouvert un port pour les connexions entrantes.
+
+< Не підписаний файл з теки користувача має з'єднання з мережею.
+> Un fichier non signé du dossier utilisateur a une connexion réseau.
+
+< Аномалії
+> Anomalies
+
+< Процесів: {0} · потоків: {1}
+> Processus : {0} · threads : {1}
+
+< Процесів: {0} · потоків: {1} · ЦП: {2}%
+> Processus : {0} · threads : {1} · CPU : {2} %
+
+< Пам'ять
+> Mémoire
+
+< Натисніть, щоб відсортувати
+> Cliquez pour trier
+
+< Працює античіт ({0}) - шляхи та підписи тимчасово не збираються.
+> Un anti-triche est actif ({0}) : les chemins et signatures ne sont pas collectés pour le moment.
+
+< Аномальної поведінки не помічено.
+> Aucun comportement anormal remarqué.
+
+< Збираю дані…
+> Collecte des données…
+
+< Показати теку
+> Afficher le dossier
+
+< Копіювати шлях
+> Copier le chemin
+
+< не збирається (працює античіт)
+> non collecté (anti-triche actif)
+
+< немає доступу до шляху
+> pas d’accès au chemin
+
+< перевіряється…
+> vérification…
+
+< підписаний: {0}
+> signé : {0}
+
+< підписаний
+> signé
+
+< підпис недійсний
+> signature invalide
+
+< підпис прострочений: {0}
+> signature expirée : {0}
+
+< підпис прострочений
+> signature expirée
+
+< без підпису
+> non signé
+
+< {0} (видалено)
+> {0} (supprimé)
+
+< Команда
+> Commande
+
+< Запустив
+> Lancé par
+
+< PID {0} (завершився)
+> PID {0} (terminé)
+
+< Старт
+> Démarrage
+
+< Підпис
+> Signature
+
+< Ресурси
+> Ressources
+
+< дескрипторів {0}, потоків {1}, виділено {2}, з'єднань {3}, портів {4}
+> handles {0}, threads {1}, mémoire allouée {2}, connexions {3}, ports {4}
+

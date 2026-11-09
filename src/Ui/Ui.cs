@@ -275,6 +275,50 @@ class SbWindow : Form
     ToolTip tipBox;
     string tipNow = "", tipWait = "";
     int hot = -1, down = -1;
+
+    // Перетягування файлів і папок із Провідника: вікно, що їх приймає, перевизначає ці два члени
+    protected virtual bool AcceptsFiles { get { return false; } }
+    protected virtual void FilesDropped(string[] files) { }
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        if (AcceptsFiles) DropFiles.Register(this);           // від адміністратора файли приходять старим способом (WM_DROPFILES)
+    }
+
+    protected override void OnDragEnter(DragEventArgs e)
+    {
+        base.OnDragEnter(e);
+        e.Effect = AcceptsFiles && e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+    }
+
+    protected override void OnDragOver(DragEventArgs e)
+    {
+        base.OnDragOver(e);
+        e.Effect = AcceptsFiles && e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+    }
+
+    protected override void OnDragDrop(DragEventArgs e)
+    {
+        base.OnDragDrop(e);
+        if (!AcceptsFiles) return;
+        string[] f = e.Data.GetData(DataFormats.FileDrop) as string[];
+        if (f != null && f.Length > 0) BeginInvoke(new Action(delegate { FilesDropped(f); }));
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        if (AcceptsFiles)
+        {
+            string[] dropped = DropFiles.Take(ref m);
+            if (dropped != null)
+            {
+                if (dropped.Length > 0) BeginInvoke(new Action(delegate { FilesDropped(dropped); }));
+                return;
+            }
+        }
+        base.WndProc(ref m);
+    }
     Point mouse = new Point(-1, -1);
     bool moving;
     Point moveFrom;
@@ -302,6 +346,7 @@ class SbWindow : Form
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.Manual;
         KeyPreview = true;
+        if (AcceptsFiles) DropFiles.Prepare(this);
         BackColor = P.Bg;
         Text = caption;
         HeadH = Px(46);
@@ -494,6 +539,17 @@ class SbWindow : Form
     protected virtual void OnTab() { }
     protected virtual void OnDragEnd() { }
     protected virtual void HeadButtons(Graphics g, ref int right) { }
+
+    // Розміщення посередині екрана (того, де панель)
+    public void ShowCentered(Rectangle onScreen)
+    {
+        Rectangle wa = Screen.FromRectangle(onScreen).WorkingArea;
+        if (Height > wa.Height - 12 || Width > wa.Width - 12)
+            ClientSize = new Size(Math.Min(ClientSize.Width, wa.Width - 12), Math.Min(ClientSize.Height, wa.Height - 12));
+        Location = new Point(wa.Left + (wa.Width - Width) / 2, wa.Top + (wa.Height - Height) / 2);
+        Show();
+        Activate();
+    }
 
     // Розміщення біля віджета на панелі
     public void ShowNear(Rectangle tile, string side) { ShowNear(tile, side, -1); }
