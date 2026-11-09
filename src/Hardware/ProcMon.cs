@@ -29,7 +29,6 @@ sealed class ProcRow
     public string Signer = "";
     public int SigKind = Sig.Unknown, Place = SecHeur.POther;
     public bool SigDone, Exists = true, Fresh;
-    public int Depth;
     internal bool PathTried;
     internal long LastCpu, LastIo;
     internal DateTime HighCpuSince = DateTime.MinValue, HighIoSince = DateTime.MinValue, LastHist = DateTime.MinValue;
@@ -50,7 +49,6 @@ static class ProcMon
     static DateTime lastAt = DateTime.MinValue;
     static int cycle;
     static readonly int cores = Math.Max(1, Environment.ProcessorCount);
-    static readonly int self = System.Diagnostics.Process.GetCurrentProcess().Id;
     static IntPtr buf = IntPtr.Zero;
     static int bufLen;
 
