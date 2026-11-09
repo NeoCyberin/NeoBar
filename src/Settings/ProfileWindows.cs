@@ -182,7 +182,7 @@ sealed class ProfileEdit : SbWindow
     string err = "";
     public bool Changed;
 
-    public ProfileEdit(Theme t, float sc, Profile edit) : base(t, sc, edit == null ? L.T("Новий профіль") : L.T("Профіль «") + edit.Name + L.Q("»"), 440, (edit != null && edit.HasPin ? 470 : 410) + 92)
+    public ProfileEdit(Theme t, float sc, Profile edit) : base(t, sc, edit == null ? L.T("Новий профіль") : L.T("Профіль «") + edit.Name + L.Q("»"), 440, (edit != null && edit.HasPin ? 470 : 410) + 118)
     {
         Glyph = "\uE77B";
         p = edit;
@@ -386,7 +386,12 @@ sealed class ProfileEdit : SbWindow
         // стиль значка - за темою профілю (змінюється разом із темою в налаштуваннях)
         TxtW(g, photo ? L.T("Значок - ваше фото (без стилю теми й кольору).") : L.T("Стиль і кольори - теми «") + ProfileArt.StyleTitles[Math.Max(0, ProfileArt.Styles.IndexOf(style))] + L.T("». Зі зміною теми значок перейде в її стиль, а колір - у відповідний із її палітри."),
             FS, new Rectangle(r.X, y, r.Width, Px(34)), P.Sub);
-        y += Px(42);
+        y += Px(38);
+        // підказка: фото можна перетягнути
+        Rectangle hint = new Rectangle(r.X, y, r.Width, Px(20));
+        Ico.Draw(g, "plus", new RectangleF(hint.X, hint.Y + Px(2), Px(16), Px(16)), P.Acc);
+        TxtL(g, L.T("Фото можна просто перетягнути у це вікно з Провідника."), FS, new Rectangle(hint.X + Px(22), hint.Y, hint.Width - Px(22), hint.Height), P.Acc);
+        y += Px(30);
 
 
         TxtL(g, L.T("Назва"), FS, new Rectangle(r.X, y, r.Width, Px(18)), P.Sub);
@@ -437,13 +442,13 @@ sealed class ProfileEdit : SbWindow
 }
 
 // ----------------------------------------------------------------------
-//  Вікно профілю біля аватара на панелі: налаштування, перезавантаження, закріплення, зміна профілю, вихід
+//  Вікно профілю біля аватара на панелі: налаштування, закріплення | зміна й видалення профілю | перезавантаження, вихід
 // ----------------------------------------------------------------------
 sealed class ProfileWindow : SbWindow
 {
     bool busy;          // відкрито вікно зміни профілю - не закриватися
 
-    public ProfileWindow(NeoBar bar) : base(bar, L.T("Профіль"), 330, 452) { Glyph = "\uE77B"; }
+    public ProfileWindow(NeoBar bar) : base(bar, L.T("Профіль"), 330, 460) { Glyph = "\uE77B"; }
 
     protected override void OnShown(EventArgs e) { base.OnShown(e); Activate(); }
 
@@ -474,11 +479,12 @@ sealed class ProfileWindow : SbWindow
         int y = top.Bottom + Px(10), rh = Px(42);
         bool fixedMode = Bar.Config.Mode == "fixed";
         Row(g, new Rectangle(r.X, y, r.Width, rh), "gear", L.T("Налаштування"), false, delegate { Close(); Bar.OpenSettingsTab(-1); }); y += rh + Px(2);
-        Row(g, new Rectangle(r.X, y, r.Width, rh), "sync", L.T("Перезавантажити панель"), false, delegate { Close(); Bar.Reload(); }); y += rh + Px(2);
         Row(g, new Rectangle(r.X, y, r.Width, rh), "pin", fixedMode ? L.T("Увімкнути автосховок") : L.T("Закріпити панель"), false, delegate { Close(); Bar.TogglePinMode(); }); y += rh + Px(10);
         using (Pen lp = new Pen(P.Line, 1f)) g.DrawLine(lp, r.X + Px(6), y - Px(5), r.Right - Px(6), y - Px(5));
         Row(g, new Rectangle(r.X, y, r.Width, rh), "#switch", L.T("Змінити профіль"), false, delegate { Close(); Bar.SwitchProfile(); }); y += rh + Px(2);
-        Row(g, new Rectangle(r.X, y, r.Width, rh), "trash", L.T("Видалити профіль"), true, delegate { Close(); Bar.DeleteProfile(); }); y += rh + Px(2);
+        Row(g, new Rectangle(r.X, y, r.Width, rh), "trash", L.T("Видалити профіль"), true, delegate { Close(); Bar.DeleteProfile(); }); y += rh + Px(10);
+        using (Pen lp = new Pen(P.Line, 1f)) g.DrawLine(lp, r.X + Px(6), y - Px(5), r.Right - Px(6), y - Px(5));
+        Row(g, new Rectangle(r.X, y, r.Width, rh), "sync", L.T("Перезавантажити панель"), false, delegate { Close(); Bar.Reload(); }); y += rh + Px(2);
         Row(g, new Rectangle(r.X, y, r.Width, rh), "#power", L.T("Вийти з NeoBar"), true, delegate { Close(); Bar.Close(); });
     }
 

@@ -15,7 +15,7 @@ using System.Windows.Forms;
 sealed class SecWindow : VtWindow
 {
     readonly int[] scroll = new int[5];
-    bool all;
+    readonly bool[] all = new bool[5];          // «показувати все» - окремо для кожної вкладки
     volatile bool fixing;
 
     public SecWindow(NeoBar bar) : base(bar, L.T("Безпека"), 620, 780)
@@ -76,7 +76,7 @@ sealed class SecWindow : VtWindow
         int np = done ? Flagged(SecScan.Proc) + Flagged(SecScan.Svc) : 0, na = done ? Flagged(SecScan.Auto) : 0, ns = done ? Flagged(SecScan.Sys) : 0;
         string[] t = new string[5];
         t[TabFile] = L.T("Файл");
-        t[TabProc] = L.T("Процеси і служби") + (np > 0 ? " · " + np : "");
+        t[TabProc] = L.T("Процеси") + (np > 0 ? " · " + np : "");             // служби - теж процеси, тож разом
         t[TabAuto] = L.T("Автозапуск") + (na > 0 ? " · " + na : "");
         t[TabSys] = L.T("Система") + (ns > 0 ? " · " + ns : "");
         t[TabLists] = L.T("Списки");
@@ -110,7 +110,7 @@ sealed class SecWindow : VtWindow
             foreach (Finding f in src)
             {
                 // «усе» для служб - лише сторонні (системних кілька сотень)
-                if (all ? (src != SecScan.Svc || f.Score > 0 || f.Place != SecHeur.PSys) : (f.Level >= 1 && !f.Allowed)) l.Add(f);
+                if (all[Tab] ? (src != SecScan.Svc || f.Score > 0 || f.Place != SecHeur.PSys) : (f.Level >= 1 && !f.Allowed)) l.Add(f);
             }
         return l;
     }
@@ -535,7 +535,7 @@ sealed class SecWindow : VtWindow
             else Btn(g, br, SecScan.LastAt == DateTime.MinValue ? L.T("Сканувати") : L.T("Сканувати знову"), Start, SecScan.LastAt == DateTime.MinValue ? 1 : 0, true);
             Rectangle left = new Rectangle(r.X, y, br.X - r.X - Px(12), Px(30));
             if (busy) TxtL(g, L.T("Перевірка…") + " " + SecScan.Stage, FS, left, P.Sub);
-            else if (Tab != TabSys) Switch(g, left, L.T("Показувати все, а не лише підозріле"), all, delegate { all = !all; Invalidate(); });
+            else if (Tab != TabSys) Switch(g, left, L.T("Показувати все, а не лише підозріле"), all[Tab], delegate { all[Tab] = !all[Tab]; Invalidate(); });
             else if (SecScan.LastAt != DateTime.MinValue) TxtL(g, L.T("Перевірено о ") + SecScan.LastAt.ToString("HH:mm"), FS, left, P.Sub);
             y += Px(40);
             Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y - foot);

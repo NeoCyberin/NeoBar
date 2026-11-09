@@ -14,6 +14,13 @@ using System.Threading;
 //  PROCESS_QUERY_LIMITED_INFORMATION - пам'ять процесів не читається. Поки працює античіт, дескриптори
 //  не відкриваються взагалі (шлях і підпис не показуються).
 // ======================================================================
+sealed class SvcInfo
+{
+    public string Name = "", Display = "";
+    public int State;                       // 1 зупинено, 2 запускається, 3 зупиняється, 4 працює, 5-7 пауза
+    public int Pid;
+}
+
 sealed class ProcRow
 {
     public int Pid, Parent, Session;
@@ -21,6 +28,11 @@ sealed class ProcRow
     public const int KApp = 0, KBg = 1, KSvc = 2, KWin = 3;
     public int Kind = KBg;
     public bool HasWin;
+    // хто керує процесом: служба, автозапуск, планувальник, користувач, інший процес, Windows
+    public const int CSvc = 0, CAuto = 1, CTask = 2, CUser = 3, CProc = 4, CWin = 5, CNone = 6;
+    public int Ctl = CNone;
+    public string CtlText = "";
+    public List<SvcInfo> Svcs = new List<SvcInfo>();          // служби, що працюють у цьому процесі
     public string Name = "", Path = "", Cmd = "";
     public long Created;                    // FILETIME (UTC)
     public float Cpu;                       // % від усього процесора
@@ -243,6 +255,14 @@ static class ProcMon
             // процеси з видимими вікнами (лише список вікон - у процеси нічого не відкривається)
             HashSet<int> wins = Windows();
             foreach (ProcRow r in rows) r.HasWin = wins.Contains(r.Pid);
+            // служби й записи автозапуску - не щоразу (раз на ~10 і ~60 с)
+            if (svcAt == DateTime.MinValue || (now - svcAt).TotalSeconds >= 10) Services();
+            if (runAt == DateTime.MinValue || (now - runAt).TotalSeconds >= 60) RunKeys();
+            foreach (ProcRow r in rows)
+            {
+                List<SvcInfo> sl;
+                r.Svcs = svcByPid.TryGetValue(r.Pid, out sl) ? sl : new List<SvcInfo>();
+            }
             Evaluate(rows, now);
             Rows = rows;
         }
@@ -281,6 +301,156 @@ static class ProcMon
 
     static readonly string WinDir = (Environment.GetFolderPath(Environment.SpecialFolder.Windows).TrimEnd('\\') + "\\").ToLowerInvariant();
     static readonly string[] Kernel = { "system", "registry", "memory compression", "secure system", "system idle process", "idle" };
+
+    // ---------- служби (лише список від диспетчера служб; у процеси нічого не відкривається) ----------
+    [StructLayout(LayoutKind.Sequential)]
+    struct ESSP { public IntPtr Name, Display; public int Type, State, Accepted, Exit, SExit, Check, Wait, Pid, Flags; }
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern IntPtr OpenSCManager(string machine, string db, uint access);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern bool EnumServicesStatusEx(IntPtr scm, int level, uint type, uint state, IntPtr buf, int size, out int need, out int count, ref int resume, string group);
+    [DllImport("advapi32.dll")] static extern bool CloseServiceHandle(IntPtr h);
+    static Dictionary<int, List<SvcInfo>> svcByPid = new Dictionary<int, List<SvcInfo>>();
+    static DateTime svcAt = DateTime.MinValue, runAt = DateTime.MinValue;
+
+    public static void RefreshServicesSoon() { svcAt = DateTime.MinValue; }
+
+    static void Services()
+    {
+        svcAt = DateTime.UtcNow;
+        Dictionary<int, List<SvcInfo>> map = new Dictionary<int, List<SvcInfo>>();
+        IntPtr scm = OpenSCManager(null, null, 0x0005);              // CONNECT | ENUMERATE_SERVICE
+        if (scm == IntPtr.Zero) return;
+        IntPtr b = IntPtr.Zero;
+        try
+        {
+            int need, count, resume = 0;
+            EnumServicesStatusEx(scm, 0, 0x30, 1, IntPtr.Zero, 0, out need, out count, ref resume, null);     // лише активні Win32-служби
+            if (need <= 0 || need > 8 << 20) return;
+            need += 4096;
+            b = Marshal.AllocHGlobal(need);
+            resume = 0;
+            if (!EnumServicesStatusEx(scm, 0, 0x30, 1, b, need, out need, out count, ref resume, null)) return;
+            int sz = Marshal.SizeOf(typeof(ESSP));
+            for (int i = 0; i < count; i++)
+            {
+                ESSP e = (ESSP)Marshal.PtrToStructure(new IntPtr(b.ToInt64() + (long)i * sz), typeof(ESSP));
+                if (e.Pid == 0) continue;
+                SvcInfo s = new SvcInfo();
+                s.Name = Marshal.PtrToStringUni(e.Name) ?? "";
+                s.Display = Marshal.PtrToStringUni(e.Display) ?? s.Name;
+                s.State = e.State;
+                s.Pid = e.Pid;
+                List<SvcInfo> l;
+                if (!map.TryGetValue(e.Pid, out l)) { l = new List<SvcInfo>(); map[e.Pid] = l; }
+                l.Add(s);
+            }
+            svcByPid = map;
+        }
+        catch (Exception ex) { Util.ErrorLog(ex); }
+        finally
+        {
+            if (b != IntPtr.Zero) Marshal.FreeHGlobal(b);
+            CloseServiceHandle(scm);
+        }
+    }
+
+    // команди автозапуску з реєстру (Run): шлях файла → де записано
+    static Dictionary<string, string> runMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    static void RunKeys()
+    {
+        runAt = DateTime.UtcNow;
+        Dictionary<string, string> m = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        string[][] keys =
+        {
+            new string[] { "CU", @"Software\Microsoft\Windows\CurrentVersion\Run" },
+            new string[] { "LM", @"Software\Microsoft\Windows\CurrentVersion\Run" },
+            new string[] { "LM", @"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Run" }
+        };
+        foreach (string[] k in keys)
+        {
+            try
+            {
+                using (Microsoft.Win32.RegistryKey root = Microsoft.Win32.RegistryKey.OpenBaseKey(k[0] == "CU" ? Microsoft.Win32.RegistryHive.CurrentUser : Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry64))
+                using (Microsoft.Win32.RegistryKey rk = root.OpenSubKey(k[1]))
+                {
+                    if (rk == null) continue;
+                    foreach (string n in rk.GetValueNames())
+                    {
+                        string cmd = Convert.ToString(rk.GetValue(n));
+                        string exe = ExeOf(Environment.ExpandEnvironmentVariables(cmd ?? ""));
+                        if (exe.Length > 0 && !m.ContainsKey(exe)) m[exe] = n;
+                    }
+                }
+            }
+            catch { }
+        }
+        runMap = m;
+    }
+
+    // шлях програми з командного рядка
+    public static string ExeOf(string cmd)
+    {
+        string c = (cmd ?? "").Trim();
+        if (c.Length == 0) return "";
+        if (c[0] == '"') { int q = c.IndexOf('"', 1); return q > 1 ? c.Substring(1, q - 1) : ""; }
+        int e = c.IndexOf(".exe", StringComparison.OrdinalIgnoreCase);
+        return e > 0 ? c.Substring(0, e + 4) : c.Split(' ')[0];
+    }
+
+    // аргументи (усе після шляху програми)
+    public static string ArgsOf(string cmd, string path)
+    {
+        string a = (cmd ?? "").TrimStart();
+        if (a.StartsWith("\"")) { int q = a.IndexOf('"', 1); a = q > 0 ? a.Substring(q + 1) : ""; }
+        else if (path.Length > 0 && a.StartsWith(path, StringComparison.OrdinalIgnoreCase)) a = a.Substring(path.Length);
+        else { int sp = a.IndexOf(' '); a = sp > 0 ? a.Substring(sp + 1) : ""; }
+        return a.Trim();
+    }
+
+    static bool Hosts(ProcRow r, string svc)
+    {
+        foreach (SvcInfo s in r.Svcs) if (string.Equals(s.Name, svc, StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
+    }
+
+    static void Controller(ProcRow r, ProcRow par)
+    {
+        string nm = r.Name.ToLowerInvariant();
+        string pn = par != null ? par.Name.ToLowerInvariant() : "";
+        string run;
+        if (r.Svcs.Count > 0)
+        {
+            r.Ctl = ProcRow.CSvc;
+            r.CtlText = r.Svcs.Count == 1 ? L.F("служба «{0}»", r.Svcs[0].Display) : L.F("служби ({0}): {1}…", r.Svcs.Count, r.Svcs[0].Display);
+        }
+        else if (r.Pid <= 4 || Array.IndexOf(Kernel, nm) >= 0 || (par == null && r.Session == 0) || pn == "smss.exe" || pn == "wininit.exe" || pn == "winlogon.exe" || pn == "csrss.exe")
+        {
+            r.Ctl = ProcRow.CWin; r.CtlText = L.T("Windows");
+        }
+        else if (r.Path.Length > 0 && runMap.TryGetValue(r.Path, out run))
+        {
+            r.Ctl = ProcRow.CAuto; r.CtlText = L.F("автозапуск «{0}»", run);
+        }
+        else if (par != null && (pn == "taskhostw.exe" || pn == "taskeng.exe" || Hosts(par, "Schedule")))
+        {
+            r.Ctl = ProcRow.CTask; r.CtlText = L.T("планувальник завдань");
+        }
+        else if (pn == "services.exe")
+        {
+            r.Ctl = ProcRow.CSvc; r.CtlText = L.T("диспетчер служб");
+        }
+        else if (pn == "explorer.exe" || pn == "sihost.exe" || pn == "startmenuexperiencehost.exe")
+        {
+            r.Ctl = ProcRow.CUser; r.CtlText = L.T("користувач");
+        }
+        else if (par != null)
+        {
+            r.Ctl = par.Svcs.Count > 0 ? ProcRow.CSvc : ProcRow.CProc;
+            r.CtlText = par.Name;
+        }
+        else { r.Ctl = ProcRow.CNone; r.CtlText = "—"; }
+    }
 
     static int KindOf(ProcRow r, ProcRow par)
     {
@@ -372,6 +542,7 @@ static class ProcMon
             ProcRow par;
             bool parOk = by.TryGetValue(r.Parent, out par) && par.Created <= r.Created && r.Parent != r.Pid;
             r.Kind = KindOf(r, parOk ? par : null);
+            Controller(r, parOk ? par : null);
 
             // системний процес запущено не тим, ким треба
             string want;
