@@ -191,17 +191,6 @@ static class SecScan
         }
     }
 
-    // аналіз файла запущеного процесу (підпис, місце, ім'я, пакувальник): для вкладки «Процеси» монітора системи
-    public static Finding AnalyzeFile(string path)
-    {
-        Finding f = new Finding();
-        f.Area = "proc";
-        f.Title = Path.GetFileName(path ?? "");
-        Analyze(f, path, "", false);
-        if (!File.Exists(path)) f.Add(5, L.T("Файл, з якого запущено процес, уже видалено з диска - так іноді ховаються шкідливі програми (але й оновлення програм)."));
-        return f;
-    }
-
     static readonly Dictionary<string, PeInfo> peCache = new Dictionary<string, PeInfo>(StringComparer.OrdinalIgnoreCase);
     static PeInfo PeCache(string path)
     {
@@ -326,6 +315,14 @@ static class SecScan
     static readonly string[] OfficeApps = { "winword", "excel", "powerpnt", "outlook", "onenote", "mspub", "msaccess", "visio", "acrord32", "acrobat", "foxitreader", "foxitpdfreader", "wordpad", "hwp", "eqnedt32" };
     static readonly string[] Shells = { "cmd", "powershell", "pwsh", "wscript", "cscript", "mshta", "rundll32", "regsvr32", "certutil", "bitsadmin", "schtasks", "wmic", "msiexec" };
 
+    // системні процеси й те, хто їх має запускати; процеси, що в Windows бувають лише в одному екземплярі
+    static readonly Dictionary<string, string> SysParents = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        { "svchost.exe", "services.exe" }, { "services.exe", "wininit.exe" }, { "lsass.exe", "wininit.exe" },
+        { "taskhostw.exe", "svchost.exe" }, { "runtimebroker.exe", "svchost.exe" }, { "sihost.exe", "svchost.exe" }
+    };
+    static readonly string[] Singles = { "lsass.exe", "services.exe", "wininit.exe" };
+
     static List<Finding> Processes(out int noAccess, out int count, List<string> listenOut)
     {
         noAccess = 0;
@@ -374,6 +371,8 @@ static class SecScan
             if (seen.Add(s)) listenOut.Add(s);
         }
 
+        Dictionary<string, int> names = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (PInfo p in ps) { int c; names.TryGetValue(p.Name, out c); names[p.Name] = c + 1; }
         Dictionary<string, Finding> by = new Dictionary<string, Finding>(StringComparer.OrdinalIgnoreCase);
         foreach (PInfo p in ps)
         {
@@ -415,8 +414,15 @@ static class SecScan
                     f.Add(5, L.T("Запущено з «") + par.Name + L.T("»: документ чи PDF запускає командний рядок або скрипт - типова ознака шкідливого макросу."));
                     if (f.Cmd.Length == 0) f.Cmd = p.Cmd;
                 }
+                // системний процес запущено не тим, ким треба (підроблений системний процес)
+                string want;
+                if (SysParents.TryGetValue(p.Name, out want) && !string.Equals(par.Name, want, StringComparison.OrdinalIgnoreCase) && SecHeur.InSys32(p.Path))
+                    f.Add(5, L.F("«{0}» зазвичай запускає {1}, а тут - «{2}» (PID {3}).", p.Name, want, par.Name, par.Pid));
                 if (f.Detail.Length == 0) f.Detail = L.T("запустив: ") + par.Name;
             }
+            int same;
+            if (Array.IndexOf(Singles, p.Name.ToLowerInvariant()) >= 0 && names.TryGetValue(p.Name, out same) && same > 1)
+                f.Add(5, L.F("Другий екземпляр «{0}»: у Windows він один - підроблені копії часто видають себе за нього.", p.Name));
             int[] nv;
             bool shady = f.SigKind != Sig.Ok && f.Place == SecHeur.PUser;
             if (net.TryGetValue(p.Pid, out nv) && shady)

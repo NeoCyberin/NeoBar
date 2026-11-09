@@ -10204,27 +10204,6 @@
 < Запущено з «{0}»: документ чи PDF запускає командний рядок або скрипт - типова ознака шкідливого макросу.
 > Iniciado desde «{0}»: un documento o PDF lanza una consola o un script, señal típica de una macro maliciosa.
 
-< Понад дві хвилини навантажує процесор ({0}%).
-> Lleva más de dos minutos cargando el procesador ({0} %).
-
-< Хвилину й довше інтенсивно читає чи пише (понад 30 МБ/с).
-> Lleva un minuto o más leyendo o escribiendo intensamente (más de 30 MB/s).
-
-< Пам'ять швидко росте: +{0} МБ за {1} хв (можливий витік).
-> La memoria crece rápido: +{0} MB en {1} min (posible fuga).
-
-< Дуже багато відкритих дескрипторів ({0}) - так виглядає витік ресурсів.
-> Muchísimos identificadores abiertos ({0}): así se ve una fuga de recursos.
-
-< Не підписаний файл з теки користувача відкрив порт для вхідних підключень.
-> Un archivo sin firmar de la carpeta de usuario abrió un puerto para conexiones entrantes.
-
-< Не підписаний файл з теки користувача має з'єднання з мережею.
-> Un archivo sin firmar de la carpeta de usuario tiene una conexión de red.
-
-< Аномалії
-> Anomalías
-
 < Процесів: {0} · потоків: {1}
 > Procesos: {0} · hilos: {1}
 
@@ -10236,9 +10215,6 @@
 
 < Працює античіт ({0}) - шляхи та підписи тимчасово не збираються.
 > Hay un anticheat en ejecución ({0}): las rutas y firmas no se recopilan por ahora.
-
-< Аномальної поведінки не помічено.
-> No se ha notado ningún comportamiento anómalo.
 
 < Збираю дані…
 > Recopilando datos…
@@ -10408,9 +10384,6 @@
 < Службу «{0}» запущено.
 > Servicio «{0}» iniciado.
 
-< і ще {0} - див. «Служби» Windows
-> y {0} más: consulta «Servicios» de Windows
-
 <  і ще {0}
 >  y {0} más
 
@@ -10569,3 +10542,66 @@
 
 < Тип запуску служби «{0}»: {1}
 > Tipo de inicio del servicio «{0}»: {1}
+
+< Нове завдання…
+> Nueva tarea…
+
+< Запустити програму, документ, теку чи команду - як «Виконати» або «Нове завдання» в Диспетчері завдань
+> Ejecutar un programa, documento, carpeta o comando, como «Ejecutar» o «Nueva tarea» del Administrador de tareas
+
+< Служб: {0} · працюють: {1}
+> Servicios: {0} · en ejecución: {1}
+
+< призупинена
+> en pausa
+
+< Системна
+> Sistema
+
+< і ще {0} - див. «Служби» вгорі
+> y {0} más: consulta «Servicios» arriba
+
+< Перезапустити службу «{0}»?
+> ¿Reiniciar el servicio «{0}»?
+
+< Ім'я служби
+> Nombre del servicio
+
+< Працюють
+> En ejecución
+
+< Зупинені
+> Detenidos
+
+< Служба вимкнена - спершу виберіть інший тип запуску
+> El servicio está deshabilitado: primero elige otro tipo de inicio
+
+< До процесу
+> Ir al proceso
+
+< Опис
+> Descripción
+
+< Запущено: {0}
+> Iniciado: {0}
+
+< Не вдалося запустити зі звичайними правами.
+> No se pudo iniciar con permisos normales.
+
+< Скасовано.
+> Cancelado.
+
+< Не знайдено: {0}
+> No encontrado: {0}
+
+< Нове завдання
+> Nueva tarea
+
+< Програми|*.exe;*.bat;*.cmd;*.com;*.msc;*.lnk|Усі файли|*.*
+> Programas|*.exe;*.bat;*.cmd;*.com;*.msc;*.lnk|Todos los archivos|*.*
+
+< Введіть ім'я програми, теки, документа чи адресу - Windows відкриє їх. Файл можна перетягнути в це вікно.
+> Escribe el nombre de un programa, carpeta, documento o dirección y Windows lo abrirá. También puedes arrastrar un archivo a esta ventana.
+
+< Створити з правами адміністратора
+> Crear con permisos de administrador
