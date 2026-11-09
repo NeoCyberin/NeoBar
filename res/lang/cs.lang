@@ -7273,9 +7273,6 @@
 < Налаштування
 > Nastavení
 
-< Перезавантажити панель
-> Znovu načíst panel
-
 < Увімкнути автосховок
 > Zapnout automatické skrývání
 
@@ -10207,9 +10204,6 @@
 < Процесів: {0} · потоків: {1}
 > Procesů: {0} · vláken: {1}
 
-< Процесів: {0} · потоків: {1} · ЦП: {2}%
-> Procesů: {0} · vláken: {1} · CPU: {2} %
-
 < Пам'ять
 > Paměť
 
@@ -10605,3 +10599,12 @@
 
 < Створити з правами адміністратора
 > Vytvořit s právy správce
+
+< Пошук: ім'я або PID
+> Hledat: název nebo PID
+
+< Завдання
+> Úlohy
+
+< Перезапустити NeoBar
+> Restartovat NeoBar

@@ -30,6 +30,10 @@ sealed partial class PerfWindow
     }
 
     int pview;                           // 0 - процеси, 1 - служби
+    TextBox search;                      // пошук за іменем або PID (і процесів, і служб)
+    string query = "";
+    int scrollToPid;                     // «До процесу»: прокрутити список до цього процесу
+    volatile bool sampling;
     int procScroll, procSort, selPid;    // сортування: 0 назва, 1 PID, 2 ЦП, 3 пам'ять, 4 диск, 5 мережа, 6 хто керує
     bool procDesc;
     List<PLine> lines = new List<PLine>();
@@ -102,16 +106,47 @@ sealed partial class PerfWindow
     {
         procScroll = 0;
         procTick = 0;
-        ProcMon.Sample();
-        RebuildView();
+        if (search == null)
+        {
+            search = MakeInput();
+            try { SendMessage(search.Handle, 0x1501, new IntPtr(1), L.T("Пошук: ім'я або PID")); } catch { }     // EM_SETCUEBANNER
+            search.TextChanged += delegate { query = search.Text.Trim(); procScroll = 0; svcScroll = 0; RebuildView(); Invalidate(); };
+            search.KeyDown += delegate (object s, KeyEventArgs e) { if (e.KeyCode == Keys.Escape) { e.SuppressKeyPress = true; search.Text = ""; } };
+        }
+        Sample();
         if (pview == 1) LoadSvcs();
     }
 
     void TickProcs()
     {
-        if ((procTick++ & 1) == 0) { ProcMon.Sample(); RebuildView(); }
+        if ((procTick++ & 1) == 0) Sample();
         if (pview == 1 && (DateTime.Now - svcAt).TotalSeconds >= 10 && !actBusy) LoadSvcs();
         Invalidate();
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr SendMessage(IntPtr h, int msg, IntPtr w, string l);
+
+    // знімок процесів - у фоні, щоб інтерфейс не чекав (служби, шляхи, мережа)
+    void Sample()
+    {
+        if (sampling) return;
+        sampling = true;
+        System.Threading.ThreadPool.QueueUserWorkItem(delegate
+        {
+            try { ProcMon.Sample(); }
+            catch (Exception ex) { Util.ErrorLog(ex); }
+            try { BeginInvoke(new Action(delegate { sampling = false; RebuildView(); Invalidate(); })); }
+            catch { sampling = false; }
+        });
+    }
+
+    // пошук: число - PID (точно чи з початку), інакше частина імені
+    bool Match(string name, int pid, string extra)
+    {
+        if (query.Length == 0) return true;
+        int n;
+        if (int.TryParse(query, out n)) return pid > 0 && (pid == n || pid.ToString().StartsWith(query));
+        return name.IndexOf(query, StringComparison.CurrentCultureIgnoreCase) >= 0 || (extra != null && extra.IndexOf(query, StringComparison.CurrentCultureIgnoreCase) >= 0);
     }
 
     static PLine Of(ProcRow r, int sec, bool child)
@@ -145,7 +180,8 @@ sealed partial class PerfWindow
     {
         List<ProcRow>[] secs = new List<ProcRow>[4];
         for (int s = 0; s < 4; s++) secs[s] = new List<ProcRow>();
-        foreach (ProcRow r in ProcMon.Rows) secs[Math.Max(0, Math.Min(3, r.Kind))].Add(r);
+        foreach (ProcRow r in ProcMon.Rows) if (Match(r.Name, r.Pid, null)) secs[Math.Max(0, Math.Min(3, r.Kind))].Add(r);
+        bool found = query.Length > 0;           // під час пошуку все розгорнуто
         List<PLine> outl = new List<PLine>();
         for (int s = 0; s < 4; s++)
         {
@@ -153,7 +189,7 @@ sealed partial class PerfWindow
             PLine h = new PLine();
             h.Type = 0; h.Sec = s; h.Name = SecName(s); h.Count = secs[s].Count;
             foreach (ProcRow r in secs[s]) { h.Cpu += r.Cpu; h.Ws += r.Ws; h.Io += r.Io; h.Net += r.NetEst; }
-            h.Open = !shutSecs.Contains(s);
+            h.Open = found || !shutSecs.Contains(s);
             outl.Add(h);
             if (!h.Open) continue;
             List<PLine> items = new List<PLine>();
@@ -172,7 +208,7 @@ sealed partial class PerfWindow
                 foreach (ProcRow r in kv.Value) { g.Cpu += r.Cpu; g.Ws += r.Ws; g.Io += r.Io; g.Net += r.NetEst; }
                 g.Ctl = CtlShort(kv.Value[0]);
                 foreach (ProcRow r in kv.Value) if (CtlShort(r) != g.Ctl) { g.Ctl = L.T("різні"); break; }
-                g.Open = openGroups.Contains(g.Key);
+                g.Open = found || openGroups.Contains(g.Key);
                 items.Add(g);
             }
             items.Sort(Cmp);
@@ -273,7 +309,9 @@ sealed partial class PerfWindow
         Rectangle bNew = new Rectangle(r.Right - Px(170), cP.Y, Px(170), Px(28));
         Btn(g, bNew, L.T("Нове завдання…"), NewTask, 0, true);
         Tip(bNew, L.T("Запустити програму, документ, теку чи команду - як «Виконати» або «Нове завдання» в Диспетчері завдань"));
-        Rectangle sumR = new Rectangle(cS.Right + Px(16), cP.Y, bNew.X - cS.Right - Px(24), Px(28));
+        Rectangle sR = new Rectangle(bNew.X - Px(10) - Px(200), cP.Y, Px(200), Px(28));
+        if (search != null) PlaceInput(g, search, sR);
+        Rectangle sumR = new Rectangle(cS.Right + Px(16), cP.Y, sR.X - cS.Right - Px(24), Px(28));
         bool noteOn = actBusy || (actNote.Length > 0 && (DateTime.Now - actAt).TotalSeconds < 10);
         if (noteOn)
         {
@@ -285,7 +323,7 @@ sealed partial class PerfWindow
         {
             int total = ProcMon.Rows.Count, thr = 0;
             foreach (ProcRow p in ProcMon.Rows) thr += p.Threads;
-            TxtL(g, float.IsNaN(Sensors.Cpu) ? L.F("Процесів: {0} · потоків: {1}", total, thr) : L.F("Процесів: {0} · потоків: {1} · ЦП: {2}%", total, thr, Math.Round(Sensors.Cpu)), F, sumR, P.Sub);
+            TxtL(g, L.F("Процесів: {0} · потоків: {1}", total, thr), F, sumR, P.Sub);
         }
         else
         {
@@ -332,6 +370,12 @@ sealed partial class PerfWindow
 
         int rowH = Px(25);
         int content = lines.Count * rowH;
+        if (scrollToPid != 0)
+        {
+            for (int i = 0; i < lines.Count; i++)
+                if (lines[i].Type == 2 && lines[i].P != null && lines[i].P.Pid == scrollToPid) { procScroll = i * rowH - (list.Height - rowH) / 2; break; }
+            scrollToPid = 0;
+        }
         procScroll = Math.Max(0, Math.Min(procScroll, Math.Max(0, content - list.Height)));
         Region old = g.Clip;
         g.SetClip(list);
@@ -590,9 +634,8 @@ sealed partial class PerfWindow
                     actBad = res.StartsWith("!");
                     actNote = actBad ? res.Substring(1) : res;
                     actAt = DateTime.Now;
-                    ProcMon.Sample();
-                    RebuildView();
-                    if (pview == 1) LoadSvcs();
+                    Sample();
+                    if (pview == 1) { svcLoading = false; LoadSvcs(); }
                     Invalidate();
                 }));
             }
@@ -694,10 +737,22 @@ sealed partial class PerfWindow
     readonly HashSet<int> shutSvc = new HashSet<int>();
     readonly Dictionary<string, string[]> svcInfo = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);   // шлях, опис
 
+    volatile bool svcLoading;
+
+    // список служб - у фоні (сотні записів реєстру)
     void LoadSvcs()
     {
         svcAt = DateTime.Now;
-        svcs = ProcMon.AllServices();
+        if (svcLoading) return;
+        svcLoading = true;
+        System.Threading.ThreadPool.QueueUserWorkItem(delegate
+        {
+            List<SvcInfo> l = null;
+            try { l = ProcMon.AllServices(); }
+            catch (Exception ex) { Util.ErrorLog(ex); }
+            try { BeginInvoke(new Action(delegate { svcLoading = false; if (l != null) svcs = l; Invalidate(); })); }
+            catch { svcLoading = false; }
+        });
     }
 
     int SvcCmp(SvcInfo a, SvcInfo b)
@@ -783,14 +838,15 @@ sealed partial class PerfWindow
 
         // розділи: працюють / зупинені
         List<SvcInfo> run = new List<SvcInfo>(), stop = new List<SvcInfo>();
-        foreach (SvcInfo s in svcs) (s.State == 1 ? stop : run).Add(s);
+        foreach (SvcInfo s in svcs) if (Match(s.Display, s.Pid, s.Name)) (s.State == 1 ? stop : run).Add(s);
         run.Sort(SvcCmp);
         stop.Sort(SvcCmp);
         List<object> rows = new List<object>();
         rows.Add(0);
-        if (!shutSvc.Contains(0)) foreach (SvcInfo s in run) rows.Add(s);
+        bool found = query.Length > 0;
+        if (found || !shutSvc.Contains(0)) foreach (SvcInfo s in run) rows.Add(s);
         rows.Add(1);
-        if (!shutSvc.Contains(1)) foreach (SvcInfo s in stop) rows.Add(s);
+        if (found || !shutSvc.Contains(1)) foreach (SvcInfo s in stop) rows.Add(s);
 
         int rowH = Px(25);
         int content = rows.Count * rowH;
@@ -862,7 +918,7 @@ sealed partial class PerfWindow
         else Btn(g, b1, L.T("Запустити"), delegate { SvcToggle(sn, sd, false); }, 1, !actBusy && s.State == 1 && s.Mode != 3);
         if (!run && s.Mode == 3) Tip(b1, L.T("Служба вимкнена - спершу виберіть інший тип запуску"));
         Btn(g, b2, L.T("Перезапустити"), delegate { AskSvcRestart(sn, sd); }, 0, !actBusy && run && !crit);
-        Btn(g, b3, L.T("До процесу"), delegate { pview = 0; selPid = pid; Invalidate(); }, 0, pid > 0);
+        Btn(g, b3, L.T("До процесу"), delegate { GoToProcess(pid); }, 0, pid > 0);
         TxtL(g, s.Display, FB, new Rectangle(d.X + pad, d.Y + Px(9), b1.X - d.X - pad - Px(8), Px(24)), P.Fg);
 
         int y = d.Y + Px(42);
@@ -879,6 +935,24 @@ sealed partial class PerfWindow
         TxtL(g, L.T("Запуск"), FS, new Rectangle(d.X + pad, y + Px(4), lw, Px(28)), P.Sub);
         if (crit) TxtL(g, L.T("ключова служба Windows - не змінюється"), FS, new Rectangle(d.X + pad + lw, y + Px(4), full - lw, Px(28)), P.Sub);
         else ModeChips(g, d.X + pad + lw, y + Px(4), Px(110), sn, sd, s.Mode);
+    }
+
+    // «До процесу»: перейти до списку процесів, розгорнути розділ і групу, виділити й прокрутити до рядка
+    void GoToProcess(int pid)
+    {
+        ProcRow p = Find(pid);
+        pview = 0;
+        selPid = pid;
+        if (p != null)
+        {
+            if (!Match(p.Name, p.Pid, null) && search != null) search.Text = "";
+            int k = Math.Max(0, Math.Min(3, p.Kind));
+            shutSecs.Remove(k);
+            openGroups.Add(k + "|" + p.Name);
+        }
+        RebuildView();
+        scrollToPid = pid;
+        Invalidate();
     }
 
     // ================= нове завдання =================

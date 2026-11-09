@@ -7273,9 +7273,6 @@
 < Налаштування
 > Paramètres
 
-< Перезавантажити панель
-> Recharger le panneau
-
 < Увімкнути автосховок
 > Activer le masquage automatique
 
@@ -10207,9 +10204,6 @@
 < Процесів: {0} · потоків: {1}
 > Processus : {0} · threads : {1}
 
-< Процесів: {0} · потоків: {1} · ЦП: {2}%
-> Processus : {0} · threads : {1} · CPU : {2} %
-
 < Пам'ять
 > Mémoire
 
@@ -10605,3 +10599,12 @@
 
 < Створити з правами адміністратора
 > Créer avec les droits d’administrateur
+
+< Пошук: ім'я або PID
+> Rechercher : nom ou PID
+
+< Завдання
+> Tâches
+
+< Перезапустити NeoBar
+> Redémarrer NeoBar

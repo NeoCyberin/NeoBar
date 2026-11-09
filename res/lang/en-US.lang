@@ -7273,9 +7273,6 @@
 < Налаштування
 > Settings
 
-< Перезавантажити панель
-> Reload panel
-
 < Увімкнути автосховок
 > Turn on auto-hide
 
@@ -10207,9 +10204,6 @@
 < Процесів: {0} · потоків: {1}
 > Processes: {0} · threads: {1}
 
-< Процесів: {0} · потоків: {1} · ЦП: {2}%
-> Processes: {0} · threads: {1} · CPU: {2}%
-
 < Пам'ять
 > Memory
 
@@ -10605,3 +10599,12 @@
 
 < Створити з правами адміністратора
 > Create with administrative rights
+
+< Пошук: ім'я або PID
+> Search: name or PID
+
+< Завдання
+> Tasks
+
+< Перезапустити NeoBar
+> Restart NeoBar

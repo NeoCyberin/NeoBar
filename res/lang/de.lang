@@ -7273,9 +7273,6 @@
 < Налаштування
 > Einstellungen
 
-< Перезавантажити панель
-> Panel neu laden
-
 < Увімкнути автосховок
 > Automatisches Ausblenden einschalten
 
@@ -10207,9 +10204,6 @@
 < Процесів: {0} · потоків: {1}
 > Prozesse: {0} · Threads: {1}
 
-< Процесів: {0} · потоків: {1} · ЦП: {2}%
-> Prozesse: {0} · Threads: {1} · CPU: {2} %
-
 < Пам'ять
 > Speicher
 
@@ -10605,3 +10599,12 @@
 
 < Створити з правами адміністратора
 > Mit Administratorrechten erstellen
+
+< Пошук: ім'я або PID
+> Suche: Name oder PID
+
+< Завдання
+> Aufgaben
+
+< Перезапустити NeoBar
+> NeoBar neu starten

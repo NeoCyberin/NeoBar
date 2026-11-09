@@ -449,8 +449,10 @@ sealed class NoteForm : Form
         {
             if (r[2] == 0 && r[3] == 0) continue;
             box.Select(r[0], r[1]);
-            box.SelectionFont = r[3] != 0 ? new Font(EmojiSets.Font, nf.Size, (FontStyle)r[2], nf.Unit)
-                                          : new Font(nf.FontFamily, nf.Size, (FontStyle)r[2], nf.Unit);
+            // RichTextBox копіює шрифт у формат тексту - сам об'єкт одразу звільняємо (інакше GDI-дескриптор висить до збирача сміття)
+            using (Font f = r[3] != 0 ? new Font(EmojiSets.Font, nf.Size, (FontStyle)r[2], nf.Unit)
+                                      : new Font(nf.FontFamily, nf.Size, (FontStyle)r[2], nf.Unit))
+                box.SelectionFont = f;
         }
     }
 

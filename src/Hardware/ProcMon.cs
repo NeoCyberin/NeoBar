@@ -99,6 +99,11 @@ static class ProcMon
 
     public static void Reset()
     {
+        lock (sampleLock) ResetNow();
+    }
+
+    static void ResetNow()
+    {
         Rows = new List<ProcRow>();
         byPid.Clear();
         lastAt = DateTime.MinValue;
@@ -107,7 +112,14 @@ static class ProcMon
     }
 
     // ---------- один знімок ----------
+    static readonly object sampleLock = new object();
+
     public static void Sample()
+    {
+        lock (sampleLock) SampleNow();
+    }
+
+    static void SampleNow()
     {
         try
         {

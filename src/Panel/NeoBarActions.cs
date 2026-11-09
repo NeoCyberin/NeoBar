@@ -375,6 +375,14 @@ sealed partial class NeoBar
     }
 
     // змінити профіль: запам'ятований профіль скидається, програма перезапускається у вікно вибору
+    // повний перезапуск NeoBar (новий процес з тим самим профілем і правами; нова копія чекає, поки ця закриється)
+    public void RestartApp()
+    {
+        try { Store.Save(cfgPath, cfg, entries); } catch { }
+        SbLog.W(SbLog.Panel, "повний перезапуск NeoBar");
+        if (Prof.Restart()) Close();
+    }
+
     public void SwitchProfile()
     {
         try { Store.Save(cfgPath, cfg, entries); } catch { }

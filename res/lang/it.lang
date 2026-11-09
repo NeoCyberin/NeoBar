@@ -7273,9 +7273,6 @@
 < Налаштування
 > Impostazioni
 
-< Перезавантажити панель
-> Ricarica pannello
-
 < Увімкнути автосховок
 > Attiva nascondimento automatico
 
@@ -10207,9 +10204,6 @@
 < Процесів: {0} · потоків: {1}
 > Processi: {0} · thread: {1}
 
-< Процесів: {0} · потоків: {1} · ЦП: {2}%
-> Processi: {0} · thread: {1} · CPU: {2}%
-
 < Пам'ять
 > Memoria
 
@@ -10605,3 +10599,12 @@
 
 < Створити з правами адміністратора
 > Crea con privilegi di amministratore
+
+< Пошук: ім'я або PID
+> Cerca: nome o PID
+
+< Завдання
+> Attività
+
+< Перезапустити NeoBar
+> Riavvia NeoBar
