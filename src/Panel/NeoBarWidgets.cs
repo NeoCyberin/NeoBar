@@ -65,15 +65,10 @@ sealed partial class NeoBar
         foreach (KeyValuePair<string, SbWindow> kv in new List<KeyValuePair<string, SbWindow>>(wins))
             if (kv.Key != key && kv.Value != null && !kv.Value.IsDisposed) kv.Value.Close();
         SbWindow nw = make();
-        nw.AutoClose = true;                 // клік повз вікно (стільниця, інша програма) закриває його
         wins[key] = nw;
         nw.FormClosed += delegate { SbWindow cur; if (wins.TryGetValue(key, out cur) && cur == nw) wins.Remove(key); };
-        Rectangle tile = anchor != null && entries.Contains(anchor) ? RectangleToScreen(RectOf(anchor)) : RectangleToScreen(ClientRectangle);
-        // вікно притиснуте впритул до панелі: уздовж краю - по плитці віджета, упоперек - від краю самої панелі
-        Rectangle pb = Bounds;
-        if (cfg.Side == "top" || cfg.Side == "bottom") tile = new Rectangle(tile.X, pb.Y, tile.Width, pb.Height);
-        else tile = new Rectangle(pb.X, tile.Y, pb.Width, tile.Height);
-        nw.ShowNear(tile, cfg.Side, 0);
+        // розкрите вікно - посередині екрана й не зникає, коли втрачає фокус; інше розкрите вікно його замінює
+        nw.ShowCentered(Bounds);
         return nw;
     }
 

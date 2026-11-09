@@ -171,6 +171,7 @@ sealed partial class SettingsForm
         cbMode.SelectedIndex = c.Mode == "autohide" ? 1 : 0;
         nGap.Value = Math.Max(nGap.Minimum, Math.Min(nGap.Maximum, c.CornerGap));
         chFs.Checked = c.FsHide;
+        chTrayOne.Checked = c.TrayOne;
         chTray[0].Checked = c.TrayCpu; chTray[1].Checked = c.TrayGpu; chTray[2].Checked = c.TrayHot;
         trayCol[0] = c.TrayCpuCol; trayCol[1] = c.TrayGpuCol; trayCol[2] = c.TrayHotCol;
         UpdateTraySwatches();
@@ -274,6 +275,7 @@ sealed partial class SettingsForm
         c.Mode = cbMode.SelectedIndex == 1 ? "autohide" : "fixed";
         c.CornerGap = (int)nGap.Value;
         c.FsHide = chFs.Checked;
+        c.TrayOne = chTrayOne.Checked;
         c.TrayCpu = chTray[0].Checked; c.TrayGpu = chTray[1].Checked; c.TrayHot = chTray[2].Checked;
         c.TrayCpuCol = trayCol[0]; c.TrayGpuCol = trayCol[1]; c.TrayHotCol = trayCol[2];
         c.SearchSuggest = chSuggest.Checked;

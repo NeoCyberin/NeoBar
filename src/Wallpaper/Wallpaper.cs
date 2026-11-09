@@ -104,7 +104,25 @@ static class WallCfg
 static class WallOrig
 {
     public static string Image = "", Style = "", Tile = "", Set = "";
+    public static string Copy = "";       // копія вихідних шпалер поруч із програмою (ім'я файла): вони повертаються, навіть якщо оригінал зник (перенесення на інший ПК)
     static bool loaded;
+
+    public static string CopyPath { get { return Copy.Length > 0 ? Path.Combine(Prof.Root, Copy) : ""; } }
+
+    // зберегти копію вихідних шпалер (до 80 МБ)
+    public static void MakeCopy()
+    {
+        try
+        {
+            if (Image.Length == 0 || !File.Exists(Image)) return;
+            FileInfo fi = new FileInfo(Image);
+            if (fi.Length > 80L * 1024 * 1024) return;
+            string name = "wallpaper-original" + Path.GetExtension(Image).ToLowerInvariant();
+            File.Copy(Image, Path.Combine(Prof.Root, name), true);
+            Copy = name;
+        }
+        catch { }
+    }
 
     static string File_ { get { return Path.Combine(Prof.Root, "wallpaper-original.ini"); } }
 
@@ -126,6 +144,7 @@ static class WallOrig
                 else if (k == "style") Style = v;
                 else if (k == "tile") Tile = v;
                 else if (k == "set") Set = v;
+                else if (k == "copy") Copy = v;
             }
         }
         catch { }
@@ -142,12 +161,18 @@ static class WallOrig
             sb.AppendLine("style=" + Style);
             sb.AppendLine("tile=" + Tile);
             sb.AppendLine("set=" + Set);
+            sb.AppendLine("copy=" + Copy);
             File.WriteAllText(File_, sb.ToString(), new UTF8Encoding(true));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
 
-    public static void Clear() { Image = Style = Tile = Set = ""; Save(); }
+    public static void Clear()
+    {
+        try { if (Copy.Length > 0 && File.Exists(CopyPath)) File.Delete(CopyPath); } catch { }
+        Image = Style = Tile = Set = Copy = "";
+        Save();
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -557,6 +582,7 @@ static class WallMgr
             WallOrig.Image = CurrentSystem();
             WallOrig.Style = Convert.ToString(Registry.GetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "WallpaperStyle", "10"));
             WallOrig.Tile = Convert.ToString(Registry.GetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "TileWallpaper", "0"));
+            WallOrig.MakeCopy();
             WallOrig.Save();
         }
         catch { }
@@ -613,7 +639,7 @@ static class WallMgr
         {
             Registry.SetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "WallpaperStyle", WallOrig.Style.Length > 0 ? WallOrig.Style : "10");
             Registry.SetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "TileWallpaper", WallOrig.Tile.Length > 0 ? WallOrig.Tile : "0");
-            Win.SystemParametersInfoSet(0x14, 0, File.Exists(WallOrig.Image) ? WallOrig.Image : "", 3);
+            Win.SystemParametersInfoSet(0x14, 0, File.Exists(WallOrig.Image) ? WallOrig.Image : (WallOrig.Copy.Length > 0 && File.Exists(WallOrig.CopyPath) ? WallOrig.CopyPath : ""), 3);
             SbLog.W(SbLog.Panel, "шпалери: повернуто шпалери Windows " + Path.GetFileName(WallOrig.Image));
         }
         catch { }

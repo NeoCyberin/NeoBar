@@ -259,7 +259,8 @@ sealed partial class NeoBar
             else if (spec.Length > 0)
             {
                 string ip = Util.ResolvePath(spec);
-                if (File.Exists(ip)) raw = LoadFileIcon(ip, px);
+                if (File.Exists(ip)) { raw = LoadFileIcon(ip, px); CacheIcon(ip, raw); }
+                else raw = IconCache.Load(ip);                // файла (програми) тут немає - збережена копія іконки
             }
 
             if (raw == null)
@@ -279,7 +280,13 @@ sealed partial class NeoBar
                 else if (cs >= 0) raw = Util.ShellIconPidl(cs);
                 else if (Util.SlowPath(tgt)) { }      // мережевий шлях: перевірка недоступного сервера тримала б панель до півхвилини - тематична іконка
                 else if (Directory.Exists(tgt)) raw = Util.ShellIcon(tgt, true);
-                else if (File.Exists(tgt)) raw = LoadFileIcon(tgt, px);
+                else if (File.Exists(tgt))
+                {
+                    // ярлик, чия програма зникла (інший ПК): краще збережена справжня іконка, ніж порожня системна
+                    if (tgt.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase)) raw = LinkGoneIcon(tgt);
+                    if (raw == null) { raw = LoadFileIcon(tgt, px); CacheIcon(tgt, raw); }
+                }
+                else if (Path.IsPathRooted(tgt) && !Util.SlowPath(tgt)) raw = IconCache.Load(tgt);     // програму видалено чи ще не встановлено: справжня іконка з кешу
             }
         }
         catch { }
@@ -291,6 +298,25 @@ sealed partial class NeoBar
         e.Gone = Gone.Is(e);
         Bitmap res = themed ? raw : CenterIn(Fit(raw, px), sl);
         return e.Gone ? Dim(res) : res;
+    }
+
+    static Bitmap LinkGoneIcon(string lnk)
+    {
+        try
+        {
+            string lt = IconHi.LinkTarget(lnk);
+            if (!string.IsNullOrEmpty(lt) && Path.IsPathRooted(lt) && !Util.SlowPath(lt) && !File.Exists(lt) && !Directory.Exists(lt)) return IconCache.Load(lnk);
+        }
+        catch { }
+        return null;
+    }
+
+    // копія іконки програми (exe, ярлик, dll) на випадок перенесення на ПК без неї; власні картинки з icons\\ уже локальні
+    static void CacheIcon(string path, Bitmap raw)
+    {
+        string ext = Path.GetExtension(path).ToLowerInvariant();
+        if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".gif" || ext == ".ico") return;
+        IconCache.Save(path, raw);
     }
 
     // програму видалено: іконка бліда й сіра

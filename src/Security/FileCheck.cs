@@ -341,49 +341,19 @@ abstract class VtWindow : ToolWindow
               (v.Mal < 3 ? L.T(" (1-2 спрацювання бувають і хибними).") : "."));
     }
 
-    protected void Bg(ThreadStart a)
-    {
-        Thread t = new Thread(delegate () { try { a(); } catch (Exception ex) { Util.ErrorLog(ex); } });
-        t.IsBackground = true;
-        t.Start();
-    }
-
-    protected void Ui(Action a)
-    {
-        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(new Action(delegate { a(); Invalidate(); })); } catch { }
-    }
-
-    protected static void OpenVt(string sha)
-    {
-        // відкривається лише сторінка за хешем: сам файл не завантажується
-        try { System.Diagnostics.Process.Start("https://www.virustotal.com/gui/file/" + sha); } catch { }
-    }
-}
-
-// ======================================================================
-//  Вікно «Перевірка файла»: картки з висновком і причинами; файли - перетягуванням чи з контекстного меню
-// ======================================================================
-sealed class FileCheckWindow : VtWindow
-{
-    readonly List<FileReport> reps = new List<FileReport>();
-    int scroll;
-
-    public FileCheckWindow(NeoBar bar) : base(bar, L.T("Перевірка файла"), 600, 640) { Glyph = "\uE8A5"; }
-    public FileCheckWindow(Theme t, float sc) : base(t, sc, L.T("Перевірка файла"), 600, 640) { Glyph = "\uE8A5"; }
-
-    protected override void Dropped(string[] files) { foreach (string f in files) Add(f); }
-
-    public void Add(string path) { Add(path, false); }
+    // ---------- звіти про файли (спільні для вікна «Перевірка файла» і вкладки «Файл» у «Безпеці») ----------
+    protected readonly List<FileReport> Reps = new List<FileReport>();
+    protected int RepScroll;
 
     // vt - одразу після аналізу перевірити й на VirusTotal
-    public void Add(string path, bool vt)
+    public void AddReport(string path, bool vt)
     {
         if (!File.Exists(path)) return;
-        foreach (FileReport x in reps) if (string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase)) { reps.Remove(x); break; }
+        foreach (FileReport x in Reps) if (string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase)) { Reps.Remove(x); break; }
         FileReport r = new FileReport();
         r.Path = path;
-        reps.Insert(0, r);
-        scroll = 0;
+        Reps.Insert(0, r);
+        RepScroll = 0;
         Thread t = new Thread(delegate ()
         {
             FileReport res = FileCheck.Analyze(path);
@@ -391,8 +361,8 @@ sealed class FileCheckWindow : VtWindow
             {
                 BeginInvoke(new Action(delegate
                 {
-                    int i = reps.IndexOf(r);
-                    if (i >= 0) reps[i] = res;
+                    int i = Reps.IndexOf(r);
+                    if (i >= 0) Reps[i] = res;
                     Invalidate();
                     if (vt && i >= 0 && res.Sha256.Length > 0) StartVt(res);
                 }));
@@ -403,17 +373,6 @@ sealed class FileCheckWindow : VtWindow
         t.Priority = ThreadPriority.BelowNormal;
         t.Start();
         Invalidate();
-    }
-
-    void Pick()
-    {
-        using (OpenFileDialog d = new OpenFileDialog())
-        {
-            d.Title = L.T("Файл для перевірки");
-            d.Filter = L.T("Усі файли|*.*");
-            d.Multiselect = true;
-            if (d.ShowDialog(this) == DialogResult.OK) foreach (string f in d.FileNames) Add(f);
-        }
     }
 
     int CardH(FileReport r, int w)
@@ -436,21 +395,17 @@ sealed class FileCheckWindow : VtWindow
         return l;
     }
 
-    protected override void PaintBody(Graphics g, Rectangle r)
+    // картки зі звітами у прямокутнику list; повертає повну висоту вмісту
+    protected int PaintReports(Graphics g, Rectangle list)
     {
-        int y = r.Y;
-        Btn(g, new Rectangle(r.X, y, Px(170), Px(32)), L.T("Перевірити файл…"), Pick, 1, true);
-        TxtL(g, L.T("або перетягніть файли у вікно"), FS, new Rectangle(r.X + Px(180), y, r.Width - Px(180), Px(32)), P.Sub);
-        y += Px(42);
-        Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y - Px(44));
-        if (reps.Count == 0) TxtC(g, L.T("Тут з'явиться висновок щодо файла."), F, list, P.Sub);
+        if (Reps.Count == 0) TxtC(g, L.T("Тут з'явиться висновок щодо файла."), F, list, P.Sub);
         int total = 0;
-        foreach (FileReport x in reps) total += CardH(x, list.Width - Px(10)) + Px(10);
-        scroll = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), scroll));
+        foreach (FileReport x in Reps) total += CardH(x, list.Width - Px(10)) + Px(10);
+        RepScroll = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), RepScroll));
         GraphicsState st = g.Save();
         g.SetClip(list);
-        int cy = list.Y - scroll;
-        foreach (FileReport x in reps)
+        int cy = list.Y - RepScroll;
+        foreach (FileReport x in Reps)
         {
             int h = CardH(x, list.Width - Px(10));
             Rectangle c = new Rectangle(list.X, cy, list.Width - Px(10), h);
@@ -483,8 +438,62 @@ sealed class FileCheckWindow : VtWindow
             }
         }
         g.Restore(st);
-        Wheel(list, delegate (int d) { scroll -= d > 0 ? Px(60) : -Px(60); Invalidate(); });
-        VBar(g, new Rectangle(list.Right - Px(5), list.Y, Px(4), list.Height), total, list.Height, scroll, delegate (int v) { scroll = v; Invalidate(); });
+        Wheel(list, delegate (int d) { RepScroll -= d > 0 ? Px(60) : -Px(60); Invalidate(); });
+        VBar(g, new Rectangle(list.Right - Px(5), list.Y, Px(4), list.Height), total, list.Height, RepScroll, delegate (int v) { RepScroll = v; Invalidate(); });
+        return total;
+    }
+
+    protected void Bg(ThreadStart a)
+    {
+        Thread t = new Thread(delegate () { try { a(); } catch (Exception ex) { Util.ErrorLog(ex); } });
+        t.IsBackground = true;
+        t.Start();
+    }
+
+    protected void Ui(Action a)
+    {
+        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(new Action(delegate { a(); Invalidate(); })); } catch { }
+    }
+
+    protected static void OpenVt(string sha)
+    {
+        // відкривається лише сторінка за хешем: сам файл не завантажується
+        try { System.Diagnostics.Process.Start("https://www.virustotal.com/gui/file/" + sha); } catch { }
+    }
+}
+
+// ======================================================================
+//  Вікно «Перевірка файла»: картки з висновком і причинами; файли - перетягуванням чи з контекстного меню
+// ======================================================================
+sealed class FileCheckWindow : VtWindow
+{
+    public FileCheckWindow(NeoBar bar) : base(bar, L.T("Перевірка файла"), 600, 640) { Glyph = "\uE8A5"; }
+    public FileCheckWindow(Theme t, float sc) : base(t, sc, L.T("Перевірка файла"), 600, 640) { Glyph = "\uE8A5"; }
+
+    protected override void Dropped(string[] files) { foreach (string f in files) Add(f); }
+
+    public void Add(string path) { AddReport(path, false); }
+    public void Add(string path, bool vt) { AddReport(path, vt); }
+
+    void Pick()
+    {
+        using (OpenFileDialog d = new OpenFileDialog())
+        {
+            d.Title = L.T("Файл для перевірки");
+            d.Filter = L.T("Усі файли|*.*");
+            d.Multiselect = true;
+            if (d.ShowDialog(this) == DialogResult.OK) foreach (string f in d.FileNames) Add(f);
+        }
+    }
+
+    protected override void PaintBody(Graphics g, Rectangle r)
+    {
+        int y = r.Y;
+        Btn(g, new Rectangle(r.X, y, Px(170), Px(32)), L.T("Перевірити файл…"), Pick, 1, true);
+        TxtL(g, L.T("або перетягніть файли у вікно"), FS, new Rectangle(r.X + Px(180), y, r.Width - Px(180), Px(32)), P.Sub);
+        y += Px(42);
+        Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y - Px(44));
+        int total = PaintReports(g, list);
         string foot = NoteLive ? Note : L.T("Евристики без бази сигнатур: це підказка, а не вирок антивіруса. Файл нікуди не надсилається без вашої згоди.");
         TxtW(g, foot, FS, new Rectangle(r.X, r.Bottom - Px(38), r.Width, Px(38)), NoteLive ? (NoteBad ? P.Bad : P.Good) : P.Sub);
         FitTo(r, list.Y + Math.Max(total, Px(90)) + Px(44), Px(300));
