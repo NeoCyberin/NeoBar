@@ -7021,12 +7021,6 @@
 < Прибрати
 > Usuń
 
-< Ще не перевіряли
-> Jeszcze nie sprawdzono
-
-< Процеси, автозапуск, служби й налаштування Windows - за хвилину.
-> Procesy, autostart, usługi i ustawienia Windows - w minutę.
-
 < Підозрілого не знайдено
 > Nie znaleziono nic podejrzanego
 
@@ -10192,20 +10186,11 @@
 < Диски ще читаються, повторіть за мить.
 > Dyski są jeszcze odczytywane, spróbuj za chwilę.
 
-<  Папку можна й перетягнути з Провідника в це вікно.
->  Folder można też przeciągnąć z Eksploratora do tego okna.
-
 < Перетягніть файли сюди
 > Upuść pliki tutaj
 
 < або
 > lub
-
-< Один значок для всіх
-> Jedna ikona na wszystko
-
-< Обрані температури в одному значку, одна під одною, кожна своїм кольором. На малих значках (100% масштабу) три числа дрібні: тоді краще обрати дві.
-> Wybrane temperatury w jednej ikonie, jedna pod drugą, każda swoim kolorem. Na małych ikonach (skala 100%) trzy liczby są drobne: wtedy lepiej wybrać dwie.
 
 < Вкладка «Процеси» працює лише в 64-розрядному NeoBar.
 > Karta Procesy działa tylko w 64-bitowym NeoBarze.
@@ -10248,9 +10233,6 @@
 
 < Пам'ять
 > Pamięć
-
-< Натисніть, щоб відсортувати
-> Kliknij, aby posortować
 
 < Працює античіт ({0}) - шляхи та підписи тимчасово не збираються.
 > Działa anticheat ({0}) – ścieżki i podpisy są chwilowo niezbierane.
@@ -10312,9 +10294,59 @@
 < Підпис
 > Podpis
 
-< Ресурси
-> Zasoby
+< Перетягніть папку сюди
+> Upuść folder tutaj
 
-< дескрипторів {0}, потоків {1}, виділено {2}, з'єднань {3}, портів {4}
-> uchwytów {0}, wątków {1}, zatwierdzone {2}, połączeń {3}, portów {4}
+< Програми
+> Aplikacje
 
+< Фонові процеси
+> Procesy w tle
+
+< Процеси Windows
+> Procesy Windows
+
+< програма з вікном
+> aplikacja z oknem
+
+< служба
+> usługa
+
+< процес Windows
+> proces Windows
+
+< фоновий процес
+> proces w tle
+
+< Сеанс
+> Sesja
+
+< 0 (системний)
+> 0 (systemowa)
+
+< {0} · виділено {1}
+> {0} · zatwierdzone {1}
+
+< Дескриптори
+> Uchwyty
+
+< {0} · потоків {1}
+> {0} · wątków {1}
+
+< з'єднань {0} · портів {1}
+> połączeń {0} · portów {1}
+
+< Процеси і служби
+> Procesy i usługi
+
+< Сканування системи
+> Skanowanie systemu
+
+< Процеси, служби, автозапуск і налаштування Windows - за хвилину.
+> Procesy, usługi, autostart i ustawienia Windows – w około minutę.
+
+< Перетягніть зображення (PNG, JPG, BMP, GIF)
+> Upuść obraz (PNG, JPG, BMP, GIF)
+
+< Фото можна й перетягнути у це вікно
+> Zdjęcie można też przeciągnąć do tego okna

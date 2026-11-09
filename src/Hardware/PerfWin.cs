@@ -31,7 +31,7 @@ sealed partial class PerfWindow : SbWindow
         Invalidate();
     }
 
-    public PerfWindow(NeoBar bar, int tab) : base(bar, L.T("Монітор системи"), 560, 740)
+    public PerfWindow(NeoBar bar, int tab) : base(bar, L.T("Монітор системи"), 880, 740)
     { Glyph = "\uE9D9";
         Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики"), L.T("Процеси") };
         Tab = Math.Max(0, Math.Min(2, tab));
@@ -60,7 +60,6 @@ sealed partial class PerfWindow : SbWindow
     protected override void OnTab()
     {
         scroll = 0;
-        ResizeFor(Tab == 2 ? 880 : 560);
         if (Tab == 1) HwInfo.Load(false);
         if (Tab == 2) EnterProcs();
     }

@@ -273,24 +273,49 @@ sealed class ProfileEdit : SbWindow
             d.Title = L.T("Фото профілю");
             d.Filter = L.T("Зображення|*.png;*.jpg;*.jpeg;*.bmp;*.gif|Усі файли|*.*");
             if (d.ShowDialog(this) != DialogResult.OK) return;
-            try
+            UsePhoto(d.FileName);
+        }
+    }
+
+    // фото можна й перетягнути у вікно (з Провідника, браузера тощо)
+    protected override bool AcceptsFiles { get { return true; } }
+
+    protected override void FilesDropped(string[] files)
+    {
+        foreach (string f in files)
+        {
+            if (!File.Exists(f)) continue;
+            string ext = Path.GetExtension(f).ToLowerInvariant();
+            if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp" || ext == ".gif" || ext == ".webp" || ext == ".tif" || ext == ".tiff" || ext == ".ico")
             {
-                err = "";
-                using (Bitmap work = PhotoSrc.Load(d.FileName))
-                using (AvatarCrop dlg = new AvatarCrop(T, Sc, work))
+                Activate();
+                UsePhoto(f);
+                return;
+            }
+        }
+        err = L.T("Перетягніть зображення (PNG, JPG, BMP, GIF)");
+        Invalidate();
+    }
+
+    void UsePhoto(string file)
+    {
+        try
+        {
+            err = "";
+            using (Bitmap work = PhotoSrc.Load(file))
+            using (AvatarCrop dlg = new AvatarCrop(T, Sc, work))
+            {
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                if (dlg.ShowDialog(this) == DialogResult.OK && dlg.Result != null)
                 {
-                    dlg.StartPosition = FormStartPosition.CenterParent;
-                    if (dlg.ShowDialog(this) == DialogResult.OK && dlg.Result != null)
-                    {
-                        if (photoNew != null) photoNew.Dispose();
-                        photoNew = dlg.Result;
-                        photoDrop = false;
-                    }
+                    if (photoNew != null) photoNew.Dispose();
+                    photoNew = dlg.Result;
+                    photoDrop = false;
                 }
             }
-            catch (InvalidOperationException ex) { err = ex.Message; }
-            catch { err = L.T("Не вдалося відкрити зображення"); }
         }
+        catch (InvalidOperationException ex) { err = ex.Message; }
+        catch { err = L.T("Не вдалося відкрити зображення"); }
         Invalidate();
     }
 
@@ -353,6 +378,8 @@ sealed class ProfileEdit : SbWindow
         // фото
         int by = y + Px(22) + sw + Px(12), bw0 = Px(118);
         Btn(g, new Rectangle(sx, by, bw0, Px(30)), photo ? L.T("Інше фото…") : L.T("Своє фото…"), PickPhoto, 0, true);
+        Tip(new Rectangle(sx, by, bw0, Px(30)), L.T("Фото можна й перетягнути у це вікно"));
+        Tip(new Rectangle(r.X, y, av, av), L.T("Фото можна й перетягнути у це вікно"));
         if (photo) Btn(g, new Rectangle(sx + bw0 + Px(8), by, Px(130), Px(30)), L.T("Прибрати фото"), delegate { if (photoNew != null) { photoNew.Dispose(); photoNew = null; } photoDrop = p != null && p.Photo; }, 2, true);
         y += av + Px(16);
 

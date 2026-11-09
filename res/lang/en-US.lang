@@ -7021,12 +7021,6 @@
 < Прибрати
 > Remove
 
-< Ще не перевіряли
-> Not checked yet
-
-< Процеси, автозапуск, служби й налаштування Windows - за хвилину.
-> Processes, autostart, services and Windows settings - in a minute.
-
 < Підозрілого не знайдено
 > Nothing suspicious found
 
@@ -10192,20 +10186,11 @@
 < Диски ще читаються, повторіть за мить.
 > The disks are still being read, try again in a moment.
 
-<  Папку можна й перетягнути з Провідника в це вікно.
->  You can also drag a folder from Explorer into this window.
-
 < Перетягніть файли сюди
 > Drop files here
 
 < або
 > or
-
-< Один значок для всіх
-> One icon for all
-
-< Обрані температури в одному значку, одна під одною, кожна своїм кольором. На малих значках (100% масштабу) три числа дрібні: тоді краще обрати дві.
-> The selected temperatures in a single icon, one under another, each in its own colour. On small icons (100% scaling) three numbers are tiny: then pick two.
 
 < Вкладка «Процеси» працює лише в 64-розрядному NeoBar.
 > The Processes tab works only in 64-bit NeoBar.
@@ -10248,9 +10233,6 @@
 
 < Пам'ять
 > Memory
-
-< Натисніть, щоб відсортувати
-> Click to sort
 
 < Працює античіт ({0}) - шляхи та підписи тимчасово не збираються.
 > An anti-cheat is running ({0}) - paths and signatures are temporarily not collected.
@@ -10312,9 +10294,59 @@
 < Підпис
 > Signature
 
-< Ресурси
-> Resources
+< Перетягніть папку сюди
+> Drop a folder here
 
-< дескрипторів {0}, потоків {1}, виділено {2}, з'єднань {3}, портів {4}
-> handles {0}, threads {1}, committed {2}, connections {3}, ports {4}
+< Програми
+> Apps
 
+< Фонові процеси
+> Background processes
+
+< Процеси Windows
+> Windows processes
+
+< програма з вікном
+> app with a window
+
+< служба
+> service
+
+< процес Windows
+> Windows process
+
+< фоновий процес
+> background process
+
+< Сеанс
+> Session
+
+< 0 (системний)
+> 0 (system)
+
+< {0} · виділено {1}
+> {0} · committed {1}
+
+< Дескриптори
+> Handles
+
+< {0} · потоків {1}
+> {0} · threads {1}
+
+< з'єднань {0} · портів {1}
+> connections {0} · ports {1}
+
+< Процеси і служби
+> Processes and services
+
+< Сканування системи
+> System scan
+
+< Процеси, служби, автозапуск і налаштування Windows - за хвилину.
+> Processes, services, startup and Windows settings - in about a minute.
+
+< Перетягніть зображення (PNG, JPG, BMP, GIF)
+> Drop an image (PNG, JPG, BMP, GIF)
+
+< Фото можна й перетягнути у це вікно
+> You can also drag a photo into this window

@@ -16,7 +16,11 @@ using System.Threading;
 // ======================================================================
 sealed class ProcRow
 {
-    public int Pid, Parent;
+    public int Pid, Parent, Session;
+    // вид процесу (як групи в Диспетчері завдань): програма з вікном, фоновий, стороння служба, процес Windows
+    public const int KApp = 0, KBg = 1, KSvc = 2, KWin = 3;
+    public int Kind = KBg;
+    public bool HasWin;
     public string Name = "", Path = "", Cmd = "";
     public long Created;                    // FILETIME (UTC)
     public float Cpu;                       // % від усього процесора
@@ -187,6 +191,7 @@ static class ProcMon
                     r.Parent = (int)Marshal.ReadInt64(p, 88);
                     r.Threads = Marshal.ReadInt32(p, 4);
                     r.Handles = Marshal.ReadInt32(p, 96);
+                    r.Session = Marshal.ReadInt32(p, 100);
                     r.Ws = Marshal.ReadInt64(p, 8);
                     r.Commit = Marshal.ReadInt64(p, 200);
                     seen.Add(pid);
@@ -235,10 +240,59 @@ static class ProcMon
                 catch { }
             }
 
+            // процеси з видимими вікнами (лише список вікон - у процеси нічого не відкривається)
+            HashSet<int> wins = Windows();
+            foreach (ProcRow r in rows) r.HasWin = wins.Contains(r.Pid);
             Evaluate(rows, now);
             Rows = rows;
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
+    }
+
+    delegate bool EnumProc(IntPtr h, IntPtr l);
+    [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc cb, IntPtr l);
+    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+    [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr h, uint cmd);
+    [DllImport("user32.dll")] static extern int GetWindowTextLength(IntPtr h);
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongW")] static extern int GetWindowLong(IntPtr h, int i);
+    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+    [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr h, int attr, out int val, int size);
+    static HashSet<int> winSet;
+    static readonly EnumProc winCb = WinCb;
+
+    static bool WinCb(IntPtr h, IntPtr l)
+    {
+        if (!IsWindowVisible(h) || GetWindow(h, 4) != IntPtr.Zero || GetWindowTextLength(h) == 0) return true;      // власник - діалог чи спливне вікно
+        if ((GetWindowLong(h, -20) & 0x80) != 0) return true;                                                        // WS_EX_TOOLWINDOW
+        int cloaked;
+        if (DwmGetWindowAttribute(h, 14, out cloaked, 4) == 0 && cloaked != 0) return true;                           // приховане (інший робочий стіл, UWP)
+        uint pid;
+        GetWindowThreadProcessId(h, out pid);
+        if (pid != 0) winSet.Add((int)pid);
+        return true;
+    }
+
+    static HashSet<int> Windows()
+    {
+        winSet = new HashSet<int>();
+        try { EnumWindows(winCb, IntPtr.Zero); } catch { }
+        return winSet;
+    }
+
+    static readonly string WinDir = (Environment.GetFolderPath(Environment.SpecialFolder.Windows).TrimEnd('\\') + "\\").ToLowerInvariant();
+    static readonly string[] Kernel = { "system", "registry", "memory compression", "secure system", "system idle process", "idle" };
+
+    static int KindOf(ProcRow r, ProcRow par)
+    {
+        string nm = r.Name.ToLowerInvariant();
+        if (r.Pid <= 4 || Array.IndexOf(Kernel, nm) >= 0) return ProcRow.KWin;
+        if (r.HasWin && r.Session != 0) return ProcRow.KApp;
+        bool inWin = r.Path.Length > 0 ? r.Path.ToLowerInvariant().StartsWith(WinDir) : false;
+        if (inWin) return ProcRow.KWin;
+        bool bySvc = par != null && string.Equals(par.Name, "services.exe", StringComparison.OrdinalIgnoreCase);
+        if (r.Path.Length == 0 && r.Session == 0 && !bySvc) return ProcRow.KWin;          // захищений системний (шлях Windows не показує)
+        if (bySvc || r.Session == 0) return nm == "svchost.exe" ? ProcRow.KWin : ProcRow.KSvc;
+        return ProcRow.KBg;
     }
 
     static void Details(ProcRow r)
@@ -317,6 +371,7 @@ static class ProcMon
             string nm = r.Name.ToLowerInvariant();
             ProcRow par;
             bool parOk = by.TryGetValue(r.Parent, out par) && par.Created <= r.Created && r.Parent != r.Pid;
+            r.Kind = KindOf(r, parOk ? par : null);
 
             // системний процес запущено не тим, ким треба
             string want;

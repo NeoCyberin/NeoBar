@@ -118,7 +118,7 @@ sealed class Cfg
     public bool Fahrenheit, Clock24 = true, ClockSec;
     public bool PerfCpu = true, PerfGpu = true, PerfRam = true;
     // температури в треї: окремий значок на кожну, зі своїм кольором
-    public bool TrayCpu, TrayGpu, TrayHot, TrayOne;       // TrayOne - усі обрані температури в одному значку, одна під одною
+    public bool TrayCpu, TrayGpu, TrayHot;
     public Color TrayCpuCol = Color.FromArgb(70, 170, 255), TrayGpuCol = Color.FromArgb(90, 200, 110), TrayHotCol = Color.FromArgb(255, 150, 60);
     public bool Welcomed, QuickDone;      // QuickDone - швидке налаштування вже показано
     // свята
@@ -366,7 +366,6 @@ static class Store
             case "fahrenheit": cfg.Fahrenheit = B(val); break;
             case "clock24": cfg.Clock24 = B(val); break;
             case "clocksec": cfg.ClockSec = B(val); break;
-            case "trayone": cfg.TrayOne = B(val); break;
             case "traycpu": cfg.TrayCpu = B(val); break;
             case "traygpu": cfg.TrayGpu = B(val); break;
             case "trayhot": cfg.TrayHot = B(val); break;
@@ -555,7 +554,6 @@ static class Store
         sb.AppendLine("@fahrenheit " + Yn(c.Fahrenheit));
         sb.AppendLine("@clock24 " + Yn(c.Clock24));
         sb.AppendLine("@clocksec " + Yn(c.ClockSec));
-        sb.AppendLine("@trayone " + Yn(c.TrayOne));
         sb.AppendLine("@traycpu " + Yn(c.TrayCpu));
         sb.AppendLine("@traygpu " + Yn(c.TrayGpu));
         sb.AppendLine("@trayhot " + Yn(c.TrayHot));

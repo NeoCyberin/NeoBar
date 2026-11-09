@@ -29,7 +29,8 @@ sealed class SecWindow : VtWindow
     // файли, перетягнуті у вікно, - на перевірку
     protected override void Dropped(string[] files) { foreach (string f in files) if (File.Exists(f)) Details(f); }
 
-    const int TabFile = 5;
+    // вкладки: «Файл» - головна (стан сканування, перевірка файлів, ключ VirusTotal), далі знахідки й списки
+    const int TabFile = 0, TabProc = 1, TabAuto = 2, TabSys = 3, TabLists = 4;
 
     void PickCheck()
     {
@@ -71,16 +72,14 @@ sealed class SecWindow : VtWindow
 
     void SetTabs()
     {
-        List<Finding>[] ls = { SecScan.Proc, SecScan.Auto, SecScan.Svc, SecScan.Sys };
-        string[] nm = { L.T("Процеси"), L.T("Автозапуск"), L.T("Служби"), L.T("Система") };
-        string[] t = new string[6];
-        for (int i = 0; i < 4; i++)
-        {
-            int n = SecScan.LastAt == DateTime.MinValue ? 0 : Flagged(ls[i]);
-            t[i] = nm[i] + (n > 0 ? " · " + n : "");
-        }
-        t[4] = L.T("Списки");
+        bool done = SecScan.LastAt != DateTime.MinValue;
+        int np = done ? Flagged(SecScan.Proc) + Flagged(SecScan.Svc) : 0, na = done ? Flagged(SecScan.Auto) : 0, ns = done ? Flagged(SecScan.Sys) : 0;
+        string[] t = new string[5];
         t[TabFile] = L.T("Файл");
+        t[TabProc] = L.T("Процеси і служби") + (np > 0 ? " · " + np : "");
+        t[TabAuto] = L.T("Автозапуск") + (na > 0 ? " · " + na : "");
+        t[TabSys] = L.T("Система") + (ns > 0 ? " · " + ns : "");
+        t[TabLists] = L.T("Списки");
         Tabs = t;
     }
 
@@ -104,17 +103,15 @@ sealed class SecWindow : VtWindow
 
     List<Finding> ShownItems()
     {
-        List<Finding> src = Tab == 0 ? SecScan.Proc : (Tab == 1 ? SecScan.Auto : (Tab == 2 ? SecScan.Svc : SecScan.Sys));
-        if (Tab == 3 || all)
-        {
-            if (Tab != 2 || !all) return src;
-            // «усе» для служб - лише сторонні (системних кілька сотень)
-            List<Finding> r = new List<Finding>();
-            foreach (Finding f in src) if (f.Score > 0 || f.Place != SecHeur.PSys) r.Add(f);
-            return r;
-        }
+        if (Tab == TabSys) return SecScan.Sys;
+        List<Finding>[] srcs = Tab == TabProc ? new List<Finding>[] { SecScan.Proc, SecScan.Svc } : new List<Finding>[] { SecScan.Auto };
         List<Finding> l = new List<Finding>();
-        foreach (Finding f in src) if (f.Level >= 1 && !f.Allowed) l.Add(f);
+        foreach (List<Finding> src in srcs)
+            foreach (Finding f in src)
+            {
+                // «усе» для служб - лише сторонні (системних кілька сотень)
+                if (all ? (src != SecScan.Svc || f.Score > 0 || f.Place != SecHeur.PSys) : (f.Level >= 1 && !f.Allowed)) l.Add(f);
+            }
         return l;
     }
 
@@ -367,29 +364,21 @@ sealed class SecWindow : VtWindow
         Invalidate();
     }
 
+    int lastListsTotal;
+
     int ListCardH(ListEntry e) { return e.Kind == 'Q' ? Px(96) : Px(66); }
 
     void PaintLists(Graphics g, Rectangle list)
     {
         List<ListEntry> q = SecLists.Of('Q'), a = SecLists.Of('A');
         int w = list.Width - Px(10);
-        int total = Px(70) + Px(34) + (q.Count == 0 ? Px(30) : 0) + Px(34) + (a.Count == 0 ? Px(30) : 0);
+        int total = Px(34) + (q.Count == 0 ? Px(30) : 0) + Px(34) + (a.Count == 0 ? Px(30) : 0);
         foreach (ListEntry e in q) total += ListCardH(e) + Px(8);
         foreach (ListEntry e in a) total += ListCardH(e) + Px(8);
-        int sc = scroll[4] = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), scroll[4]));
+        int sc = scroll[TabLists] = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), scroll[TabLists]));
         GraphicsState st = g.Save();
         g.SetClip(list);
         int cy = list.Y - sc;
-        // ключ VirusTotal
-        Rectangle vc = new Rectangle(list.X, cy, w, Px(60));
-        Card(g, vc);
-        bool has = Vt.Key.Length > 0;
-        TxtL(g, L.T("Ключ VirusTotal API"), FB, new Rectangle(vc.X + Px(14), vc.Y + Px(6), vc.Width - Px(200), Px(24)), P.Fg);
-        TxtL(g, has ? L.T("Задано: перевірка й надсилання файлів прямо з NeoBar.") : L.T("Не задано: для перевірки відкривається сайт."), FS, new Rectangle(vc.X + Px(14), vc.Y + Px(30), vc.Width - Px(200), Px(20)), P.Sub);
-        Rectangle kb = new Rectangle(vc.Right - Px(174), vc.Y + Px(14), Px(160), Px(32));
-        if (Rectangle.Intersect(kb, list) == kb)
-            Btn(g, kb, has ? L.T("Змінити ключ") : L.T("Задати ключ"), delegate { AskVtKey(); Invalidate(); }, 0, true);
-        cy += Px(70);
         TxtL(g, L.T("Ізольовані (чорний список)") + (q.Count > 0 ? " · " + q.Count : ""), FB, new Rectangle(list.X, cy + Px(4), w, Px(24)), P.Fg);
         cy += Px(34);
         if (q.Count == 0) { TxtL(g, L.T("Порожньо. Кнопка «Ізолювати» є на картках підозрілих файлів."), FS, new Rectangle(list.X, cy, w, Px(22)), P.Sub); cy += Px(30); }
@@ -442,8 +431,9 @@ sealed class SecWindow : VtWindow
             } : null, 0, true);
         }
         g.Restore(st);
-        Wheel(list, delegate (int d) { scroll[4] -= d > 0 ? Px(70) : -Px(70); Invalidate(); });
-        VBar(g, new Rectangle(list.Right - Px(5), list.Y, Px(4), list.Height), total, list.Height, sc, delegate (int v) { scroll[4] = v; Invalidate(); });
+        Wheel(list, delegate (int d) { scroll[TabLists] -= d > 0 ? Px(70) : -Px(70); Invalidate(); });
+        VBar(g, new Rectangle(list.Right - Px(5), list.Y, Px(4), list.Height), total, list.Height, sc, delegate (int v) { scroll[TabLists] = v; Invalidate(); });
+        lastListsTotal = total;
     }
 
     // довільний файл (кнопка «Перевірити файл…», перетягування) - у вкладці «Файл»
@@ -454,33 +444,12 @@ sealed class SecWindow : VtWindow
         Invalidate();
     }
 
-    // вкладка «Файл»: зона перетягування й звіти про перевірені файли
+    // вкладка «Файл» (головна): стан сканування системи, перевірка файлів перетягуванням, ключ VirusTotal, налаштування
     void PaintFileTab(Graphics g, Rectangle r)
     {
-        Rectangle dz = new Rectangle(r.X, r.Y, r.Width, Px(112));
-        Card(g, dz);
-        using (Pen pn = new Pen(Util.Blend(P.Card, P.Sub, 0.55f), 1.5f))
-        using (GraphicsPath gp = Util.Round(Rectangle.Inflate(dz, -Px(7), -Px(7)), Px(10)))
-        {
-            pn.DashStyle = DashStyle.Dash;
-            g.DrawPath(pn, gp);
-        }
-        TxtC(g, L.T("Перетягніть файли сюди"), FH, new Rectangle(dz.X, dz.Y + Px(16), dz.Width, Px(30)), P.Fg);
-        TxtC(g, L.T("або"), FS, new Rectangle(dz.X, dz.Y + Px(46), dz.Width, Px(18)), P.Sub);
-        Btn(g, new Rectangle(dz.X + (dz.Width - Px(200)) / 2, dz.Y + Px(66), Px(200), Px(34)), L.T("Перевірити файл…"), PickCheck, 1, true);
-        int y = dz.Bottom + Px(10);
-        Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y - Px(44));
-        int total = PaintReports(g, list);
-        string foot = NoteLive ? Note : L.T("Евристики без бази сигнатур: це підказка, а не вирок антивіруса. Файл нікуди не надсилається без вашої згоди.");
-        TxtW(g, foot, FS, new Rectangle(r.X, r.Bottom - Px(38), r.Width, Px(38)), NoteLive ? (NoteBad ? P.Bad : P.Good) : P.Sub);
-        FitTo(r, list.Y + Math.Min(Math.Max(total, Px(130)), Px(540)) + Px(44), Px(470));
-    }
-
-    protected override void PaintBody(Graphics g, Rectangle r)
-    {
-        if (Tab == TabFile) { PaintFileTab(g, r); return; }
         int y = r.Y;
-        Rectangle top = new Rectangle(r.X, y, r.Width, Px(90));
+        // сканування системи
+        Rectangle top = new Rectangle(r.X, y, r.Width, Px(76));
         Card(g, top);
         bool busy = SecScan.Busy;
         int bad, warn;
@@ -488,7 +457,7 @@ sealed class SecWindow : VtWindow
         string big, small;
         Color bc = P.Fg;
         if (busy) { big = L.T("Перевірка…"); small = SecScan.Stage; }
-        else if (SecScan.LastAt == DateTime.MinValue) { big = L.T("Ще не перевіряли"); small = L.T("Процеси, автозапуск, служби й налаштування Windows - за хвилину."); }
+        else if (SecScan.LastAt == DateTime.MinValue) { big = L.T("Сканування системи"); small = L.T("Процеси, служби, автозапуск і налаштування Windows - за хвилину."); }
         else if (bad + warn == 0) { big = L.T("Підозрілого не знайдено"); small = L.T("Перевірено о ") + SecScan.LastAt.ToString("HH:mm") + (SecScan.ProcSkipped ? L.T(" (без процесів)") : ""); bc = P.Good; }
         else
         {
@@ -496,27 +465,39 @@ sealed class SecWindow : VtWindow
             small = L.T("Перевірено о ") + SecScan.LastAt.ToString("HH:mm") + (SecScan.ProcSkipped ? L.T(" (без процесів)") : "");
             bc = bad > 0 ? P.Bad : P.Warn;
         }
-        TxtL(g, big, FH, new Rectangle(top.X + Px(14), top.Y + Px(12), top.Width - Px(190), Px(28)), bc);
-        TxtL(g, small, FS, new Rectangle(top.X + Px(14), top.Y + Px(44), top.Width - Px(190), Px(20)), P.Sub);
-        Rectangle br = new Rectangle(top.Right - Px(174), top.Y + Px(9), Px(160), Px(34));
+        TxtL(g, big, FH, new Rectangle(top.X + Px(14), top.Y + Px(10), top.Width - Px(200), Px(28)), bc);
+        TxtL(g, small, FS, new Rectangle(top.X + Px(14), top.Y + Px(42), top.Width - Px(200), Px(20)), P.Sub);
+        Rectangle br = new Rectangle(top.Right - Px(174), top.Y + (top.Height - Px(34)) / 2, Px(160), Px(34));
         if (busy) Btn(g, br, L.T("Зупинити"), delegate { SecScan.Stop = true; }, 0, true);
         else Btn(g, br, SecScan.LastAt == DateTime.MinValue ? L.T("Сканувати") : L.T("Сканувати знову"), Start, 1, true);
-        Btn(g, new Rectangle(br.X, br.Bottom + Px(5), br.Width, Px(32)), L.T("Перевірити файл…"), PickCheck, 0, true);
         y = top.Bottom + Px(10);
-        if (Tab < 3) { Switch(g, new Rectangle(r.X, y, r.Width, Px(26)), L.T("Показувати все, а не лише підозріле"), all, delegate { all = !all; Invalidate(); }); y += Px(32); }
 
-        Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y - Px(44) - Px(34) - Px(32));
-        if (Tab == 4)
-        {
-            PaintLists(g, list);
-            FitTo(r, list.Y + Px(470) + Px(44) + Px(34) + Px(32), Px(470));         // вкладка «Списки» - стала висота
-        }
-        else
-        {
-            PaintFindings(g, list);
-            // вікно за висотою - за вмістом (без порожнього місця при кількох знахідках), але не нижче за мінімум і не вище за екран
-            FitTo(r, list.Y + Math.Min(Math.Max(fitTotal, Px(150)), Px(620)) + Px(44) + Px(34) + Px(32), Px(470));
-        }
+        // перевірка файла
+        DropZone(g, new Rectangle(r.X, y, r.Width, Px(112)), L.T("Перетягніть файли сюди"), L.T("Перевірити файл…"), PickCheck, true);
+        y += Px(122);
+
+        // ключ VirusTotal
+        Rectangle vc = new Rectangle(r.X, y, r.Width, Px(56));
+        Card(g, vc);
+        bool has = Vt.Key.Length > 0;
+        TxtL(g, L.T("Ключ VirusTotal API"), FB, new Rectangle(vc.X + Px(14), vc.Y + Px(6), vc.Width - Px(200), Px(22)), P.Fg);
+        TxtL(g, has ? L.T("Задано: перевірка й надсилання файлів прямо з NeoBar.") : L.T("Не задано: для перевірки відкривається сайт."), FS, new Rectangle(vc.X + Px(14), vc.Y + Px(28), vc.Width - Px(200), Px(20)), P.Sub);
+        Btn(g, new Rectangle(vc.Right - Px(174), vc.Y + Px(12), Px(160), Px(32)), has ? L.T("Змінити ключ") : L.T("Задати ключ"), delegate { AskVtKey(); Invalidate(); }, 0, true);
+        y = vc.Bottom + Px(10);
+
+        // звіти про перевірені файли
+        int bottom = Px(38) + Px(64);
+        Rectangle list = new Rectangle(r.X, y, r.Width, Math.Max(Px(40), r.Bottom - y - bottom - Px(6)));
+        int total = PaintReports(g, list);
+        PaintSwitches(g, r);
+        string foot = NoteLive ? Note : (fixing ? L.T("Виправлення…") : L.T("Евристики без бази сигнатур - підказка, а не вирок: ознаки бувають і в звичайних програм. Нічого не змінюється без вашого підтвердження."));
+        TxtW(g, foot, FS, new Rectangle(r.X, r.Bottom - Px(38), r.Width, Px(38)), NoteLive ? (NoteBad ? P.Bad : P.Good) : P.Sub);
+        FitTo(r, list.Y + Math.Min(Math.Max(total, Px(60)), Px(460)) + Px(6) + bottom, Px(520));
+    }
+
+    // фонове стеження й пункт контекстного меню - на головній вкладці
+    void PaintSwitches(Graphics g, Rectangle r)
+    {
         bool watch = Bar != null && Bar.Config.SecWatch;
         Switch(g, new Rectangle(r.X, r.Bottom - Px(38) - Px(64), r.Width, Px(28)), L.T("Стежити у фоні (значок у треї) і сповіщати про нове; не під час гри"), watch && Bar.Config.SecUsed, delegate
         {
@@ -532,19 +513,49 @@ sealed class SecWindow : VtWindow
             if (err.Length > 0) Say(L.T("Не вдалося змінити меню: ") + err, true);
             else Say(was ? L.T("Пункт прибрано з контекстного меню.") : L.T("Додано: ПКМ на файлі → NeoBar → «Перевірити на підозрілість» (у Windows 11 - «Показати додаткові параметри»)."), false);
         });
-        string foot = NoteLive ? Note : (fixing ? L.T("Виправлення…") : L.T("Евристики без бази сигнатур - підказка, а не вирок: ознаки бувають і в звичайних програм. Нічого не змінюється без вашого підтвердження."));
-        TxtW(g, foot, FS, new Rectangle(r.X, r.Bottom - Px(38), r.Width, Px(38)), NoteLive ? (NoteBad ? P.Bad : P.Good) : P.Sub);
+    }
+
+    protected override void PaintBody(Graphics g, Rectangle r)
+    {
+        if (Tab == TabFile) { PaintFileTab(g, r); return; }
+        int y = r.Y;
+        int foot = Px(44);
+        if (Tab == TabLists)
+        {
+            Rectangle ll = new Rectangle(r.X, y, r.Width, r.Bottom - y - foot);
+            PaintLists(g, ll);
+            FitTo(r, ll.Y + Math.Min(Math.Max(lastListsTotal, Px(200)), Px(620)) + foot, Px(420));
+        }
+        else
+        {
+            // рядок над знахідками: «усе / лише підозріле» і повторне сканування (стан і перевірка файлів - на вкладці «Файл»)
+            bool busy = SecScan.Busy;
+            Rectangle br = new Rectangle(r.Right - Px(160), y, Px(160), Px(30));
+            if (busy) Btn(g, br, L.T("Зупинити"), delegate { SecScan.Stop = true; }, 0, true);
+            else Btn(g, br, SecScan.LastAt == DateTime.MinValue ? L.T("Сканувати") : L.T("Сканувати знову"), Start, SecScan.LastAt == DateTime.MinValue ? 1 : 0, true);
+            Rectangle left = new Rectangle(r.X, y, br.X - r.X - Px(12), Px(30));
+            if (busy) TxtL(g, L.T("Перевірка…") + " " + SecScan.Stage, FS, left, P.Sub);
+            else if (Tab != TabSys) Switch(g, left, L.T("Показувати все, а не лише підозріле"), all, delegate { all = !all; Invalidate(); });
+            else if (SecScan.LastAt != DateTime.MinValue) TxtL(g, L.T("Перевірено о ") + SecScan.LastAt.ToString("HH:mm"), FS, left, P.Sub);
+            y += Px(40);
+            Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y - foot);
+            PaintFindings(g, list);
+            // вікно за висотою - за вмістом (без порожнього місця при кількох знахідках), але не нижче за мінімум і не вище за екран
+            FitTo(r, list.Y + Math.Min(Math.Max(fitTotal, Px(150)), Px(620)) + foot, Px(420));
+        }
+        string ft = NoteLive ? Note : (fixing ? L.T("Виправлення…") : L.T("Евристики без бази сигнатур - підказка, а не вирок: ознаки бувають і в звичайних програм. Нічого не змінюється без вашого підтвердження."));
+        TxtW(g, ft, FS, new Rectangle(r.X, r.Bottom - Px(38), r.Width, Px(38)), NoteLive ? (NoteBad ? P.Bad : P.Good) : P.Sub);
     }
 
     void PaintFindings(Graphics g, Rectangle list)
     {
         List<Finding> items = ShownItems();
-        List<FixEntry> journal = Tab == 3 ? new List<FixEntry>(SecFix.Journal) : new List<FixEntry>();
+        List<FixEntry> journal = Tab == TabSys ? new List<FixEntry>(SecFix.Journal) : new List<FixEntry>();
         if (items.Count == 0 && journal.Count == 0)
         {
             string empty = SecScan.LastAt == DateTime.MinValue ? L.T("Натисніть «Сканувати».") :
-                           (Tab == 0 && SecScan.ProcSkipped ? L.T("Процеси пропущено (працював античіт).") : L.T("Нічого підозрілого."));
-            if (Tab == 0 && SecScan.LastAt != DateTime.MinValue && !SecScan.ProcSkipped)
+                           (Tab == TabProc && SecScan.ProcSkipped ? L.T("Процеси пропущено (працював античіт).") : L.T("Нічого підозрілого."));
+            if (Tab == TabProc && SecScan.LastAt != DateTime.MinValue && !SecScan.ProcSkipped)
                 empty += L.T("\nПроцесів: ") + SecScan.ProcCount + L.T("; захищених системних (Windows не показує навіть шлях): ") + SecScan.NoAccess + ".";
             TxtC(g, empty.Split('\n')[0], F, new Rectangle(list.X, list.Y + Px(30), list.Width, Px(24)), P.Sub);
             if (empty.Contains("\n")) TxtC(g, empty.Split('\n')[1], FS, new Rectangle(list.X, list.Y + Px(56), list.Width, Px(20)), P.Sub);

@@ -7021,12 +7021,6 @@
 < Прибрати
 > Quitar
 
-< Ще не перевіряли
-> Aún no comprobado
-
-< Процеси, автозапуск, служби й налаштування Windows - за хвилину.
-> Procesos, inicio automático, servicios y ajustes de Windows: en un minuto.
-
 < Підозрілого не знайдено
 > No se encontró nada sospechoso
 
@@ -10192,20 +10186,11 @@
 < Диски ще читаються, повторіть за мить.
 > Los discos aún se están leyendo, inténtalo de nuevo en un momento.
 
-<  Папку можна й перетягнути з Провідника в це вікно.
->  También puedes arrastrar una carpeta desde el Explorador a esta ventana.
-
 < Перетягніть файли сюди
 > Suelta aquí los archivos
 
 < або
 > o
-
-< Один значок для всіх
-> Un icono para todo
-
-< Обрані температури в одному значку, одна під одною, кожна своїм кольором. На малих значках (100% масштабу) три числа дрібні: тоді краще обрати дві.
-> Las temperaturas elegidas en un solo icono, una debajo de otra, cada una con su color. En iconos pequeños (escala 100 %) tres cifras son diminutas: entonces elige dos.
 
 < Вкладка «Процеси» працює лише в 64-розрядному NeoBar.
 > La pestaña Procesos solo funciona con NeoBar de 64 bits.
@@ -10248,9 +10233,6 @@
 
 < Пам'ять
 > Memoria
-
-< Натисніть, щоб відсортувати
-> Haz clic para ordenar
 
 < Працює античіт ({0}) - шляхи та підписи тимчасово не збираються.
 > Hay un anticheat en ejecución ({0}): las rutas y firmas no se recopilan por ahora.
@@ -10312,9 +10294,59 @@
 < Підпис
 > Firma
 
-< Ресурси
-> Recursos
+< Перетягніть папку сюди
+> Suelta aquí una carpeta
 
-< дескрипторів {0}, потоків {1}, виділено {2}, з'єднань {3}, портів {4}
-> identificadores {0}, hilos {1}, confirmada {2}, conexiones {3}, puertos {4}
+< Програми
+> Aplicaciones
 
+< Фонові процеси
+> Procesos en segundo plano
+
+< Процеси Windows
+> Procesos de Windows
+
+< програма з вікном
+> aplicación con ventana
+
+< служба
+> servicio
+
+< процес Windows
+> proceso de Windows
+
+< фоновий процес
+> proceso en segundo plano
+
+< Сеанс
+> Sesión
+
+< 0 (системний)
+> 0 (sistema)
+
+< {0} · виділено {1}
+> {0} · confirmada {1}
+
+< Дескриптори
+> Identificadores
+
+< {0} · потоків {1}
+> {0} · hilos {1}
+
+< з'єднань {0} · портів {1}
+> conexiones {0} · puertos {1}
+
+< Процеси і служби
+> Procesos y servicios
+
+< Сканування системи
+> Análisis del sistema
+
+< Процеси, служби, автозапуск і налаштування Windows - за хвилину.
+> Procesos, servicios, inicio y configuración de Windows: en un minuto aproximadamente.
+
+< Перетягніть зображення (PNG, JPG, BMP, GIF)
+> Suelta una imagen (PNG, JPG, BMP, GIF)
+
+< Фото можна й перетягнути у це вікно
+> También puedes arrastrar una foto a esta ventana

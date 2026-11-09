@@ -7021,12 +7021,6 @@
 < Прибрати
 > Remover
 
-< Ще не перевіряли
-> Ainda não verificado
-
-< Процеси, автозапуск, служби й налаштування Windows - за хвилину.
-> Processos, inicialização automática, serviços e configurações do Windows - em um minuto.
-
 < Підозрілого не знайдено
 > Nada suspeito encontrado
 
@@ -10192,20 +10186,11 @@
 < Диски ще читаються, повторіть за мить.
 > Os discos ainda estão sendo lidos, tente novamente em instantes.
 
-<  Папку можна й перетягнути з Провідника в це вікно.
->  Você também pode arrastar uma pasta do Explorador para esta janela.
-
 < Перетягніть файли сюди
 > Solte os arquivos aqui
 
 < або
 > ou
-
-< Один значок для всіх
-> Um ícone para tudo
-
-< Обрані температури в одному значку, одна під одною, кожна своїм кольором. На малих значках (100% масштабу) три числа дрібні: тоді краще обрати дві.
-> As temperaturas escolhidas em um único ícone, uma sob a outra, cada uma com sua cor. Em ícones pequenos (escala 100%) três números ficam minúsculos: então escolha dois.
 
 < Вкладка «Процеси» працює лише в 64-розрядному NeoBar.
 > A aba Processos só funciona com o NeoBar de 64 bits.
@@ -10248,9 +10233,6 @@
 
 < Пам'ять
 > Memória
-
-< Натисніть, щоб відсортувати
-> Clique para ordenar
 
 < Працює античіт ({0}) - шляхи та підписи тимчасово не збираються.
 > Um anti-cheat está em execução ({0}) – caminhos e assinaturas não são coletados por enquanto.
@@ -10312,9 +10294,59 @@
 < Підпис
 > Assinatura
 
-< Ресурси
-> Recursos
+< Перетягніть папку сюди
+> Solte uma pasta aqui
 
-< дескрипторів {0}, потоків {1}, виділено {2}, з'єднань {3}, портів {4}
-> handles {0}, threads {1}, confirmada {2}, conexões {3}, portas {4}
+< Програми
+> Aplicativos
 
+< Фонові процеси
+> Processos em segundo plano
+
+< Процеси Windows
+> Processos do Windows
+
+< програма з вікном
+> aplicativo com janela
+
+< служба
+> serviço
+
+< процес Windows
+> processo do Windows
+
+< фоновий процес
+> processo em segundo plano
+
+< Сеанс
+> Sessão
+
+< 0 (системний)
+> 0 (sistema)
+
+< {0} · виділено {1}
+> {0} · confirmada {1}
+
+< Дескриптори
+> Handles
+
+< {0} · потоків {1}
+> {0} · threads {1}
+
+< з'єднань {0} · портів {1}
+> conexões {0} · portas {1}
+
+< Процеси і служби
+> Processos e serviços
+
+< Сканування системи
+> Verificação do sistema
+
+< Процеси, служби, автозапуск і налаштування Windows - за хвилину.
+> Processos, serviços, inicialização e configurações do Windows – em cerca de um minuto.
+
+< Перетягніть зображення (PNG, JPG, BMP, GIF)
+> Solte uma imagem (PNG, JPG, BMP, GIF)
+
+< Фото можна й перетягнути у це вікно
+> Você também pode arrastar uma foto para esta janela
