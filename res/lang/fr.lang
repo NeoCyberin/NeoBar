@@ -7021,12 +7021,6 @@
 < Прибрати
 > Retirer
 
-< Ще не перевіряли
-> Pas encore vérifié
-
-< Процеси, автозапуск, служби й налаштування Windows - за хвилину.
-> Processus, démarrage automatique, services et paramètres Windows - en une minute.
-
 < Підозрілого не знайдено
 > Rien de suspect trouvé
 
@@ -10192,20 +10186,11 @@
 < Диски ще читаються, повторіть за мить.
 > Les disques sont encore en cours de lecture, réessayez dans un instant.
 
-<  Папку можна й перетягнути з Провідника в це вікно.
->  Vous pouvez aussi faire glisser un dossier depuis l’Explorateur dans cette fenêtre.
-
 < Перетягніть файли сюди
 > Déposez les fichiers ici
 
 < або
 > ou
-
-< Один значок для всіх
-> Une seule icône pour tout
-
-< Обрані температури в одному значку, одна під одною, кожна своїм кольором. На малих значках (100% масштабу) три числа дрібні: тоді краще обрати дві.
-> Les températures choisies dans une seule icône, l’une sous l’autre, chacune de sa couleur. Sur les petites icônes (échelle 100 %), trois nombres sont minuscules : choisissez-en plutôt deux.
 
 < Вкладка «Процеси» працює лише в 64-розрядному NeoBar.
 > L’onglet Processus ne fonctionne qu’avec NeoBar 64 bits.
@@ -10248,9 +10233,6 @@
 
 < Пам'ять
 > Mémoire
-
-< Натисніть, щоб відсортувати
-> Cliquez pour trier
 
 < Працює античіт ({0}) - шляхи та підписи тимчасово не збираються.
 > Un anti-triche est actif ({0}) : les chemins et signatures ne sont pas collectés pour le moment.
@@ -10312,9 +10294,59 @@
 < Підпис
 > Signature
 
-< Ресурси
-> Ressources
+< Перетягніть папку сюди
+> Déposez un dossier ici
 
-< дескрипторів {0}, потоків {1}, виділено {2}, з'єднань {3}, портів {4}
-> handles {0}, threads {1}, mémoire allouée {2}, connexions {3}, ports {4}
+< Програми
+> Applications
 
+< Фонові процеси
+> Processus en arrière-plan
+
+< Процеси Windows
+> Processus Windows
+
+< програма з вікном
+> application avec fenêtre
+
+< служба
+> service
+
+< процес Windows
+> processus Windows
+
+< фоновий процес
+> processus en arrière-plan
+
+< Сеанс
+> Session
+
+< 0 (системний)
+> 0 (système)
+
+< {0} · виділено {1}
+> {0} · mémoire allouée {1}
+
+< Дескриптори
+> Handles
+
+< {0} · потоків {1}
+> {0} · threads {1}
+
+< з'єднань {0} · портів {1}
+> connexions {0} · ports {1}
+
+< Процеси і служби
+> Processus et services
+
+< Сканування системи
+> Analyse du système
+
+< Процеси, служби, автозапуск і налаштування Windows - за хвилину.
+> Processus, services, démarrage et paramètres Windows : environ une minute.
+
+< Перетягніть зображення (PNG, JPG, BMP, GIF)
+> Déposez une image (PNG, JPG, BMP, GIF)
+
+< Фото можна й перетягнути у це вікно
+> Vous pouvez aussi faire glisser une photo dans cette fenêtre

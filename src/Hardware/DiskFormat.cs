@@ -988,10 +988,10 @@ sealed class RecoverPickWindow : SbWindow
         }
         if (tab == 2)
         {
-            Btn(g, new Rectangle(r.X, y, r.Width, Px(40)), L.T("Вибрати папку…"), PickFolder, 1, !loading);
-            y += Px(50);
+            DropZone(g, new Rectangle(r.X, y, r.Width, Px(112)), L.T("Перетягніть папку сюди"), L.T("Вибрати папку…"), PickFolder, !loading);
+            y += Px(122);
             if (note.Length > 0) TxtW(g, note, FS, new Rectangle(r.X, y, r.Width, Px(40)), P.Acc);
-            else TxtW(g, L.T("Підійде папка на будь-якому локальному чи знімному диску з NTFS, exFAT або FAT. Мережеві папки не підтримуються.") + L.T(" Папку можна й перетягнути з Провідника в це вікно."), FS, new Rectangle(r.X, y, r.Width, Px(60)), P.Sub);
+            else TxtW(g, L.T("Підійде папка на будь-якому локальному чи знімному диску з NTFS, exFAT або FAT. Мережеві папки не підтримуються."), FS, new Rectangle(r.X, y, r.Width, Px(60)), P.Sub);
             FitTo(r, y + Px(68), Px(300));
             return;
         }

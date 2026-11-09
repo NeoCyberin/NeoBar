@@ -14,6 +14,12 @@ static class Program
         try { Environment.SetEnvironmentVariable("NEOBAR_DIR", AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\', '/')); } catch { }
         // підвищений помічник (SMART, літера диска, перевірка, оптимізація) - окремий короткий процес
         if (args.Length > 0 && args[0] == "--helper") return Helper.Run(args);
+        // помічник перетягування файлів (зі звичайними правами) для NeoBar, запущеної від адміністратора
+        if (args.Length >= 2 && args[0] == "--drop")
+        {
+            Win.SetProcessDPIAware();
+            return DropBridge.RunHelper(args);
+        }
         // встановлювач перед видаленням програми: прибрати її сліди в системі
         if (args.Length > 0 && args[0] == "--uninstall") return Uninstall.Run();
         // автооновлення: копія програми з тимчасової теки ставить нову версію, поки основна закрита

@@ -53,6 +53,7 @@ static class DropFiles
             SbLog.W(SbLog.Panel, "перетягування файлів (від адміністратора), фільтр UIPI: " + log);
         }
         catch { }
+        DropBridge.Add(c);          // основний шлях: помічник зі звичайними правами (WM_DROPFILES від Провідника UIPI зазвичай не пропускає)
     }
 
     // у WndProc: повертає список файлів, якщо це WM_DROPFILES, інакше null

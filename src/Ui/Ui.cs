@@ -975,6 +975,22 @@ class SbWindow : Form
     }
 
     // «таблетка» вибору (як вкладка)
+    // зона для перетягування файлів: пунктирна рамка, підпис, «або» й кнопка (висота ~112 px)
+    protected void DropZone(Graphics g, Rectangle dz, string title, string button, Action click, bool enabled)
+    {
+        Card(g, dz);
+        using (Pen pn = new Pen(Util.Blend(P.Card, P.Sub, 0.55f), 1.5f))
+        using (GraphicsPath gp = Util.Round(Rectangle.Inflate(dz, -Px(7), -Px(7)), Px(10)))
+        {
+            pn.DashStyle = DashStyle.Dash;
+            g.DrawPath(pn, gp);
+        }
+        TxtC(g, title, FH, new Rectangle(dz.X, dz.Y + Px(16), dz.Width, Px(30)), P.Fg);
+        TxtC(g, L.T("або"), FS, new Rectangle(dz.X, dz.Y + Px(46), dz.Width, Px(18)), P.Sub);
+        int bw = Math.Max(Px(200), TextRenderer.MeasureText(button, F).Width + Px(32));
+        Btn(g, new Rectangle(dz.X + (dz.Width - bw) / 2, dz.Y + Px(66), bw, Px(34)), button, click, 1, enabled);
+    }
+
     protected void Chip(Graphics g, Rectangle r, string text, bool sel, Action click)
     {
         bool h = Over(r);
