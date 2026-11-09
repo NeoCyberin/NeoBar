@@ -10318,12 +10318,6 @@
 < фоновий процес
 > background process
 
-< Сеанс
-> Session
-
-< 0 (системний)
-> 0 (system)
-
 < {0} · виділено {1}
 > {0} · committed {1}
 
@@ -10336,9 +10330,6 @@
 < з'єднань {0} · портів {1}
 > connections {0} · ports {1}
 
-< Процеси і служби
-> Processes and services
-
 < Сканування системи
 > System scan
 
@@ -10350,3 +10341,231 @@
 
 < Фото можна й перетягнути у це вікно
 > You can also drag a photo into this window
+
+< різні
+> mixed
+
+< Служба
+> Service
+
+< диспетчер служб
+> service manager
+
+< Планувальник
+> Scheduler
+
+< Користувач
+> User
+
+< Керує
+> Managed by
+
+< Хто запускає процес і стежить за ним: служба, автозапуск, планувальник завдань, користувач, інша програма чи сама Windows
+> Who starts the process and looks after it: a service, startup, Task Scheduler, the user, another program or Windows itself
+
+< Зупинити служби процесу (разом із залежними) і завершити його
+> Stop the process's services (with dependent ones) and end it
+
+< Завершити разом із пов'язаними процесами - перед цим буде список і підтвердження
+> End together with related processes - a list and confirmation come first
+
+< Перезапустити служби процесу
+> Restart the process's services
+
+< Завершити й запустити знову з тими самими параметрами
+> End and start again with the same parameters
+
+< Служба в цьому процесі
+> Service in this process
+
+< Служби в цьому процесі: {0}
+> Services in this process: {0}
+
+< Із затримкою
+> Delayed
+
+< працює
+> running
+
+< запускається
+> starting
+
+< зупиняється
+> stopping
+
+< зупинена
+> stopped
+
+< ключова служба Windows - не змінюється
+> key Windows service - cannot be changed
+
+< Особливий тип запуску (завантажувальна чи системна служба)
+> Special start type (boot or system service)
+
+< Запустити
+> Start
+
+< Службу «{0}» запущено.
+> Service “{0}” started.
+
+< і ще {0} - див. «Служби» Windows
+> and {0} more - see Windows “Services”
+
+<  і ще {0}
+>  and {0} more
+
+< Перезапуск процесу
+> Restart process
+
+< Завершення процесу
+> End process
+
+< Перезапустити «{0}» (PID {1})?
+> Restart “{0}” (PID {1})?
+
+< Завершити «{0}» (PID {1})?
+> End “{0}” (PID {1})?
+
+< Служби процесу буде {0} через диспетчер служб: {1}.
+> The process's services will be {0} via the service manager: {1}.
+
+< перезапущено
+> restarted
+
+< зупинено
+> stopped
+
+< Разом з ними зупиняться залежні служби: {0}.
+> Dependent services will stop with them: {0}.
+
+< Пов'язані процеси, запущені ним ({0}), буде завершено першими: {1}.
+> Related processes it started ({0}) will be ended first: {1}.
+
+< Програмі спершу буде запропоновано закритися самій (до 3 с), далі - примусово. Незбережені дані можуть втратитися.
+> The program will first be asked to close itself (up to 3 s), then forcibly. Unsaved data may be lost.
+
+< Процес буде завершено примусово. Незбережені дані можуть втратитися.
+> The process will be ended forcibly. Unsaved data may be lost.
+
+< Потім програму буде запущено знову з тими самими параметрами (зі звичайними правами, як і була).
+> Then the program will be started again with the same parameters (with normal rights, as before).
+
+< Потім програму буде запущено знову з тими самими параметрами.
+> Then the program will be started again with the same parameters.
+
+< Працює античіт ({0}): завершення процесів гри він може розцінити як втручання.
+> An anti-cheat is running ({0}): it may treat ending game processes as tampering.
+
+< Завершити все
+> End all
+
+< Лише цей процес
+> This process only
+
+< Зупинити службу «{0}»?
+> Stop service “{0}”?
+
+< Разом з нею зупиняться залежні служби: {0}.
+> Dependent services will stop with it: {0}.
+
+< Тип запуску не зміниться: служба може запуститися знову сама або після перезавантаження ПК.
+> The start type will not change: the service may start again by itself or after a PC restart.
+
+< Службу «{0}» зупинено.
+> Service “{0}” stopped.
+
+< автоматично із затримкою
+> automatic (delayed)
+
+< Тип запуску служби «{0}»: {1}?
+> Start type of service “{0}”: {1}?
+
+< Вимкнена служба не запуститься, доки її не ввімкнуть знову. 
+> A disabled service will not start until it is enabled again. 
+
+< Це служба Windows: невдала зміна може порушити роботу системи. 
+> This is a Windows service: a bad change can break the system. 
+
+< Зміну записано в журнал - відкотити можна в «Безпеці», вкладка «Система».
+> The change is logged - you can undo it in Security, System tab.
+
+< Змінити
+> Change
+
+< Тип запуску «{0}»: {1}.
+> Start type of “{0}”: {1}.
+
+< служба «{0}»
+> service “{0}”
+
+< служби ({0}): {1}…
+> services ({0}): {1}…
+
+< Windows
+> Windows
+
+< автозапуск «{0}»
+> startup “{0}”
+
+< планувальник завдань
+> Task Scheduler
+
+< користувач
+> user
+
+< Фото можна просто перетягнути у це вікно з Провідника.
+> You can simply drag a photo into this window from Explorer.
+
+< Процес уже завершився.
+> The process has already exited.
+
+< Це сама NeoBar - закривайте її через меню профілю («Вийти з NeoBar»).
+> This is NeoBar itself - close it from the profile menu (“Exit NeoBar”).
+
+< Критичний процес Windows: після його завершення система зупиниться (синій екран). Його не можна завершувати.
+> Critical Windows process: ending it stops the system (blue screen). It cannot be ended.
+
+< У цьому процесі працює ключова служба Windows «{0}» - без неї система перестане працювати. Його не можна завершувати.
+> A key Windows service “{0}” runs in this process - the system stops working without it. It cannot be ended.
+
+< немає доступу
+> access denied
+
+< не відкривається
+> cannot be opened
+
+< немає доступу (захищений процес)
+> access denied (protected process)
+
+< Завершено: {0}. Не вдалося: {1}
+> Ended: {0}. Failed: {1}
+
+< Служби зупинено, процес «{0}» завершено.
+> Services stopped, process “{0}” ended.
+
+< Завершено «{0}» і пов'язані процеси ({1}).
+> Ended “{0}” and related processes ({1}).
+
+< «{0}» завершено.
+> “{0}” ended.
+
+< Службу перезапущено: {0}.
+> Service restarted: {0}.
+
+< Невідомий шлях до програми - перезапустити не вийде.
+> Unknown program path - cannot restart.
+
+< «{0}» перезапущено.
+> “{0}” restarted.
+
+< Процес завершено, але запустити знову не вдалося.
+> The process was ended, but could not be started again.
+
+< Процес завершено, але запустити знову не вдалося: 
+> The process was ended, but could not be started again: 
+
+< Для цієї служби тип запуску тут не змінюється.
+> The start type of this service cannot be changed here.
+
+< Тип запуску служби «{0}»: {1}
+> Start type of service “{0}”: {1}

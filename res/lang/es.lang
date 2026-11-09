@@ -10318,12 +10318,6 @@
 < фоновий процес
 > proceso en segundo plano
 
-< Сеанс
-> Sesión
-
-< 0 (системний)
-> 0 (sistema)
-
 < {0} · виділено {1}
 > {0} · confirmada {1}
 
@@ -10336,9 +10330,6 @@
 < з'єднань {0} · портів {1}
 > conexiones {0} · puertos {1}
 
-< Процеси і служби
-> Procesos y servicios
-
 < Сканування системи
 > Análisis del sistema
 
@@ -10350,3 +10341,231 @@
 
 < Фото можна й перетягнути у це вікно
 > También puedes arrastrar una foto a esta ventana
+
+< різні
+> varios
+
+< Служба
+> Servicio
+
+< диспетчер служб
+> administrador de servicios
+
+< Планувальник
+> Programador
+
+< Користувач
+> Usuario
+
+< Керує
+> Controlado por
+
+< Хто запускає процес і стежить за ним: служба, автозапуск, планувальник завдань, користувач, інша програма чи сама Windows
+> Quién inicia el proceso y lo supervisa: un servicio, el inicio, el Programador de tareas, el usuario, otro programa o el propio Windows
+
+< Зупинити служби процесу (разом із залежними) і завершити його
+> Detener los servicios del proceso (con los dependientes) y finalizarlo
+
+< Завершити разом із пов'язаними процесами - перед цим буде список і підтвердження
+> Finalizar junto con los procesos relacionados: antes se muestra una lista y una confirmación
+
+< Перезапустити служби процесу
+> Reiniciar los servicios del proceso
+
+< Завершити й запустити знову з тими самими параметрами
+> Finalizar e iniciar de nuevo con los mismos parámetros
+
+< Служба в цьому процесі
+> Servicio en este proceso
+
+< Служби в цьому процесі: {0}
+> Servicios en este proceso: {0}
+
+< Із затримкою
+> Con retraso
+
+< працює
+> en ejecución
+
+< запускається
+> iniciándose
+
+< зупиняється
+> deteniéndose
+
+< зупинена
+> detenido
+
+< ключова служба Windows - не змінюється
+> servicio clave de Windows: no se puede cambiar
+
+< Особливий тип запуску (завантажувальна чи системна служба)
+> Tipo de inicio especial (servicio de arranque o del sistema)
+
+< Запустити
+> Iniciar
+
+< Службу «{0}» запущено.
+> Servicio «{0}» iniciado.
+
+< і ще {0} - див. «Служби» Windows
+> y {0} más: consulta «Servicios» de Windows
+
+<  і ще {0}
+>  y {0} más
+
+< Перезапуск процесу
+> Reiniciar proceso
+
+< Завершення процесу
+> Finalizar proceso
+
+< Перезапустити «{0}» (PID {1})?
+> ¿Reiniciar «{0}» (PID {1})?
+
+< Завершити «{0}» (PID {1})?
+> ¿Finalizar «{0}» (PID {1})?
+
+< Служби процесу буде {0} через диспетчер служб: {1}.
+> Los servicios del proceso se {0} mediante el administrador de servicios: {1}.
+
+< перезапущено
+> reiniciarán
+
+< зупинено
+> detendrán
+
+< Разом з ними зупиняться залежні служби: {0}.
+> Con ellos se detendrán los servicios dependientes: {0}.
+
+< Пов'язані процеси, запущені ним ({0}), буде завершено першими: {1}.
+> Los procesos relacionados que inició ({0}) se finalizarán primero: {1}.
+
+< Програмі спершу буде запропоновано закритися самій (до 3 с), далі - примусово. Незбережені дані можуть втратитися.
+> Primero se pedirá al programa que se cierre solo (hasta 3 s) y luego se forzará. Los datos no guardados pueden perderse.
+
+< Процес буде завершено примусово. Незбережені дані можуть втратитися.
+> El proceso se finalizará a la fuerza. Los datos no guardados pueden perderse.
+
+< Потім програму буде запущено знову з тими самими параметрами (зі звичайними правами, як і була).
+> Después el programa se iniciará de nuevo con los mismos parámetros (con permisos normales, como antes).
+
+< Потім програму буде запущено знову з тими самими параметрами.
+> Después el programa se iniciará de nuevo con los mismos parámetros.
+
+< Працює античіт ({0}): завершення процесів гри він може розцінити як втручання.
+> Hay un anticheat en ejecución ({0}): puede considerar una manipulación finalizar procesos del juego.
+
+< Завершити все
+> Finalizar todo
+
+< Лише цей процес
+> Solo este proceso
+
+< Зупинити службу «{0}»?
+> ¿Detener el servicio «{0}»?
+
+< Разом з нею зупиняться залежні служби: {0}.
+> Con él se detendrán los servicios dependientes: {0}.
+
+< Тип запуску не зміниться: служба може запуститися знову сама або після перезавантаження ПК.
+> El tipo de inicio no cambiará: el servicio puede volver a iniciarse solo o tras reiniciar el PC.
+
+< Службу «{0}» зупинено.
+> Servicio «{0}» detenido.
+
+< автоматично із затримкою
+> automático (retrasado)
+
+< Тип запуску служби «{0}»: {1}?
+> ¿Tipo de inicio del servicio «{0}»: {1}?
+
+< Вимкнена служба не запуститься, доки її не ввімкнуть знову. 
+> Un servicio deshabilitado no se iniciará hasta que se vuelva a habilitar. 
+
+< Це служба Windows: невдала зміна може порушити роботу системи. 
+> Es un servicio de Windows: un cambio incorrecto puede afectar al sistema. 
+
+< Зміну записано в журнал - відкотити можна в «Безпеці», вкладка «Система».
+> El cambio queda registrado: puedes deshacerlo en «Seguridad», pestaña «Sistema».
+
+< Змінити
+> Cambiar
+
+< Тип запуску «{0}»: {1}.
+> Tipo de inicio de «{0}»: {1}.
+
+< служба «{0}»
+> servicio «{0}»
+
+< служби ({0}): {1}…
+> servicios ({0}): {1}…
+
+< Windows
+> Windows
+
+< автозапуск «{0}»
+> inicio «{0}»
+
+< планувальник завдань
+> Programador de tareas
+
+< користувач
+> usuario
+
+< Фото можна просто перетягнути у це вікно з Провідника.
+> Puedes arrastrar una foto a esta ventana desde el Explorador.
+
+< Процес уже завершився.
+> El proceso ya ha terminado.
+
+< Це сама NeoBar - закривайте її через меню профілю («Вийти з NeoBar»).
+> Es el propio NeoBar: ciérralo desde el menú del perfil («Salir de NeoBar»).
+
+< Критичний процес Windows: після його завершення система зупиниться (синій екран). Його не можна завершувати.
+> Proceso crítico de Windows: finalizarlo detiene el sistema (pantalla azul). No se puede finalizar.
+
+< У цьому процесі працює ключова служба Windows «{0}» - без неї система перестане працювати. Його не можна завершувати.
+> En este proceso se ejecuta el servicio clave de Windows «{0}»: sin él el sistema deja de funcionar. No se puede finalizar.
+
+< немає доступу
+> acceso denegado
+
+< не відкривається
+> no se puede abrir
+
+< немає доступу (захищений процес)
+> acceso denegado (proceso protegido)
+
+< Завершено: {0}. Не вдалося: {1}
+> Finalizados: {0}. Fallidos: {1}
+
+< Служби зупинено, процес «{0}» завершено.
+> Servicios detenidos, proceso «{0}» finalizado.
+
+< Завершено «{0}» і пов'язані процеси ({1}).
+> Finalizado «{0}» y procesos relacionados ({1}).
+
+< «{0}» завершено.
+> «{0}» finalizado.
+
+< Службу перезапущено: {0}.
+> Servicio reiniciado: {0}.
+
+< Невідомий шлях до програми - перезапустити не вийде.
+> Ruta del programa desconocida: no se puede reiniciar.
+
+< «{0}» перезапущено.
+> «{0}» reiniciado.
+
+< Процес завершено, але запустити знову не вдалося.
+> El proceso se finalizó, pero no se pudo iniciar de nuevo.
+
+< Процес завершено, але запустити знову не вдалося: 
+> El proceso se finalizó, pero no se pudo iniciar de nuevo: 
+
+< Для цієї служби тип запуску тут не змінюється.
+> Aquí no se puede cambiar el tipo de inicio de este servicio.
+
+< Тип запуску служби «{0}»: {1}
+> Tipo de inicio del servicio «{0}»: {1}
