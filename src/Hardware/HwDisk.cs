@@ -861,6 +861,8 @@ static class Helper
                 case "netcfg": code = a.Length > 4 ? NetCfg.RunFile(a[3], a[4], w) : 1; break;
                 case "regclean": code = a.Length > 5 ? RegClean.RunFile(a[3], a[4], a[5], w) : 1; break;
                 case "uninstall": code = Uninstall.Elevate(w); break;
+                case "relock": code = AppLock.Apply("", w) ? 0 : 1; if (code == 0) AppLock.InstallLauncher(); break;
+                case "unlock": code = AppLock.Remove(w) ? 0 : 1; break;
                 case "task": code = AdminTask.Configure(a[3] == "on", a.Length > 4 && a[4] == "auto", a.Length > 5 ? a[5] : "", w); break;
                 default: w.WriteLine(L.T("Невідома дія.")); code = 1; break;
             }

@@ -45,8 +45,8 @@ static class WallCfg
         Fx = 1; TransMs = 1200;
         try
         {
-            if (!File.Exists(Path_)) return;
-            foreach (string raw in File.ReadAllLines(Path_, Encoding.UTF8))
+            if (!SafeFile.Exists(Path_)) return;
+            foreach (string raw in SafeFile.ReadLines(Path_))
             {
                 int eq = raw.IndexOf('=');
                 if (eq <= 0) continue;
@@ -90,7 +90,7 @@ static class WallCfg
             sb.AppendLine("pausebattery=" + (PauseBattery ? 1 : 0));
             sb.AppendLine("fx=" + Fx);
             sb.AppendLine("transms=" + TransMs);
-            File.WriteAllText(Path_, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(Path_, sb.ToString(), new UTF8Encoding(true));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
@@ -134,8 +134,8 @@ static class WallOrig
         loaded = true;
         try
         {
-            if (!File.Exists(File_)) return;
-            foreach (string raw in File.ReadAllLines(File_, Encoding.UTF8))
+            if (!SafeFile.Exists(File_)) return;
+            foreach (string raw in SafeFile.ReadLines(File_))
             {
                 int eq = raw.IndexOf('=');
                 if (eq <= 0) continue;
@@ -154,7 +154,7 @@ static class WallOrig
     {
         try
         {
-            if (Image.Length == 0 && Set.Length == 0) { if (File.Exists(File_)) File.Delete(File_); return; }
+            if (Image.Length == 0 && Set.Length == 0) { SafeFile.Delete(File_); return; }
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(L.T("# NeoBar - шпалери Windows до NeoBar (щоб повернути)"));
             sb.AppendLine("image=" + Image);
@@ -162,7 +162,7 @@ static class WallOrig
             sb.AppendLine("tile=" + Tile);
             sb.AppendLine("set=" + Set);
             sb.AppendLine("copy=" + Copy);
-            File.WriteAllText(File_, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(File_, sb.ToString(), new UTF8Encoding(true));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }

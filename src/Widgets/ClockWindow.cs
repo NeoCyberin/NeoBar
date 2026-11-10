@@ -285,7 +285,7 @@ sealed partial class ClockWindow : SbWindow
             TxtC(g, ClockData.Fmt(left, false), FHuge, tr, run ? P.Acc : P.Fg);
             float frac = t.Set.TotalSeconds > 0 ? (float)(1 - left.TotalSeconds / t.Set.TotalSeconds) : 0;
             ProgressBar(g, new Rectangle(r.X + Px(30), tr.Bottom + Px(8), r.Width - Px(60), Px(8)), frac, P.Acc);
-            TxtC(g, run ? L.T("Сигнал о ") + t.End.ToString("HH:mm:ss") : L.T("Пауза"), FS, new Rectangle(r.X, tr.Bottom + Px(24), r.Width, Px(20)), P.Sub);
+            TxtC(g, run ? L.T("Сигнал о ") + t.End.ToLocalTime().ToString("HH:mm:ss") : L.T("Пауза"), FS, new Rectangle(r.X, tr.Bottom + Px(24), r.Width, Px(20)), P.Sub);
         }
         int y = tr.Bottom + Px(54);
         // швидкий вибір
@@ -447,9 +447,9 @@ sealed partial class ClockWindow : SbWindow
             string sub2 = "";
             if (snoozed)
             {
-                TimeSpan sd = a.Snooze - now;
+                TimeSpan sd = a.Snooze - DateTime.UtcNow;
                 int sm = Math.Max(0, (int)Math.Ceiling(sd.TotalMinutes));
-                sub2 = L.T("Відкладено до ") + a.Snooze.ToString("HH:mm") + L.T(" · ще ") + sm + L.T(" хв");
+                sub2 = L.T("Відкладено до ") + a.Snooze.ToLocalTime().ToString("HH:mm") + L.T(" · ще ") + sm + L.T(" хв");
             }
             else if (a.On)
             {

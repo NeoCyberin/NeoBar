@@ -401,7 +401,7 @@ sealed class DeskClock : LayeredForm
                 TimerItem ti = ClockData.TimerOf(spec);
                 title = ClockData.TimerName(ti).ToUpper(Widgets.UK);
                 value = ClockData.Fmt(ti.Left, false);
-                sub = ti.Running ? L.T("до ") + ti.End.ToString("HH:mm") : (ti.IsPaused ? L.T("пауза") : L.T("двічі клацніть, щоб запустити"));
+                sub = ti.Running ? L.T("до ") + ti.End.ToLocalTime().ToString("HH:mm") : (ti.IsPaused ? L.T("пауза") : L.T("двічі клацніть, щоб запустити"));
                 if (ti.Running) vc = p.Acc;
                 break;
             }
@@ -413,7 +413,7 @@ sealed class DeskClock : LayeredForm
                 foreach (Alarm al in ClockData.Alarms)
                 {
                     if (!al.On && al.Snooze == DateTime.MinValue) continue;
-                    DateTime nx = al.Snooze != DateTime.MinValue ? al.Snooze : al.Next(now);
+                    DateTime nx = al.Snooze != DateTime.MinValue ? al.Snooze.ToLocalTime() : al.Next(now);
                     if (nx < bt) { bt = nx; best = al; }
                 }
                 if (best == null) { value = "--:--"; sub = L.T("немає увімкнених будильників"); }

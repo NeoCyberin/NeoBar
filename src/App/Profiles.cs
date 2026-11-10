@@ -215,9 +215,9 @@ static class Prof
         All.Clear();
         Last = "";
         Drop = "";
-        if (!System.IO.File.Exists(ListPath)) return;
+        if (!SafeFile.Exists(ListPath)) return;
         Profile cur = null;
-        foreach (string raw in System.IO.File.ReadAllLines(ListPath, Encoding.UTF8))
+        foreach (string raw in SafeFile.ReadLines(ListPath))
         {
             string l = raw.Trim();
             if (l.Length == 0 || l.StartsWith(";")) continue;
@@ -269,14 +269,7 @@ static class Prof
                 if (p.HasPin) sb.AppendLine("pin=" + p.Salt + ":" + p.Hash);
             }
             // запис через тимчасовий файл: обірваний запис не зіпсує список профілів
-            string tmp = ListPath + ".tmp";
-            System.IO.File.WriteAllText(tmp, sb.ToString(), new UTF8Encoding(true));
-            if (!System.IO.File.Exists(ListPath)) System.IO.File.Move(tmp, ListPath);
-            else
-            {
-                try { System.IO.File.Replace(tmp, ListPath, null); }
-                catch { System.IO.File.Copy(tmp, ListPath, true); System.IO.File.Delete(tmp); }   // диск без підтримки заміни файлу
-            }
+            SafeFile.Write(ListPath, sb.ToString(), new UTF8Encoding(true));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }

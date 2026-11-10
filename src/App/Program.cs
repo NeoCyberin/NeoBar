@@ -8,6 +8,8 @@ static class Program
     [STAThread]
     static int Main(string[] args)
     {
+        // запускач «Завжди від імені адміністратора» (копія в Program Files): перевірити теку й запустити панель
+        if (args.Length >= 2 && args[0] == "--launch") return AdminTask.LaunchFrom(args[1]);
         // мова інтерфейсу - найперше (і в помічниках: їхній вивід показується у вікнах)
         try { L.Init(); } catch { }
         // папка програми для шляхів у налаштуваннях (%NEOBAR_DIR%\links\… - власні копії ярликів)
@@ -22,6 +24,8 @@ static class Program
         }
         // встановлювач перед видаленням програми: прибрати її сліди в системі
         if (args.Length > 0 && args[0] == "--uninstall") return Uninstall.Run();
+        // встановлювач перед оновленням: тимчасово зняти захист теки (повертається під час наступного запуску з правами)
+        if (args.Length > 0 && args[0] == "--unlock") return Elevated.IsAdmin ? (AppLock.Remove(null) ? 0 : 1) : (AdminTask.Helper("unlock") ? 0 : 1);
         // автооновлення: копія програми з тимчасової теки ставить нову версію, поки основна закрита
         if (args.Length > 0 && args[0] == "--update") return UpdateHelper.Run(args);
         // пункт контекстного меню файлів (хеш, шифрування, перевірка) - окреме легке вікно без панелі
@@ -36,7 +40,10 @@ static class Program
         // «Завжди від імені адміністратора»: звичайний запуск передає роботу завданню з найвищими правами
         if (!restarted && !Elevated.IsAdmin && AdminTask.Wanted())
         {
-            if (AdminTask.Launch()) return 0;
+            // захист теки зняли (ручне оновлення): запускач відмовиться - спершу відновлюємо (один запит UAC)
+            string exe = Application.ExecutablePath, dir = System.IO.Path.GetDirectoryName(exe);
+            if (!AppLock.Trusted(dir, exe) && AdminTask.Exists()) AdminTask.Helper("relock");
+            if (AppLock.Trusted(dir, exe) && AdminTask.Launch()) return 0;
         }
         bool created = false;
         Mutex mtx = null;
@@ -68,11 +75,15 @@ static class Program
             try { Prof.Init(); } catch (Exception ex) { Util.ErrorLog(ex); }
             if (!Prof.Choose()) return 0;
             SbLog.W(SbLog.Panel, "запуск NeoBar: профіль «" + Prof.Cur.Name + "» (" + Prof.Dir + ")" + (Elevated.IsAdmin ? ", від адміністратора" : ""));
+            // «Завжди від імені адміністратора»: завдання й запускач - актуальні (у фоні)
+            if (Elevated.IsAdmin && AdminTask.Wanted()) Util.Bg(AdminTask.Refresh);
             // перший запуск профілю: швидке налаштування ще до появи панелі (записується прямо у файл профілю)
             try { FirstRun(); } catch (Exception ex) { Util.ErrorLog(ex); }
             ShellMenu.Refresh();          // NeoBar перенесли - пункти контекстного меню ведуть на новий шлях
             NeoBar bar = new NeoBar();
             // перше знайомство - один раз, до появи панелі
+            // перше знайомство (перевірка системи) - лише якщо щось справді не працює; решта - у Налаштування → Діагностика
+            if (!bar.Config.Welcomed && !SysCheck.HasProblems(bar)) bar.MarkWelcomed();
             if (!bar.Config.Welcomed)
             {
                 bool go = true, dontShow = true;

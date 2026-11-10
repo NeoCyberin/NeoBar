@@ -281,12 +281,12 @@ static class Notes
     static void Load()
     {
         All.Clear();
-        if (!File.Exists(path)) return;
+        if (!SafeFile.Exists(path)) return;
         Note cur = null;
         NoteTheme th = null;
         try
         {
-            foreach (string raw in File.ReadAllLines(path, Encoding.UTF8))
+            foreach (string raw in SafeFile.ReadLines(path))
             {
                 string line = raw.Trim();
                 if (line.Length == 0 || line.StartsWith("#")) continue;
@@ -418,9 +418,9 @@ static class Notes
                 sb.AppendLine("rtf=" + Esc(n.Rtf));
                 sb.AppendLine();
             }
-            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(path, sb.ToString(), new UTF8Encoding(true));
         }
-        catch { }
+        catch (Exception ex) { Util.ErrorLog(ex); }
     }
 
     static string NewId()

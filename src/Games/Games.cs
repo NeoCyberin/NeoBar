@@ -194,8 +194,8 @@ static class Games
         bool any = false;
         try
         {
-            if (File.Exists(path))
-                foreach (string raw in File.ReadAllLines(path, Encoding.UTF8))
+            if (SafeFile.Exists(path))
+                foreach (string raw in SafeFile.ReadLines(path))
                 {
                     int eq = raw.IndexOf('=');
                     if (eq <= 0 || raw.StartsWith("#")) continue;
@@ -246,7 +246,7 @@ static class Games
             foreach (Game g in List)
                 sb.AppendLine("game2=" + (g.On ? 1 : 0) + "|" + g.Source + "|" + g.Name.Replace("|", "/") + "|" + g.Dir + "|" + (g.OvOwn ? 1 : 0) + "|" + g.IntRaw + "|" + (g.LimitOn ? 1 : 0) + "|" +
                     g.LimFps.ToString(System.Globalization.CultureInfo.InvariantCulture) + "|" + g.ModeSel + "|" + (g.Api ?? "") + "|" + g.MonHz + "|" + (g.AcSeen ?? "").Replace("|", "/") + "|" + (g.AcNote ? 1 : 0) + "|" + (g.Wrap ?? "") + "|" + (g.ExeDir ?? "").Replace("|", "/") + "|" + g.Bits + "|" + (g.LookEnc ?? "").Replace("|", "/"));
-            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(path, sb.ToString(), new UTF8Encoding(true));
         }
         catch { }
     }

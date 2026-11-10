@@ -49,8 +49,8 @@ static class Dice
         Labels.Clear(); Last = new int[0];
         try
         {
-            if (File.Exists(File_))
-                foreach (string raw in File.ReadAllLines(File_, Encoding.UTF8))
+            if (SafeFile.Exists(File_))
+                foreach (string raw in SafeFile.ReadLines(File_))
                 {
                     int eq = raw.IndexOf('=');
                     if (eq <= 0) continue;
@@ -78,7 +78,7 @@ static class Dice
             sb.AppendLine("faces=" + Faces);
             sb.AppendLine("total=" + (Total ? 1 : 0));
             foreach (string l in Labels) sb.AppendLine("label=" + l.Replace("\r", "").Replace("\n", " "));
-            File.WriteAllText(File_, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(File_, sb.ToString(), new UTF8Encoding(true));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }

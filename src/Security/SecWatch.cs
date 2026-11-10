@@ -43,8 +43,8 @@ static class SecWatch
     {
         try
         {
-            if (!File.Exists(FilePath)) return;
-            string[] l = File.ReadAllLines(FilePath, Encoding.UTF8);
+            if (!SafeFile.Exists(FilePath)) return;
+            string[] l = SafeFile.ReadLines(FilePath);
             long b;
             if (l.Length == 0 || !long.TryParse(l[0], out b) || Math.Abs(b - boot) > TimeSpan.FromMinutes(2).Ticks) return;
             for (int i = 1; i < l.Length; i++) if (l[i].Length > 0) told.Add(l[i]);
@@ -59,7 +59,7 @@ static class SecWatch
             StringBuilder sb = new StringBuilder();
             sb.Append(boot).Append("\r\n");
             lock (told) foreach (string k in told) sb.Append(k.Replace("\r", " ").Replace("\n", " ")).Append("\r\n");
-            File.WriteAllText(FilePath, sb.ToString(), new UTF8Encoding(false));
+            SafeFile.Write(FilePath, sb.ToString(), new UTF8Encoding(false));
         }
         catch { }
     }

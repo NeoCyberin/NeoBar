@@ -101,8 +101,8 @@ static class Holidays
         path = Prof.File("calendar.ini");
         try
         {
-            if (!File.Exists(path)) return;
-            foreach (string raw in File.ReadAllLines(path, Encoding.UTF8))
+            if (!SafeFile.Exists(path)) return;
+            foreach (string raw in SafeFile.ReadLines(path))
             {
                 int eq = raw.IndexOf('=');
                 if (eq <= 0 || raw.StartsWith("#")) continue;
@@ -149,7 +149,7 @@ static class Holidays
             if (LastNotified != DateTime.MinValue) sb.AppendLine("notified=" + LastNotified.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
             foreach (Holiday h in Own)
                 sb.AppendLine("holiday=" + h.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "|" + (h.Yearly ? 1 : 0) + "|" + h.Name.Replace("|", "/").Replace("\n", " "));
-            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(path, sb.ToString(), new UTF8Encoding(true));
         }
         catch { }
         Fire();

@@ -32,7 +32,7 @@ static class Uninstall
         }
         catch { }
         // завдання з найвищими правами й шар Vulkan у HKLM прибирає лише адміністратор
-        if (TaskExists() || VkValues(RegistryHive.LocalMachine, true))
+        if (TaskExists() || AppLock.Applied() || VkValues(RegistryHive.LocalMachine, true))
         {
             if (Elevated.IsAdmin) Elevate(null);
             else
@@ -56,7 +56,8 @@ static class Uninstall
     // підвищена частина (помічник «--helper uninstall»)
     public static int Elevate(StreamWriter w)
     {
-        if (TaskExists()) AdminTask.Configure(false, false, "", w ?? new StreamWriter(Stream.Null));
+        if (TaskExists()) AdminTask.Configure(false, false, "", w);
+        else if (AppLock.Applied()) { AppLock.RemoveLauncher(); AppLock.Remove(w); }
         VkValues(RegistryHive.LocalMachine);
         return 0;
     }

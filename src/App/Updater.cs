@@ -66,8 +66,8 @@ static class Updater
         Dictionary<string, string> d = new Dictionary<string, string>();
         try
         {
-            if (File.Exists(StateFile))
-                foreach (string l in File.ReadAllLines(StateFile, Encoding.UTF8))
+            if (SafeFile.Exists(StateFile))
+                foreach (string l in SafeFile.ReadLines(StateFile))
                 {
                     int i = l.IndexOf('=');
                     if (i > 0) d[l.Substring(0, i).Trim()] = l.Substring(i + 1).Trim();
@@ -83,7 +83,7 @@ static class Updater
         {
             StringBuilder sb = new StringBuilder();
             foreach (KeyValuePair<string, string> kv in d) sb.AppendLine(kv.Key + "=" + kv.Value);
-            File.WriteAllText(StateFile, sb.ToString(), new UTF8Encoding(false));
+            SafeFile.Write(StateFile, sb.ToString(), new UTF8Encoding(false));
         }
         catch { }
     }
@@ -207,7 +207,7 @@ static class Updater
             string ver = Display(tag);
             string name = "NeoBar-" + ver + (setup ? "-setup.exe" : "-portable.zip");
             // тека пакета може бути захищена від запису - тоді помічникові потрібне підтвердження прав (UAC)
-            bool needElev = !setup && !Elevated.IsAdmin && !Writable(appDir);
+            bool needElev = !Elevated.IsAdmin && !Writable(appDir);
 
             string work = Path.Combine(TempRoot, DateTime.Now.Ticks.ToString("x"));
             Job job = new Job();
@@ -285,6 +285,8 @@ static class Updater
     static void Fetch(string tag, string name, string work, Job job, UpdateWindow w)
     {
         Directory.CreateDirectory(work);
+        // підвищена панель запустить звідси помічника з правами - тека лише для адміністраторів (ніхто не підкладе DLL)
+        if (Elevated.IsAdmin) AppLock.Protect(work);
         string baseUrl = DlBase + tag + "/";
         w.Set(L.T("Отримання контрольних сум…"), 0, 0);
         string sums;

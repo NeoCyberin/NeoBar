@@ -386,7 +386,7 @@ static class Store
     public static void Load(string path, Cfg cfg, List<Entry> list)
     {
         string[] lines;
-        try { lines = File.ReadAllLines(path, Encoding.UTF8); }
+        try { lines = SafeFile.ReadLines(path); }
         catch { lines = new string[0]; }
         LoadLines(lines, cfg, list);
         Normalize(list);
@@ -640,7 +640,7 @@ static class Store
         ImportLinks(list);
         List<string> oldLinks = LinkRefs(path);            // ярлики, що були в попередньому файлі
         List<string> old = IconRefs(path);                 // іконки, що були в попередньому файлі
-        File.WriteAllText(path, Serialize(c, list), new UTF8Encoding(true));
+        SafeFile.Write(path, Serialize(c, list), new UTF8Encoding(true));
         try
         {
             // елемент видалили або змінили іконку: власну копію в icons, якої більше ніхто не використовує, прибираємо

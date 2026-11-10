@@ -247,9 +247,9 @@ static class OverlayCfg
         Defaults();
         try
         {
-            if (!File.Exists(path)) return;
+            if (!SafeFile.Exists(path)) return;
 
-            foreach (string raw in File.ReadAllLines(path, Encoding.UTF8))
+            foreach (string raw in SafeFile.ReadLines(path))
             {
                 int eq = raw.IndexOf('=');
                 if (eq <= 0 || raw.StartsWith("#")) continue;
@@ -324,7 +324,7 @@ static class OverlayCfg
             List<string> ms = new List<string>();
             foreach (OvMetric m in Metrics) ms.Add(m.Key + ":" + (m.Show ? 1 : 0) + ":" + (m.Graph ? 1 : 0));
             sb.AppendLine("metrics=" + string.Join(",", ms.ToArray()));
-            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(path, sb.ToString(), new UTF8Encoding(true));
         }
         catch { }
     }

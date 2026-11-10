@@ -22,6 +22,13 @@ sealed class CheckItem
 
 static class SysCheck
 {
+    // швидкі перевірки (без WMI й мережі) знайшли справжню проблему (а не лише «до відома» чи «увага»)?
+    public static bool HasProblems(NeoBar bar)
+    {
+        try { return Collect(bar, null, false, null).Exists(delegate (CheckItem i) { return i.State == 2; }); }
+        catch { return true; }
+    }
+
     static string wmiOs;                    // назва системи з WMI (запит повільний - один раз за запуск)
 
     // Перевірки побудовані за можливостями програми: що їм потрібно і чи воно є на цьому комп'ютері.
