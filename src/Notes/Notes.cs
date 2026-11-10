@@ -55,7 +55,7 @@ sealed class NoteTheme
         n.Fg = Util.Opaque(t.Text.A < 255 ? Util.Blend(n.Body, Util.Opaque(t.Text), t.Text.A / 255f) : t.Text);
         Color acc = Util.Opaque(t.Accent);
         n.Header = Util.Blend(n.Body, acc, 0.78f);
-        n.FontName = t.Font;                                       // той самий шрифт, що й у панелі та вікнах цієї теми
+        n.FontName = SBFonts.ForTheme(t.Id) + "|" + t.Font;      // власний шрифт теми, далі - запасний
         n.FontSize = t.Sketchy ? 12f : (t.Id == "cyber" ? 10.5f : 11f);
         n.BorderW = Math.Max(1, t.EdgeW);
         n.Radius = t.Radius;
