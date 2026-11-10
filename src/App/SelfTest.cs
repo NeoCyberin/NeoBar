@@ -35,7 +35,7 @@ static class SelfTest
         catch (Exception ex) { Check(name, false, ex.GetType().Name + ": " + ex.Message); }
     }
 
-    public static int Main(string report)
+    public static int Execute(string report)
     {
         log = new StringBuilder();
         failed = 0;

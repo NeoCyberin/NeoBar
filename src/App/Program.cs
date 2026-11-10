@@ -25,7 +25,7 @@ static class Program
         // встановлювач перед видаленням програми: прибрати її сліди в системі
         if (args.Length > 0 && args[0] == "--uninstall") return Uninstall.Run();
         // самоперевірка для збірки на GitHub (без вікон): криптографія, хеші, надійний запис, калькулятор
-        if (args.Length >= 2 && args[0] == "--selftest") return SelfTest.Main(args[1]);
+        if (args.Length >= 2 && args[0] == "--selftest") return SelfTest.Execute(args[1]);
         // встановлювач перед оновленням: тимчасово зняти захист теки (повертається під час наступного запуску з правами)
         if (args.Length > 0 && args[0] == "--unlock") return Elevated.IsAdmin ? (AppLock.Remove(null) ? 0 : 1) : (AdminTask.Helper("unlock") ? 0 : 1);
         // автооновлення: копія програми з тимчасової теки ставить нову версію, поки основна закрита
@@ -93,7 +93,6 @@ static class Program
             try { FirstRun(); } catch (Exception ex) { Util.ErrorLog(ex); }
             ShellMenu.Refresh();          // NeoBar перенесли - пункти контекстного меню ведуть на новий шлях
             NeoBar bar = new NeoBar();
-            // перше знайомство - один раз, до появи панелі
             // перше знайомство (перевірка системи) - лише якщо щось справді не працює; решта - у Налаштування → Діагностика
             if (!bar.Config.Welcomed && !SysCheck.HasProblems(bar)) bar.MarkWelcomed();
             if (!bar.Config.Welcomed)
