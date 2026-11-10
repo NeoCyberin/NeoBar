@@ -117,7 +117,7 @@ sealed class FlyoutForm : Form
         int fr = Px(Math.Max(0, t.Radius)) + Px(2);
         if (t.Radius > 1 && !t.Sketchy)
         {
-            try { using (GraphicsPath gp = Util.Round(new Rectangle(0, 0, Width, Height), fr)) Util.SetRegion(this, gp); } catch { }
+            try { using (GraphicsPath gp = Util.Round(new Rectangle(0, 0, Width, Height), fr)) Util.SetRegion(this, gp); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
 
         fade.Interval = 16;
@@ -416,7 +416,7 @@ sealed class RoundMenu : ToolStripProfessionalRenderer
             {
                 using (GraphicsPath gp = Util.Round(new Rectangle(0, 0, m.Width, m.Height), rad)) Util.SetRegion(m, gp);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         };
     }
 
@@ -495,12 +495,12 @@ static class MenuGuard
         t.Interval = 40;
         bool armed = false;
         IntPtr fg0 = IntPtr.Zero;
-        try { fg0 = Win.GetForegroundWindow(); } catch { }
+        try { fg0 = Win.GetForegroundWindow(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         t.Tick += delegate
         {
             if (m.IsDisposed || !m.Visible) { t.Stop(); t.Dispose(); return; }
             bool down = false;
-            try { down = (Win.GetAsyncKeyState(1) & 0x8000) != 0 || (Win.GetAsyncKeyState(2) & 0x8000) != 0 || (Win.GetAsyncKeyState(4) & 0x8000) != 0; } catch { }
+            try { down = (Win.GetAsyncKeyState(1) & 0x8000) != 0 || (Win.GetAsyncKeyState(2) & 0x8000) != 0 || (Win.GetAsyncKeyState(4) & 0x8000) != 0; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (!down) { armed = true; }
             bool outside = false;
             if (armed && down)
@@ -514,11 +514,11 @@ static class MenuGuard
                 IntPtr fg = Win.GetForegroundWindow();
                 if (armed && fg != fg0 && fg != IntPtr.Zero && fg != m.Handle) { fg0 = fg; if (!down) outside = true; }
             }
-            catch { }
-            if (outside) { t.Stop(); t.Dispose(); try { m.Close(ToolStripDropDownCloseReason.AppFocusChange); } catch { } }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            if (outside) { t.Stop(); t.Dispose(); try { m.Close(ToolStripDropDownCloseReason.AppFocusChange); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         };
         t.Start();
-        m.Closed += delegate { try { t.Stop(); t.Dispose(); } catch { } };
+        m.Closed += delegate { try { t.Stop(); t.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } };
     }
 
     static bool Inside(ToolStripDropDown d, Point p)

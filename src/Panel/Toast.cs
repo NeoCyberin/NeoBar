@@ -44,7 +44,7 @@ sealed class ToastForm : Form
             f.slide.Start();
             Chime.Play("chime", false, 100);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static void Show(NeoBar owner, string title, string body, string glyph, bool alarm, Action snooze)
@@ -75,7 +75,7 @@ sealed class ToastForm : Form
             f.slide.Start();
             if (sound != "none") Chime.Play(sound ?? "chime", alarm, volume);      // "none" - без звуку (його вже грає ефект свята)
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     ToastForm(NeoBar owner, string title, string body, string glyph, bool alarm, Action snooze)
@@ -110,7 +110,7 @@ sealed class ToastForm : Form
         {
             using (GraphicsPath gp = Util.Round(new Rectangle(0, 0, Width, Height), p.Rad + Px(4))) Util.SetRegion(this, gp);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override bool ShowWithoutActivation { get { return true; } }

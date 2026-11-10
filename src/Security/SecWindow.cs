@@ -54,7 +54,7 @@ sealed class SecWindow : VtWindow
                 if (!SecScan.Busy && Bar != null) Bar.WidgetRedraw("security");
             }));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
@@ -228,7 +228,7 @@ sealed class SecWindow : VtWindow
         else if (!f.Ok && (f.Level >= 1 || (f.Area == "sys" && f.Score > 0))) a.Add(new Act { Text = L.T("Дозволити"), Do = delegate { AllowIt(ff); }, Style = 2 });
         if (file && f.Level >= 1) a.Add(new Act { Text = VtLabel(f), Do = delegate { CardVt(ff); }, Style = 0 });
         if (file) a.Add(new Act { Text = f.Open ? L.T("Згорнути") : L.T("Детальніше"), Do = delegate { CardOpen(ff); }, Style = 2 });
-        if (f.Area == "svc") a.Add(new Act { Text = L.T("Служби Windows"), Do = delegate { try { Process.Start("services.msc"); } catch { } }, Style = 2 });
+        if (f.Area == "svc") a.Add(new Act { Text = L.T("Служби Windows"), Do = delegate { try { Process.Start("services.msc"); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }, Style = 2 });
         foreach (string[] l in f.Links) { string tg = l[1]; a.Add(new Act { Text = l[0], Do = delegate { Open(tg); }, Style = 2 }); }
         return a;
     }
@@ -322,7 +322,7 @@ sealed class SecWindow : VtWindow
                     Invalidate();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         t.IsBackground = true;
         t.Start();
@@ -357,7 +357,7 @@ sealed class SecWindow : VtWindow
                     Invalidate();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         t.IsBackground = true;
         t.Start();
@@ -693,7 +693,7 @@ sealed class SecWindow : VtWindow
                     Invalidate();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         t.IsBackground = true;
         t.Start();
@@ -722,7 +722,7 @@ sealed class SecWindow : VtWindow
                     Invalidate();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         t.IsBackground = true;
         t.Start();

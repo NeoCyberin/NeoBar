@@ -376,7 +376,7 @@ static class Festive
                 case "birthday": Party(g, t, r, sc, rnd, rich); break;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         g.Restore(st);
         g.SmoothingMode = sm;
     }

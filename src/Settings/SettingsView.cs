@@ -344,7 +344,7 @@ sealed partial class SettingsForm
                     SetCitySug(list.Count > 0);
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -420,7 +420,7 @@ sealed partial class SettingsForm
                     else lCity.Text = L.T("Місто не знайдено або немає інтернету.");
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 

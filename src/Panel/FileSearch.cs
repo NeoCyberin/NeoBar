@@ -313,7 +313,7 @@ static class MftIndex
                 catch (Exception ex) { Util.ErrorLog(ex); }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
 
         lock (gate)
         {
@@ -691,11 +691,11 @@ static class FileFind
                     note = L.T("Перегляд дисків");
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (res == null) res = new List<FileHit>();
             Sort(res, s);
             LastStatus = note;
-            try { report(res, note, myGen); } catch { }
+            try { report(res, note, myGen); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -778,8 +778,8 @@ static class FileFind
                 h.Name = name;
                 h.Path = path;
                 h.IsDir = string.Equals(type, "Directory", StringComparison.OrdinalIgnoreCase);
-                try { h.Size = rd.IsDBNull(3) ? -1 : Convert.ToInt64(rd.GetValue(3)); } catch { }
-                try { h.Modified = rd.IsDBNull(4) ? DateTime.MinValue : Convert.ToDateTime(rd.GetValue(4)); } catch { }
+                try { h.Size = rd.IsDBNull(3) ? -1 : Convert.ToInt64(rd.GetValue(3)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                try { h.Modified = rd.IsDBNull(4) ? DateTime.MinValue : Convert.ToDateTime(rd.GetValue(4)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 if (!s.NameOk(h.Name, h.IsDir)) continue;
                 if (!s.PathOk(h.Path)) continue;
                 if (s.NeedStat && !s.StatOk(h.Size, h.Modified)) continue;
@@ -798,8 +798,8 @@ static class FileFind
     static void Kill(IDisposable c)
     {
         if (c == null) return;
-        try { GC.SuppressFinalize(c); } catch { }
-        try { c.Dispose(); } catch { }
+        try { GC.SuppressFinalize(c); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { c.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static string Esc(string v)
@@ -813,21 +813,21 @@ static class FileFind
         List<FileHit> res = new List<FileHit>();
         DateTime deadline = DateTime.UtcNow.AddMilliseconds(2500);
         Queue<string> q = new Queue<string>();
-        try { q.Enqueue(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)); } catch { }
+        try { q.Enqueue(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
         {
             foreach (DriveInfo d in DriveInfo.GetDrives())
                 if (d.DriveType == DriveType.Fixed && d.IsReady) q.Enqueue(d.RootDirectory.FullName);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
 
         while (q.Count > 0)
         {
             if (res.Count >= max || DateTime.UtcNow > deadline || myGen != gen) break;
             string dir = q.Dequeue();
             string[] subs = null, files = null;
-            try { subs = Directory.GetDirectories(dir); } catch { }
-            try { if (s.Kind != 2) files = Directory.GetFiles(dir); } catch { }
+            try { subs = Directory.GetDirectories(dir); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { if (s.Kind != 2) files = Directory.GetFiles(dir); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (subs != null)
             {
                 foreach (string sd in subs)

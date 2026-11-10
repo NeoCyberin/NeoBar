@@ -68,7 +68,7 @@ static class MediaInfo
         }
         finally
         {
-            try { System.Runtime.InteropServices.Marshal.ReleaseComObject(sh); } catch { }
+            try { System.Runtime.InteropServices.Marshal.ReleaseComObject(sh); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 

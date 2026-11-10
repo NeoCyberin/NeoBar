@@ -102,7 +102,7 @@ sealed class FrameSkin : NativeWindow
                 using (Pen p = new Pen(col)) g.DrawRectangle(p, 0, 0, c.Width - 1, c.Height - 1);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         finally { Win.ReleaseDC(m.HWnd, dc); }
     }
 }

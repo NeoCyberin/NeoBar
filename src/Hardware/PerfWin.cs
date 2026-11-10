@@ -156,7 +156,7 @@ sealed partial class PerfWindow : SbWindow
         }
         Btn(g, new Rectangle(r.X, r.Bottom - Px(34), Px(180), Px(32)), L.T("Копіювати все"), delegate
         {
-            try { Clipboard.SetText(HwInfo.AsText()); } catch { }
+            try { Clipboard.SetText(HwInfo.AsText()); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }, 1, HwInfo.Done);
         Btn(g, new Rectangle(r.X + Px(190), r.Bottom - Px(34), Px(130), Px(32)), L.T("Оновити"), delegate { scroll = 0; HwInfo.Load(true); }, 0, !HwInfo.Loading);
         TxtR(g, L.T("Дані зчитуються з Windows (WMI)"), FS, new Rectangle(r.X + Px(330), r.Bottom - Px(34), r.Width - Px(330), Px(32)), P.Sub);

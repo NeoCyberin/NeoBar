@@ -26,7 +26,7 @@ static class AppLock
     static SecurityIdentifier UserSid(string user)
     {
         if (!string.IsNullOrEmpty(user))
-            try { return (SecurityIdentifier)new NTAccount(user).Translate(typeof(SecurityIdentifier)); } catch { }
+            try { return (SecurityIdentifier)new NTAccount(user).Translate(typeof(SecurityIdentifier)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return WindowsIdentity.GetCurrent().User;
     }
 
@@ -89,7 +89,7 @@ static class AppLock
             DirectorySecurity ds = Directory.GetAccessControl(Root);
             ds.SetAccessRuleProtection(false, false);
             foreach (FileSystemAccessRule r in ds.GetAccessRules(true, false, typeof(SecurityIdentifier))) ds.RemoveAccessRuleSpecific(r);
-            try { ds.SetOwner(me); } catch { }
+            try { ds.SetOwner(me); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Directory.SetAccessControl(Root, ds);
             Reset(Root);
             return true;
@@ -121,7 +121,7 @@ static class AppLock
                 foreach (FileSystemAccessRule r in s.GetAccessRules(true, false, typeof(SecurityIdentifier))) s.RemoveAccessRuleSpecific(r);
                 File.SetAccessControl(f, s);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         foreach (string d in Directory.GetDirectories(dir))
         {
             if ((File.GetAttributes(d) & FileAttributes.ReparsePoint) != 0) continue;   // посилання на інші теки не чіпаємо
@@ -135,7 +135,7 @@ static class AppLock
                     Directory.SetAccessControl(d, s);
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Reset(d);
         }
     }
@@ -180,14 +180,14 @@ static class AppLock
                 System.Diagnostics.FileVersionInfo.GetVersionInfo(LauncherExe).FileVersion == System.Diagnostics.FileVersionInfo.GetVersionInfo(src).FileVersion &&
                 new FileInfo(LauncherExe).Length == new FileInfo(src).Length;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (!same) File.Copy(src, LauncherExe, true);
     }
 
     public static void RemoveLauncher()
     {
         try { if (File.Exists(LauncherExe)) File.Delete(LauncherExe); } catch (Exception ex) { Util.ErrorLog(ex); }
-        try { if (Directory.Exists(LauncherDir) && Directory.GetFileSystemEntries(LauncherDir).Length == 0) Directory.Delete(LauncherDir); } catch { }
+        try { if (Directory.Exists(LauncherDir) && Directory.GetFileSystemEntries(LauncherDir).Length == 0) Directory.Delete(LauncherDir); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // тека захищена так, як її залишив Apply: власник - адміністратори або SYSTEM, права не успадковуються,

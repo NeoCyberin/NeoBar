@@ -68,7 +68,7 @@ static class Chime
             catch
             {
                 d = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NeoBar", "sounds");
-                try { Directory.CreateDirectory(d); } catch { }
+                try { Directory.CreateDirectory(d); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 return d;
             }
         }
@@ -86,7 +86,7 @@ static class Chime
             }
             l.Sort(StringComparer.CurrentCultureIgnoreCase);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return l;
     }
 
@@ -606,7 +606,7 @@ static class Chime
                     if (mciSendString("open \"" + f + "\" type " + (ext == ".wav" ? "waveaudio" : "mpegvideo") + " alias sbsnd", null, 0, IntPtr.Zero) == 0)
                     {
                         mciOpen = true;
-                        try { mciSendString("setaudio sbsnd volume to " + Math.Max(0, Math.Min(100, vol)) * 10, null, 0, IntPtr.Zero); } catch { }
+                        try { mciSendString("setaudio sbsnd volume to " + Math.Max(0, Math.Min(100, vol)) * 10, null, 0, IntPtr.Zero); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                         // прослуховування файлу: двічі (довжина - з MCI), з повторенням і зупинкою за таймером
                         double sec = MaxPreviewSec;
                         if (!loop)
@@ -623,7 +623,7 @@ static class Chime
                     }
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             id = "chime";    // файл зник або не відтворюється - вбудований звук
         }
         try
@@ -640,7 +640,7 @@ static class Chime
                 player.Play();
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // зупинити прослуховування через sec секунд
@@ -659,11 +659,11 @@ static class Chime
 
     public static void Stop()
     {
-        try { if (mciOpen) { mciSendString("stop sbsnd", null, 0, IntPtr.Zero); mciSendString("close sbsnd", null, 0, IntPtr.Zero); } } catch { }
+        try { if (mciOpen) { mciSendString("stop sbsnd", null, 0, IntPtr.Zero); mciSendString("close sbsnd", null, 0, IntPtr.Zero); } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         mciOpen = false;
-        try { if (player != null) { player.Stop(); player.Dispose(); } } catch { }
+        try { if (player != null) { player.Stop(); player.Dispose(); } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         player = null;
-        try { if (wav != null) wav.Dispose(); } catch { }
+        try { if (wav != null) wav.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         wav = null;
     }
 }

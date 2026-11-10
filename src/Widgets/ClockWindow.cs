@@ -103,7 +103,7 @@ sealed partial class ClockWindow : SbWindow
         if (previews == null)
         {
             previews = new Bitmap[DeskKinds.Length];
-            for (int i = 0; i < DeskKinds.Length; i++) try { previews[i] = DeskClock.Preview(DeskKinds[i]); } catch { }
+            for (int i = 0; i < DeskKinds.Length; i++) try { previews[i] = DeskClock.Preview(DeskKinds[i]); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         int y = r.Y + Px(34);
         int numH = Px(38);              // рядок «Цифри» під плитками (активний для стрілкового)
@@ -378,7 +378,7 @@ sealed partial class ClockWindow : SbWindow
                 {
                     if (MessageBox.Show(this, L.T("Видалити мелодію «") + Path.GetFileNameWithoutExtension(fn) + L.Q("»?"), "NeoBar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
                     Chime.Stop();
-                    try { File.Delete(Path.Combine(Chime.Dir, fn)); } catch { }
+                    try { File.Delete(Path.Combine(Chime.Dir, fn)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     foreach (Alarm al in ClockData.Alarms) if (al.Sound == "file:" + fn) al.Sound = "theme";
                     foreach (TimerItem ti in ClockData.Timers) if (ti.Sound == "file:" + fn) ti.Sound = "theme";
                     if (edit != null && edit.Sound == "file:" + fn) edit.Sound = "theme";
@@ -406,7 +406,7 @@ sealed partial class ClockWindow : SbWindow
         });
         m.Items.Add(L.T("Відкрити папку мелодій"), null, delegate
         {
-            try { using (System.Diagnostics.Process.Start("explorer.exe", "\"" + Chime.Dir + "\"")) { } } catch { }
+            try { using (System.Diagnostics.Process.Start("explorer.exe", "\"" + Chime.Dir + "\"")) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         m.Show(this, new Point(at.X, at.Bottom));
     }

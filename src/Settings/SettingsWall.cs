@@ -194,7 +194,7 @@ sealed partial class SettingsForm
                 if (Directory.Exists(dir))
                     foreach (string f in Directory.GetFiles(dir)) sb.Append('|').Append(Path.GetFileName(f)).Append(File.GetLastWriteTimeUtc(f).Ticks);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return sb.ToString();
     }
@@ -226,9 +226,9 @@ sealed partial class SettingsForm
         // рушій пише стан за мить після запуску - оновити підпис ще раз
         Timer st = new Timer();
         st.Interval = 2500;
-        st.Tick += delegate { st.Stop(); st.Dispose(); try { if (!lWStatus.IsDisposed) lWStatus.Text = WallMgr.Status; } catch { } };
+        st.Tick += delegate { st.Stop(); st.Dispose(); try { if (!lWStatus.IsDisposed) lWStatus.Text = WallMgr.Status; } catch (Exception skipEx) { SbLog.Skip(skipEx); } };
         st.Start();
-        try { owner.Invalidate(); } catch { }
+        try { owner.Invalidate(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         WallQueue();
     }
 }

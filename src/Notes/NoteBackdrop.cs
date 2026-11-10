@@ -400,7 +400,7 @@ sealed class ThemeDialog : Form
             string name = nm;
             ToolStripMenuItem it = new ToolStripMenuItem(name + L.T("   Привіт, Київ! Abc 123"));
             it.Checked = string.Equals(cur, name, StringComparison.OrdinalIgnoreCase);
-            try { FontFamily ff = SBFonts.Family(name); if (ff != null) it.Font = new Font(ff, 12f, FontStyle.Regular, GraphicsUnit.Point); } catch { }
+            try { FontFamily ff = SBFonts.Family(name); if (ff != null) it.Font = new Font(ff, 12f, FontStyle.Regular, GraphicsUnit.Point); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             it.Click += delegate
             {
                 t.FontName = name + "|Segoe UI";
@@ -414,7 +414,7 @@ sealed class ThemeDialog : Form
         {
             using (FontDialog fd = new FontDialog())
             {
-                try { fd.Font = new Font(cur, t.FontSize); } catch { }
+                try { fd.Font = new Font(cur, t.FontSize); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 fd.ShowEffects = false;
                 if (fd.ShowDialog(this) != DialogResult.OK) return;
                 t.FontName = fd.Font.Name;

@@ -53,7 +53,7 @@ sealed class PdhQuery : IDisposable
     public void Collect()
     {
         if (q == IntPtr.Zero) return;
-        try { PdhCollectQueryData(q); } catch { }
+        try { PdhCollectQueryData(q); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public double Value(string key)
@@ -97,13 +97,13 @@ sealed class PdhQuery : IDisposable
             }
             finally { Marshal.FreeHGlobal(buf); }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return res;
     }
 
     public void Dispose()
     {
-        if (q != IntPtr.Zero) try { PdhCloseQuery(q); } catch { }
+        if (q != IntPtr.Zero) try { PdhCloseQuery(q); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         q = IntPtr.Zero;
     }
 }
@@ -171,7 +171,7 @@ static class Gpu
             // спершу дискретний (найбільше власної пам'яті)
             list.Sort(delegate (GpuAdapter x, GpuAdapter y) { return y.Dedicated.CompareTo(x.Dedicated); });
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return list;
     }
 
@@ -322,7 +322,7 @@ static class Sensors
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Cores = Environment.ProcessorCount;
     }
 
@@ -347,7 +347,7 @@ static class Sensors
             RamTotalGb = tot / 1024.0;
             RamUsedGb = (tot - free) / 1024.0;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Push("cpu", Cpu);
         Push("ram", Ram);
         if (level >= 2)
@@ -360,11 +360,11 @@ static class Sensors
                 Thread th = new Thread(delegate ()
                 {
                     System.Diagnostics.Stopwatch w = System.Diagnostics.Stopwatch.StartNew();
-                    try { InitPdh(); } catch { }
-                    try { Gpu.Adapters(); } catch { }
-                    try { VendorGpu.Read(); } catch { }
-                    try { CpuTempPawn.Read(); } catch { }       // завантаження модуля PawnIO (~0,1 с)
-                    try { CpuTempWmi.Read(); } catch { }
+                    try { InitPdh(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                    try { Gpu.Adapters(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                    try { VendorGpu.Read(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                    try { CpuTempPawn.Read(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }       // завантаження модуля PawnIO (~0,1 с)
+                    try { CpuTempWmi.Read(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     warmDone = true;
                     if (SbLog.On(SbLog.Sensors)) SbLog.W(SbLog.Sensors, "прогрів датчиків у фоні: " + w.ElapsedMilliseconds + " мс");
                 });
@@ -375,13 +375,13 @@ static class Sensors
             if (warmDone) SampleFull();
         }
         Action u = Updated;
-        if (u != null) try { u(); } catch { }
+        if (u != null) try { u(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static void SampleFull()
     {
         GpuAdapter ga = null;
-        try { List<GpuAdapter> al = Gpu.Adapters(); if (al.Count > 0) ga = al[0]; } catch { }
+        try { List<GpuAdapter> al = Gpu.Adapters(); if (al.Count > 0) ga = al[0]; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         GpuName = ga != null ? ga.Name : "";
         if (pdh != null)
         {
@@ -455,7 +455,7 @@ static class Sensors
         // датчики виробника відеокарти (AMD ADL / NVIDIA NVML)
         GpuClock = MemClock = Hotspot = MemTemp = GpuPowerW = GpuVolt = GpuFanPct = CpuPowerW = float.NaN;
         VendorStats vs = null;
-        try { vs = VendorGpu.Read(); } catch { }
+        try { vs = VendorGpu.Read(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         VendorSource = vs != null ? vs.Source : "";
         if (vs != null)
         {
@@ -469,14 +469,14 @@ static class Sensors
         if (float.IsNaN(CpuTemp) || TempIsAcpi)
         {
             float pt = float.NaN;
-            try { pt = CpuTempPawn.Read(); } catch { }
+            try { pt = CpuTempPawn.Read(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (!float.IsNaN(pt)) { CpuTemp = pt; TempIsAcpi = false; }
         }
         if (float.IsNaN(CpuPowerW) && !float.IsNaN(CpuTempPawn.PowerW)) CpuPowerW = CpuTempPawn.PowerW;
         if (float.IsNaN(CpuTemp) || TempIsAcpi)
         {
             float wt = float.NaN;
-            try { wt = CpuTempWmi.Read(); } catch { }
+            try { wt = CpuTempWmi.Read(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (!float.IsNaN(wt)) { CpuTemp = wt; TempIsAcpi = false; }
         }
 
@@ -486,7 +486,7 @@ static class Sensors
         int gpid = Games.CurrentPid;
         if (gpid <= 0)
         {
-            try { IntPtr h = Win.GetForegroundWindow(); Win.GetWindowThreadProcessId(h, out gpid); } catch { }
+            try { IntPtr h = Win.GetForegroundWindow(); Win.GetWindowThreadProcessId(h, out gpid); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         try
         {

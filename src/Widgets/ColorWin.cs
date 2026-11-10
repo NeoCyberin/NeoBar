@@ -54,7 +54,7 @@ sealed class ScreenPicker : Form
         {
             ScreenPicker p = new ScreenPicker(pick, end);
             p.Show();
-            try { Win.SetWindowPos(p.Handle, (IntPtr)(-1), 0, 0, 0, 0, 0x0013); } catch { }   // понад усіма, зокрема понад самою панеллю
+            try { Win.SetWindowPos(p.Handle, (IntPtr)(-1), 0, 0, 0, 0, 0x0013); } catch (Exception skipEx) { SbLog.Skip(skipEx); }   // понад усіма, зокрема понад самою панеллю
             p.Activate();
             p.Capture = true;      // жодне клацання не проходить до інших вікон
             Point c = Cursor.Position;

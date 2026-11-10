@@ -64,8 +64,6 @@ static class Fw
     public static readonly string[] ProfNames = { L.T("Домен"), L.T("Приватна"), L.T("Загальна") };
     static readonly string[] ProfNetsh = { "domainprofile", "privateprofile", "publicprofile" };
 
-    [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
-    static extern int SHLoadIndirectString(string src, StringBuilder buf, int size, IntPtr reserved);
 
     // ---------- стан профілів ----------
     // on[i]: увімкнено; managed[i]: керується груповою політикою (змінити тут не вийде)
@@ -92,7 +90,7 @@ static class Fw
                             if (pv is int) { managed[i] = true; on[i] = (int)pv != 0; }
                         }
                     }
-                    catch { }
+                    catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 }
                 return true;
             }
@@ -130,9 +128,9 @@ static class Fw
         try
         {
             StringBuilder sb = new StringBuilder(260);
-            if (SHLoadIndirectString(s, sb, sb.Capacity, IntPtr.Zero) == 0 && sb.Length > 0) return sb.ToString();
+            if (Win.SHLoadIndirectString(s, sb, sb.Capacity, IntPtr.Zero) == 0 && sb.Length > 0) return sb.ToString();
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return s;
     }
 
@@ -240,7 +238,7 @@ static class Fw
                 FwRule r = ParseRule(U(p[1]), U(p[2]));
                 if (r != null) l.Add(r);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (l.Count >= 6000) break;
         }
         return Finish(l);
@@ -318,13 +316,13 @@ static class Fw
         {
             ProcessStartInfo psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "netsh.exe"), args);
             psi.UseShellExecute = false; psi.CreateNoWindow = true; psi.RedirectStandardOutput = true;
-            try { psi.StandardOutputEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage); } catch { }
+            try { psi.StandardOutputEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             StringBuilder sb = new StringBuilder();
             using (Process pr = Process.Start(psi))
             {
                 pr.OutputDataReceived += delegate (object s, DataReceivedEventArgs e) { if (e.Data != null && e.Data.Trim().Length > 0) lock (sb) if (sb.Length < 400) sb.Append(e.Data.Trim()).Append(' '); };
                 pr.BeginOutputReadLine();
-                if (!pr.WaitForExit(30000)) { try { pr.Kill(); } catch { } output = L.T("час очікування вичерпано"); return 1; }
+                if (!pr.WaitForExit(30000)) { try { pr.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } output = L.T("час очікування вичерпано"); return 1; }
                 pr.WaitForExit();
                 lock (sb) output = sb.ToString().Trim();
                 return pr.ExitCode;
@@ -407,7 +405,7 @@ static class Fw
     public static int RunFile(string file, string hash, TextWriter w)
     {
         byte[] raw = File.ReadAllBytes(file);
-        try { File.Delete(file); } catch { }
+        try { File.Delete(file); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (!ElevHash.Same(raw, hash)) { w.WriteLine(L.T("ERR|Файл завдання змінено після створення - нічого не виконано.")); return 1; }
         Exec(Encoding.UTF8.GetString(raw).Split('\n'), w);
         return 0;

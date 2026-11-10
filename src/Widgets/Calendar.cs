@@ -129,7 +129,7 @@ static class Holidays
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static void Save()
@@ -151,7 +151,7 @@ static class Holidays
                 sb.AppendLine("holiday=" + h.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "|" + (h.Yearly ? 1 : 0) + "|" + h.Name.Replace("|", "/").Replace("\n", " "));
             SafeFile.Write(path, sb.ToString(), new UTF8Encoding(true));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Fire();
     }
 
@@ -161,7 +161,7 @@ static class Holidays
     {
         Ver++;
         Action a = Changed;
-        if (a != null) try { a(); } catch { }
+        if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // свята на дату: власні, день народження, державні (з інтернету), світові дні
@@ -383,7 +383,7 @@ sealed partial class ClockWindow
 
     void OnHol()
     {
-        try { if (!IsDisposed) BeginInvoke(new Action(Invalidate)); } catch { }
+        try { if (!IsDisposed) BeginInvoke(new Action(Invalidate)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static string Cap(string s) { return s.Length > 0 ? char.ToUpper(s[0]) + s.Substring(1) : s; }

@@ -44,7 +44,7 @@ static class SafeFile
             File.Copy(tmp, path, true);
             File.Delete(tmp);
         }
-        if ((at & FileAttributes.Hidden) != 0) try { File.SetAttributes(path, FileAttributes.Hidden); } catch { }
+        if ((at & FileAttributes.Hidden) != 0) try { File.SetAttributes(path, FileAttributes.Hidden); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // читання з відкатом на .bak, якщо основний файл зник або порожній (обірваний запис старішою версією)

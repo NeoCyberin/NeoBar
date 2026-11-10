@@ -212,7 +212,7 @@ static class SecLists
         Load();
         long size = -1;
         string sha = "";
-        try { size = new FileInfo(f.Path).Length; sha = ShaOf(f.Path); } catch { }
+        try { size = new FileInfo(f.Path).Length; sha = ShaOf(f.Path); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         List<FixOp> undo;
         string err = SecFix.ApplyRaw(fx, out undo);
         if (err.Length > 0) return err;

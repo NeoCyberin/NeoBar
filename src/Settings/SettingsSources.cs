@@ -56,6 +56,6 @@ sealed partial class SettingsForm
                 if (srcCard != null && !srcCard.IsDisposed) { srcCard.Queue(); srcCard.Invalidate(); }
             }));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 }

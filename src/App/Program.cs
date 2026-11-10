@@ -11,9 +11,9 @@ static class Program
         // запускач «Завжди від імені адміністратора» (копія в Program Files): перевірити теку й запустити панель
         if (args.Length >= 2 && args[0] == "--launch") return AdminTask.LaunchFrom(args[1]);
         // мова інтерфейсу - найперше (і в помічниках: їхній вивід показується у вікнах)
-        try { L.Init(); } catch { }
+        try { L.Init(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         // папка програми для шляхів у налаштуваннях (%NEOBAR_DIR%\links\… - власні копії ярликів)
-        try { Environment.SetEnvironmentVariable("NEOBAR_DIR", AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\', '/')); } catch { }
+        try { Environment.SetEnvironmentVariable("NEOBAR_DIR", AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\', '/')); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         // підвищений помічник (SMART, літера диска, перевірка, оптимізація) - окремий короткий процес
         if (args.Length > 0 && args[0] == "--helper") return Helper.Run(args);
         // помічник перетягування файлів (зі звичайними правами) для NeoBar, запущеної від адміністратора
@@ -24,6 +24,8 @@ static class Program
         }
         // встановлювач перед видаленням програми: прибрати її сліди в системі
         if (args.Length > 0 && args[0] == "--uninstall") return Uninstall.Run();
+        // самоперевірка для збірки на GitHub (без вікон): криптографія, хеші, надійний запис, калькулятор
+        if (args.Length >= 2 && args[0] == "--selftest") return SelfTest.Main(args[1]);
         // встановлювач перед оновленням: тимчасово зняти захист теки (повертається під час наступного запуску з правами)
         if (args.Length > 0 && args[0] == "--unlock") return Elevated.IsAdmin ? (AppLock.Remove(null) ? 0 : 1) : (AdminTask.Helper("unlock") ? 0 : 1);
         // автооновлення: копія програми з тимчасової теки ставить нову версію, поки основна закрита
@@ -36,6 +38,16 @@ static class Program
         }
 
         Win.SetProcessDPIAware();
+        // Multicore JIT: під час запуску методи компілюються наперед у фонових потоках за профілем попереднього
+        // запуску (cache\startup.jit) - панель з'являється швидше
+        try
+        {
+            string jit = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache");
+            System.IO.Directory.CreateDirectory(jit);
+            System.Runtime.ProfileOptimization.SetProfileRoot(jit);
+            System.Runtime.ProfileOptimization.StartProfile("startup.jit");
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         bool restarted = args.Length > 0 && args[0] == "--restarted";
         // «Завжди від імені адміністратора»: звичайний запуск передає роботу завданню з найвищими правами
         if (!restarted && !Elevated.IsAdmin && AdminTask.Wanted())
@@ -61,7 +73,7 @@ static class Program
         if (!created)
         {
             // друга копія не запускається: показуємо вже запущену панель і підказку на ній
-            if (!restarted) try { Win.PostMessage(new IntPtr(0xFFFF), Win.RegisterWindowMessage(NeoBar.RunningMsg), IntPtr.Zero, IntPtr.Zero); } catch { }
+            if (!restarted) try { Win.PostMessage(new IntPtr(0xFFFF), Win.RegisterWindowMessage(NeoBar.RunningMsg), IntPtr.Zero, IntPtr.Zero); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return 0;
         }
         try
@@ -96,12 +108,12 @@ static class Program
                         dontShow = w.DontShow;
                     }
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 // хрестик - вихід; перезапуск від адміністратора - нова копія покаже це вікно ще раз
                 if (!go)
                 {
-                    try { Fps.Stop(); } catch { }
-                    try { mtx.Dispose(); } catch { }
+                    try { Fps.Stop(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                    try { mtx.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     Environment.Exit(0);
                 }
                 if (dontShow) bar.MarkWelcomed();
@@ -111,7 +123,7 @@ static class Program
         }
         finally
         {
-            try { Fps.Stop(); } catch { }
+            try { Fps.Stop(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             mtx.Dispose();
         }
         return 0;
@@ -126,8 +138,8 @@ static class Program
         else { l = NeoBar.DefaultEntries(); Store.Normalize(l); }
         if (c.Welcomed || c.QuickDone) return;
         bool auto = false, ov = true;
-        try { auto = NeoBar.IsAutostart(); } catch { }
-        try { Games.Load(); ov = Games.GenOv; } catch { }
+        try { auto = NeoBar.IsAutostart(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { Games.Load(); ov = Games.GenOv; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         using (QuickSetup q = new QuickSetup(c, l, auto, ov, true))
         {
             q.ShowDialog();
@@ -135,8 +147,8 @@ static class Program
             if (!q.Done) { Store.Save(ini, c, l); return; }
             q.ApplyTo(c, l);
             Store.Save(ini, c, l);
-            if (q.AutoKnown && q.Auto != auto) try { NeoBar.SetAutostart(q.Auto); } catch { }
-            if (q.Overlay != ov) try { Games.Load(); Games.GenOv = q.Overlay; Games.Save(); } catch { }
+            if (q.AutoKnown && q.Auto != auto) try { NeoBar.SetAutostart(q.Auto); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            if (q.Overlay != ov) try { Games.Load(); Games.GenOv = q.Overlay; Games.Save(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 }

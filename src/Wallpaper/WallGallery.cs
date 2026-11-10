@@ -24,7 +24,7 @@ static class WallLib
     public static string Dir(int kind)
     {
         string d = Path.Combine(Root, Sub[Math.Max(0, Math.Min(2, kind))]);
-        try { Directory.CreateDirectory(d); } catch { }
+        try { Directory.CreateDirectory(d); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return d;
     }
 
@@ -50,7 +50,7 @@ static class WallLib
             foreach (string f in Directory.GetFiles(Dir(kind)))
                 if (Accepts(kind, f)) r.Add(f);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         r.Sort(StringComparer.CurrentCultureIgnoreCase);
         return r;
     }
@@ -160,7 +160,7 @@ static class WallThumbs
     static string Key(string file, int w, int h)
     {
         long len = 0, ticks = 0;
-        try { FileInfo fi = new FileInfo(file); len = fi.Length; ticks = fi.LastWriteTimeUtc.Ticks; } catch { }
+        try { FileInfo fi = new FileInfo(file); len = fi.Length; ticks = fi.LastWriteTimeUtc.Ticks; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return file + "|" + w + "x" + h + "|" + len + "|" + ticks;
     }
 
@@ -214,7 +214,7 @@ static class WallThumbs
             catch (Exception ex) { Util.ErrorLog(ex); }
             lock (gate) { cache[job[0]] = bmp; asked.Remove(job[0]); }
             Action r = Ready;
-            if (r != null) { try { r(); } catch { } }
+            if (r != null) { try { r(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         }
     }
 
@@ -230,7 +230,7 @@ static class WallThumbs
                 using (Image im = Image.FromStream(fs, false, false))
                     return Cover(im, w, h);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return ShellThumb(file, w, h);
     }
@@ -281,7 +281,7 @@ static class WallThumbs
             finally { Win.DeleteObject(hb); }
         }
         catch { return null; }
-        finally { if (f != null) { try { Marshal.ReleaseComObject(f); } catch { } } }
+        finally { if (f != null) { try { Marshal.ReleaseComObject(f); } catch (Exception skipEx) { SbLog.Skip(skipEx); } } }
     }
 }
 
@@ -319,7 +319,7 @@ sealed class WallGallery : Control
 
     void OnThumb()
     {
-        try { if (IsHandleCreated && !IsDisposed) BeginInvoke(new Action(delegate { Invalidate(); })); } catch { }
+        try { if (IsHandleCreated && !IsDisposed) BeginInvoke(new Action(delegate { Invalidate(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void SetInfo(string s)
@@ -575,7 +575,7 @@ sealed class WallGallery : Control
                     SetInfo(added.Count > 0 ? L.T("Додано файлів: ") + added.Count : L.T("Нічого не додано: формат не підтримується або файл недоступний"));
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 

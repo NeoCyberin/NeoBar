@@ -17,7 +17,6 @@ static class DropFiles
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern uint DragQueryFile(IntPtr hDrop, uint i, StringBuilder buf, int cch);
     [DllImport("shell32.dll")] static extern void DragFinish(IntPtr hDrop);
     [DllImport("user32.dll", SetLastError = true)] static extern bool ChangeWindowMessageFilter(uint msg, uint flag);
-    [DllImport("user32.dll", SetLastError = true)] static extern bool ChangeWindowMessageFilterEx(IntPtr h, uint msg, uint action, IntPtr info);
     [DllImport("user32.dll", EntryPoint = "GetWindowLongW")] static extern int GetExStyleLong(IntPtr h, int i);
     [DllImport("user32.dll", EntryPoint = "SetWindowLongW")] static extern int SetExStyleLong(IntPtr h, int i, int v);
 
@@ -41,8 +40,8 @@ static class DropFiles
             foreach (uint msg in new uint[] { WM_DROPFILES, 0x4A, 0x49 })            // WM_DROPFILES, WM_COPYDATA, WM_COPYGLOBALDATA
             {
                 bool a = false, b = false;
-                try { a = ChangeWindowMessageFilter(msg, 1); } catch { }
-                try { b = ChangeWindowMessageFilterEx(h, msg, 1, IntPtr.Zero); } catch { }
+                try { a = ChangeWindowMessageFilter(msg, 1); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                try { b = Win.ChangeWindowMessageFilterEx(h, msg, 1, IntPtr.Zero); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 log += "0x" + msg.ToString("X") + (a ? " +" : " -") + (b ? "+" : "-") + "; ";
             }
             DragAcceptFiles(h, true);
@@ -52,7 +51,7 @@ static class DropFiles
             log += "exstyle 0x" + ex.ToString("X");
             SbLog.W(SbLog.Panel, "перетягування файлів (від адміністратора), фільтр UIPI: " + log);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         DropBridge.Add(c);          // основний шлях: помічник зі звичайними правами (WM_DROPFILES від Провідника UIPI зазвичай не пропускає)
     }
 
@@ -70,8 +69,8 @@ static class DropFiles
                 if (DragQueryFile(m.WParam, i, sb, sb.Capacity) > 0) r.Add(sb.ToString());
             }
         }
-        catch { }
-        try { DragFinish(m.WParam); } catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { DragFinish(m.WParam); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return r.ToArray();
     }
 }

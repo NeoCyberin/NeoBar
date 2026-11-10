@@ -97,7 +97,7 @@ sealed partial class NetWindow
                     string t = Elevated.ReadOut(f, out done);
                     if (done) { text = t; break; }
                 }
-                try { File.Delete(f); } catch { }
+                try { File.Delete(f); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 if (text == null) err = L.T("Помічник не відповів.");
             }
             List<FwRule> l = text != null ? Fw.ParseDump(text) : null;

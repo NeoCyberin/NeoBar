@@ -51,7 +51,7 @@ static class SecScan
     public static DateTime LastAt = DateTime.MinValue;
     public static event Action Changed;
 
-    static void Fire() { Action a = Changed; if (a != null) try { a(); } catch { } }
+    static void Fire() { Action a = Changed; if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
     // підсумок: скільки «підозріло» і «варто перевірити»
     public static void Count(out int bad, out int warn)
@@ -212,28 +212,19 @@ static class SecScan
     [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint pid);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool Process32FirstW(IntPtr h, ref PROCESSENTRY32W e);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool Process32NextW(IntPtr h, ref PROCESSENTRY32W e);
-    [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
-    [DllImport("kernel32.dll")] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool QueryFullProcessImageNameW(IntPtr h, int flags, StringBuilder sb, ref int size);
     [DllImport("kernel32.dll")] static extern bool GetProcessTimes(IntPtr h, out long create, out long exit, out long kernel, out long user);
-    [DllImport("ntdll.dll")] static extern int NtQueryInformationProcess(IntPtr h, int cls, IntPtr buf, int len, out int ret);
-    [DllImport("iphlpapi.dll")] static extern uint GetExtendedTcpTable(IntPtr buf, ref int size, bool sort, int af, int cls, int reserved);
-    delegate bool EnumProc(IntPtr h, IntPtr l);
-    [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc cb, IntPtr l);
-    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
-    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
 
     sealed class PInfo { public uint Pid, Parent; public string Name = "", Path = "", Cmd = ""; public long Created; }
 
     static string CmdLine(IntPtr h)
     {
         int need;
-        NtQueryInformationProcess(h, 60, IntPtr.Zero, 0, out need);          // ProcessCommandLineInformation (Windows 8.1+)
+        Win.NtQueryInformationProcess(h, 60, IntPtr.Zero, 0, out need);          // ProcessCommandLineInformation (Windows 8.1+)
         if (need <= 0 || need > 1 << 20) return "";
         IntPtr buf = Marshal.AllocHGlobal(need);
         try
         {
-            if (NtQueryInformationProcess(h, 60, buf, need, out need) != 0) return "";
+            if (Win.NtQueryInformationProcess(h, 60, buf, need, out need) != 0) return "";
             int len = Marshal.ReadInt16(buf);
             IntPtr s = Marshal.ReadIntPtr(buf, IntPtr.Size == 8 ? 8 : 4);
             return len > 0 && s != IntPtr.Zero ? Marshal.PtrToStringUni(s, len / 2) : "";
@@ -259,7 +250,7 @@ static class SecScan
                 r.Add(p);
             } while (Process32NextW(snap, ref e));
         }
-        finally { CloseHandle(snap); }
+        finally { Win.CloseHandle(snap); }
         return r;
     }
 
@@ -269,12 +260,12 @@ static class SecScan
         foreach (int af in new int[] { 2, 23 })
         {
             int size = 0;
-            GetExtendedTcpTable(IntPtr.Zero, ref size, false, af, 5, 0);       // TCP_TABLE_OWNER_PID_ALL
+            Win.GetExtendedTcpTable(IntPtr.Zero, ref size, false, af, 5, 0);       // TCP_TABLE_OWNER_PID_ALL
             if (size <= 0) continue;
             IntPtr buf = Marshal.AllocHGlobal(size);
             try
             {
-                if (GetExtendedTcpTable(buf, ref size, false, af, 5, 0) != 0) continue;
+                if (Win.GetExtendedTcpTable(buf, ref size, false, af, 5, 0) != 0) continue;
                 int n = Marshal.ReadInt32(buf), rs = af == 2 ? 24 : 56;
                 for (int i = 0; i < n; i++)
                 {
@@ -334,29 +325,29 @@ static class SecScan
         {
             byPid[p.Pid] = p;
             if (p.Pid == 0 || p.Pid == 4) continue;
-            IntPtr h = OpenProcess(0x1000, false, p.Pid);        // PROCESS_QUERY_LIMITED_INFORMATION - як у Диспетчера завдань, пам'ять не читається
+            IntPtr h = Win.OpenProcess(0x1000, false, p.Pid);        // PROCESS_QUERY_LIMITED_INFORMATION - як у Диспетчера завдань, пам'ять не читається
             if (h == IntPtr.Zero) continue;
             try
             {
                 StringBuilder sb = new StringBuilder(1024);
                 int n = sb.Capacity;
-                if (QueryFullProcessImageNameW(h, 0, sb, ref n)) p.Path = sb.ToString();
+                if (Win.QueryFullProcessImageNameW(h, 0, sb, ref n)) p.Path = sb.ToString();
                 long c, x, k, u;
                 if (GetProcessTimes(h, out c, out x, out k, out u)) p.Created = c;
                 p.Cmd = CmdLine(h);
             }
-            finally { CloseHandle(h); }
+            finally { Win.CloseHandle(h); }
         }
         HashSet<uint> visible = new HashSet<uint>();
         try
         {
-            EnumWindows(delegate (IntPtr w, IntPtr l)
+            Win.EnumWindows(delegate (IntPtr w, IntPtr l)
             {
-                if (IsWindowVisible(w)) { uint pid; GetWindowThreadProcessId(w, out pid); visible.Add(pid); }
+                if (Win.IsWindowVisible(w)) { uint pid; Win.GetWindowThreadProcessId(w, out pid); visible.Add(pid); }
                 return true;
             }, IntPtr.Zero);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Dictionary<uint, int[]> net = new Dictionary<uint, int[]>();
         List<KeyValuePair<int, uint>> listens = new List<KeyValuePair<int, uint>>();
         try { Tcp(net, listens); } catch (Exception ex) { Util.ErrorLog(ex); }
@@ -588,7 +579,7 @@ static class SecScan
         if (Stop) return r;
         try { Tasks(r); } catch (Exception ex) { Util.ErrorLog(ex); }
         try { Winlogon(r); } catch (Exception ex) { Util.ErrorLog(ex); }
-        try { Wmi(r); } catch { }
+        try { Wmi(r); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return r;
     }
 
@@ -629,7 +620,7 @@ static class SecScan
                 bool enabled = task.Enabled;
                 dynamic def = task.Definition;
                 bool hidden = false;
-                try { hidden = def.Settings.Hidden; } catch { }
+                try { hidden = def.Settings.Hidden; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 foreach (dynamic a in def.Actions)
                 {
                     int type = a.Type;
@@ -650,7 +641,7 @@ static class SecScan
                     break;
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         foreach (dynamic sub in folder.GetFolders(0)) WalkTasks((object)sub, r, depth + 1);
     }
@@ -735,7 +726,7 @@ static class SecScan
                 {
                     f.Cmd = cls.StartsWith("Command") ? (string)o.Properties_.Item("CommandLineTemplate").Value : L.T("скрипт ") + (string)o.Properties_.Item("ScriptingEngine").Value;
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 f.Add(5, L.T("Постійна підписка WMI запускає ") + (cls.StartsWith("Command") ? L.T("команду") : L.T("скрипт")) + L.T(" за подією системи. Звичайні програми так майже не роблять; це відомий спосіб прихованого автозапуску."));
                 f.Score += SecHeur.CmdRisk(f.Cmd, f.Why);
                 r.Add(f);
@@ -743,12 +734,11 @@ static class SecScan
     }
 
     // ---------- служби й драйвери ----------
-    [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)] static extern int SHLoadIndirectString(string src, StringBuilder outBuf, int cch, IntPtr reserved);
 
     static string Indirect(string s)
     {
         if (string.IsNullOrEmpty(s) || s[0] != '@') return s ?? "";
-        try { StringBuilder b = new StringBuilder(512); if (SHLoadIndirectString(s, b, b.Capacity, IntPtr.Zero) == 0) return b.ToString(); } catch { }
+        try { StringBuilder b = new StringBuilder(512); if (Win.SHLoadIndirectString(s, b, b.Capacity, IntPtr.Zero) == 0) return b.ToString(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return "";
     }
 
@@ -805,7 +795,7 @@ static class SecScan
                             if (wf || wd)
                             {
                                 Fix fx = null;
-                                try { fx = SecFix.StripWrite(wf ? target : Path.GetDirectoryName(target), !wf); } catch { }
+                                try { fx = SecFix.StripWrite(wf ? target : Path.GetDirectoryName(target), !wf); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                                 if (fx != null)
                                 {
                                     fx.Button = L.T("Закрити запис");
@@ -830,7 +820,7 @@ static class SecScan
                             if (File.Exists(exe))
                             {
                                 bool expand = false;
-                                try { expand = k.GetValueKind("ImagePath") == RegistryValueKind.ExpandString; } catch { }
+                                try { expand = k.GetValueKind("ImagePath") == RegistryValueKind.ExpandString; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                                 Fix fx = new Fix().Reg(true, @"SYSTEM\CurrentControlSet\Services\" + name, "ImagePath", expand ? "expand" : "sz", "\"" + exe + "\"" + (args.Length > 0 ? " " + args : ""));
                                 fx.Button = L.T("Взяти шлях у лапки");
                                 fx.Confirm = L.T("Шлях до файла служби буде записано в лапках:\n\"") + exe + "\"" + (args.Length > 0 ? " " + args : "") + L.T("\nСлужба працюватиме так само. Діє з наступного запуску служби.");
@@ -855,7 +845,7 @@ static class SecScan
                         r.Add(f);
                     }
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
         }
         return r;
@@ -966,7 +956,7 @@ static class SecScan
                         }
                     }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             // брандмауер
             {
                 Finding f = Check(r, L.T("Брандмауер"));
@@ -1095,7 +1085,7 @@ static class SecScan
                         else if (days > 45) f.Add(1, L.T("Оновлення не встановлювалися понад півтора місяця."));
                     }
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 if (f.Score > 0) f.Links.Add(new string[] { "Windows Update", "ms-settings:windowsupdate" });
                 f.Ok = f.Score == 0;
             }
@@ -1151,7 +1141,7 @@ static class SecScan
                 f.Ok = f.Score == 0;
                 if (f.Ok && f.Why.Count == 0) f.Why.Add(L.T("Без підозрілих записів."));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             // проксі
             {
                 Finding f = Check(r, L.T("Проксі для браузерів"));

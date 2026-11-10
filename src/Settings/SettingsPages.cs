@@ -304,7 +304,7 @@ sealed partial class SettingsForm
             using (InstalledFontCollection ifc = new InstalledFontCollection())
                 foreach (FontFamily ff in ifc.Families) cbFont.Items.Add(ff.Name);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         k.Row(L.T("Шрифт"), "", cbFont);
         cbFontStyle = Cb(180, L.T("Звичайний"), L.T("Жирний"), L.T("Курсив"), L.T("Жирний курсив"));
         k.Row(L.T("Стиль"), "", cbFontStyle);
@@ -481,7 +481,7 @@ sealed partial class SettingsForm
                     ShowMapText();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -515,7 +515,7 @@ sealed partial class SettingsForm
                     lMap.Text += "  (" + src + ")";
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -564,7 +564,7 @@ sealed partial class SettingsForm
                         else SbDialog.Show(owner, this, L.T("Оновлення"), msg, L.T("Гаразд"));
                     }));
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             });
         });
         k.Row(L.T("Перевірити оновлення"), L.F("Поточна версія: {0}", Updater.CurrentText), bu);
@@ -589,8 +589,8 @@ sealed partial class SettingsForm
             Bt(L.T("Очистити"), "g:trash", 110, delegate { SbLog.Clear(); k.Invalidate(); }));
         SRow re = k.Row(L.T("Журнал помилок"), "",
             Bt("Відкрити", "g:open", 110, delegate { OpenErrorLog(); }),
-            Bt(L.T("Очистити"), "g:trash", 110, delegate { try { File.Delete(ErrPath); } catch { } k.Invalidate(); RunDiag(); }));
-        re.DescFn = delegate { long n = 0; try { if (File.Exists(ErrPath)) n = new FileInfo(ErrPath).Length; } catch { } return L.T("Записується завжди. Надішліть його разом з описом проблеми  ·  ") + SizeText(n); };
+            Bt(L.T("Очистити"), "g:trash", 110, delegate { try { File.Delete(ErrPath); } catch (Exception skipEx) { SbLog.Skip(skipEx); } k.Invalidate(); RunDiag(); }));
+        re.DescFn = delegate { long n = 0; try { if (File.Exists(ErrPath)) n = new FileInfo(ErrPath).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); } return L.T("Записується завжди. Надішліть його разом з описом проблеми  ·  ") + SizeText(n); };
 
         h.Arrange = delegate (Rectangle r)
         {
@@ -614,13 +614,13 @@ sealed partial class SettingsForm
 
     static void OpenDir(string d, bool create)
     {
-        try { if (create) Directory.CreateDirectory(d); using (Process.Start("explorer.exe", "\"" + d + "\"")) { } } catch { }
+        try { if (create) Directory.CreateDirectory(d); using (Process.Start("explorer.exe", "\"" + d + "\"")) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void OpenErrorLog()
     {
         if (!File.Exists(ErrPath)) { SbDialog.Show(owner, this, L.T("Журнал помилок"), L.T("Помилок не записано - журнал порожній."), L.T("Гаразд")); return; }
-        try { using (Process.Start("notepad.exe", "\"" + ErrPath + "\"")) { } } catch { }
+        try { using (Process.Start("notepad.exe", "\"" + ErrPath + "\"")) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void OpenQuick()
@@ -668,7 +668,7 @@ sealed partial class SettingsForm
         Util.Bg(delegate
         {
             List<CheckItem> l = null;
-            try { l = SysCheck.Collect(owner, this, true, delegate { RunDiag(); }); } catch { }
+            try { l = SysCheck.Collect(owner, this, true, delegate { RunDiag(); }); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             try { BeginInvoke(new Action(delegate { diagBusy = false; if (!IsDisposed) diag.SetItems(l); })); } catch { diagBusy = false; }
         });
     }

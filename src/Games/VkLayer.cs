@@ -55,7 +55,7 @@ static class VkLayer
 
     public static void Shutdown()
     {
-        try { if (on) Remove(true); } catch { }
+        try { if (on) Remove(true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // гра з античітом, якій NeoBar не дозволено торкатися, зараз працює
@@ -78,7 +78,7 @@ static class VkLayer
             foreach (Process p in all)
             {
                 string n = "";
-                try { n = p.ProcessName.ToLowerInvariant(); } catch { }
+                try { n = p.ProcessName.ToLowerInvariant(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 if (n.Length > 0 && Array.IndexOf(GameAcProcesses, n) >= 0) return L.T("служба ") + n;
                 if (risky.Count == 0) continue;
                 string exe;
@@ -124,7 +124,7 @@ static class VkLayer
                 using (RegistryKey k = b.CreateSubKey(RegPath))
                 { k.SetValue(it[0], 0, RegistryValueKind.DWord); ok = true; }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (!ok)
                 try
                 {
@@ -132,7 +132,7 @@ static class VkLayer
                     using (RegistryKey k = b.CreateSubKey(RegPath))
                     { k.SetValue(it[0], 0, RegistryValueKind.DWord); ok = true; }
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (ok) { manifests.Add(it[0] + "|" + it[2]); any = true; }
         }
         if (!any) return admin ? L.T("Не вдалося записати шар у реєстр.") : L.T("Потрібні права адміністратора (запустіть NeoBar від імені адміністратора).");
@@ -155,8 +155,8 @@ static class VkLayer
                     using (RegistryKey k = b.OpenSubKey(RegPath, true))
                         if (k != null && k.GetValue(json) != null) k.DeleteValue(json, false);
                 }
-                catch { }
-            try { if (File.Exists(json)) File.Delete(json); } catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { if (File.Exists(json)) File.Delete(json); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         manifests.Clear();
         on = false;

@@ -56,7 +56,7 @@ static class GameWrap
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return false;
     }
 
@@ -78,7 +78,7 @@ static class GameWrap
                 string kind = name == "d3d8.dll" ? "d3d8" : name == "ddraw.dll" ? "ddraw" : "";
                 if (kind.Length > 0 && File.Exists(SrcPath(kind)) && new FileInfo(f).Length == new FileInfo(SrcPath(kind)).Length && HashOf(f) == HashOf(SrcPath(kind))) continue;      // наш файл
                 string t = "";
-                try { System.Diagnostics.FileVersionInfo v = System.Diagnostics.FileVersionInfo.GetVersionInfo(f); t = (v.ProductName + " " + v.FileDescription + " " + v.CompanyName + " " + v.InternalName + " " + v.Comments).ToLowerInvariant(); } catch { }
+                try { System.Diagnostics.FileVersionInfo v = System.Diagnostics.FileVersionInfo.GetVersionInfo(f); t = (v.ProductName + " " + v.FileDescription + " " + v.CompanyName + " " + v.InternalName + " " + v.Comments).ToLowerInvariant(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 foreach (string k in wrapKeys)
                     if (t.Contains(k))
                     {
@@ -90,7 +90,7 @@ static class GameWrap
                 if (r.Length > 0) break;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         foreignCache[ckey] = new KeyValuePair<DateTime, string>(DateTime.Now, r);
         return r;
     }
@@ -193,7 +193,7 @@ static class GameWrap
                 if (File.Exists(ini) && File.ReadAllText(ini).StartsWith(IniMark)) File.Delete(ini);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static string Remove(Game g, string api)
@@ -208,7 +208,7 @@ static class GameWrap
             if (k == "ddraw")
             {
                 string ini = Path.Combine(Path.GetDirectoryName(t), "ddraw.ini");
-                try { if (File.Exists(ini) && File.ReadAllText(ini).StartsWith(IniMark)) File.Delete(ini); } catch { }
+                try { if (File.Exists(ini) && File.ReadAllText(ini).StartsWith(IniMark)) File.Delete(ini); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
             return "";
         }
@@ -290,7 +290,7 @@ static class GameWrap
                 else g.WrapRetry = DateTime.Now.AddMinutes(10);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static void SyncAll() { foreach (Game g in Games.List) Sync(g); }

@@ -129,7 +129,7 @@ sealed class CryptWindow : ToolWindow
                     Invalidate();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         t.IsBackground = true;
         t.Priority = ThreadPriority.BelowNormal;
@@ -149,7 +149,7 @@ sealed class CryptWindow : ToolWindow
             if (have) continue;
             FItem it = new FItem();
             it.Path = p;
-            try { it.Size = new FileInfo(p).Length; } catch { }
+            try { it.Size = new FileInfo(p).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             files.Add(it);
         }
         fMsg = "";
@@ -303,7 +303,7 @@ sealed class CryptWindow : ToolWindow
                     Invalidate();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         t.IsBackground = true;
         t.Start();
@@ -509,7 +509,7 @@ sealed class CryptWindow : ToolWindow
                     Invalidate();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         t.IsBackground = true;
         t.Priority = ThreadPriority.BelowNormal;

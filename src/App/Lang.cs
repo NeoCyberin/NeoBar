@@ -73,7 +73,7 @@ static class L
                 foreach (string l in System.IO.File.ReadAllLines(CfgFile, Encoding.UTF8))
                     if (l.StartsWith("lang=")) return l.Substring(5).Trim();
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return "";
     }
 
@@ -179,7 +179,7 @@ static class L
                     if (at >= 0) l[at] = li; else l.Add(li);
                 }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return l;
     }
 

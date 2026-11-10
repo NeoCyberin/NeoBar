@@ -110,7 +110,7 @@ static class Ctl
     // заокруглені кути випадних вікон (Windows 11; на старіших тихо ігнорується)
     public static void RoundPopup(IntPtr h)
     {
-        try { int v = FormTheme.Square ? 1 : 3; Win.DwmSetWindowAttribute(h, 33, ref v, 4); } catch { }
+        try { int v = FormTheme.Square ? 1 : 3; Win.DwmSetWindowAttribute(h, 33, ref v, 4); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 }
 
@@ -293,7 +293,7 @@ sealed class SToggle : CheckBox, ISelfPaint
             g.TranslateTransform(-Left, -Top);
             card.PaintBehind(g, new Rectangle(Left, Top, Width, Height));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         finally { g.Restore(st); }
     }
 
@@ -559,7 +559,7 @@ sealed class SCombo : Control, ISelfPaint
             closedAt = DateTime.Now;
             Invalidate();
             EventHandler h = DropDownClosed; if (h != null) h(this, EventArgs.Empty);
-            BeginInvoke(new Action(delegate { try { me.Dispose(); } catch { } }));
+            BeginInvoke(new Action(delegate { try { me.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }));
             if (CanFocus) Focus();
         };
         dropped = true;

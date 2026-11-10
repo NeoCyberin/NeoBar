@@ -15,7 +15,7 @@ sealed class NotesWindow : SbWindow
         Notes.Changed += OnData;
     }
 
-    void OnData() { try { if (!IsDisposed) BeginInvoke(new Action(Invalidate)); } catch { } }
+    void OnData() { try { if (!IsDisposed) BeginInvoke(new Action(Invalidate)); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {

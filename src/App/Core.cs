@@ -631,7 +631,7 @@ static class Store
                 if (e.Kind == Kind.Item && s.StartsWith(Util.LinksRef, StringComparison.OrdinalIgnoreCase) && !r.Contains(s)) r.Add(s);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return r;
     }
 
@@ -654,7 +654,7 @@ static class Store
                 if (!list.Exists(delegate (Entry x) { return x.Kind == Kind.Item && string.Equals((x.Target ?? "").Trim(), s, StringComparison.OrdinalIgnoreCase); }))
                     Util.DeleteLinkIfUnused(s);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static List<string> IconRefs(string path)
@@ -672,7 +672,7 @@ static class Store
                 if (s.Length > 0 && !r.Contains(s)) r.Add(s);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return r;
     }
 
@@ -788,7 +788,7 @@ static class Store
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             if (isIni)
             {
-                try { if (File.Exists(full)) File.Copy(full, full + ".bak", true); } catch { }
+                try { if (File.Exists(full)) File.Copy(full, full + ".bak", true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 iniDone = true;
             }
             File.WriteAllBytes(full, data);

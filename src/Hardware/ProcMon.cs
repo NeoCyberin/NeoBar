@@ -62,10 +62,6 @@ static class ProcMon
     static int bufLen;
 
     [DllImport("ntdll.dll")] static extern int NtQuerySystemInformation(int cls, IntPtr buf, int len, out int ret);
-    [DllImport("ntdll.dll")] static extern int NtQueryInformationProcess(IntPtr h, int cls, IntPtr b, int len, out int ret);
-    [DllImport("kernel32.dll")] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
-    [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool QueryFullProcessImageNameW(IntPtr h, int flags, StringBuilder sb, ref int size);
 
     // ---------- цифровий підпис - лише для вибраного процесу, у фоні ----------
     public sealed class SigInfo
@@ -91,7 +87,7 @@ static class ProcMon
         ThreadPool.QueueUserWorkItem(delegate
         {
             try { string sg = ""; ss.Kind = File.Exists(path) ? Sig.Check(path, out sg) : Sig.Unknown; ss.Signer = sg ?? ""; }     // з каталогами Windows
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             ss.Done = true;
         });
         return s;
@@ -230,7 +226,7 @@ static class ProcMon
                         else { r.NetListen = 0; r.NetEst = 0; }
                     }
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
 
             // процеси з видимими вікнами (лише список вікон - у процеси нічого не відкривається)
@@ -250,25 +246,19 @@ static class ProcMon
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
 
-    delegate bool EnumProc(IntPtr h, IntPtr l);
-    [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc cb, IntPtr l);
-    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
-    [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr h, uint cmd);
     [DllImport("user32.dll")] static extern int GetWindowTextLength(IntPtr h);
-    [DllImport("user32.dll", EntryPoint = "GetWindowLongW")] static extern int GetWindowLong(IntPtr h, int i);
-    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
     [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr h, int attr, out int val, int size);
     static HashSet<int> winSet;
-    static readonly EnumProc winCb = WinCb;
+    static readonly Win.EnumWindowsProc winCb = WinCb;
 
     static bool WinCb(IntPtr h, IntPtr l)
     {
-        if (!IsWindowVisible(h) || GetWindow(h, 4) != IntPtr.Zero || GetWindowTextLength(h) == 0) return true;      // власник - діалог чи спливне вікно
-        if ((GetWindowLong(h, -20) & 0x80) != 0) return true;                                                        // WS_EX_TOOLWINDOW
+        if (!Win.IsWindowVisible(h) || Win.GetWindow(h, 4) != IntPtr.Zero || GetWindowTextLength(h) == 0) return true;      // власник - діалог чи спливне вікно
+        if ((Win.GetWindowLong(h, -20) & 0x80) != 0) return true;                                                        // WS_EX_TOOLWINDOW
         int cloaked;
         if (DwmGetWindowAttribute(h, 14, out cloaked, 4) == 0 && cloaked != 0) return true;                           // приховане (інший робочий стіл, UWP)
         uint pid;
-        GetWindowThreadProcessId(h, out pid);
+        Win.GetWindowThreadProcessId(h, out pid);
         if (pid != 0) winSet.Add((int)pid);
         return true;
     }
@@ -276,7 +266,7 @@ static class ProcMon
     static HashSet<int> Windows()
     {
         winSet = new HashSet<int>();
-        try { EnumWindows(winCb, IntPtr.Zero); } catch { }
+        try { Win.EnumWindows(winCb, IntPtr.Zero); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return winSet;
     }
 
@@ -286,10 +276,8 @@ static class ProcMon
     // ---------- служби (лише список від диспетчера служб; у процеси нічого не відкривається) ----------
     [StructLayout(LayoutKind.Sequential)]
     struct ESSP { public IntPtr Name, Display; public int Type, State, Accepted, Exit, SExit, Check, Wait, Pid, Flags; }
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern IntPtr OpenSCManager(string machine, string db, uint access);
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     static extern bool EnumServicesStatusEx(IntPtr scm, int level, uint type, uint state, IntPtr buf, int size, out int need, out int count, ref int resume, string group);
-    [DllImport("advapi32.dll")] static extern bool CloseServiceHandle(IntPtr h);
     static Dictionary<int, List<SvcInfo>> svcByPid = new Dictionary<int, List<SvcInfo>>();
     static DateTime svcAt = DateTime.MinValue, runAt = DateTime.MinValue;
 
@@ -299,7 +287,7 @@ static class ProcMon
     {
         svcAt = DateTime.UtcNow;
         Dictionary<int, List<SvcInfo>> map = new Dictionary<int, List<SvcInfo>>();
-        IntPtr scm = OpenSCManager(null, null, 0x0005);              // CONNECT | ENUMERATE_SERVICE
+        IntPtr scm = Win.OpenSCManager(null, null, 0x0005);              // CONNECT | ENUMERATE_SERVICE
         if (scm == IntPtr.Zero) return;
         IntPtr b = IntPtr.Zero;
         try
@@ -331,7 +319,7 @@ static class ProcMon
         finally
         {
             if (b != IntPtr.Zero) Marshal.FreeHGlobal(b);
-            CloseServiceHandle(scm);
+            Win.CloseServiceHandle(scm);
         }
     }
 
@@ -364,7 +352,7 @@ static class ProcMon
                     }
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         runMap = m;
     }
@@ -448,27 +436,27 @@ static class ProcMon
 
     static void Details(ProcRow r)
     {
-        IntPtr h = OpenProcess(0x1000, false, (uint)r.Pid);          // PROCESS_QUERY_LIMITED_INFORMATION, як у Диспетчера завдань
+        IntPtr h = Win.OpenProcess(0x1000, false, (uint)r.Pid);          // PROCESS_QUERY_LIMITED_INFORMATION, як у Диспетчера завдань
         if (h == IntPtr.Zero) return;
         try
         {
             StringBuilder sb = new StringBuilder(1024);
             int n = sb.Capacity;
-            if (QueryFullProcessImageNameW(h, 0, sb, ref n)) r.Path = sb.ToString();
+            if (Win.QueryFullProcessImageNameW(h, 0, sb, ref n)) r.Path = sb.ToString();
             r.Cmd = CmdLine(h);
         }
-        finally { CloseHandle(h); }
+        finally { Win.CloseHandle(h); }
     }
 
     static string CmdLine(IntPtr h)
     {
         int need;
-        NtQueryInformationProcess(h, 60, IntPtr.Zero, 0, out need);          // ProcessCommandLineInformation (Windows 8.1+)
+        Win.NtQueryInformationProcess(h, 60, IntPtr.Zero, 0, out need);          // ProcessCommandLineInformation (Windows 8.1+)
         if (need <= 0 || need > 1 << 20) return "";
         IntPtr b = Marshal.AllocHGlobal(need);
         try
         {
-            if (NtQueryInformationProcess(h, 60, b, need, out need) != 0) return "";
+            if (Win.NtQueryInformationProcess(h, 60, b, need, out need) != 0) return "";
             int len = (ushort)Marshal.ReadInt16(b);
             IntPtr s = Marshal.ReadIntPtr(b, 8);
             return len > 0 && s != IntPtr.Zero ? Marshal.PtrToStringUni(s, len / 2) : "";
@@ -496,7 +484,7 @@ static class ProcMon
     public static List<SvcInfo> AllServices()
     {
         List<SvcInfo> r = new List<SvcInfo>();
-        IntPtr scm = OpenSCManager(null, null, 0x0005);
+        IntPtr scm = Win.OpenSCManager(null, null, 0x0005);
         if (scm == IntPtr.Zero) return r;
         IntPtr b = IntPtr.Zero;
         try
@@ -525,7 +513,7 @@ static class ProcMon
         finally
         {
             if (b != IntPtr.Zero) Marshal.FreeHGlobal(b);
-            CloseServiceHandle(scm);
+            Win.CloseServiceHandle(scm);
         }
         return r;
     }

@@ -90,7 +90,7 @@ sealed partial class NetWindow
                         string t = Elevated.ReadOut(f, out done);
                         if (done) { text = t; break; }
                     }
-                    try { File.Delete(f); } catch { }
+                    try { File.Delete(f); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     if (text == null && id == runId) err = L.T("Помічник не відповів.");
                 }
             }
@@ -144,7 +144,7 @@ sealed partial class NetWindow
         Util.Bg(delegate
         {
             IPAddress ip = null;
-            try { ip = Resolve(host); } catch { }
+            try { ip = Resolve(host); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (ip == null) { Add(id, L.T("Не вдалося знайти адресу «") + host + L.Q("»"), "bad"); Finish(id); return; }
             Add(id, L.T("Адреса: ") + ip, "");
             int n = ports.Length;
@@ -221,11 +221,11 @@ sealed partial class NetWindow
                                         System.Threading.Tasks.Task<string> tk = System.Threading.Tasks.Task<string>.Factory.StartNew(delegate { try { return Dns.GetHostEntry(ip).HostName; } catch { return ""; } });
                                         if (tk.Wait(1200)) nm = tk.Result;
                                     }
-                                    catch { }
+                                    catch (Exception skipEx) { SbLog.Skip(skipEx); }
                                     lock (lk) { found[a] = rp.RoundtripTime; names[a] = nm; }
                                 }
                             }
-                            catch { }
+                            catch (Exception skipEx) { SbLog.Skip(skipEx); }
                             Interlocked.Increment(ref doneN);
                         }
                 });

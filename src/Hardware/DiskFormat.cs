@@ -18,11 +18,6 @@ using Microsoft.Win32.SafeHandles;
 // ======================================================================
 static class DiskFormat
 {
-    [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr VirtualAlloc(IntPtr a, UIntPtr size, uint type, uint prot);
-    [DllImport("kernel32.dll", SetLastError = true)] static extern bool VirtualFree(IntPtr a, UIntPtr size, uint type);
-    [DllImport("kernel32.dll", SetLastError = true)] static extern bool WriteFile(SafeFileHandle h, IntPtr buf, int n, out int done, IntPtr ovl);
-    [DllImport("kernel32.dll", SetLastError = true)] static extern bool SetFilePointerEx(SafeFileHandle h, long dist, out long np, int method);
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool GetDiskFreeSpace(string root, out uint spc, out uint bps, out uint free, out uint total);
 
     // поточний розмір кластера тому в байтах (0 - не вдалося визначити)
     public static int ClusterOf(string root)
@@ -31,9 +26,9 @@ static class DiskFormat
         {
             if (string.IsNullOrEmpty(root)) return 0;
             uint a, b, c, d;
-            if (GetDiskFreeSpace(root.EndsWith("\\") ? root : root + "\\", out a, out b, out c, out d)) return (int)Math.Min(int.MaxValue, (long)a * b);
+            if (Win.GetDiskFreeSpace(root.EndsWith("\\") ? root : root + "\\", out a, out b, out c, out d)) return (int)Math.Min(int.MaxValue, (long)a * b);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return 0;
     }
 
@@ -96,7 +91,7 @@ static class DiskFormat
         string why = Forbidden(letter);
         if (why.Length > 0) { w.WriteLine(why); return 1; }
         string label = "";
-        try { label = SafeLabel(Encoding.UTF8.GetString(Convert.FromBase64String(labelB64)), fs); } catch { }
+        try { label = SafeLabel(Encoding.UTF8.GetString(Convert.FromBase64String(labelB64)), fs); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         int cl;
         if (!int.TryParse(cluster, out cl) || cl < 512 || cl > (32 << 20) || (cl & (cl - 1)) != 0) cl = 0;       // лише степені двійки; 0 - вибір Windows
         if (mode == "full")
@@ -173,7 +168,7 @@ static class DiskFormat
                 string err;
                 Fat32Fmt.Plan plan = Fat32Fmt.MakePlan(len, bps, cluster, out err);
                 if (plan == null) { w.WriteLine(err); return 1; }
-                buf = VirtualAlloc(IntPtr.Zero, (UIntPtr)(Block + 4096), 0x3000, 0x04);
+                buf = Win.VirtualAlloc(IntPtr.Zero, (UIntPtr)(Block + 4096), 0x3000, 0x04);
                 if (buf == IntPtr.Zero) { w.WriteLine(L.T("Немає пам'яті.")); return 1; }
                 string fail = null;
                 Fat32Fmt.WriteAt wr = delegate (long off, byte[] b, int n)
@@ -181,7 +176,7 @@ static class DiskFormat
                     if (fail != null) return;
                     Marshal.Copy(b, 0, buf, n);
                     long np; int done;
-                    if (!SetFilePointerEx(h, off, out np, 0) || !WriteFile(h, buf, n, out done, IntPtr.Zero) || done != n) fail = L.T("Помилка запису на диск (код ") + Marshal.GetLastWin32Error() + L.T(") за зсувом ") + off + ".";
+                    if (!Win.SetFilePointerEx(h, off, out np, 0) || !Win.WriteFile(h, buf, n, out done, IntPtr.Zero) || done != n) fail = L.T("Помилка запису на диск (код ") + Marshal.GetLastWin32Error() + L.T(") за зсувом ") + off + ".";
                 };
                 Fat32Fmt.Format(wr, plan, hidden, Fat32Fmt.LabelOf(label), delegate (string s) { w.WriteLine(s); });
                 if (fail != null) { w.WriteLine(fail); return 1; }
@@ -192,7 +187,7 @@ static class DiskFormat
             return 0;
         }
         catch (Exception ex) { w.WriteLine(ex.Message); return 1; }
-        finally { if (buf != IntPtr.Zero) VirtualFree(buf, UIntPtr.Zero, 0x8000); }
+        finally { if (buf != IntPtr.Zero) Win.VirtualFree(buf, UIntPtr.Zero, 0x8000); }
     }
 
     // запис нулями по всьому тому; 0 - готово, 1 - помилка, 2 - зупинено
@@ -209,7 +204,7 @@ static class DiskFormat
                 byte[] li = Io.Ioctl(h, 0x7405C, null, 8);                       // IOCTL_DISK_GET_LENGTH_INFO
                 long len = li != null && li.Length >= 8 ? BitConverter.ToInt64(li, 0) : 0;
                 if (len <= 0) { w.WriteLine(L.T("Не вдалося визначити розмір тому.")); return 1; }
-                buf = VirtualAlloc(IntPtr.Zero, (UIntPtr)Block, 0x3000, 0x04);   // обнулена й вирівняна пам'ять
+                buf = Win.VirtualAlloc(IntPtr.Zero, (UIntPtr)Block, 0x3000, 0x04);   // обнулена й вирівняна пам'ять
                 if (buf == IntPtr.Zero) { w.WriteLine(L.T("Немає пам'яті.")); return 1; }
                 Stopwatch sw = Stopwatch.StartNew();
                 long pos = 0, bad = 0;
@@ -219,7 +214,7 @@ static class DiskFormat
                     if (stopFile != null && File.Exists(stopFile)) { w.WriteLine(L.T("Зупинено на ") + Vols.Size(pos) + "."); return 2; }
                     int n = (int)Math.Min(Block, len - pos);
                     long np; int done;
-                    if (!SetFilePointerEx(h, pos, out np, 0) || !WriteFile(h, buf, n, out done, IntPtr.Zero) || done != n) { bad += n; }
+                    if (!Win.SetFilePointerEx(h, pos, out np, 0) || !Win.WriteFile(h, buf, n, out done, IntPtr.Zero) || done != n) { bad += n; }
                     pos += n;
                     int pct = (int)(pos * 100 / len);
                     if (pct != lastPct)
@@ -235,7 +230,7 @@ static class DiskFormat
             }
         }
         catch (Exception ex) { w.WriteLine(ex.Message); return 1; }
-        finally { if (buf != IntPtr.Zero) VirtualFree(buf, UIntPtr.Zero, 0x8000); }
+        finally { if (buf != IntPtr.Zero) Win.VirtualFree(buf, UIntPtr.Zero, 0x8000); }
     }
 
     public static string Eta(double sec)
@@ -305,7 +300,7 @@ sealed class FormatWindow : SbWindow
         if (t != outText || d != done)
         {
             outText = t;
-            if (d && !done) { done = true; try { Bar.OnDisksChanged(); } catch { } try { File.Delete(outFile + ".stop"); } catch { } }
+            if (d && !done) { done = true; try { Bar.OnDisksChanged(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } try { File.Delete(outFile + ".stop"); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
             Invalidate();
         }
     }
@@ -330,7 +325,7 @@ sealed class FormatWindow : SbWindow
     void StopIt()
     {
         if (outFile == null) return;
-        try { File.WriteAllText(outFile + ".stop", "stop"); } catch { }
+        try { File.WriteAllText(outFile + ".stop", "stop"); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         msg = L.T("Зупиняємо…");
         Invalidate();
     }
@@ -481,7 +476,7 @@ sealed class RecoverWindow : SbWindow
 
     void Post(Action a)
     {
-        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(a); } catch { }
+        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(a); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -522,8 +517,8 @@ sealed class RecoverWindow : SbWindow
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         if (scan != null) scan.Stop = true;
-        try { if (worker != null) worker.Join(2000); } catch { }
-        if (baseDev != null) try { baseDev.Dispose(); } catch { }
+        try { if (worker != null) worker.Join(2000); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        if (baseDev != null) try { baseDev.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         base.OnFormClosed(e);
     }
 
@@ -627,7 +622,7 @@ sealed class RecoverWindow : SbWindow
         if (root.Length < 2) return false;
         string l = root.Substring(0, 2).ToUpperInvariant();
         if (!physical) return l == vol.Letter.ToUpperInvariant();
-        try { foreach (Vol x in Vols.List()) if (x.Letter == l && x.DiskNo == di.No) return true; } catch { }
+        try { foreach (Vol x in Vols.List()) if (x.Letter == l && x.DiskNo == di.No) return true; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return false;
     }
 
@@ -655,7 +650,7 @@ sealed class RecoverWindow : SbWindow
             DriveInfo dr = new DriveInfo(root);
             if (dr.AvailableFreeSpace < size) { note = L.T("На вибраному диску замало місця: потрібно ") + Cleaner.Size(size) + "."; Invalidate(); return; }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         outDir = Path.Combine(dir, L.T("Відновлено ") + (physical ? L.T("диск ") + di.No : vol.Letter.TrimEnd(':')) + " " + DateTime.Now.ToString("yyyy-MM-dd HH-mm"));
         List<Found> todo = new List<Found>();
         foreach (Found f in scan.Snapshot()) if (f.Sel) todo.Add(f);
@@ -874,7 +869,7 @@ sealed class RecoverPickWindow : SbWindow
 
     void Post(Action a)
     {
-        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(a); } catch { }
+        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(a); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // томи й накопичувачі - у фоні: сплячий диск може відповідати секундами
@@ -907,7 +902,7 @@ sealed class RecoverPickWindow : SbWindow
                     if (d != null && d.Size > 0 && !d.Optical) nd.Add(d);
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Post(delegate
             {
                 vols = nv; disks = nd;
@@ -932,7 +927,7 @@ sealed class RecoverPickWindow : SbWindow
     protected override void FilesDropped(string[] files)
     {
         string p = files[0];
-        try { if (File.Exists(p)) p = Path.GetDirectoryName(p); } catch { }
+        try { if (File.Exists(p)) p = Path.GetDirectoryName(p); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         tab = 2;
         if (loading) { note = L.T("Диски ще читаються, повторіть за мить."); Invalidate(); return; }
         OpenFolder(p);

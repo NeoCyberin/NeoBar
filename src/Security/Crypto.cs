@@ -2,14 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 // ======================================================================
 //  Хеш-суми, шифрування тексту й файлів.
-//   - Хеші: MD5, SHA-1, SHA-256, SHA-512, CRC32 - за один прохід файлом.
+//   - Хеші: MD5, SHA-1, SHA-256, SHA-512, CRC32 - за один прохід файлом, системними (CNG) реалізаціями,
+//     усі паралельно, поки читається наступний шматок файлу.
 //   - Власний формат .nbenc і текст «SBX1:…»: AES-256-CBC, ключ з пароля через PBKDF2-HMAC-SHA256
-//     (200 000 повторів), цілісність - HMAC-SHA256 (спершу перевіряється підпис, лише потім розшифровується,
+//     (600 000 повторів, як радить OWASP; системна BCryptDeriveKeyPBKDF2; кількість повторів записана в
+//     заголовку, тож старі файли з 200 000 відкриваються як і раніше), цілісність - HMAC-SHA256 (спершу перевіряється підпис, лише потім розшифровується,
 //     тож із неправильним паролем чи пошкодженим файлом не з'являється жодного байта «сміття»).
 //   - ZIP з AES-256 (стандарт WinZip AE-2): відкривається в 7-Zip і WinRAR без NeoBar.
 //  Без пароля нічого не відновити - «чорного ходу» немає.
@@ -55,10 +59,10 @@ static class Hashes
         {
             switch (i)
             {
-                case 0: return MD5.Create();          // у режимі FIPS Windows не дає MD5 - тоді просто пропускаємо
-                case 1: return SHA1.Create();
-                case 2: return SHA256.Create();
-                default: return SHA512.Create();
+                case 0: return new MD5Cng();          // у режимі FIPS Windows не дає MD5 - тоді просто пропускаємо
+                case 1: return new SHA1Cng();
+                case 2: return new SHA256Cng();
+                default: return new SHA512Cng();
             }
         }
         catch { return null; }
@@ -75,15 +79,25 @@ static class Hashes
             using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 1 << 16, FileOptions.SequentialScan))
             {
                 long len = fs.Length, done = 0;
-                byte[] buf = new byte[1 << 20];
-                int n;
-                while ((n = fs.Read(buf, 0, buf.Length)) > 0)
+                // два буфери: поки хеші рахують один шматок (кожен - у своєму потоці), читається наступний
+                byte[] cur = new byte[1 << 20], next = new byte[1 << 20];
+                int n = fs.Read(cur, 0, cur.Length), n2 = 0;
+                while (n > 0)
                 {
                     if (stop != null && stop()) return null;
-                    foreach (HashAlgorithm h in a) if (h != null) h.TransformBlock(buf, 0, n, null, 0);
-                    crc = Crc32.Update(crc, buf, 0, n);
+                    byte[] b = cur;
+                    int c = n;
+                    Parallel.Invoke(
+                        delegate { if (a[0] != null) a[0].TransformBlock(b, 0, c, null, 0); },
+                        delegate { if (a[1] != null) a[1].TransformBlock(b, 0, c, null, 0); },
+                        delegate { if (a[2] != null) a[2].TransformBlock(b, 0, c, null, 0); },
+                        delegate { if (a[3] != null) a[3].TransformBlock(b, 0, c, null, 0); },
+                        delegate { crc = Crc32.Update(crc, b, 0, c); },
+                        delegate { n2 = fs.Read(next, 0, next.Length); });
                     done += n;
                     if (progress != null && len > 0) progress((float)((double)done / len));
+                    byte[] sw = cur; cur = next; next = sw;
+                    n = n2;
                 }
             }
             string[] r = new string[5];
@@ -101,7 +115,7 @@ static class Hashes
 
     public static string Sha256Of(string path)
     {
-        using (SHA256 h = SHA256.Create())
+        using (SHA256 h = new SHA256Cng())
         using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 1 << 16, FileOptions.SequentialScan))
             return Hex(h.ComputeHash(fs));
     }
@@ -122,11 +136,36 @@ static class Hashes
 
 static class SbCrypt
 {
-    public const int Iter = 200000;
+    public const int Iter = 600000;
     static readonly byte[] Magic = Encoding.ASCII.GetBytes("SBENC1");
     public const string Ext = ".nbenc";
 
     // PBKDF2 з довільним HMAC (SHA-256 для свого формату, SHA-1 - для ZIP AES за стандартом)
+    // PBKDF2 системою Windows (CNG) - у рази швидше за цикл на C#; не вдалося - запасний шлях нижче
+    [DllImport("bcrypt.dll", CharSet = CharSet.Unicode)] static extern int BCryptOpenAlgorithmProvider(out IntPtr alg, string id, string impl, int flags);
+    [DllImport("bcrypt.dll")] static extern int BCryptCloseAlgorithmProvider(IntPtr alg, int flags);
+    [DllImport("bcrypt.dll")] static extern int BCryptDeriveKeyPBKDF2(IntPtr alg, byte[] pw, int pwLen, byte[] salt, int saltLen, ulong iter, byte[] key, int keyLen, int flags);
+
+    // alg - "SHA256" або "SHA1"
+    public static byte[] Pbkdf2(string alg, byte[] pw, byte[] salt, int iter, int len)
+    {
+        try
+        {
+            IntPtr h;
+            if (BCryptOpenAlgorithmProvider(out h, alg, null, 0x8) == 0)           // BCRYPT_ALG_HANDLE_HMAC_FLAG
+            {
+                try
+                {
+                    byte[] key = new byte[len];
+                    if (BCryptDeriveKeyPBKDF2(h, pw, pw.Length, salt, salt.Length, (ulong)iter, key, len, 0) == 0) return key;
+                }
+                finally { BCryptCloseAlgorithmProvider(h, 0); }
+            }
+        }
+        catch (Exception ex) { SbLog.Skip(ex); }
+        using (HMAC m = alg == "SHA1" ? (HMAC)new HMACSHA1(pw) : new HMACSHA256(pw)) return Pbkdf2(m, salt, iter, len);
+    }
+
     public static byte[] Pbkdf2(HMAC h, byte[] salt, int iter, int len)
     {
         int hl = h.HashSize / 8;
@@ -159,7 +198,9 @@ static class SbCrypt
     static void Keys(string pw, byte[] salt, int iter, out byte[] enc, out byte[] mac)
     {
         byte[] dk;
-        using (HMACSHA256 h = new HMACSHA256(Encoding.UTF8.GetBytes(pw))) dk = Pbkdf2(h, salt, iter, 32);
+        byte[] pb = Encoding.UTF8.GetBytes(pw);
+        dk = Pbkdf2("SHA256", pb, salt, iter, 32);
+        Array.Clear(pb, 0, pb.Length);
         using (HMACSHA256 h = new HMACSHA256(dk))
         {
             enc = h.ComputeHash(Encoding.ASCII.GetBytes("NeoBar enc"));
@@ -240,7 +281,7 @@ static class SbCrypt
                 byte[] x = Convert.FromBase64String(b64);
                 if (x.Length >= 4 + 32 + 16 + 32 && (x.Length - 36 - 32) % 16 == 0) all = x;
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         if (all == null) { err = L.T("Текст пошкоджено або обрізано: частину символів втрачено під час копіювання."); return null; }
         int iter = GetInt(all, 0);
@@ -328,7 +369,7 @@ static class SbCrypt
             File.Move(part, dst);
             return dst;
         }
-        catch { try { File.Delete(part); } catch { } throw; }
+        catch { try { File.Delete(part); } catch (Exception skipEx) { SbLog.Skip(skipEx); } throw; }
     }
 
     public static bool IsSbenc(string path)
@@ -404,7 +445,7 @@ static class SbCrypt
                 File.Move(part, dst);
                 return dst;
             }
-            catch { if (part != null) try { File.Delete(part); } catch { } throw; }
+            catch { if (part != null) try { File.Delete(part); } catch (Exception skipEx) { SbLog.Skip(skipEx); } throw; }
         }
     }
 
@@ -559,7 +600,7 @@ static class ZipAes
     static void Derive(string pw, byte[] salt, out byte[] key, out byte[] mac, out byte[] pv)
     {
         byte[] dk;
-        using (HMACSHA1 h = new HMACSHA1(Encoding.UTF8.GetBytes(pw))) dk = SbCrypt.Pbkdf2(h, salt, 1000, 66);
+        dk = SbCrypt.Pbkdf2("SHA1", Encoding.UTF8.GetBytes(pw), salt, 1000, 66);
         key = new byte[32]; mac = new byte[32]; pv = new byte[2];
         Buffer.BlockCopy(dk, 0, key, 0, 32);
         Buffer.BlockCopy(dk, 32, mac, 0, 32);
@@ -666,7 +707,7 @@ static class ZipAes
             }
             File.Move(part, zipPath);
         }
-        catch { try { File.Delete(part); } catch { } throw; }
+        catch { try { File.Delete(part); } catch (Exception skipEx) { SbLog.Skip(skipEx); } throw; }
         finally { rng.Dispose(); }
     }
 
@@ -851,7 +892,7 @@ static class ZipAes
                     string fin = SbCrypt.Free(dst);
                     File.Move(part, fin);
                 }
-                catch { try { File.Delete(part); } catch { } throw; }
+                catch { try { File.Delete(part); } catch (Exception skipEx) { SbLog.Skip(skipEx); } throw; }
                 done += e.Comp;
             }
         }
@@ -859,7 +900,7 @@ static class ZipAes
         catch
         {
             // невдача (пароль, пошкодження, зупинка): тека без жодного файла не лишається
-            try { if (Directory.Exists(root) && Directory.GetFiles(root, "*", SearchOption.AllDirectories).Length == 0) Directory.Delete(root, true); } catch { }
+            try { if (Directory.Exists(root) && Directory.GetFiles(root, "*", SearchOption.AllDirectories).Length == 0) Directory.Delete(root, true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             throw;
         }
         if (!anyAes) notes = L.T("В архіві немає шифрованих файлів - його просто розпаковано.");

@@ -21,11 +21,7 @@ sealed class BenchResult
 
 static class DiskBench
 {
-    [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr VirtualAlloc(IntPtr a, UIntPtr size, uint type, uint prot);
-    [DllImport("kernel32.dll", SetLastError = true)] static extern bool VirtualFree(IntPtr a, UIntPtr size, uint type);
-    [DllImport("kernel32.dll", SetLastError = true)] static extern bool WriteFile(SafeFileHandle h, IntPtr buf, int n, out int done, IntPtr ovl);
     [DllImport("kernel32.dll", SetLastError = true)] static extern bool ReadFile(SafeFileHandle h, IntPtr buf, int n, out int done, IntPtr ovl);
-    [DllImport("kernel32.dll", SetLastError = true)] static extern bool SetFilePointerEx(SafeFileHandle h, long dist, out long np, int method);
 
     const uint NO_BUFFERING = 0x20000000, WRITE_THROUGH = 0x80000000, DELETE_ON_CLOSE = 0x04000000;
 
@@ -53,7 +49,7 @@ static class DiskBench
             if (size < (32L << 20)) { res.Error = L.T("Замало вільного місця для тесту."); return; }
             dir = TestDir(v);
             file = Path.Combine(dir, "neobar-speed-" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".tmp");
-            buf = VirtualAlloc(IntPtr.Zero, (UIntPtr)block, 0x3000, 0x04);   // вирівняна пам'ять для запису без кешу
+            buf = Win.VirtualAlloc(IntPtr.Zero, (UIntPtr)block, 0x3000, 0x04);   // вирівняна пам'ять для запису без кешу
             if (buf == IntPtr.Zero) { res.Error = L.T("Немає пам'яті для тесту."); return; }
             byte[] rnd = new byte[block];
             new Random(7).NextBytes(rnd);
@@ -69,7 +65,7 @@ static class DiskBench
                 while (done < size)
                 {
                     int n;
-                    if (!WriteFile(h, buf, block, out n, IntPtr.Zero) || n == 0) { res.Error = L.T("Помилка запису (код ") + Marshal.GetLastWin32Error() + ")."; return; }
+                    if (!Win.WriteFile(h, buf, block, out n, IntPtr.Zero) || n == 0) { res.Error = L.T("Помилка запису (код ") + Marshal.GetLastWin32Error() + ")."; return; }
                     done += n;
                     res.Progress = (int)(done * 40 / size);
                 }
@@ -104,7 +100,7 @@ static class DiskBench
                     long pos = (long)(r.NextDouble() * (blocks - 1)) * 4096;
                     long np;
                     int n;
-                    if (!SetFilePointerEx(h, pos, out np, 0) || !ReadFile(h, buf, 4096, out n, IntPtr.Zero)) break;
+                    if (!Win.SetFilePointerEx(h, pos, out np, 0) || !ReadFile(h, buf, 4096, out n, IntPtr.Zero)) break;
                     ops++;
                     res.Progress = 80 + (int)(rs.ElapsedMilliseconds * 20 / 5000);
                 }
@@ -120,9 +116,9 @@ static class DiskBench
         catch (Exception ex) { res.Error = ex.Message; }
         finally
         {
-            if (buf != IntPtr.Zero) VirtualFree(buf, UIntPtr.Zero, 0x8000);
-            try { if (file != null && File.Exists(file)) File.Delete(file); } catch { }
-            try { if (dir != null && dir.EndsWith("NeoBar-test") && Directory.GetFileSystemEntries(dir).Length == 0) Directory.Delete(dir); } catch { }
+            if (buf != IntPtr.Zero) Win.VirtualFree(buf, UIntPtr.Zero, 0x8000);
+            try { if (file != null && File.Exists(file)) File.Delete(file); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { if (dir != null && dir.EndsWith("NeoBar-test") && Directory.GetFileSystemEntries(dir).Length == 0) Directory.Delete(dir); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             res.Stage = "";
             res.Done = true;
         }
@@ -182,7 +178,7 @@ static class DiskHealth
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static string HealthText(string h)
@@ -219,8 +215,6 @@ static class DiskHealth
 // Подробиці про том і накопичувач (IOCTL, без прав адміністратора)
 static class DiskDetails
 {
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    static extern bool GetDiskFreeSpace(string root, out uint spc, out uint bps, out uint freeClusters, out uint totalClusters);
 
     const uint QUERY_PROPERTY = 0x2D1400;
 
@@ -239,7 +233,7 @@ static class DiskDetails
             if (v.Root.Length > 0)
             {
                 uint spc, bps, fc, tc;
-                if (GetDiskFreeSpace(v.Root, out spc, out bps, out fc, out tc)) l.Add(new[] { L.T("Розмір кластера"), (spc * bps / 1024) + L.T(" КБ") });
+                if (Win.GetDiskFreeSpace(v.Root, out spc, out bps, out fc, out tc)) l.Add(new[] { L.T("Розмір кластера"), (spc * bps / 1024) + L.T(" КБ") });
                 StringBuilder lab = new StringBuilder(261), fs = new StringBuilder(261);
                 uint ser, mc, fl;
                 if (Win.GetVolumeInformation(v.Root, lab, lab.Capacity, out ser, out mc, out fl, fs, fs.Capacity))
@@ -254,7 +248,7 @@ static class DiskDetails
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (d == null || d.No < 0) return l;
         try
         {
@@ -282,7 +276,7 @@ static class DiskDetails
                 l.Add(new[] { L.T("Номер диска в системі"), d.No.ToString() });
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return l;
     }
 }

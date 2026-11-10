@@ -159,7 +159,7 @@ sealed class SearchForm : Form
         if (cfg.SearchSuggest)
         {
             Action onReady = null;
-            onReady = delegate { try { if (!IsDisposed) BeginInvoke(new Action(delegate { if (!IsDisposed && !fileMode) Refill(); })); } catch { } };
+            onReady = delegate { try { if (!IsDisposed) BeginInvoke(new Action(delegate { if (!IsDisposed && !fileMode) Refill(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); } };
             StartApps.Ready += onReady;
             FormClosed += delegate { StartApps.Ready -= onReady; };
         }
@@ -189,7 +189,7 @@ sealed class SearchForm : Form
         {
             openT = Math.Min(1f, openT + 0.1f);
             float e = 1f - (float)Math.Pow(1f - openT, 3);
-            try { Opacity = Math.Min(0.995, e); } catch { }
+            try { Opacity = Math.Min(0.995, e); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Top = baseTop + (int)((1f - e) * Px(16));
             busy = true;
         }
@@ -347,7 +347,7 @@ sealed class SearchForm : Form
         {
             using (GraphicsPath gp = Util.Round(new Rectangle(0, 0, ClientSize.Width, ClientSize.Height), radius)) Util.SetRegion(this, gp);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public void ShowCentered(Rectangle wa)
@@ -356,7 +356,7 @@ sealed class SearchForm : Form
         Location = new Point(wa.Left + (wa.Width - Width) / 2, baseTop + Px(16));
         ApplyRegion();
         Show();
-        try { Win.SetForegroundWindow(Handle); } catch { }
+        try { Win.SetForegroundWindow(Handle); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Activate();
         tb.Focus();
         StartAnim();
@@ -413,6 +413,9 @@ sealed class SearchForm : Form
             res.Add(x);
         }
         List<object> rows = new List<object>(res.ToArray());
+        // вираз чи перетворення одиниць - результат першим рядком (Enter копіює)
+        string calc;
+        if (!q.StartsWith("#") && Calc.TryEval(q, out calc)) { CalcRow cr = new CalcRow(); cr.Expr = q; cr.Result = calc; rows.Insert(0, cr); }
         // рекомендації: програми й ігри, яких ще немає на панелі. Порожній запит - 5 випадкових (щоразу інших),
         // із запитом - ті, що підходять. Додали одну - на її місце стає наступна.
         if (cfg.SearchSuggest && !q.StartsWith("#"))
@@ -489,7 +492,7 @@ sealed class SearchForm : Form
                     Invalidate(rChip);
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -499,7 +502,11 @@ sealed class SearchForm : Form
         lb.Items.Clear();
         lb.Items.AddRange(items);
         lb.EndUpdate();
-        if (lb.Items.Count > 0) lb.SelectedIndex = lb.Items[0] is RecHeader && lb.Items.Count > 1 ? 1 : 0;
+        if (lb.Items.Count == 0) return;
+        int first = lb.Items[0] is RecHeader && lb.Items.Count > 1 ? 1 : 0;
+        // результат калькулятора вибраний, лише коли на панелі нічого не знайшлось (інакше Enter запускає елемент)
+        if (lb.Items[0] is CalcRow && lb.Items.Count > 1 && lb.Items[1] is Entry) first = 1;
+        lb.SelectedIndex = first;
     }
 
     // заголовок рекомендацій не вибирається: перескакуємо його
@@ -624,7 +631,7 @@ sealed class SearchForm : Form
     void DrawRow(object sender, DrawItemEventArgs e)
     {
         // помилка малювання одного рядка не повинна ламати весь список (інакше WinForms малює червоний хрест)
-        try { DrawRow0(e); } catch { }
+        try { DrawRow0(e); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void DrawRow0(DrawItemEventArgs e)
@@ -654,6 +661,7 @@ sealed class SearchForm : Form
         Graphics g = e.Graphics;
         Color bg = PopStyle.Bg(t), txt = PopStyle.Text(t);
         bool sel = (e.State & DrawItemState.Selected) != 0;
+        if (it is CalcRow) { DrawCalc(g, e.Bounds, (CalcRow)it, sel, e.Index == hoverRow); return; }
         using (SolidBrush b = new SolidBrush(bg)) g.FillRectangle(b, e.Bounds);
         if (!sel && e.Index == hoverRow)
         {
@@ -693,7 +701,7 @@ sealed class SearchForm : Form
                     else if (rc.Path.StartsWith("steam://", StringComparison.OrdinalIgnoreCase)) rc.Icon = IconFactory.Make(t, "game", rc.Name, isz);
                     else rc.Icon = Util.ShellIcon(rc.Path, false);
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
             icon = rc.Icon;
             recLv = recFade.Level;
@@ -737,6 +745,22 @@ sealed class SearchForm : Form
         TextRenderer.DrawText(g, title, f, new Rectangle(tx, e.Bounds.Y + Px(5), tw, f.Height + 2), Util.Blend(bg, txt, recLv), fl);
         TextRenderer.DrawText(g, sub, small, new Rectangle(tx, e.Bounds.Y + Px(5) + f.Height + 1, tw, small.Height + 2),
             Util.Blend(bg, txt, 0.55f * recLv), fl);
+    }
+
+    void DrawCalc(Graphics g, Rectangle rb, CalcRow cr, bool sel, bool hover)
+    {
+        Color bg = PopStyle.Bg(t), txt = PopStyle.Text(t), acc = Util.Opaque(t.Accent);
+        using (SolidBrush b = new SolidBrush(bg)) g.FillRectangle(b, rb);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        Rectangle hr = Rectangle.Inflate(rb, -Px(2), -Px(1));
+        using (SolidBrush hb = new SolidBrush(Util.Blend(bg, acc, sel ? 0.38f : (hover ? 0.16f : 0.08f)))) Util.FillRound(g, hb, hr, t.Radius);
+        int isz = rowH - Px(12);
+        Rectangle icr = new Rectangle(rb.X + Px(9), rb.Y + (rowH - isz) / 2, isz, isz);
+        TextRenderer.DrawText(g, "=", tabFont, icr, acc, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+        int tx = icr.Right + Px(9), tw = rb.Right - tx - Px(9);
+        TextFormatFlags fl = TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding | TextFormatFlags.SingleLine;
+        TextRenderer.DrawText(g, cr.Result, f, new Rectangle(tx, rb.Y + Px(5), tw, f.Height + 2), txt, fl);
+        TextRenderer.DrawText(g, cr.Expr + "   ·   " + L.T("Enter - копіювати результат"), small, new Rectangle(tx, rb.Y + Px(5) + f.Height + 1, tw, small.Height + 2), Util.Blend(bg, txt, 0.55f), fl);
     }
 
     static void DrawTri(Graphics g, Color c, int cx, int cy, int r)
@@ -868,7 +892,7 @@ sealed class SearchForm : Form
                 string args = h.IsDir ? "\"" + h.Path + "\"" : "/select,\"" + h.Path + "\"";
                 using (Process.Start("explorer.exe", args)) { }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         m.Items.Add(new ToolStripSeparator());
         m.Items.Add(L.T("Додати на панель"), null, delegate
@@ -927,6 +951,13 @@ sealed class SearchForm : Form
 
     void Go()
     {
+        CalcRow cr = lb.SelectedItem as CalcRow;
+        if (cr != null)
+        {
+            try { Clipboard.SetText(cr.Result); } catch (Exception ex) { Util.ErrorLog(ex); }
+            Close();
+            return;
+        }
         FileHit h = lb.SelectedItem as FileHit;
         if (h != null)
         {
@@ -1029,19 +1060,19 @@ static class StartApps
                                     if (pat == "*.url")
                                     {
                                         string tx = "";
-                                        try { tx = File.ReadAllText(f); } catch { }
+                                        try { tx = File.ReadAllText(f); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                                         if (tx.IndexOf("steam://", StringComparison.OrdinalIgnoreCase) < 0 && tx.IndexOf("com.epicgames", StringComparison.OrdinalIgnoreCase) < 0 &&
                                             tx.IndexOf("uplay://", StringComparison.OrdinalIgnoreCase) < 0 && tx.IndexOf("goggalaxy://", StringComparison.OrdinalIgnoreCase) < 0) { seen.Remove(n); continue; }
                                     }
                                     l.Add(new string[] { n, f, "" });
                                 }
                         }
-                        catch { }
+                        catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     }
                     l.Sort(delegate (string[] x, string[] y) { return string.Compare(x[0], y[0], StringComparison.CurrentCultureIgnoreCase); });
                     apps = l;
                     Action r = Ready;
-                    if (r != null) try { r(); } catch { }
+                    if (r != null) try { r(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 });
             }
             return new List<string[]>();
@@ -1054,6 +1085,8 @@ static class StartApps
 // рядок-рекомендація в пошуку: програма з «Пуску», якої ще немає на панелі
 // заголовок розділу рекомендацій (роздільник + назва + кнопка «перемішати»)
 sealed class RecHeader { }
+
+sealed class CalcRow { public string Expr = "", Result = ""; }
 
 sealed class SearchRec
 {

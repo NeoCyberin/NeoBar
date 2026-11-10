@@ -59,7 +59,7 @@ static class AdminTask
         string file = Path.Combine(Path.GetTempPath(), "neobar-task.xml");
         File.WriteAllText(file, xml, Encoding.Unicode);
         int code = Run("schtasks.exe", "/create /tn \"" + Name + "\" /xml \"" + file + "\" /f", w);
-        try { File.Delete(file); } catch { }
+        try { File.Delete(file); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         w.WriteLine(code == 0 ? L.T("Готово: NeoBar запускатиметься з правами адміністратора без запиту.") : L.T("Не вдалося створити завдання (код ") + code + ").");
         return code;
     }
@@ -131,7 +131,7 @@ static class AdminTask
             Elevated.ReadOut(outFile, out done);
             if (!done) System.Threading.Thread.Sleep(100);
         }
-        try { File.Delete(outFile); } catch { }
+        try { File.Delete(outFile); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return done;
     }
 
@@ -175,7 +175,7 @@ static class AdminTask
                 if (t.StartsWith("@admin")) return t.EndsWith("yes") || t.EndsWith("true") || t.EndsWith("1");
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return false;
     }
 }

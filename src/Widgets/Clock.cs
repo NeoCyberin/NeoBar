@@ -224,7 +224,7 @@ static class ClockData
                 {
                     string msg;
                     TimeSync.Run(out msg);
-                    try { bar.BeginInvoke(new Action(delegate { SyncNote = L.T("Під час запуску: ") + msg; Fire(); })); } catch { }
+                    try { bar.BeginInvoke(new Action(delegate { SyncNote = L.T("Під час запуску: ") + msg; Fire(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 });
             };
             st.Start();
@@ -335,7 +335,7 @@ static class ClockData
     static void Fire()
     {
         Action a = Changed;
-        if (a != null) try { a(); } catch { }
+        if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         foreach (DeskSpec d in Desk) if (d.Form != null && !d.Form.IsDisposed) d.Form.Redraw();
     }
 
@@ -392,6 +392,9 @@ static class ClockData
         foreach (DeskSpec d in Desk)
             if (d.Form != null && !d.Form.IsDisposed && m != lastMinute && !NeoBar.Paused) d.Form.TickRedraw();
         lastMinute = m;
+        // наступна перевірка - одразу після зміни секунди: раз на секунду замість двох, а секунди на столі не запізнюються
+        int next = Math.Max(50, 1015 - DateTime.Now.Millisecond);
+        if (Math.Abs(tick.Interval - next) > 30) tick.Interval = next;
     }
 
     // Сповіщення про свята: о заданій годині або через кілька хвилин після запуску, якщо ПК увімкнули пізніше
@@ -451,7 +454,7 @@ static class ClockData
         if (loc.Length == 0) { text = L.T("Дані сайту про пояс ще не отримано."); return true; }
         TimeZoneInfo local = TimeZoneInfo.Local;
         TimeSpan sysOff = TimeSpan.Zero;
-        try { sysOff = local.GetUtcOffset(DateTime.Now); } catch { }
+        try { sysOff = local.GetUtcOffset(DateTime.Now); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         string win = TzMap.ToWindows(loc);
         string dst = "";
         TimeSpan siteOff = TimeSpan.FromSeconds(Widgets.WTzOffset);
@@ -463,7 +466,7 @@ static class ClockData
                 TimeZoneInfo z = TimeZoneInfo.FindSystemTimeZoneById(win);
                 if (haveOff && z.SupportsDaylightSavingTime) dst = siteOff > z.BaseUtcOffset ? L.T("літній час") : L.T("зимовий час");
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         string off = haveOff ? (siteOff < TimeSpan.Zero ? "UTC−" : "UTC+") + siteOff.Duration().Hours.ToString("00") + ":" + siteOff.Duration().Minutes.ToString("00") : "";
         text = L.T("Сайт (") + Widgets.CityLabel(bar != null ? bar.Config : new Cfg()) + "): " + loc +
@@ -517,7 +520,7 @@ static class ClockData
                     Fire();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -540,7 +543,7 @@ static class ClockData
                     Fire();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -569,7 +572,7 @@ static class ClockData
                 sb.AppendLine("desk=" + d.Kind + "|" + d.X + "|" + d.Y + "|" + d.Size + "|" + d.Opacity + "|" + (d.Locked ? 1 : 0) + "|" + d.Numbers + "|" + d.Tm + "|" + (d.Opt ?? "").Replace("|", "").Replace("\n", "") + "|" + d.Scale.ToString("0.###", CultureInfo.InvariantCulture));
             SafeFile.Write(path, sb.ToString(), new UTF8Encoding(true));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static long LongOf(string s) { long v; return long.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out v) ? v : 0; }
@@ -645,7 +648,7 @@ static class ClockData
                     }
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 

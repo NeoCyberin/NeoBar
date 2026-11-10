@@ -30,7 +30,7 @@ static class Seasons
         t.Tick += delegate
         {
             t.Stop(); t.Dispose();
-            if (ended.Length > 0) { try { ToastForm.Show(bar, L.T("Свято минуло"), ended, "check", false, null); } catch { } ended = ""; }
+            if (ended.Length > 0) { try { ToastForm.Show(bar, L.T("Свято минуло"), ended, "check", false, null); } catch (Exception skipEx) { SbLog.Skip(skipEx); } ended = ""; }
             started = true;
         };
         t.Start();
@@ -98,7 +98,7 @@ static class Seasons
         if (Holidays.BirthdayIn(c, y, out bd)) l.Add(Make("birthday", L.T("день народження"), bd, 0, 7));
         l.Add(Make("halloween", L.T("Хелловін"), new DateTime(y, 10, 31), 3, 10));
         DateTime xd = new DateTime(y, 12, 25), ed = Holidays.Easter(y, true);
-        try { xd = Holidays.ChristmasFor(y, c); ed = Holidays.EasterFor(y, c); } catch { }
+        try { xd = Holidays.ChristmasFor(y, c); ed = Holidays.EasterFor(y, c); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         l.Add(Make("xmas", L.T("Різдво"), xd, 3, 10));
         l.Add(Make("easter", L.T("Великдень"), ed, 3, 10));
         return l;

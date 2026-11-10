@@ -31,7 +31,7 @@ static class SUi
     public static void Init(float sc)
     {
         Sc = Math.Max(1f, sc);
-        foreach (Font f in new Font[] { fHead, fPage }) if (f != null) try { f.Dispose(); } catch { }
+        foreach (Font f in new Font[] { fHead, fPage }) if (f != null) try { f.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         fHead = null; fPage = null;
     }
 

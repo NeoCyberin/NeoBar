@@ -174,7 +174,7 @@ sealed class MapView : Control
                 using (Image im = Image.FromStream(ms))
                     bmp = new Bitmap(im);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         lock (mem)
         {
             workers--;
@@ -192,7 +192,7 @@ sealed class MapView : Control
                 }
             }
         }
-        try { if (IsHandleCreated && !IsDisposed) BeginInvoke(new Action(delegate { Invalidate(); Pump(); })); } catch { }
+        try { if (IsHandleCreated && !IsDisposed) BeginInvoke(new Action(delegate { Invalidate(); Pump(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void OnMouseDown(MouseEventArgs e)

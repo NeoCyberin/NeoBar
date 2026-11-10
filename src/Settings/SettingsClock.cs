@@ -30,7 +30,7 @@ sealed partial class SettingsForm
             zs.Sort(delegate (TimeZoneInfo a, TimeZoneInfo b) { int k = a.BaseUtcOffset.CompareTo(b.BaseUtcOffset); return k != 0 ? k : string.Compare(a.DisplayName, b.DisplayName, StringComparison.CurrentCulture); });
             foreach (TimeZoneInfo z in zs) { cbTz.Items.Add(z.DisplayName); tzIds.Add(z.Id); }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         cbTz.SelectedIndexChanged += delegate { if (!loading) tzCard.Queue(); };
         SRow tr = tzCard.Row(L.T("Часовий пояс"), "", cbTz);
         tr.DescFn = delegate { return TzText(); };
@@ -144,7 +144,7 @@ sealed partial class SettingsForm
     {
         TimeZoneInfo local = TimeZoneInfo.Local;
         bool dst = false;
-        try { dst = local.IsDaylightSavingTime(DateTime.Now); } catch { }
+        try { dst = local.IsDaylightSavingTime(DateTime.Now); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         string s = L.T("Зараз у Windows: ") + SysTz.Describe(local) + (dst ? L.T(" (літній час)") : "") + " · " + local.DisplayName;
         if (cbTz.SelectedIndex == 0)
         {

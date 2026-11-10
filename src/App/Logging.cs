@@ -79,6 +79,26 @@ static class SbLog
         if (value) Write(g, "журнал", "увімкнено");
     }
 
+    // проігнорована помилка (порожній catch): видно в журналі панелі, коли його ввімкнено;
+    // одне й те саме місце - не частіше разу на хвилину (деякі місця спрацьовують щосекунди)
+    static readonly System.Collections.Generic.Dictionary<string, int> skipped = new System.Collections.Generic.Dictionary<string, int>();
+
+    public static void Skip(Exception ex,
+        [System.Runtime.CompilerServices.CallerMemberName] string member = "",
+        [System.Runtime.CompilerServices.CallerLineNumber] int line = 0)
+    {
+        if (!On(Panel) || ex == null) return;
+        // шлях до файлу не беремо (CallerFilePath вшив би в exe шлях теки, де збирали програму)
+        string at = member + ":" + line + (ex.TargetSite != null && ex.TargetSite.DeclaringType != null ? " ← " + ex.TargetSite.DeclaringType.Name + "." + ex.TargetSite.Name : "");
+        int now = Environment.TickCount, last;
+        lock (skipped)
+        {
+            if (skipped.TryGetValue(at, out last) && unchecked(now - last) < 60000) return;
+            skipped[at] = now;
+        }
+        Write(GroupOf[Panel], "пропущено", at + "  " + ex.GetType().Name + ": " + ex.Message);
+    }
+
     public static void W(int cat, string msg)
     {
         if (!On(cat)) return;

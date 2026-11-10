@@ -438,7 +438,7 @@ class SbWindow : Form
     {
         base.OnLoad(e);
         Util.Buffer(this);
-        try { if (Bar.Config.Anim) Opacity = 0; } catch { }
+        try { if (Bar.Config.Anim) Opacity = 0; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void OnShown(EventArgs e)
@@ -447,7 +447,7 @@ class SbWindow : Form
         Ticker.Start();
         OnTick();
         bool anim = false;
-        try { anim = Bar.Config.Anim; } catch { }
+        try { anim = Bar.Config.Anim; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (!anim) { Opacity = 1; return; }
         showTop = Top;
         int lift = Px(14);
@@ -481,7 +481,7 @@ class SbWindow : Form
             if (P.Rad > 2 && Width > 0 && Height > 0)
                 using (GraphicsPath gp = Util.Round(new Rectangle(0, 0, Width, Height), P.Rad + Px(2))) Util.SetRegion(this, gp);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ширина вкладки: найдовший рядок (назва може бути у два рядки)
@@ -689,7 +689,7 @@ class SbWindow : Form
     {
         tipNow = ""; tipWait = "";
         if (tipTimer != null) tipTimer.Stop();
-        if (tipBox != null) try { tipBox.Hide(this); } catch { }
+        if (tipBox != null) try { tipBox.Hide(this); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void TipMove()
@@ -738,7 +738,7 @@ class SbWindow : Form
     {
         int pad = Height - body.Bottom;
         int want = Math.Max(minH, contentBottom + pad);
-        try { want = Math.Min(want, Screen.FromControl(this).WorkingArea.Height - Px(40)); } catch { }
+        try { want = Math.Min(want, Screen.FromControl(this).WorkingArea.Height - Px(40)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (Math.Abs(want - Height) <= Px(3) || fitBusy || !IsHandleCreated) return;
         fitBusy = true;
         BeginInvoke(new Action(delegate
@@ -751,7 +751,7 @@ class SbWindow : Form
                 Rectangle wa = Screen.FromControl(this).WorkingArea;
                 if (Bottom > wa.Bottom) Top = Math.Max(wa.Top, wa.Bottom - Height);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Invalidate();
         }));
     }

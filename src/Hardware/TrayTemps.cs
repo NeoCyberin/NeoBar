@@ -51,10 +51,6 @@ static class TrayTemps
     const uint NIM_ADD = 0, NIM_MODIFY = 1, NIM_DELETE = 2, NIF_MESSAGE = 1, NIF_ICON = 2, NIF_TIP = 4, NIF_GUID = 0x20;
     const int CallbackMsg = 0x8000 + 0x51;
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern bool Shell_NotifyIcon(uint msg, ref NID d);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int RegisterWindowMessage(string s);
-    [DllImport("user32.dll")] static extern bool ChangeWindowMessageFilterEx(IntPtr h, uint msg, uint action, IntPtr info);
-    [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr h);
-    [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr h);
 
     static readonly Slot[] slots = { new Slot(), new Slot(), new Slot() };
     static NeoBar bar;
@@ -69,9 +65,9 @@ static class TrayTemps
         public Wnd()
         {
             CreateHandle(new CreateParams());
-            taskbarCreated = RegisterWindowMessage("TaskbarCreated");
+            taskbarCreated = (int)Win.RegisterWindowMessage("TaskbarCreated");
             // NeoBar від адміністратора: дозволити повідомлення від Провідника (UIPI)
-            try { ChangeWindowMessageFilterEx(Handle, (uint)taskbarCreated, 1, IntPtr.Zero); ChangeWindowMessageFilterEx(Handle, CallbackMsg, 1, IntPtr.Zero); } catch { }
+            try { Win.ChangeWindowMessageFilterEx(Handle, (uint)taskbarCreated, 1, IntPtr.Zero); Win.ChangeWindowMessageFilterEx(Handle, CallbackMsg, 1, IntPtr.Zero); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
 
         protected override void WndProc(ref Message m)
@@ -104,7 +100,7 @@ static class TrayTemps
                 open.Click += delegate { Open(); };
                 menu.Items.Add(open);
             }
-            SetForegroundWindow(wnd.Handle);
+            Win.SetForegroundWindow(wnd.Handle);
             menu.Show(Cursor.Position);
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
@@ -168,7 +164,7 @@ static class TrayTemps
             if (bar.InvokeRequired) bar.BeginInvoke(new Action(Refresh));
             else Refresh();
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static void Refresh()
@@ -294,7 +290,7 @@ static class TrayTemps
             }
             IntPtr h = bmp.GetHicon();
             try { using (Icon tmp = Icon.FromHandle(h)) return (Icon)tmp.Clone(); }
-            finally { DestroyIcon(h); }
+            finally { Win.DestroyIcon(h); }
         }
     }
 }

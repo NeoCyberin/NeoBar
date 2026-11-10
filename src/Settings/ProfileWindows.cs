@@ -457,7 +457,7 @@ sealed class ProfileWindow : SbWindow
     {
         base.OnDeactivate(e);
         if (busy || IsDisposed) return;
-        try { BeginInvoke(new Action(delegate { if (!busy && !IsDisposed) Close(); })); } catch { }
+        try { BeginInvoke(new Action(delegate { if (!busy && !IsDisposed) Close(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void PaintBody(Graphics g, Rectangle r)

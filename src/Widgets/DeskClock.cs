@@ -27,7 +27,7 @@ sealed class DeskClock : LayeredForm
     {
         spec = s;
         Text = "NeoBar - " + ClockData.KindTitle(s.Kind);
-        if (s.Kind == "trash") { cleanHook = delegate { try { if (IsHandleCreated && !IsDisposed) BeginInvoke(new Action(TrashChanged)); } catch { } }; Cleaner.Changed += cleanHook; }
+        if (s.Kind == "trash") { cleanHook = delegate { try { if (IsHandleCreated && !IsDisposed) BeginInvoke(new Action(TrashChanged)); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }; Cleaner.Changed += cleanHook; }
         if (s.Kind == "weather")
         {
             // анімація погоди на віджеті: ~15 кадрів/с, лише коли є що показувати
@@ -126,7 +126,7 @@ sealed class DeskClock : LayeredForm
 
     void KeepBottom()
     {
-        try { Win.SetWindowPos(Handle, HWND_BOTTOM, 0, 0, 0, 0, 0x1 | 0x2 | 0x10); } catch { }
+        try { Win.SetWindowPos(Handle, HWND_BOTTOM, 0, 0, 0, 0, 0x1 | 0x2 | 0x10); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void WndProc(ref Message m)
@@ -141,7 +141,7 @@ sealed class DeskClock : LayeredForm
                 int fl = Marshal.ReadInt32(m.LParam, flagsOff);
                 Marshal.WriteInt32(m.LParam, flagsOff, fl & ~0x4);   // без SWP_NOZORDER
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         base.WndProc(ref m);
     }
@@ -521,7 +521,7 @@ sealed class DeskClock : LayeredForm
                             l.Add(dd);
                         }
                     }
-                    catch { }
+                    catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     deskDisks = l;
                     deskDisksBusy = false;
                 });
@@ -653,7 +653,7 @@ sealed class DeskClock : LayeredForm
                     Fw.RaiseChanged();      // відкрите вікно «Мережа» теж одразу покаже новий стан
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -874,7 +874,7 @@ sealed class DeskClock : LayeredForm
                     RectangleF cr = new RectangleF(r.X + col * cw, y0 + row * ch, cw, ch);
                     bool inM = d.Month == m0.Month;
                     bool hol = false;
-                    try { foreach (Holiday h in Holidays.On(d, c)) if (h.Kind == Holiday.Public) hol = true; } catch { }
+                    try { foreach (Holiday h in Holidays.On(d, c)) if (h.Kind == Holiday.Public) hol = true; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     if (d == today)
                     {
                         float ds = Math.Min(cw, ch) - 2;

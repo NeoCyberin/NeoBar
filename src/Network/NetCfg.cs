@@ -72,15 +72,15 @@ static class NetCfg
                     foreach (byte b in mb) { if (sb.Length > 0) sb.Append('-'); sb.Append(b.ToString("X2")); }
                     a.Mac = sb.ToString();
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 IPInterfaceProperties ip = ni.GetIPProperties();
-                try { IPv4InterfaceProperties v4 = ip.GetIPv4Properties(); a.Dhcp = v4 != null && v4.IsDhcpEnabled; } catch { }
+                try { IPv4InterfaceProperties v4 = ip.GetIPv4Properties(); a.Dhcp = v4 != null && v4.IsDhcpEnabled; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 foreach (UnicastIPAddressInformation u in ip.UnicastAddresses)
                 {
                     if (u.Address.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork) continue;
                     a.Ips.Add(u.Address.ToString());
                     string m = "";
-                    try { m = u.IPv4Mask != null ? u.IPv4Mask.ToString() : ""; } catch { }
+                    try { m = u.IPv4Mask != null ? u.IPv4Mask.ToString() : ""; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     a.Masks.Add(m);
                 }
                 foreach (GatewayIPAddressInformation g in ip.GatewayAddresses)
@@ -90,7 +90,7 @@ static class NetCfg
                 a.DnsAuto = !StaticDns(a.Id);
                 res.Add(a);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         HashSet<string> present = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (AdapterInfo a in res) present.Add(a.Id);
@@ -149,11 +149,11 @@ static class NetCfg
                             res.Add(a);
                         }
                     }
-                    catch { }
+                    catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return res;
     }
 
@@ -320,7 +320,7 @@ static class NetCfg
                 return n;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         // вимкнений адаптер: його можна лише знову ввімкнути (інші дії netsh сам відхилить)
         foreach (AdapterInfo d in DisabledList(new HashSet<string>(StringComparer.OrdinalIgnoreCase)))
         {
@@ -355,13 +355,13 @@ static class NetCfg
             psi.UseShellExecute = false;
             psi.CreateNoWindow = true;
             psi.RedirectStandardOutput = true;
-            try { psi.StandardOutputEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage); } catch { }
+            try { psi.StandardOutputEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             StringBuilder sb = new StringBuilder();
             using (Process pr = Process.Start(psi))
             {
                 pr.OutputDataReceived += delegate (object s, DataReceivedEventArgs e) { if (e.Data != null) lock (sb) sb.AppendLine(e.Data); };
                 pr.BeginOutputReadLine();
-                if (!pr.WaitForExit(30000)) { try { pr.Kill(); } catch { } output = L.T("час очікування вичерпано"); return 1; }
+                if (!pr.WaitForExit(30000)) { try { pr.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } output = L.T("час очікування вичерпано"); return 1; }
                 pr.WaitForExit();
                 lock (sb) output = FirstLine(sb.ToString());
                 return pr.ExitCode;
@@ -434,7 +434,7 @@ static class NetCfg
     public static int RunFile(string file, string hash, TextWriter w)
     {
         byte[] raw = File.ReadAllBytes(file);
-        try { File.Delete(file); } catch { }
+        try { File.Delete(file); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (!ElevHash.Same(raw, hash)) { w.WriteLine(L.T("ERR|Файл завдання змінено після створення - нічого не виконано.")); return 1; }
         Exec(Encoding.UTF8.GetString(raw).Split('\n'), w);
         return 0;
@@ -449,14 +449,14 @@ static class NetCfg
         try { File.WriteAllBytes(planFile, raw); }
         catch (Exception ex) { err = ex.Message; return null; }
         string outFile = Elevated.Run(op, "\"" + planFile + "\" " + ElevHash.Of(raw), out err);
-        if (outFile == null) { try { File.Delete(planFile); } catch { } return null; }
+        if (outFile == null) { try { File.Delete(planFile); } catch (Exception skipEx) { SbLog.Skip(skipEx); } return null; }
         DateTime until = DateTime.Now.AddMinutes(5);
         while (DateTime.Now < until)
         {
             Thread.Sleep(250);
             bool done;
             string t = Elevated.ReadOut(outFile, out done);
-            if (done) { try { File.Delete(outFile); } catch { } return t; }
+            if (done) { try { File.Delete(outFile); } catch (Exception skipEx) { SbLog.Skip(skipEx); } return t; }
         }
         err = L.T("Помічник не відповів.");
         return null;

@@ -233,7 +233,7 @@ static class SecFix
             File.SetAttributes(src, FileAttributes.Normal);
             File.Delete(src);              // зайнятий (програма ще працює) - копію прибираємо, оригінал лишається
         }
-        catch { try { File.Delete(part); } catch { } throw; }
+        catch { try { File.Delete(part); } catch (Exception skipEx) { SbLog.Skip(skipEx); } throw; }
         File.Move(part, dst);
     }
 
@@ -264,7 +264,7 @@ static class SecFix
     {
         List<FixOp> ops = new List<FixOp>();
         byte[] raw = File.ReadAllBytes(file);
-        try { File.Delete(file); } catch { }
+        try { File.Delete(file); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (!ElevHash.Same(raw, hash)) { w.WriteLine(L.T("Файл завдання змінено після створення - нічого не виконано.")); return 1; }
         foreach (string l in Encoding.UTF8.GetString(raw).Split('\n')) { FixOp o = FixOp.Parse(l.TrimEnd('\r')); if (o != null) ops.Add(o); }
         return Exec(ops, w);
@@ -293,7 +293,7 @@ static class SecFix
         File.WriteAllBytes(opsFile, raw);
         string err;
         string outFile = Elevated.Run("secfix", "\"" + opsFile + "\" " + ElevHash.Of(raw), out err);
-        if (outFile == null) { started = false; try { File.Delete(opsFile); } catch { } return err; }
+        if (outFile == null) { started = false; try { File.Delete(opsFile); } catch (Exception skipEx) { SbLog.Skip(skipEx); } return err; }
         DateTime until = DateTime.Now.AddMinutes(16);
         while (DateTime.Now < until)
         {
@@ -305,10 +305,10 @@ static class SecFix
                     using (FileStream fs = new FileStream(outFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                     using (StreamReader r = new StreamReader(fs, Encoding.UTF8)) t = r.ReadToEnd();
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             int k = t.IndexOf("<<END ", StringComparison.Ordinal);
             if (k < 0) continue;
-            try { File.Delete(outFile); } catch { }
+            try { File.Delete(outFile); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             string code = t.Substring(k + 6).TrimEnd('>', ' ', '\r', '\n');
             return code == "0" ? "" : (t.Substring(0, k).Trim().Length > 0 ? t.Substring(0, k).Trim() : L.T("Не вдалося."));
         }
@@ -325,7 +325,7 @@ static class SecFix
         if (err.Length > 0)
         {
             if (!started) return err;
-            try { Do(undo, f.Admin); } catch { }
+            try { Do(undo, f.Admin); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return err + L.T(" Зміни відкочено.");
         }
         return "";

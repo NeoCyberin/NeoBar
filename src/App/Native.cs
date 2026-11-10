@@ -134,6 +134,30 @@ static class Win
     public static extern bool DeviceIoControl(IntPtr h, uint code, IntPtr inBuf, int inSize, IntPtr outBuf, int outSize, out int ret, IntPtr ov);
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool DeviceIoControl(SafeFileHandle h, uint code, byte[] inBuf, int inSize, byte[] outBuf, int outSize, out int ret, IntPtr ov);
+    [DllImport("kernel32.dll", SetLastError = true)] public static extern IntPtr VirtualAlloc(IntPtr a, UIntPtr size, uint type, uint prot);
+    [DllImport("kernel32.dll", SetLastError = true)] public static extern bool VirtualFree(IntPtr a, UIntPtr size, uint type);
+    [DllImport("kernel32.dll", SetLastError = true)] public static extern bool WriteFile(SafeFileHandle h, IntPtr buf, int n, out int done, IntPtr ovl);
+    [DllImport("kernel32.dll", SetLastError = true)] public static extern bool SetFilePointerEx(SafeFileHandle h, long dist, out long np, int method);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] public static extern bool GetDiskFreeSpace(string root, out uint spc, out uint bps, out uint free, out uint total);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern bool QueryFullProcessImageNameW(IntPtr h, int flags, StringBuilder sb, ref int size);
+    [DllImport("ntdll.dll")] public static extern int NtQueryInformationProcess(IntPtr h, int cls, IntPtr buf, int len, out int ret);
+    [DllImport("ntdll.dll")] public static extern int NtQueryInformationProcess(IntPtr h, int cls, out int val, int len, out int ret);
+    [DllImport("advapi32.dll", SetLastError = true)] public static extern bool OpenProcessToken(IntPtr p, uint access, out IntPtr tok);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)] public static extern IntPtr OpenSCManager(string machine, string db, uint access);
+    [DllImport("advapi32.dll")] public static extern bool CloseServiceHandle(IntPtr h);
+    [DllImport("iphlpapi.dll", SetLastError = true)] public static extern int GetExtendedTcpTable(IntPtr tbl, ref int size, bool sort, int af, int cls, int reserved);
+    [DllImport("iphlpapi.dll", SetLastError = true)] public static extern int GetExtendedUdpTable(IntPtr tbl, ref int size, bool sort, int af, int cls, int reserved);
+    [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)] public static extern int SHLoadIndirectString(string src, StringBuilder buf, int size, IntPtr reserved);
+
+    // вікна
+    public delegate bool EnumWindowsProc(IntPtr h, IntPtr l);
+    [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc cb, IntPtr l);
+    [DllImport("user32.dll")] public static extern bool IsWindow(IntPtr h);
+    [DllImport("user32.dll")] public static extern IntPtr GetAncestor(IntPtr h, uint flags);
+    [DllImport("user32.dll")] public static extern IntPtr GetWindow(IntPtr h, uint cmd);
+    [DllImport("user32.dll")] public static extern IntPtr GetShellWindow();
+    [DllImport("user32.dll")] public static extern bool AllowSetForegroundWindow(int pid);
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongW")] public static extern int GetWindowLong(IntPtr h, int i);
 }
 
 static class Nat

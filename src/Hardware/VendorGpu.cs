@@ -131,7 +131,7 @@ static class VendorGpu
                 if (Marshal.ReadInt32(pmBuf, 4 + sid * 8) != 0) sb.Append(sid + "=" + Marshal.ReadInt32(pmBuf, 4 + sid * 8 + 4) + " ");
             SbLog.W(SbLog.Sensors, "ADL адаптер " + idx + " (" + (name ?? "").Trim() + ", шина " + bus + "): " + (sb.Length > 0 ? sb.ToString() : "датчиків немає"));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static bool Sensor(int id, out float v)
@@ -217,7 +217,7 @@ static class VendorGpu
                 if (t > best) { best = t; nvmlPath = p; }           // кілька версій драйвера - найновіша
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return nvmlPath;
     }
 
@@ -448,7 +448,7 @@ static class CpuTempWmi
         busy = true;
         System.Threading.ThreadPool.QueueUserWorkItem(delegate
         {
-            try { Refresh(); } catch { }
+            try { Refresh(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             finally { busy = false; }
         });
         return last;
@@ -458,7 +458,7 @@ static class CpuTempWmi
     {
         float res = float.NaN; string src = "";
         Type lt = null;
-        try { lt = Type.GetTypeFromProgID("WbemScripting.SWbemLocator"); } catch { }
+        try { lt = Type.GetTypeFromProgID("WbemScripting.SWbemLocator"); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (lt == null) { next = DateTime.Now.AddSeconds(60); last = res; Source = src; return; }
         foreach (string ns in Spaces)
         {
@@ -480,7 +480,7 @@ static class CpuTempWmi
                 float r = !float.IsNaN(pkg) ? pkg : best;
                 if (!float.IsNaN(r)) { last = r; Source = ns.Substring(ns.IndexOf('\\') + 1); return; }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         next = DateTime.Now.AddSeconds(30);       // нічого не запущено - не питати щосекунди
         last = res; Source = src;

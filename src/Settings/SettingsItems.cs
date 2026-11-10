@@ -90,7 +90,7 @@ sealed partial class SettingsForm
     static string TargetKey(string t)
     {
         string s = (t ?? "").Trim().Trim('"');
-        try { s = Environment.ExpandEnvironmentVariables(s); } catch { }
+        try { s = Environment.ExpandEnvironmentVariables(s); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return s.TrimEnd('\\', '/').ToLowerInvariant();
     }
 
@@ -146,7 +146,7 @@ sealed partial class SettingsForm
                     files.Add(f);
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         if (files.Count == 0)
         {
@@ -543,9 +543,9 @@ sealed partial class SettingsForm
         {
             string file = null;
             try { file = Util.DownloadFavicon(u, dir); }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             try { BeginInvoke(new Action(delegate { OnFavicon(e, file); })); }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 

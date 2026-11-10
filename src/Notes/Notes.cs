@@ -165,7 +165,7 @@ static class Notes
     static void Notify()
     {
         Action a = Changed;
-        if (a != null) try { a(); } catch { }
+        if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static List<NoteTheme> BuildThemes()
@@ -242,7 +242,7 @@ static class Notes
         zTimer.Stop();
         saveTimer.Stop();
         Save();
-        foreach (NoteForm f in new List<NoteForm>(forms.Values)) { try { f.Dispose(); } catch { } }
+        foreach (NoteForm f in new List<NoteForm>(forms.Values)) { try { f.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         forms.Clear();
         started = false;
     }
@@ -326,7 +326,7 @@ static class Notes
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         foreach (Note n in All)
         {
             if (n.Id.Length == 0) n.Id = NewId();
@@ -476,7 +476,7 @@ static class Notes
     public static void Delete(Note n)
     {
         NoteForm f;
-        if (forms.TryGetValue(n, out f)) { forms.Remove(n); try { f.Dispose(); } catch { } }
+        if (forms.TryGetValue(n, out f)) { forms.Remove(n); try { f.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         All.Remove(n);
         Save();
         Notify();
@@ -579,7 +579,7 @@ static class Notes
             using (Graphics g = Graphics.FromImage(bmp))
             {
                 g.Clear(t.Body);
-                try { NoteBackdrop.Draw(g, new Rectangle(0, 0, w, h), t, seed); } catch { }
+                try { NoteBackdrop.Draw(g, new Rectangle(0, 0, w, h), t, seed); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
             byte[] l = ReadBits(bmp);
             for (int i = 3; i < l.Length; i += 4) l[i] = 255;

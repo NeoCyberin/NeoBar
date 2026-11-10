@@ -95,7 +95,7 @@ static class FileCheck
             if (Array.IndexOf(new string[] { ".scr", ".pif", ".com" }, ext) >= 0) r.Add(2, L.T("Розширення ") + ext + L.T(" - це теж програма, але звичайні програми ним майже не користуються."));
             if (ext == ".hta") r.Add(3, L.T("HTA - веб-сторінка з повними правами програми; часто використовується в шкідливих розсилках."));
             if (ext == ".vbe" || ext == ".jse") r.Add(3, L.T("Закодований скрипт (") + ext + L.T(") - вміст навмисно приховано."));
-            try { r.Sha256 = Hashes.Sha256Of(path); } catch { }
+            try { r.Sha256 = Hashes.Sha256Of(path); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         catch (Exception ex) { r.Error = ex.Message; }
         r.Done = true;
@@ -368,7 +368,7 @@ abstract class VtWindow : ToolWindow
                     if (vt && i >= 0 && res.Sha256.Length > 0) StartVt(res);
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         t.IsBackground = true;
         t.Priority = ThreadPriority.BelowNormal;
@@ -453,13 +453,13 @@ abstract class VtWindow : ToolWindow
 
     protected void Ui(Action a)
     {
-        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(new Action(delegate { a(); Invalidate(); })); } catch { }
+        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(new Action(delegate { a(); Invalidate(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected static void OpenVt(string sha)
     {
         // відкривається лише сторінка за хешем: сам файл не завантажується
-        try { System.Diagnostics.Process.Start("https://www.virustotal.com/gui/file/" + sha); } catch { }
+        try { System.Diagnostics.Process.Start("https://www.virustotal.com/gui/file/" + sha); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 }
 

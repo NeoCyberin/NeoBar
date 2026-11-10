@@ -156,7 +156,7 @@ static class SBFonts
                         for (int i = 0; i < blobs.Count; i++)
                         {
                             string fp = Path.Combine(dir, files[i][0] + ".ttf");
-                            try { File.WriteAllBytes(fp, blobs[i]); } catch { }
+                            try { File.WriteAllBytes(fp, blobs[i]); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                             int r = AddFontResourceExW(fp, 0x10, IntPtr.Zero);
                             if (r == 0) log.AppendLine("AddFontResourceEx " + files[i][0] + ": 0 шрифтів");
                         }

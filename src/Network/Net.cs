@@ -39,7 +39,7 @@ static class NetCache
             {
                 // папка програми лише для читання (Program Files) - кеш у профілі користувача
                 r = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NeoBar", "cache");
-                try { Directory.CreateDirectory(r); } catch { }
+                try { Directory.CreateDirectory(r); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
             root = r;
             return root;
@@ -49,7 +49,7 @@ static class NetCache
     public static string Dir(string sub)
     {
         string d = Path.Combine(Root, sub);
-        try { Directory.CreateDirectory(d); } catch { }
+        try { Directory.CreateDirectory(d); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return d;
     }
 
@@ -159,7 +159,7 @@ static class NetCache
         {
             if (File.Exists(f) && DateTime.Now - File.GetLastWriteTime(f) < ttl) return File.ReadAllBytes(f);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
         {
             DateTime t0 = DateTime.Now;
@@ -175,7 +175,7 @@ static class NetCache
             {
                 if (File.Exists(f)) { stale = true; return File.ReadAllBytes(f); }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             throw;
         }
     }
@@ -214,7 +214,7 @@ static class NetCache
                 if (File.Exists(file)) File.Delete(file);
                 File.Move(tmp, file);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 
@@ -223,7 +223,7 @@ static class NetCache
     {
         long n = 0;
         try { foreach (string f in Directory.GetFiles(Root, "*", SearchOption.AllDirectories)) n += new FileInfo(f).Length; }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return n;
     }
 
@@ -232,9 +232,9 @@ static class NetCache
         try
         {
             foreach (string d in Directory.GetDirectories(Root))
-                try { Directory.Delete(d, true); } catch { }
+                try { Directory.Delete(d, true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 }
 
@@ -361,7 +361,7 @@ static class Geo
                     if (d != null) d.Dispose();
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 
@@ -392,7 +392,7 @@ static class Geo
                 tz = tzo.Length > 0 ? Js.Str(tzo, "id") : Js.Str(js, "timezone");
                 return true;
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return false;
     }
@@ -608,7 +608,7 @@ static class Favicons
                     {
                         bool ok = Fetch(host, f);
                         lock (busy) { busy.Remove(host); if (!ok) failed.Add(host); }
-                        if (ok && done != null) try { done(); } catch { }
+                        if (ok && done != null) try { done(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     });
                 }
             }
@@ -638,7 +638,7 @@ static class Favicons
                 else bmp.Dispose();
                 if (best.Width >= 96) break;
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         if (best == null) return false;
         try

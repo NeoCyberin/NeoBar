@@ -16,8 +16,6 @@ using System.Threading;
 // ======================================================================
 static class GamePing
 {
-    [DllImport("iphlpapi.dll", SetLastError = true)] static extern int GetExtendedTcpTable(IntPtr tbl, ref int size, bool sort, int af, int cls, int reserved);
-    [DllImport("iphlpapi.dll", SetLastError = true)] static extern int GetExtendedUdpTable(IntPtr tbl, ref int size, bool sort, int af, int cls, int reserved);
     [DllImport("iphlpapi.dll")] static extern int GetPerTcpConnectionEStats(IntPtr row, int type, IntPtr rw, uint rwVer, uint rwSize, IntPtr ros, uint rosVer, uint rosSize, IntPtr rod, uint rodVer, uint rodSize);
     [DllImport("iphlpapi.dll")] static extern int SetPerTcpConnectionEStats(IntPtr row, int type, IntPtr rw, uint rwVer, uint rwSize, uint offset);
 
@@ -52,7 +50,7 @@ static class GamePing
         }
     }
 
-    public static void Shutdown() { stop = true; pid = 0; try { wake.Set(); } catch { } StopSniffer(); }
+    public static void Shutdown() { stop = true; pid = 0; try { wake.Set(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } StopSniffer(); }
 
     static void Loop()
     {
@@ -147,17 +145,17 @@ static class GamePing
         IntPtr b = IntPtr.Zero;
         try
         {
-            int rc = tcp ? GetExtendedTcpTable(IntPtr.Zero, ref size, false, 2, cls, 0) : GetExtendedUdpTable(IntPtr.Zero, ref size, false, 2, cls, 0);
+            int rc = tcp ? Win.GetExtendedTcpTable(IntPtr.Zero, ref size, false, 2, cls, 0) : Win.GetExtendedUdpTable(IntPtr.Zero, ref size, false, 2, cls, 0);
             for (int attempt = 0; attempt < 4 && size > 0 && size < 16000000; attempt++)
             {
                 if (b != IntPtr.Zero) Marshal.FreeHGlobal(b);
                 b = Marshal.AllocHGlobal(size + 256);
-                rc = tcp ? GetExtendedTcpTable(b, ref size, false, 2, cls, 0) : GetExtendedUdpTable(b, ref size, false, 2, cls, 0);
+                rc = tcp ? Win.GetExtendedTcpTable(b, ref size, false, 2, cls, 0) : Win.GetExtendedUdpTable(b, ref size, false, 2, cls, 0);
                 if (rc == 0) { buf = b; return true; }
                 if (rc != 122) break;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (b != IntPtr.Zero) Marshal.FreeHGlobal(b);
         return false;
     }
@@ -307,7 +305,7 @@ static class GamePing
         sniffStop = true;
         Socket s = sock;
         sock = null;
-        if (s != null) try { s.Close(); } catch { }
+        if (s != null) try { s.Close(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         lock (udpGate) { udpBytes.Clear(); }
     }
 
@@ -348,7 +346,7 @@ static class GamePing
                     if (udpBytes.Count < 512) udpBytes[remote] = cur + len;
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 

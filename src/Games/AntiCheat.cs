@@ -73,7 +73,7 @@ static class AntiCheat
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         lock (dirCache) dirCache[key] = r;
         return r;
     }
@@ -103,7 +103,7 @@ static class AntiCheat
                 if (string.Equals(Games.Vdf(t, "installdir"), install, StringComparison.OrdinalIgnoreCase)) { g.AppId = Games.Vdf(t, "appid"); break; }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return g.AppId;
     }
 
@@ -139,7 +139,7 @@ static class AntiCheat
                 byte[] b = NetCache.Get("https://store.steampowered.com/api/appdetails?appids=" + id + "&filters=categories&l=english", TimeSpan.FromDays(30), out stale);
                 if (b != null) res = ParseVac(Encoding.UTF8.GetString(b));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             lock (vac) vac[id] = res;
             if (res >= 0) Version++;
         }
@@ -189,7 +189,7 @@ static class AntiCheat
             }
             finally { foreach (Process p in all) p.Dispose(); }       // і ті, до яких цикл не дійшов
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (w.Length == 0)
         {
             try
@@ -202,10 +202,10 @@ static class AntiCheat
                         if (w.Length > 0) break;
                     }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         // запам'ятати: у налаштуваннях біля гри з'явиться позначка й попередження
-        if (w.Length > 0 && g != null && g.AcSeen != w) { g.AcSeen = w; try { Games.Save(); } catch { } }
+        if (w.Length > 0 && g != null && g.AcSeen != w) { g.AcSeen = w; try { Games.Save(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         return w;
     }
 }

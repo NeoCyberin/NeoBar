@@ -84,7 +84,7 @@ static class Widgets
             if (kinds.Contains("net")) ReadNet();
             if (kinds.Contains("battery")) ReadBattery();
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // id томів віджета (через кому); порожньо - системний диск
@@ -157,13 +157,13 @@ static class Widgets
                     Vol old;
                     snap.TryGetValue(id, out old);
                     Vol v = null;
-                    try { v = Vols.Quick(id, old != null ? old.Root : ""); } catch { }
+                    try { v = Vols.Quick(id, old != null ? old.Root : ""); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     lock (disks) disks[id] = v;
                 }
             }
             finally { diskBusy = false; }
             Action a = DisksUpdated;
-            if (a != null) try { a(); } catch { }
+            if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -182,7 +182,7 @@ static class Widgets
                 tx += st.BytesSent;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         DateTime now = DateTime.Now;
         if (lastNet != DateTime.MinValue)
         {
@@ -468,7 +468,7 @@ static class Widgets
                 if (res.Count >= 8) break;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return res;
     }
 
@@ -556,7 +556,7 @@ static class Widgets
             }
             wBusy = false;
             wfEnd = DateTime.Now;
-            try { if (done != null) done(); } catch { }
+            try { if (done != null) done(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 

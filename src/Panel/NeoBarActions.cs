@@ -62,12 +62,12 @@ sealed partial class NeoBar
                 MessageBox.Show(L.T("Не вдалося запустити:\n") + target + "\n\n" + msg, "NeoBar", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static void RunShell(System.Threading.ThreadStart a)
     {
-        System.Threading.Thread t = new System.Threading.Thread(delegate () { try { a(); } catch { } });
+        System.Threading.Thread t = new System.Threading.Thread(delegate () { try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } });
         t.SetApartmentState(System.Threading.ApartmentState.STA);
         t.IsBackground = true;
         t.Start();
@@ -129,8 +129,8 @@ sealed partial class NeoBar
         Invalidate();
         string[] files = null;
         string text = null;
-        try { files = e.Data.GetData(DataFormats.FileDrop) as string[]; } catch { }
-        if (files == null) try { text = e.Data.GetData(DataFormats.Text) as string; } catch { }
+        try { files = e.Data.GetData(DataFormats.FileDrop) as string[]; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        if (files == null) try { text = e.Data.GetData(DataFormats.Text) as string; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         BeginInvoke(new Action(delegate { AddDropped(files, text, slot); }));
     }
 
@@ -277,7 +277,7 @@ sealed partial class NeoBar
     {
         float from = GroupOpen(e);
         e.Collapsed = !e.Collapsed;
-        try { Store.Save(cfgPath, cfg, entries); } catch { }   // стан згортання запам'ятовується
+        try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }   // стан згортання запам'ятовується
         if (cfg.Anim)
         {
             grpT[e] = from;
@@ -378,14 +378,14 @@ sealed partial class NeoBar
     // повний перезапуск NeoBar (новий процес з тим самим профілем і правами; нова копія чекає, поки ця закриється)
     public void RestartApp()
     {
-        try { Store.Save(cfgPath, cfg, entries); } catch { }
+        try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         SbLog.W(SbLog.Panel, "повний перезапуск NeoBar");
         if (Prof.Restart()) Close();
     }
 
     public void SwitchProfile()
     {
-        try { Store.Save(cfgPath, cfg, entries); } catch { }
+        try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Prof.Last = "";
         Prof.Save();
         SbLog.W(SbLog.Panel, "зміна профілю: перезапуск у вікно вибору");
@@ -423,7 +423,7 @@ sealed partial class NeoBar
     {
         cfg.Mode = cfg.Mode == "fixed" ? "autohide" : "fixed";
         SbLog.W(SbLog.Panel, "режим панелі: " + cfg.Mode);
-        try { Store.Save(cfgPath, cfg, entries); } catch { }
+        try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Reload();
     }
 

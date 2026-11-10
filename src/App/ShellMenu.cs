@@ -114,19 +114,19 @@ static class ShellMenu
     // усі пункти й асоціація .nbenc (видалення програми)
     public static void RemoveAll()
     {
-        try { Registry.CurrentUser.DeleteSubKeyTree(Root, false); } catch { }
+        try { Registry.CurrentUser.DeleteSubKeyTree(Root, false); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
         {
             string cur = null;
             using (RegistryKey e = Registry.CurrentUser.OpenSubKey(ExtKey)) if (e != null) cur = e.GetValue("") as string;
             if (cur == ProgId) Registry.CurrentUser.DeleteSubKeyTree(ExtKey, false);
         }
-        catch { }
-        try { Registry.CurrentUser.DeleteSubKeyTree(ProgKey, false); } catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { Registry.CurrentUser.DeleteSubKeyTree(ProgKey, false); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Notify();
     }
 
-    static void Notify() { try { SHChangeNotify(0x08000000, 0, IntPtr.Zero, IntPtr.Zero); } catch { } }      // SHCNE_ASSOCCHANGED
+    static void Notify() { try { SHChangeNotify(0x08000000, 0, IntPtr.Zero, IntPtr.Zero); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }      // SHCNE_ASSOCCHANGED
 
     // NeoBar перенесли в іншу теку - пункти меню вели б на старий шлях: оновлюємо (під час запуску панелі)
     public static void Refresh()
@@ -163,7 +163,6 @@ static class ShellMenu
 // ======================================================================
 static class ToolHost
 {
-    [DllImport("user32.dll")] static extern bool AllowSetForegroundWindow(int pid);
 
     static string PipeName { get { return "NeoBarTool-" + Process.GetCurrentProcess().SessionId + "-" + Environment.UserName; } }
 
@@ -193,7 +192,7 @@ static class ToolHost
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += delegate (object s, ThreadExceptionEventArgs e) { Util.ErrorLog(e.Exception); };
             theme = Prof.PeekTheme();
-            try { using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) scale = Math.Max(1f, g.DpiX / 96f); } catch { }
+            try { using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) scale = Math.Max(1f, g.DpiX / 96f); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             marshal = new Control();
             IntPtr h = marshal.Handle;     // вікно для передачі викликів у потік інтерфейсу
             ctx = new ApplicationContext();
@@ -201,13 +200,13 @@ static class ToolHost
             if (created) Serve();
             Application.Run(ctx);
         }
-        finally { if (m != null) { try { m.ReleaseMutex(); } catch { } m.Dispose(); } }
+        finally { if (m != null) { try { m.ReleaseMutex(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } m.Dispose(); } }
         return 0;
     }
 
     static bool Send(string verb, string path)
     {
-        try { AllowSetForegroundWindow(-1); } catch { }       // щоб господар зміг вивести своє вікно наперед
+        try { Win.AllowSetForegroundWindow(-1); } catch (Exception skipEx) { SbLog.Skip(skipEx); }       // щоб господар зміг вивести своє вікно наперед
         DateTime until = DateTime.Now.AddSeconds(4);
         while (DateTime.Now < until)
         {
@@ -246,7 +245,7 @@ static class ToolHost
                                 int k = l.IndexOf('\t');
                                 if (k <= 0) continue;
                                 string v = l.Substring(0, k), p = l.Substring(k + 1);
-                                try { marshal.BeginInvoke(new Action(delegate { Handle(v, p); })); } catch { }
+                                try { marshal.BeginInvoke(new Action(delegate { Handle(v, p); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                             }
                         }
                     }
@@ -383,7 +382,7 @@ class ToolWindow : SbWindow
 
     protected static void Copy(string s)
     {
-        try { if (!string.IsNullOrEmpty(s)) Clipboard.SetText(s); } catch { }
+        try { if (!string.IsNullOrEmpty(s)) Clipboard.SetText(s); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected static string SizeText(long b) { return Cleaner.Size(b); }

@@ -56,7 +56,7 @@ static class CpuTempPawn
                     else if (v.IndexOf("GenuineIntel", StringComparison.OrdinalIgnoreCase) >= 0) vendor = 1;
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return vendor;
         }
     }
@@ -79,7 +79,7 @@ static class CpuTempPawn
                     if (m.Success) family = int.Parse(m.Groups[1].Value);
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return family;
         }
     }
@@ -116,7 +116,7 @@ static class CpuTempPawn
                     if (!Directory.Exists(d)) continue;
                     foreach (string f in Directory.GetFiles(d, pre + "*.bin")) return f;
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
             return null;
         }
@@ -207,12 +207,12 @@ static class CpuTempPawn
             locked = pci.WaitOne(150);
         }
         catch (AbandonedMutexException) { locked = true; }     // попередній власник закрився, не звільнивши: м'ютекс тепер наш - обов'язково звільнити
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         long[] inp = { 0x00059800 }, outp = { 0 };
         IntPtr ret;
         int hr;
         try { hr = exec(handle, "ioctl_read_smn", inp, new IntPtr(1), outp, new IntPtr(1), out ret); }
-        finally { if (locked) { try { pci.ReleaseMutex(); } catch { } } }
+        finally { if (locked) { try { pci.ReleaseMutex(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } } }
         if (hr != 0) { Status = L.T("PawnIO: помилка читання (0x") + hr.ToString("X8") + ")"; return float.NaN; }
         uint v = (uint)(outp[0] & 0xFFFFFFFF);
         float t = ((v >> 21) & 0x7FF) / 8.0f;
@@ -328,7 +328,7 @@ static class CpuTempPawn
             if (err != null) SbLog.W(SbLog.Sensors, "PawnIO: завантаження модуля: " + err);
             next = DateTime.MinValue;
             downloading = false;
-            try { done(err); } catch { }
+            try { done(err); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         t.IsBackground = true;
         t.Start();
