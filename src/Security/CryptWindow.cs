@@ -104,6 +104,7 @@ sealed class CryptWindow : ToolWindow
     public void HashFile(string path)
     {
         if (!File.Exists(path)) return;
+        EnsureHandle();
         if (Tab != 0) { Tab = 0; OnTab(); }
         if (hBusy) { hStop = true; }
         hFile = path;
@@ -138,6 +139,7 @@ sealed class CryptWindow : ToolWindow
 
     public void AddFiles(string[] paths)
     {
+        EnsureHandle();
         if (Tab != 2) { Tab = 2; OnTab(); }
         foreach (string p in paths)
         {
@@ -176,20 +178,23 @@ sealed class CryptWindow : ToolWindow
     {
         foreach (TextBox t in new TextBox[] { tbIn, tbOut, tbPw, tbFpw, tbFpw2 }) if (t.Visible) t.Visible = false;
         int y = r.Y;
-        Rectangle top = new Rectangle(r.X, y, r.Width, Px(70));
-        Card(g, top);
+        Rectangle top;
         if (hFile.Length == 0)
         {
-            TxtL(g, L.T("Перетягніть файл у вікно або виберіть його"), F, new Rectangle(top.X + Px(14), top.Y, top.Width - Px(190), top.Height), P.Sub);
+            // зона перетягування - як у «Безпеці» та «Відновленні файлів»
+            top = new Rectangle(r.X, y, r.Width, Px(112));
+            DropZone(g, top, L.T("Перетягніть файл сюди"), L.T("Вибрати файл…"), PickHash, true);
         }
         else
         {
+            top = new Rectangle(r.X, y, r.Width, Px(70));
+            Card(g, top);
             TxtL(g, Path.GetFileName(hFile), FB, new Rectangle(top.X + Px(14), top.Y + Px(12), top.Width - Px(190), Px(22)), P.Fg);
             TxtL(g, SizeText(hSize) + " · " + Path.GetDirectoryName(hFile), FS, new Rectangle(top.X + Px(14), top.Y + Px(36), top.Width - Px(190), Px(20)), P.Sub);
+            Rectangle pick = new Rectangle(top.Right - Px(164), top.Y + (top.Height - Px(34)) / 2, Px(150), Px(34));
+            if (hBusy) Btn(g, pick, L.T("Зупинити"), delegate { hStop = true; hBusy = false; hFile = ""; Invalidate(); }, 0, true);
+            else Btn(g, pick, L.T("Інший файл…"), PickHash, 1, true);
         }
-        Rectangle pick = new Rectangle(top.Right - Px(164), top.Y + (top.Height - Px(34)) / 2, Px(150), Px(34));
-        if (hBusy) Btn(g, pick, L.T("Зупинити"), delegate { hStop = true; hBusy = false; hFile = ""; Invalidate(); }, 0, true);
-        else Btn(g, pick, L.T("Вибрати файл…"), PickHash, 1, true);
         y = top.Bottom + Px(12);
         if (hBusy)
         {
@@ -344,9 +349,8 @@ sealed class CryptWindow : ToolWindow
         int bottomBlock = Px(34) + Px(8) + Px(34) + Px(8) + Px(34) + Px(10) + Px(38) + Px(30);
         Rectangle list = new Rectangle(r.X, y, r.Width, Math.Max(Px(80), r.Bottom - y - bottomBlock));
         int rowH = Px(48);
-        Card(g, list, Util.Blend(P.Bg, P.Fg, 0.035f));
-        if (files.Count == 0)
-            TxtC(g, L.T("Перетягніть файли у вікно або натисніть «Додати файли…»"), F, list, P.Sub);
+        if (files.Count == 0) DropZone(g, list, L.T("Перетягніть файли сюди"), L.T("Додати файли…"), PickFiles, !fBusy);
+        else Card(g, list, Util.Blend(P.Bg, P.Fg, 0.035f));
         int total = files.Count * rowH, maxS = Math.Max(0, total - list.Height + Px(8));
         fScroll = Math.Max(0, Math.Min(maxS, fScroll));
         GraphicsState st = g.Save();

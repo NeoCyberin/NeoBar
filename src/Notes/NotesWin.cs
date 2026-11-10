@@ -61,10 +61,10 @@ sealed class NotesWindow : SbWindow
             {
                 if (MessageBox.Show(this, L.T("Видалити нотатку «") + n.Label + L.Q("»?"), "NeoBar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) Notes.Delete(n);
             }, false);
-            Hot(new Rectangle(cr.X, cr.Y, cr.Width - Px(150), cr.Height), delegate { if (n.Locked) Notes.SetLocked(n, false); });
+            Hot(new Rectangle(cr.X, cr.Y, cr.Width - Px(150), cr.Height), delegate { Notes.Reveal(n); });
             y += rowH;
         }
         Wheel(lr, delegate (int d) { scroll -= d; });
-        TxtL(g, L.T("Клік по нотатці - редагувати; перемикач - закріпити на шпалерах."), FS, new Rectangle(r.X, r.Bottom - Px(20), r.Width, Px(20)), P.Sub);
+        TxtL(g, L.T("Клік по нотатці - показати її; перемикач - закріпити на шпалерах або редагувати."), FS, new Rectangle(r.X, r.Bottom - Px(20), r.Width, Px(20)), P.Sub);
     }
 }

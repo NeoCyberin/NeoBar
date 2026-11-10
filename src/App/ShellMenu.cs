@@ -176,6 +176,8 @@ static class ToolHost
 
     public static int Run(string verb, string path)
     {
+        // працює панель - файл відкривається в її розкритому вікні (одне розкрите вікно замінює інше)
+        if (DropBridge.SendTool(verb, path)) return 0;
         bool created;
         Mutex m = new Mutex(true, "Local\\NeoBarTool", out created);
         if (!created)
@@ -272,6 +274,7 @@ static class ToolHost
 
     static void Closed()
     {
+        // вікно під час FormClosed ще не звільнене (IsDisposed = false) - тому поле обнуляється в обробнику закриття
         bool any = (crypt != null && !crypt.IsDisposed) || (check != null && !check.IsDisposed);
         if (!any) ctx.ExitThread();
     }
@@ -285,7 +288,7 @@ static class ToolHost
                 if (check == null || check.IsDisposed)
                 {
                     check = new FileCheckWindow(theme, scale);
-                    check.FormClosed += delegate { Closed(); };
+                    check.FormClosed += delegate { check = null; Closed(); };
                     Place(check);
                 }
                 check.Add(path);
@@ -295,7 +298,7 @@ static class ToolHost
             if (crypt == null || crypt.IsDisposed)
             {
                 crypt = new CryptWindow(theme, scale);
-                crypt.FormClosed += delegate { Closed(); };
+                crypt.FormClosed += delegate { crypt = null; Closed(); };
                 Place(crypt);
             }
             if (verb == "hash") crypt.HashFile(path);

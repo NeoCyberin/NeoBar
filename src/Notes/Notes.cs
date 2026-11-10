@@ -55,7 +55,7 @@ sealed class NoteTheme
         n.Fg = Util.Opaque(t.Text.A < 255 ? Util.Blend(n.Body, Util.Opaque(t.Text), t.Text.A / 255f) : t.Text);
         Color acc = Util.Opaque(t.Accent);
         n.Header = Util.Blend(n.Body, acc, 0.78f);
-        n.FontName = SBFonts.ForTheme(t.Id) + "|" + t.Font;      // власний шрифт теми, далі - запасний
+        n.FontName = t.Font;                                       // той самий шрифт, що й у панелі та вікнах цієї теми
         n.FontSize = t.Sketchy ? 12f : (t.Id == "cyber" ? 10.5f : 11f);
         n.BorderW = Math.Max(1, t.EdgeW);
         n.Radius = t.Radius;
@@ -489,6 +489,13 @@ static class Notes
         else n.Locked = locked;
         Save();
         Notify();
+    }
+
+    // клік у списку нотаток: показати нотатку, не змінюючи закріплення (закріплюють перемикач і замочок)
+    public static void Reveal(Note n)
+    {
+        NoteForm f;
+        if (forms.TryGetValue(n, out f) && f != null && !f.IsDisposed) f.Reveal();
     }
 
     public static void LockAll() { foreach (Note n in All) SetLocked(n, true); }

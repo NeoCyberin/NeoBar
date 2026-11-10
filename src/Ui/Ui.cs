@@ -985,10 +985,11 @@ class SbWindow : Form
             pn.DashStyle = DashStyle.Dash;
             g.DrawPath(pn, gp);
         }
-        TxtC(g, title, FH, new Rectangle(dz.X, dz.Y + Px(16), dz.Width, Px(30)), P.Fg);
-        TxtC(g, L.T("або"), FS, new Rectangle(dz.X, dz.Y + Px(46), dz.Width, Px(18)), P.Sub);
+        int y0 = dz.Y + Math.Max(0, (dz.Height - Px(112)) / 2);        // висока зона - вміст посередині
+        TxtC(g, title, FH, new Rectangle(dz.X, y0 + Px(16), dz.Width, Px(30)), P.Fg);
+        TxtC(g, L.T("або"), FS, new Rectangle(dz.X, y0 + Px(46), dz.Width, Px(18)), P.Sub);
         int bw = Math.Max(Px(200), TextRenderer.MeasureText(button, F).Width + Px(32));
-        Btn(g, new Rectangle(dz.X + (dz.Width - bw) / 2, dz.Y + Px(66), bw, Px(34)), button, click, 1, enabled);
+        Btn(g, new Rectangle(dz.X + (dz.Width - bw) / 2, y0 + Px(66), bw, Px(34)), button, click, 1, enabled);
     }
 
     protected void Chip(Graphics g, Rectangle r, string text, bool sel, Action click)
@@ -1049,6 +1050,10 @@ class SbWindow : Form
     }
 
     // поле для тексту в стилі теми (системний TextBox без рамки поверх намальованого поля)
+    // вікно ще не показане (напр., створене з контекстного меню): фонові завдання повертають результат через
+    // BeginInvoke, а він без дескриптора вікна кидає виняток - результат губився б («вічне обчислення»)
+    public void EnsureHandle() { if (!IsHandleCreated && !IsDisposed) { IntPtr h = Handle; } }
+
     protected TextBox MakeInput()
     {
         TextBox tb = new TextBox();

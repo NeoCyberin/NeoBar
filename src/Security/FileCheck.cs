@@ -348,6 +348,7 @@ abstract class VtWindow : ToolWindow
     // vt - одразу після аналізу перевірити й на VirusTotal
     public void AddReport(string path, bool vt)
     {
+        EnsureHandle();
         if (!File.Exists(path)) return;
         foreach (FileReport x in Reps) if (string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase)) { Reps.Remove(x); break; }
         FileReport r = new FileReport();

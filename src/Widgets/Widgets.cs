@@ -907,9 +907,9 @@ static class Widgets
                 int[] dv = Dice.Shown;
                 int n = Math.Max(1, Dice.Count);
                 bool lab = n == 1 && dv.Length == 1 && !Dice.Rolling && Dice.LabelOf(dv[0]).Length > 0;
-                // на панелі - один кубик: результат (для кількох кубиків - сума або їхня кількість)
-                float area = h * 0.6f;
-                float s = Math.Max(6 * sc, Math.Min(area, w * 0.8f));
+                // на панелі - один кубик: результат (для кількох кубиків - сума або їхня кількість);
+                // розмір і місце - як у значків інших віджетів (над підписом, по центру)
+                float s = Math.Max(6 * sc, Math.Min(h * 0.52f, w * 0.7f));
                 Color face = Util.Blend(Util.Opaque(t.Bg), text, Util.Lum(Util.Opaque(t.Bg)) > 140 ? 0.06f : 0.2f);
                 Color ink = text;
                 bool ready = dv.Length > 0 && !Dice.Rolling;
@@ -921,9 +921,11 @@ static class Widgets
                     else tl = "x" + n;
                 }
                 using (Font nf = FitFont(font, "88", s * 0.55f, (int)(s * 0.86f), FontStyle.Bold))
-                    Dice.DrawDie(g, new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.02f + (area - s) / 2f, s, s), tv, face, ink, nf, tl);
-                string cap = dv.Length == 0 ? (n > 1 ? L.T("Кубик x") + n : L.T("Кубик")) : (Dice.Rolling ? "…" : (lab ? Dice.LabelOf(dv[0])
-                    : (n > 1 ? (Dice.Total ? L.T("сума з ") + n : string.Join(" ", Array.ConvertAll(dv, delegate (int x) { return x.ToString(); }))) : (Dice.Faces <= 6 ? dv[0].ToString() : L.T("к") + Dice.Faces))));
+                    Dice.DrawDie(g, new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.05f, s, s), tv, face, ink, nf, tl);
+                // підпис: тип кубика (к4, к6, к20…) - однаково для всіх; число - на самому кубику
+                string dk = Dice.Locked ? L.T("Кубик") : (n > 1 ? n + L.T("к") + Dice.Faces : L.T("к") + Dice.Faces);
+                string cap = Dice.Rolling ? "…" : (lab ? Dice.LabelOf(dv[0])
+                    : (n > 1 && dv.Length > 0 && Dice.Total ? L.T("сума з ") + n : dk));
                 using (Font sm = FitFont(font, cap, h * 0.22f, w, FontStyle.Regular))
                     Txt(g, cap, sm, new Rectangle(inner.X, inner.Y + (int)(h * 0.62f), w, (int)(h * 0.34f)), lab ? text : sec);
                 break;

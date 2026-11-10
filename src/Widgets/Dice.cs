@@ -24,7 +24,7 @@ static class Dice
     public static bool Total = true;                 // кілька кубиків: true - один результат (сума), false - кожен кубик окремо
     public static readonly List<string> Labels = new List<string>();     // Labels[i] - назва для числа i + 1
     public static readonly List<string> History = new List<string>();   // останні 10 кидків, лише в пам'яті (найновіший - першим)
-    public static int[] Last = new int[0];                                // останній кидок
+    public static int[] Last = new int[0];                                // останній кидок (лише до виходу: після запуску - знак питання)
     public static bool Rolling { get { return throwing; } }
     public static event Action Changed;
 
@@ -60,12 +60,6 @@ static class Dice
                     else if (k == "faces") Faces = Clamp(n, 2, 100);
                     else if (k == "total") Total = v.Trim() != "0";
                     else if (k == "label") Labels.Add(v.Trim());
-                    else if (k == "last")
-                    {
-                        List<int> l = new List<int>();
-                        foreach (string p in v.Split(',')) { int x; if (int.TryParse(p.Trim(), out x) && x > 0) l.Add(x); }
-                        Last = l.ToArray();
-                    }
                 }
         }
         catch { }
@@ -83,9 +77,6 @@ static class Dice
             sb.AppendLine("count=" + Count);
             sb.AppendLine("faces=" + Faces);
             sb.AppendLine("total=" + (Total ? 1 : 0));
-            string[] ls = new string[Last.Length];
-            for (int i = 0; i < Last.Length; i++) ls[i] = Last[i].ToString();
-            sb.AppendLine("last=" + string.Join(",", ls));
             foreach (string l in Labels) sb.AppendLine("label=" + l.Replace("\r", "").Replace("\n", " "));
             File.WriteAllText(File_, sb.ToString(), new UTF8Encoding(true));
         }

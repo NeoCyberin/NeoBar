@@ -141,6 +141,18 @@ static class Nat
     public static bool Is64 { get { return IntPtr.Size == 8; } }
 
     // Стан «користувач зайнятий»: 2 = повноекранна програма/презентація, 3 = повноекранна D3D-гра, 4 = режим презентації
+    // на передньому плані - власне вікно NeoBar (піпетка на весь екран тощо)
+    public static bool ForegroundIsOwn()
+    {
+        try
+        {
+            uint pid;
+            IntPtr h = Win.GetForegroundWindow();
+            return h != IntPtr.Zero && Win.GetWindowThreadProcessId(h, out pid) != 0 && pid == SelfPid;
+        }
+        catch { return false; }
+    }
+
     public static bool FullscreenBusy()
     {
         try
@@ -171,12 +183,17 @@ static class Nat
     }
 
     // Чи на передньому плані вікно, що займає весь монітор (або розгорнуте)
+    static readonly uint SelfPid = (uint)System.Diagnostics.Process.GetCurrentProcess().Id;
+
     public static bool ForegroundCovers(bool onlyFullscreen, IntPtr ignore)
     {
         try
         {
             IntPtr h = Win.GetForegroundWindow();
             if (h == IntPtr.Zero || h == ignore || !Win.IsWindowVisible(h)) return false;
+            // власні вікна NeoBar (піпетка на весь екран тощо) - не гра й не повноекранна програма
+            uint pid;
+            if (Win.GetWindowThreadProcessId(h, out pid) != 0 && pid == SelfPid) return false;
             StringBuilder cls = new StringBuilder(64);
             Win.GetClassName(h, cls, 64);
             string c = cls.ToString();
