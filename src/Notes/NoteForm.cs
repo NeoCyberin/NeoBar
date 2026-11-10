@@ -279,9 +279,9 @@ sealed class NoteForm : Form
     {
         get
         {
-            CreateParams cp = base.CreateParams;
-            cp.ExStyle |= 0x02000000;      // WS_EX_COMPOSITED: усі дочірні елементи малюються через подвійний буфер
-            return cp;
+            // без WS_EX_COMPOSITED: з ним поле тексту (RichEdit) мигає під час набору - воно малює курсор і літери
+            // поза звичайною перемальовкою. Подвійний буфер для всього вікна вмикається лише на час зміни розміру.
+            return base.CreateParams;
         }
     }
 
@@ -291,6 +291,7 @@ sealed class NoteForm : Form
         // заокруглений Region міняти на кожен піксель дорого й мигає - на час перетягування прибираємо
         if (!gripDrag) return;          // це переміщення, а не зміна розміру
         sizing = true;
+        Composited(true);
         try { if (Region != null) { Region.Dispose(); Region = null; } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
@@ -299,6 +300,7 @@ sealed class NoteForm : Form
         base.OnResizeEnd(e);
         if (!sizing) return;
         sizing = false;
+        Composited(false);
         UpdateRegion();
         Invalidate(true);
     }
@@ -1341,8 +1343,19 @@ sealed class NoteForm : Form
             ex &= ~(WS_EX_LAYERED | WS_EX_TRANSPARENT | 0x02000000);
             SetWindowLong(Handle, GWL_EXSTYLE, ex);
             ex |= WS_EX_TOOLWINDOW;
-            if (locked) ex |= WS_EX_LAYERED | WS_EX_TRANSPARENT; else ex |= 0x02000000;
+            if (locked) ex |= WS_EX_LAYERED | WS_EX_TRANSPARENT;
             SetWindowLong(Handle, GWL_EXSTYLE, ex);
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+    }
+
+    void Composited(bool on)
+    {
+        try
+        {
+            int ex = Win.GetWindowLong(Handle, GWL_EXSTYLE);
+            int nx = on ? ex | 0x02000000 : ex & ~0x02000000;
+            if (nx != ex) SetWindowLong(Handle, GWL_EXSTYLE, nx);
         }
         catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }

@@ -10,10 +10,10 @@ NeoBar is a side panel for Windows 10/11: it launches programs and games, shows 
 
 - [[Installation]] - install or run the portable version
 - [[Panel and items]] - screen edge, items, groups, search, profiles
-- [[Widgets]] - clock, weather, monitor, QR code and the others
+- [[Widgets]] - clock, weather, monitor, QR code and the others; widgets on the desktop
 - [[Games and overlay]] - FPS overlay, frame limit, anti-cheat safety
 - [[Wallpapers and themes]] - slideshows, live wallpapers, themes, languages
-- [[Tools]] - cleanup, recovery, disks, firewall, security check, encryption
+- [[Tools]] - cleanup, processes and services, load analysis, recovery, disks, firewall, security check, encryption
 - [[FAQ]] - SmartScreen, administrator rights, logs, reset
 - [[Translating]] - add your own language
 - [[Building]] - build from source

@@ -310,6 +310,7 @@ sealed partial class NeoBar : Form
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
+        try { ProcRecorder.Stop(L.T("NeoBar закрито.")); } catch (Exception skipEx) { SbLog.Skip(skipEx); }     // журнал аналізу - з підсумком
         Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= OnDisplayChanged;
         Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnPrefChanged;
         Dice.Changed -= DiceRedraw;

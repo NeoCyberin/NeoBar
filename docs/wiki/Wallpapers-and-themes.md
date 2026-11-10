@@ -5,8 +5,8 @@
 Set per profile. NeoBar wallpapers are shown **on top of** the Windows wallpaper and do not change it: after you exit NeoBar your usual wallpaper is visible again.
 
 - **Windows wallpaper** - NeoBar shows nothing and runs nothing in the background.
-- **Slideshow** - images from a gallery (files are copied into NeoBar; you can add a whole folder or drag files in). Change every 1 minute to once a day, random or by name, transitions (fade, slide, zoom, blinds, random or none).
-- **Live wallpaper** - a video or GIF, looped, optional sound.
+- **Slideshow** - images from a gallery (files are copied into NeoBar; you can add a whole folder or drag files in - this works when NeoBar runs as administrator too). Change every 1 minute to once a day, random or by name, transitions (fade, slide, zoom, blinds, random or none).
+- **Live wallpaper** - a video (MP4, MKV, MOV, AVI, WMV, WebM) or GIF, looped, optional sound; drag files into the gallery or add them with the button. WebM needs the Windows *Web Media Extensions* (usually already installed).
 - Fit: fill, fit, stretch or centre. Show on all monitors or only the primary one.
 - **Pause** when the desktop is covered (a game, fullscreen program or maximised window) and, optionally, on battery.
 

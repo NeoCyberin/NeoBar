@@ -6,7 +6,7 @@ Widgets sit at the top of the panel; click one to open its window. Order them wi
 |---|---|
 | **Time & date** | Clock, calendar, public holidays (from date.nager.at) and world days, your own dates, alarms, timers, stopwatch, desktop clocks (digital, analog, calendar). Clock accuracy can be checked against a time server. |
 | **Weather** | Current weather, hourly and weekly forecast, weather themes, European/American units. |
-| **System monitor** | CPU, GPU, RAM, with graphs; specs; *Tasks* - processes and services. Temperatures can be shown in the tray. |
+| **System monitor** | CPU, GPU, RAM, with graphs; specs; *Tasks* - processes and services; *Analysis* - one process's load over time. Temperatures can be shown in the tray. |
 | **Network** | Download/upload speed, ping, adapters, Wi-Fi, firewall switch. |
 | **Storage** | Drives with free space; health (SMART) and maintenance; formatting; file recovery. |
 | **Battery** | Charge and power state (shown only on devices with a battery). |
@@ -18,6 +18,14 @@ Widgets sit at the top of the panel; click one to open its window. Order them wi
 | **Encryption** | Encrypt text and files, hashes. |
 | **Cleanup** | Windows junk cleanup. |
 | **Recovery** | Recover deleted files and folders from a drive or USB stick. |
+
+## Widgets on the desktop
+
+Most widgets can be put on the desktop (the screen button in the widget's window). Drag a widget to move it, the corner to resize it: the size has limits, so the small captions always stay readable. The lock pins it in place (clicks go through to the desktop); the slider sets transparency. Large captions (time, temperature, totals) use the theme's notes font - Settings → Appearance → *Notes font in desktop widgets* turns this off.
+
+## Process analysis (System monitor → Analysis)
+
+Pick a process in *Tasks* and press **Analysis**. A window in the middle asks how often to sample (0.5-10 s) and where to save the log, then **Start recording**. While recording you see a live graph; afterwards a player: drag along the graph or press play (×1 - ×300), and the table shows the value at that moment and the minimum, maximum, average and 95th percentile for CPU, memory (working set and private), disk reads/writes, handles, GDI and USER objects. Every sample is written to a CSV log right away (it opens in Excel), and a summary goes next to it as a .txt file. Recording continues when the monitor window is closed and stops by itself when the process exits. *Open log…* plays back an earlier recording.
 
 ## Location and weather (Settings → Location & weather)
 

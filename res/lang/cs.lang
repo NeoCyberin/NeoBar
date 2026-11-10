@@ -10359,3 +10359,189 @@
 
 < щомісяця {0}-го
 > měsíčně {0}.
+
+< /с
+> /s
+
+< 95 % часу
+> 95 % času
+
+< 95-й процентиль: 95 % замірів були не більші за це значення (короткі піки не враховано)
+> 95. percentil: 95 % měření nebylo vyšších než tato hodnota (krátké špičky se nepočítají)
+
+< NeoBar закрито.
+> NeoBar byl ukončen.
+
+< {0}  ·  PID {1}
+> {0}  ·  PID {1}
+
+< Інші програми, які він запустив, працюватимуть далі.
+> Ostatní programy, které spustil, poběží dál.
+
+< Аналіз навантаження процесу
+> Analýza zátěže procesu
+
+< Аналіз процесу «{0}» (PID {1})
+> Analýza procesu „{0}“ (PID {1})
+
+< Великі написи (час, температура, назви) - шрифтом теми, як у нотатках
+> Velké popisky (čas, teplota, názvy) písmem motivu, jako v poznámkách
+
+< Виберіть процес у «Завданнях» і натисніть «Аналіз» - або відкрийте збережений журнал.
+> Vyberte proces v „Úlohách“ a klepněte na „Analýza“ - nebo otevřete uložený záznam.
+
+< Відкрити журнал…
+> Otevřít záznam…
+
+< Досягнуто найбільшої кількості замірів.
+> Bylo dosaženo maximálního počtu měření.
+
+< Журнал (усі заміри, CSV) і підсумок (.txt) поруч:
+> Záznam (všechna měření, CSV) a souhrn (.txt) vedle něj:
+
+< Журнал CSV (*.csv)|*.csv
+> Záznam CSV (*.csv)|*.csv
+
+< З файлу
+> Ze souboru
+
+< Заміряти кожні
+> Měřit každých
+
+< Запис на диск
+> Zápis na disk
+
+< Запис триває, навіть якщо закрити вікно монітора; зупиняється сам, коли процес завершиться.
+> Záznam pokračuje, i když zavřete okno monitoru; sám se zastaví, když proces skončí.
+
+< Запис, КБ/с
+> Zápis, KB/s
+
+< Запис: {0} - {1}, замірів: {2}, інтервал: {3} мс
+> Záznam: {0} - {1}, měření: {2}, interval: {3} ms
+
+< Записувати навантаження цього процесу протягом часу: графік, мін, макс, середнє, журнал
+> Zaznamenávat zátěž tohoto procesu v čase: graf, min, max, průměr, záznam
+
+< Збираю перші заміри…
+> Sbírám první měření…
+
+< Зупинити запис
+> Zastavit záznam
+
+< Макс
+> Max
+
+< Мін
+> Min
+
+< Наживо
+> Živě
+
+< Не вдалося завершити Провідник: {0}
+> Průzkumníka se nepodařilo ukončit: {0}
+
+< Не вдалося прочитати файл: {0}
+> Soubor se nepodařilo přečíst: {0}
+
+< Не вдалося створити журнал: {0}
+> Záznam se nepodařilo vytvořit: {0}
+
+< Новий запис навантаження
+> Nový záznam zátěže
+
+< Новий запис…
+> Nový záznam…
+
+< Об'єкти GDI
+> Objekty GDI
+
+< Об'єкти USER
+> Objekty USER
+
+< Пам'ять (робочий набір)
+> Paměť (pracovní sada)
+
+< Перезапустити Провідник? Панель завдань і робочий стіл зникнуть на кілька секунд; відкриті програми й вікна працюватимуть далі.
+> Restartovat Průzkumníka? Hlavní panel a plocha na pár sekund zmizí; otevřené programy a okna poběží dál.
+
+< Показник
+> Ukazatel
+
+< Почати запис
+> Spustit záznam
+
+< Приватна пам'ять
+> Soukromá paměť
+
+< Приватна пам'ять, МБ
+> Soukromá paměť, MB
+
+< Провідник завершено, але запустити знову не вдалося. Натисніть Ctrl+Shift+Esc → «Запустити нове завдання» → explorer.exe.
+> Průzkumník byl ukončen, ale znovu ho spustit nešlo. Stiskněte Ctrl+Shift+Esc → Spustit novou úlohu → explorer.exe.
+
+< Провідник запущено, але панель завдань ще не з'явилась - зачекайте кілька секунд.
+> Průzkumník byl spuštěn, ale hlavní panel se ještě neobjevil - počkejte pár sekund.
+
+< Провідник перезапущено.
+> Průzkumník byl restartován.
+
+< Процес завершився.
+> Proces skončil.
+
+< Процес не відкривається: він уже завершився або захищений.
+> Proces nelze otevřít: už skončil nebo je chráněný.
+
+< Пік о
+> Špička v
+
+< Робочий набір, МБ
+> Pracovní sada, MB
+
+< Секунд від початку
+> Sekund od začátku
+
+< Середнє
+> Průměr
+
+< Спершу зупиніть поточний запис.
+> Nejprve zastavte probíhající záznam.
+
+< Тека
+> Složka
+
+< Тут буде графік навантаження
+> Zde se zobrazí graf zátěže
+
+< У файлі немає замірів NeoBar.
+> Soubor neobsahuje měření NeoBar.
+
+< У цей момент
+> V tuto chvíli
+
+< Уже йде запис іншого процесу - спершу зупиніть його у вкладці «Аналіз»
+> Už se zaznamenává jiný proces - nejprve ho zastavte na kartě „Analýza“
+
+< ЦП, %
+> CPU, %
+
+< Читання з диска
+> Čtení z disku
+
+< Читання, КБ/с
+> Čtení, KB/s
+
+< Швидкість відтворення: у скільки разів швидше за реальний час
+> Rychlost přehrávání: kolikrát rychleji než skutečný čas
+
+< Шрифт нотаток у віджетах на столі
+> Písmo poznámek ve widgetech na ploše
+
+< замірів: {0}
+> měření: {0}
+
+< мін {0}, макс {1} (о {2}), середнє {3}, 95 % часу - не більше {4}
+> min {0}, max {1} (v {2}), průměr {3}, 95 % času nejvýše {4}
+
+< шлях невідомий
+> cesta neznámá

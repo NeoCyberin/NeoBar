@@ -295,6 +295,8 @@ sealed partial class SettingsForm
         k.Row(L.T("Ефект при наведенні"), "", cbFx);
         chAnim = Tg();
         k.Row(L.T("Плавні анімації"), L.T("Висування панелі, поява й зникання"), chAnim);
+        chDeskFont = Tg();
+        k.Row(L.T("Шрифт нотаток у віджетах на столі"), L.T("Великі написи (час, температура, назви) - шрифтом теми, як у нотатках"), chDeskFont);
 
         k = p.Card(L.T("Шрифт підписів"));
         cbFont = Cb(260);

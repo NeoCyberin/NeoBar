@@ -356,6 +356,13 @@ sealed class NoteScroll : Control
     [StructLayout(LayoutKind.Sequential)] struct SCROLLINFO { public int cbSize; public uint fMask; public int nMin, nMax; public uint nPage; public int nPos, nTrackPos; }
     [StructLayout(LayoutKind.Sequential)] struct POINT { public int X, Y; }
     [DllImport("user32.dll")] static extern bool GetScrollInfo(IntPtr h, int bar, ref SCROLLINFO si);
+    [StructLayout(LayoutKind.Sequential)]
+    struct SCROLLBARINFO
+    {
+        public int cbSize; public int l, t, r, b; public int dxyLineButton, xyThumbTop, xyThumbBottom, reserved;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)] public int[] rgstate;
+    }
+    [DllImport("user32.dll")] static extern bool GetScrollBarInfo(IntPtr h, int obj, ref SCROLLBARINFO sbi);
     [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
     [DllImport("user32.dll", EntryPoint = "SendMessageW")] static extern IntPtr SendPoint(IntPtr h, int msg, IntPtr w, ref POINT l);
 
@@ -378,10 +385,19 @@ sealed class NoteScroll : Control
         si.fMask = 0x17;                    // SIF_ALL
         if (!GetScrollInfo(box.Handle, 1, ref si)) return false;
         min = si.nMin; max = si.nMax; page = (int)si.nPage; pos = si.nPos;
-        return page > 0 && max - min + 1 > page;
+        if (page <= 0 || max - min + 1 <= page) return false;
+        // текст вміщається: поле з «завжди видимою» смугою вимикає її, але діапазон лишає трохи більшим за сторінку
+        try
+        {
+            SCROLLBARINFO sb = new SCROLLBARINFO();
+            sb.cbSize = Marshal.SizeOf(typeof(SCROLLBARINFO));
+            if (GetScrollBarInfo(box.Handle, unchecked((int)0xFFFFFFFB), ref sb) && sb.rgstate != null && (sb.rgstate[0] & 0x1) != 0) return false;   // OBJID_VSCROLL, STATE_SYSTEM_UNAVAILABLE
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        return max - min + 1 - page > Notes.Px(6);
     }
 
-    Rectangle Track() { return new Rectangle(0, 2, Width, Math.Max(1, Height - 4)); }
+    Rectangle Track() { return new Rectangle(0, Notes.Px(2), Width, Math.Max(1, Height - Notes.Px(8))); }       // знизу - відступ від панелі форматування
 
     Rectangle Thumb(out int min, out int span, out int trackFree)
     {

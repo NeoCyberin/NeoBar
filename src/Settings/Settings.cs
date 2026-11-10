@@ -81,7 +81,7 @@ sealed partial class SettingsForm : Form, IGradHost
     // «Вигляд»
     SCombo cbTheme, cbFx, cbGroups, cbFont, cbFontStyle, cbLabelPos;
     SNum nIcon, nFont;
-    CheckBox chBlur, chAnim;
+    CheckBox chBlur, chAnim, chDeskFont;
     readonly SSlider[] tbA = new SSlider[4];
     readonly Label[] lA = new Label[4];
     readonly Button[] bCol = new Button[4];
