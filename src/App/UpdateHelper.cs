@@ -39,7 +39,7 @@ static class UpdateHelper
         catch (Exception ex) { err = ex.Message; }
         if (err != null)
         {
-            try { MessageBox.Show(L.F("Оновлення не вдалося: {0}", err), "NeoBar", MessageBoxButtons.OK, MessageBoxIcon.Warning); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { SbDialog.Ask(null, L.T("Оновлення NeoBar"), L.F("Оновлення не вдалося: {0}", err)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         try
         {

@@ -1072,13 +1072,38 @@ sealed class NoteForm : Form
         cust.Image = NoteFrame.Swatch(cur);
         cust.Click += delegate { Notes.EditTheme(Notes.ThemeOf(n)); };
         m.Items.Add(cust);
+        m.Items.Add(new ToolStripSeparator());
+        m.Items.Add(L.T("Зберегти нотатку у файл…"), null, delegate { Export(); });
         m.Closed += delegate { BeginInvoke(new Action(m.Dispose)); };
         m.Show(host, at);
     }
 
+    // експорт: звичайний текст (.txt) або з форматуванням (.rtf - відкривається у WordPad і Word)
+    void Export()
+    {
+        string name = (n.Label ?? "").Trim();
+        foreach (char c in System.IO.Path.GetInvalidFileNameChars()) name = name.Replace(c, '_');
+        if (name.Length > 60) name = name.Substring(0, 60).Trim();
+        if (name.Length == 0) name = L.T("Нотатка");
+        using (SaveFileDialog d = new SaveFileDialog())
+        {
+            d.Filter = L.T("Текст (*.txt)|*.txt|Текст із форматуванням (*.rtf)|*.rtf");
+            d.FileName = name;
+            d.AddExtension = true;
+            d.OverwritePrompt = true;
+            if (d.ShowDialog(this) != DialogResult.OK) return;
+            try
+            {
+                if (d.FilterIndex == 2 || d.FileName.EndsWith(".rtf", StringComparison.OrdinalIgnoreCase)) box.SaveFile(d.FileName, RichTextBoxStreamType.RichText);
+                else System.IO.File.WriteAllText(d.FileName, box.Text.Replace("\r\n", "\n").Replace("\n", "\r\n"), new System.Text.UTF8Encoding(true));
+            }
+            catch (Exception ex) { SbDialog.Ask(this, "NeoBar", L.F("Не вдалося зберегти нотатку: {0}", ex.Message)); }
+        }
+    }
+
     void AskDelete()
     {
-        if (MessageBox.Show(L.T("Видалити цю нотатку?"), "NeoBar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+        if (SbDialog.Ask(this, "NeoBar", L.T("Видалити цю нотатку?"), L.T("Видалити"), L.T("Скасувати")) == 0)
             Notes.Delete(n);
     }
 

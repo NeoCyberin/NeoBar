@@ -448,6 +448,8 @@ sealed class SecWindow : VtWindow
     }
 
     // вкладка «Файл» (головна): стан сканування системи, перевірка файлів перетягуванням, ключ VirusTotal, налаштування
+    static string FootText { get { return L.T("Евристики без бази сигнатур - підказка, а не вирок: ознаки бувають і в звичайних програм. Нічого не змінюється без вашого підтвердження."); } }
+
     void PaintFileTab(Graphics g, Rectangle r)
     {
         int y = r.Y;
@@ -475,11 +477,9 @@ sealed class SecWindow : VtWindow
         else Btn(g, br, SecScan.LastAt == DateTime.MinValue ? L.T("Сканувати") : L.T("Сканувати знову"), Start, 1, true);
         y = top.Bottom + Px(10);
 
-        // перевірка файла
-        DropZone(g, new Rectangle(r.X, y, r.Width, Px(112)), L.T("Перетягніть файли сюди"), L.T("Перевірити файл…"), PickCheck, true);
-        y += Px(122);
-
-        // ключ VirusTotal
+        // ключ VirusTotal, потім місце для файлів: поки звітів немає, зона перетягування займає весь вільний простір
+        bool noReps = Reps.Count == 0;
+        int bottom = Px(38) + Px(64);
         Rectangle vc = new Rectangle(r.X, y, r.Width, Px(56));
         Card(g, vc);
         bool has = Vt.Key.Length > 0;
@@ -488,12 +488,25 @@ sealed class SecWindow : VtWindow
         Btn(g, new Rectangle(vc.Right - Px(174), vc.Y + Px(12), Px(160), Px(32)), has ? L.T("Змінити ключ") : L.T("Задати ключ"), delegate { AskVtKey(); Invalidate(); }, 0, true);
         y = vc.Bottom + Px(10);
 
+        if (noReps)
+        {
+            Rectangle dz = new Rectangle(r.X, y, r.Width, Math.Max(Px(112), r.Bottom - y - bottom - Px(10)));
+            DropZone(g, dz, L.T("Перетягніть файли сюди"), L.T("Перевірити файл…"), PickCheck, true);
+            PaintSwitches(g, r);
+            string foot0 = NoteLive ? Note : (fixing ? L.T("Виправлення…") : FootText);
+            TxtW(g, foot0, FS, new Rectangle(r.X, r.Bottom - Px(38), r.Width, Px(38)), NoteLive ? (NoteBad ? P.Bad : P.Good) : P.Sub);
+            FitTo(r, y + Px(122) + Px(66) + bottom, Px(520));      // та сама висота, що й зі звітами - вікно не стрибає
+            return;
+        }
+        // перевірка файла
+        DropZone(g, new Rectangle(r.X, y, r.Width, Px(112)), L.T("Перетягніть файли сюди"), L.T("Перевірити файл…"), PickCheck, true);
+        y += Px(122);
+
         // звіти про перевірені файли
-        int bottom = Px(38) + Px(64);
         Rectangle list = new Rectangle(r.X, y, r.Width, Math.Max(Px(40), r.Bottom - y - bottom - Px(6)));
         int total = PaintReports(g, list);
         PaintSwitches(g, r);
-        string foot = NoteLive ? Note : (fixing ? L.T("Виправлення…") : L.T("Евристики без бази сигнатур - підказка, а не вирок: ознаки бувають і в звичайних програм. Нічого не змінюється без вашого підтвердження."));
+        string foot = NoteLive ? Note : (fixing ? L.T("Виправлення…") : FootText);
         TxtW(g, foot, FS, new Rectangle(r.X, r.Bottom - Px(38), r.Width, Px(38)), NoteLive ? (NoteBad ? P.Bad : P.Good) : P.Sub);
         FitTo(r, list.Y + Math.Min(Math.Max(total, Px(60)), Px(460)) + Px(6) + bottom, Px(520));
     }

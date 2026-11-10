@@ -325,6 +325,13 @@ class SbWindow : Form
 
     protected int Px(float v) { return (int)Math.Round(v * Sc); }
 
+    // питання чи повідомлення в стилі теми; повертає номер кнопки (-1 - закрили)
+    protected int Ask(string title, string text, params string[] buttons)
+    {
+        if (Bar != null) return SbDialog.Show(Bar, this, title, text, buttons);
+        return SbDialog.Show(T, Sc, this, title, text, buttons);
+    }
+
     public SbWindow(NeoBar owner, string caption, int w, int h) : this(owner, owner.CurrentTheme, owner.Dpi, owner.LabelFont, caption, w, h) { }
 
     // вікно без панелі (вибір профілю до запуску NeoBar): тема й масштаб задаються явно
@@ -663,6 +670,21 @@ class SbWindow : Form
         using (Pen ep = new Pen(edge, Math.Max(1f, Px(T.EdgeW))))
         using (GraphicsPath gp = Util.Round(new Rectangle(0, 0, Width - 1, Height - 1), P.Rad + Px(2)))
             g.DrawPath(ep, gp);
+
+        // клавіатура: рамка навколо вибраного Tab-ом елемента
+        if (kbMode)
+        {
+            List<int> fk = Focusable(build);
+            if (fk.Count == 0) kbFocus = -1;
+            else
+            {
+                kbFocus = Math.Max(0, Math.Min(fk.Count - 1, kbFocus));
+                Rectangle fr = Rectangle.Inflate(build[fk[kbFocus]].R, Px(2), Px(2));
+                using (Pen fp = new Pen(P.Acc, Math.Max(2f, Px(2))))
+                using (GraphicsPath gp = Util.Round(fr, Math.Min(P.Rad + Px(2), fr.Height / 2)))
+                    g.DrawPath(fp, gp);
+            }
+        }
 
         hits.Clear();
         hits.AddRange(build);
@@ -1097,6 +1119,7 @@ class SbWindow : Form
             return;
         }
         mouse = e.Location;
+        if (kbMode) { kbMode = false; Invalidate(); }       // мишею - рамка клавіатури зникає
         if (dragging != null) { TipHide(); dragging(e.Location); Invalidate(); return; }
         TipMove();
         int h = HitAt(mouse);
@@ -1152,6 +1175,56 @@ class SbWindow : Form
     {
         base.OnKeyDown(e);
         if (e.KeyCode == Keys.Escape) Close();
+    }
+
+    // ---------- клавіатура: Tab / Shift+Tab - між кнопками, перемикачами, вкладками; Enter чи пробіл - натиснути ----------
+    bool kbMode;
+    int kbFocus = -1;
+
+    List<int> Focusable(List<Hit> l)
+    {
+        List<int> r = new List<int>();
+        Rectangle cl = ClientRectangle;
+        for (int i = 0; i < l.Count; i++)
+        {
+            Hit h = l[i];
+            if (h.Click == null || h.Drag != null || h.R.Width < 4 || h.R.Height < 4) continue;
+            if (!cl.Contains(new Point(h.R.X + h.R.Width / 2, h.R.Y + h.R.Height / 2))) continue;
+            r.Add(i);
+        }
+        return r;
+    }
+
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        Keys k = keyData & Keys.KeyCode;
+        bool inText = ActiveControl is TextBoxBase;
+        if (k == Keys.Tab && (keyData & (Keys.Control | Keys.Alt)) == 0)
+        {
+            List<int> fk = Focusable(hits);
+            if (fk.Count > 0)
+            {
+                bool back = (keyData & Keys.Shift) != 0;
+                if (!kbMode) kbFocus = back ? fk.Count - 1 : 0;
+                else kbFocus = (kbFocus + (back ? -1 : 1) + fk.Count) % fk.Count;
+                kbMode = true;
+                if (inText) { ActiveControl = null; Focus(); }
+                Invalidate();
+                return true;
+            }
+        }
+        if (kbMode && !inText && (k == Keys.Enter || k == Keys.Space))
+        {
+            List<int> fk = Focusable(hits);
+            if (kbFocus >= 0 && kbFocus < fk.Count)
+            {
+                Hit h = hits[fk[kbFocus]];
+                h.Click();
+                Invalidate();
+                return true;
+            }
+        }
+        return base.ProcessCmdKey(ref msg, keyData);
     }
 
     // тематичне контекстне меню для вікна

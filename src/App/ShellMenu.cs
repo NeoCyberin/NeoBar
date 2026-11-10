@@ -360,12 +360,6 @@ class ToolWindow : SbWindow
         }
     }
 
-    protected int Ask(string title, string text, params string[] buttons)
-    {
-        if (Bar != null) return SbDialog.Show(Bar, this, title, text, buttons);
-        return SbDialog.Show(T, Sc, this, title, text, buttons);
-    }
-
     protected static void ShowInFolder(string path)
     {
         try

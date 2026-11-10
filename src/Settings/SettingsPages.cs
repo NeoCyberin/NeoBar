@@ -680,9 +680,9 @@ sealed partial class SettingsForm
         SPage p = new SPage();
         SCard k = p.Card(L.T("Налаштування профілю «") + (Prof.Cur != null ? Prof.Cur.Name : "—") + L.Q("»"));
         k.Row(L.T("Експорт"), L.T("Файл .nbpack з елементами, групами, віджетами, темою й іконками цього профілю"), Bt(L.T("Експортувати…"), "g:export", 170, delegate { DoExport(); }));
-        k.Row(L.T("Імпорт"), L.T("Замінює налаштування профілю; стара копія лишається як neobar.ini.bak"), Bt(L.T("Імпортувати…"), "g:import", 170, delegate { DoImport(); }));
+        k.Row(L.T("Імпорт"), L.T("Замінює налаштування профілю; стара копія лишається як neobar.ini.old"), Bt(L.T("Імпортувати…"), "g:import", 170, delegate { DoImport(); }));
         k.Row(L.T("Тека профілю"), Prof.Dir, Bt(L.T("Відкрити"), "g:open", 170, delegate { OpenDir(Prof.Dir, false); }));
-        k.Row(L.T("Скинути до початкових"), L.T("Усі налаштування й елементи профілю - як після встановлення (копія - neobar.ini.bak)"), Bt(L.T("Скинути…"), "danger g:reset", 170, delegate { DoReset(); }));
+        k.Row(L.T("Скинути до початкових"), L.T("Усі налаштування й елементи профілю - як після встановлення (копія - neobar.ini.old)"), Bt(L.T("Скинути…"), "danger g:reset", 170, delegate { DoReset(); }));
         lData = Note();
         k.NoteRow(lData);
 

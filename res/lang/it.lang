@@ -3373,9 +3373,6 @@
 < Зайняті й пропущені: 
 > In uso e saltati: 
 
-< Реєстр
-> Registro
-
 < Видалити вибране сміття (
 > Elimina i file inutili selezionati (
 
@@ -3397,266 +3394,14 @@
 < Системні компоненти Windows (оновлення, WinSxS) не чіпаються - для безпеки. Зайняті файли й кеш відкритих програм пропускаються. Реєстр - на вкладці «Реєстр».
 > I componenti di sistema di Windows (aggiornamenti, WinSxS) non vengono toccati - per sicurezza. I file in uso e la cache dei programmi aperti vengono saltati. Il registro è nella scheda «Registro».
 
-< Залишки видалених програм
-> Residui di programmi disinstallati
-
-< Записи в «Програми та засоби» для програм, файлів яких уже немає
-> Voci in «Programmi e funzionalità» di programmi i cui file non ci sono più
-
-< Де: розділ Uninstall у HKLM і HKCU. Критерій: немає ні папки програми, ні програми видалення, ні значка. Записи Windows Installer (MSI) і системні не чіпаються.
-> Dove: la chiave Uninstall in HKLM e HKCU. Criterio: nessuna cartella del programma, nessun programma di disinstallazione e nessuna icona. Windows Installer (MSI) e le voci di sistema non vengono toccati.
-
-< Налаштування видалених програм
-> Impostazioni di programmi disinstallati
-
-< Розділи Software\\виробник\\програма, де папки встановлення вже немає
-> Chiavi Software\\produttore\\programma la cui cartella di installazione non esiste più
-
-< Обережніше: зникнуть і налаштування програм. Вимкнено за замовчуванням
-> Attenzione: spariranno anche le impostazioni dei programmi. Disattivato per impostazione predefinita
-
-< Де: HKCU\\Software і HKLM\\SOFTWARE (розділ виробника та програми). Критерій: у розділі є значення з папкою встановлення (InstallDir, Path тощо), її точно немає, і жоден інший шлях у розділі не існує. Розділи Microsoft, Classes і Policies не чіпаються. Якщо плануєте встановити програму знову й хочете зберегти її налаштування - не вмикайте.
-> Dove: HKCU\\Software e HKLM\\SOFTWARE (chiave del produttore e del programma). Criterio: la chiave ha un valore con la cartella di installazione (InstallDir, Path ecc.), quella cartella sicuramente non esiste e nessun altro percorso nella chiave esiste. Le chiavi Microsoft, Classes e Policies non vengono toccate. Se pensi di reinstallare il programma e vuoi mantenerne le impostazioni, non attivarlo.
-
-< Застарілі шляхи програм
-> Percorsi di programmi obsoleti
-
-< Записи «App Paths» на програми, яких уже немає на диску
-> Voci «App Paths» di programmi non più presenti sul disco
-
-< Де: App Paths у HKLM і HKCU. Критерій: файла, на який веде запис, точно немає.
-> Dove: App Paths in HKLM e HKCU. Criterio: il file a cui punta la voce sicuramente non esiste.
-
-< Спільні бібліотеки
-> Librerie condivise
-
-< Лічильники спільних DLL, яких уже немає на диску
-> Contatori di DLL condivise non più presenti sul disco
-
-< Де: SharedDLLs у HKLM. Критерій: файла бібліотеки точно немає. Видаляється лише лічильник, не файл.
-> Dove: SharedDLLs in HKLM. Criterio: il file della libreria sicuramente non esiste. Viene eliminato solo il contatore, non il file.
-
-< Кеш назв програм
-> Cache dei nomi dei programmi
-
-< Назви вже видалених програм, які Windows запам'ятала для своїх списків
-> Nomi di programmi già disinstallati che Windows ha memorizzato per i suoi elenchi
-
-< Де: MUICache у HKCU. Критерій: програми, чию назву запам'ятала Windows, точно немає.
-> Dove: MUICache in HKCU. Criterio: il programma di cui Windows ha memorizzato il nome sicuramente non esiste.
-
-< Зламаний автозапуск
-> Avvio automatico non funzionante
-
-< Пункти автозапуску, чиї програми видалені: Windows шукає їх при кожному вході
-> Voci di avvio automatico i cui programmi sono stati disinstallati: Windows le cerca a ogni accesso
-
-< Де: Run у HKLM і HKCU. Критерій: програми автозапуску точно немає на диску.
-> Dove: Run in HKLM e HKCU. Criterio: il programma di avvio automatico sicuramente non è sul disco.
-
-< Застарілі «Відкрити за допомогою»
-> «Apri con» obsoleto
-
-< Програми зі списку «Відкрити за допомогою», яких уже немає на диску
-> Programmi dell'elenco «Apri con» non più presenti sul disco
-
-< Де: Software\\Classes\\Applications у HKCU і HKLM. Критерій: усі програми в командах запису точно відсутні.
-> Dove: Software\\Classes\\Applications in HKCU e HKLM. Criterio: tutti i programmi nei comandi della voce sicuramente mancano.
-
-< Зайві «Програми за замовчуванням»
-> «App predefinite» superflue
-
-< Програми, що лишились у списку «Програми за замовчуванням», хоча їхніх параметрів у реєстрі вже немає
-> Programmi rimasti nell'elenco «App predefinite» anche se le loro impostazioni non sono più nel registro
-
-< Де: RegisteredApplications у HKLM і HKCU. Критерій: розділу з можливостями програми, на який веде запис, немає в реєстрі (в обох виглядах реєстру).
-> Dove: RegisteredApplications in HKLM e HKCU. Criterio: la chiave delle funzionalità del programma a cui punta la voce non è nel registro (in entrambe le viste del registro).
-
-< Сліди шпалер
-> Tracce degli sfondi
-
-< Історія робочого столу: шпалери, чиїх файлів уже немає (поточні шпалери не чіпаються)
-> Cronologia del desktop: sfondi i cui file non ci sono più (gli sfondi attuali non vengono toccati)
-
-< Де: Explorer\\Wallpapers у HKCU (BackgroundHistoryPath). Критерій: файла шпалер точно немає. Поточні шпалери не чіпаються.
-> Dove: Explorer\\Wallpapers in HKCU (BackgroundHistoryPath). Criterio: il file dello sfondo sicuramente non esiste. Gli sfondi attuali non vengono toccati.
-
-< Сліди запуску програм
-> Tracce di avvio dei programmi
-
-< Режими сумісності й лічильник запусків програм, яких уже немає на диску
-> Modalità di compatibilità e contatori di avvio di programmi non più presenti sul disco
-
-< Де: AppCompatFlags (режими сумісності та помічник сумісності) і UserAssist (лічильник запусків у меню «Пуск»). Критерій: програми, про яку запис, точно немає.
-> Dove: AppCompatFlags (modalità di compatibilità e assistente compatibilità) e UserAssist (contatore di avvii del menu Start). Criterio: il programma a cui si riferisce la voce sicuramente non esiste.
-
-< Застарілі COM-компоненти
-> Componenti COM obsoleti
-
-< Реєстрації компонентів, чиї файли точно відсутні (не в папці Windows)
-> Registrazioni di componenti i cui file sicuramente mancano (non nella cartella di Windows)
-
-< Обережніше: лише ті, чий файл точно відсутній. Вимкнено за замовчуванням
-> Attenzione: solo quelli il cui file sicuramente manca. Disattivato per impostazione predefinita
-
-< Де: CLSID у HKLM і HKCU. Критерій: файли InprocServer32 і LocalServer32 точно відсутні; компоненти з TreatAs і Windows не чіпаються.
-> Dove: CLSID in HKLM e HKCU. Criterio: i file InprocServer32 e LocalServer32 sicuramente mancano; i componenti con TreatAs e quelli di Windows non vengono toccati.
-
-< Застарілі бібліотеки типів
-> Librerie dei tipi obsolete
-
-< Описи інтерфейсів COM, чиї файли точно відсутні
-> Descrizioni di interfacce COM i cui file sicuramente mancano
-
-< Обережніше: рідко дає користь. Вимкнено за замовчуванням
-> Attenzione: utile raramente. Disattivato per impostazione predefinita
-
-< Де: TypeLib у HKLM і HKCU. Критерій: файли бібліотек типів точно відсутні.
-> Dove: TypeLib in HKLM e HKCU. Criterio: i file della libreria dei tipi sicuramente mancano.
-
-< Історія «Виконати» й адресного рядка
-> Cronologia di «Esegui» e della barra degli indirizzi
-
-< Не помилка, а слід користування: що вводили у Win+R та адресний рядок Провідника
-> Non un errore ma una traccia d'uso: ciò che è stato digitato in Win+R e nella barra degli indirizzi di Esplora file
-
-< Де: RunMRU і TypedPaths у HKCU. Видаляються всі записи цієї історії.
-> Dove: RunMRU e TypedPaths in HKCU. Vengono eliminate tutte le voci di questa cronologia.
-
-<  (32-бітний вигляд)
->  (vista a 32 bit)
-
-< Чого немає на диску: 
-> Mancante sul disco: 
-
-< \n\nБуде видалено з реєстру:\n
-> \n\nVerrà eliminato dal registro:\n
-
-< розділ 
-> chiave 
-
-<  разом з усіма підрозділами
->  con tutte le sottochiavi
-
-< усі значення розділу 
-> tutti i valori della chiave 
-
-< запис лічильника запусків цієї програми в розділі 
-> voce del contatore di avvii di questo programma nella chiave 
-
-< значення 
-> valore 
-
-< значення (
-> valori (
-
-< (за замовчуванням)
-> (predefinito)
-
-<  і ще 
->  e 
-
-< \nу розділі 
-> \nnella chiave 
-
-< \n\nПеред видаленням запис буде збережено в резервну копію.
-> \n\nLa voce verrà salvata in un backup prima dell'eliminazione.
-
 < (без назви)
 > (senza nome)
-
-< Історія вікна «Виконати» (Win+R)
-> Cronologia della finestra «Esegui» (Win+R)
-
-< Адреси, введені в адресний рядок Провідника
-> Indirizzi digitati nella barra degli indirizzi di Esplora file
-
-< записів: 
-> voci: 
-
-< немає розділу 
-> nessuna chiave 
-
-< історія шпалер
-> cronologia degli sfondi
-
-< помічник сумісності
-> assistente compatibilità
-
-< режим сумісності
-> modalità di compatibilità
-
-< режим сумісності (для всіх користувачів)
-> modalità di compatibilità (per tutti gli utenti)
-
-< лічильник запусків
-> contatore di avvii
-
-< Перевірка: 
-> Controllo: 
-
-< Пропущено: знайдено підозріло багато (
-> Saltato: trovati sospettosamente tanti (
-
-<  із 
->  su 
-
-< ) - схоже на збій перевірки, нічого не чіпаємо
-> ) - sembra un errore di controllo, non viene toccato nulla
-
-< |недопустимий запис
-> |voce non valida
-
-< |уже змінився
-> |già modificato
-
-< |немає доступу до реєстру
-> |nessun accesso al registro
-
-< |немає доступу
-> |nessun accesso
-
-< |недопустимий шлях
-> |percorso non valido
-
-< |не вдалося створити ключ
-> |impossibile creare la chiave
-
-< |невідомий тип значення
-> |tipo di valore sconosciuto
 
 < Файл завдання змінено після створення - нічого не виконано.
 > Il file dell'attività è stato modificato dopo la creazione - non è stato fatto nulla.
 
-< Невідомий режим.
-> Modalità sconosciuta.
-
 < Помічник не відповів.
 > L'helper non ha risposto.
-
-< Нічого виправляти: записи вже змінилися або їх не вдалося безпечно зберегти.
-> Niente da correggere: le voci sono già cambiate o non è stato possibile salvarle in sicurezza.
-
-< порожній файл копії
-> file di backup vuoto
-
-< Не вдалося зберегти резервну копію, тож нічого не змінено: 
-> Impossibile salvare il backup, quindi non è stato cambiato nulla: 
-
-< Не вдалося прочитати копію: 
-> Impossibile leggere il backup: 
-
-< Невідомий формат копії.
-> Formato di backup sconosciuto.
-
-< Виправлення (резервна копія вже збережена)
-> Correzione (il backup è già salvato)
-
-< Реєстр ще не перевірено
-> Registro non ancora analizzato
-
-< Знайдено проблем (вибране)
-> Problemi trovati (selezionati)
 
 < Сканувати знову
 > Analizza di nuovo
@@ -3664,62 +3409,8 @@
 < Сканувати
 > Analizza
 
-< …ще 
-> …e altri 
-
-<  (вони теж будуть виправлені, якщо категорія ввімкнена)
->  (verranno corretti anch'essi se la categoria è attiva)
-
-< Відновити з копії
-> Ripristina dal backup
-
-< Тека копій
-> Cartella dei backup
-
-< Остання копія: 
-> Ultimo backup: 
-
-< Резервних копій ще немає.
-> Ancora nessun backup.
-
-< Сканування лише читає реєстр. Запис вважається сміттям, лише коли всі його файли точно відсутні; перед змінами все зберігається в копію.
-> L'analisi legge soltanto il registro. Una voce è considerata inutile solo se tutti i suoi file mancano sicuramente; prima delle modifiche tutto viene salvato in un backup.
-
-< Виправити записів у реєстрі: 
-> Correggi le voci del registro: 
-
-< \n\nПеред змінами всі ці записи зберігаються в резервну копію - її можна відновити кнопкою «Відновити з копії».
-> \n\nPrima delle modifiche, tutte queste voci vengono salvate in un backup - si possono ripristinare con il pulsante «Ripristina dal backup».
-
-< \nДля записів, спільних для всіх користувачів, Windows попросить дозвіл адміністратора.
-> \nPer le voci comuni a tutti gli utenti, Windows chiederà l'autorizzazione di amministratore.
-
-< Прибрано записів: 
-> Voci rimosse: 
-
-< , пропущено: 
-> , saltate: 
-
-<  (вже змінилися, зайняті або їх не вдалося безпечно зберегти)
->  (già modificate, in uso o impossibili da salvare in sicurezza)
-
-< . Копія: 
-> . Backup: 
-
-< Повернути в реєстр записи з копії 
-> Ripristinare le voci dal backup 
-
-<  (розділів: 
->  nel registro (chiavi: 
-
-< )?\n\nПрава доступу до розділів (ACL) не відновлюються - вони й не змінювалися програмою.
-> )?\n\nI permessi di accesso delle chiavi (ACL) non vengono ripristinati - il programma non li ha nemmeno modificati.
-
 < Відновити
 > Ripristina
-
-< Відновлено розділів: 
-> Chiavi ripristinate: 
 
 < немає відповіді за 
 > nessuna risposta entro 
@@ -7561,9 +7252,6 @@
 < Системні елементи
 > Elementi di sistema
 
-< Швидкий доступ до Цей ПК, Кошика, особистої папки та інших місць Windows.
-> Accesso rapido a Questo PC, Cestino, cartella personale e altri luoghi di Windows.
-
 < Ярлики з робочого столу
 > Collegamenti del desktop
 
@@ -8116,8 +7804,8 @@
 < Імпорт
 > Importa
 
-< Замінює налаштування профілю; стара копія лишається як neobar.ini.bak
-> Sostituisce le impostazioni del profilo; la vecchia copia resta come neobar.ini.bak
+< Замінює налаштування профілю; стара копія лишається як neobar.ini.old
+> Sostituisce le impostazioni del profilo; la vecchia copia resta come neobar.ini.old
 
 < Імпортувати…
 > Importa…
@@ -8128,8 +7816,8 @@
 < Скинути до початкових
 > Ripristina i valori predefiniti
 
-< Усі налаштування й елементи профілю - як після встановлення (копія - neobar.ini.bak)
-> Tutte le impostazioni e gli elementi del profilo - come dopo l'installazione (copia - neobar.ini.bak)
+< Усі налаштування й елементи профілю - як після встановлення (копія - neobar.ini.old)
+> Tutte le impostazioni e gli elementi del profilo - come dopo l'installazione (copia - neobar.ini.old)
 
 < Скинути…
 > Ripristina…
@@ -8227,8 +7915,8 @@
 < Імпорт налаштувань
 > Importa impostazioni
 
-< Замінити налаштування профілю імпортованими?\nСтара копія збережеться як neobar.ini.bak.
-> Sostituire le impostazioni del profilo con quelle importate?\nLa vecchia copia verrà salvata come neobar.ini.bak.
+< Замінити налаштування профілю імпортованими?\nСтара копія збережеться як neobar.ini.old.
+> Sostituire le impostazioni del profilo con quelle importate?\nLa vecchia copia verrà salvata come neobar.ini.old.
 
 < Замінити
 > Sostituisci
@@ -8242,8 +7930,8 @@
 < Скинути налаштування
 > Ripristina impostazioni
 
-< Скинути всі налаштування й елементи профілю до початкових?\nСтара копія збережеться як neobar.ini.bak.
-> Ripristinare i valori predefiniti di tutte le impostazioni e gli elementi del profilo?\nLa vecchia copia verrà salvata come neobar.ini.bak.
+< Скинути всі налаштування й елементи профілю до початкових?\nСтара копія збережеться як neobar.ini.old.
+> Ripristinare i valori predefiniti di tutte le impostazioni e gli elementi del profilo?\nLa vecchia copia verrà salvata come neobar.ini.old.
 
 < Налаштування скинуто.
 > Impostazioni ripristinate.
@@ -10183,9 +9871,6 @@
 < Другий екземпляр «{0}»: у Windows він один - підроблені копії часто видають себе за нього.
 > Seconda istanza di «{0}»: in Windows ce n’è una sola e le copie false spesso si spacciano per essa.
 
-< Запущено з «{0}»: документ чи PDF запускає командний рядок або скрипт - типова ознака шкідливого макросу.
-> Avviato da «{0}»: un documento o PDF lancia un prompt dei comandi o uno script, segno tipico di una macro dannosa.
-
 < Процесів: {0} · потоків: {1}
 > Processi: {0} · thread: {1}
 
@@ -10617,3 +10302,60 @@
 
 < Шифр
 > Cifra
+
+< Enter - копіювати результат
+> Invio - copia il risultato
+
+< Було - клацніть, щоб повернути
+> Prima - fai clic per ripristinare
+
+< Вибрати
+> Scegli
+
+< Зберегти нотатку у файл…
+> Salva la nota in un file…
+
+< Зразок тексту
+> Testo di esempio
+
+< Не вдалося захистити теку програми: {0}
+> Impossibile proteggere la cartella del programma: {0}
+
+< Не вдалося зберегти нотатку: {0}
+> Impossibile salvare la nota: {0}
+
+< Не вдалося повернути права теки програми: {0}
+> Impossibile ripristinare i permessi della cartella del programma: {0}
+
+< Не вдалося поставити запускач у Program Files: {0}
+> Impossibile installare il programma di avvio in Program Files: {0}
+
+< Нотатка
+> Nota
+
+< Пошук шрифту
+> Cerca carattere
+
+< Піпетка: колір з будь-якого місця екрана
+> Contagocce: un colore da qualsiasi punto dello schermo
+
+< Режим не ввімкнено: тека програми не підтримує права доступу (наприклад, флешка FAT) або їх не вдалося змінити.
+> La modalità non è stata attivata: la cartella del programma non supporta i permessi di accesso (ad esempio una chiavetta FAT) oppure non è stato possibile modificarli.
+
+< Тека програми захищена від підміни: змінювати файли NeoBar тепер може лише адміністратор.
+> La cartella del programma è protetta dalla sostituzione: ora solo un amministratore può modificare i file di NeoBar.
+
+< Текст (*.txt)|*.txt|Текст із форматуванням (*.rtf)|*.rtf
+> Testo (*.txt)|*.txt|Testo formattato (*.rtf)|*.rtf
+
+< нова версія не має цифрового підпису
+> la nuova versione non ha una firma digitale
+
+< нову версію підписано іншим сертифікатом
+> la nuova versione è firmata con un altro certificato
+
+< цифровий підпис нової версії пошкоджено
+> la firma digitale della nuova versione è danneggiata
+
+< щомісяця {0}-го
+> ogni mese il giorno {0}

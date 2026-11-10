@@ -22,10 +22,12 @@ Icon size 24-96 px, labels below/above/hidden, hover effect (zoom, lift, glow), 
 
 ## Search
 
-A search box on the panel and a global hotkey (Settings → Search). The *Computer* tab finds all files and folders: an NTFS index when NeoBar runs as administrator, otherwise Windows Search. NeoBar can also suggest programs and games that are not on the panel yet.
+A search box on the panel and a global hotkey (Settings → Search). The *Computer* tab finds all files and folders: an NTFS index when NeoBar runs as administrator, otherwise Windows Search. The NTFS index keeps itself up to date from the drive's change journal and frees its memory after 10 minutes without searching. NeoBar can also suggest programs and games that are not on the panel yet.
+
+In the *Panel* tab the search box is also a calculator: `2+2*3`, `sqrt(2)`, `15% of 80`, and unit conversion: `10 km in mi`, `100 f to c`, `2 gb to mb`, `90 km/h to m/s`. Enter copies the result.
 
 ## Profiles
 
-Each profile has its own items, settings, notes, game list and theme. A profile may be protected with a PIN (deleting it asks for the PIN). Settings → Data: export a profile to a `.nbpack` file, import it, or reset to defaults (the old copy is kept as `neobar.ini.bak`).
+Each profile has its own items, settings, notes, game list and theme. A profile may be protected with a PIN (deleting it asks for the PIN). Settings → Data: export a profile to a `.nbpack` file, import it, or reset to defaults (the old copy is kept as `neobar.ini.old`).
 
 Back: [[Home]]

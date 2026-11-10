@@ -4,7 +4,7 @@
 A new program has no reputation yet. Check Properties → Digital Signatures, then More info → Run anyway. Releases include `SHA256SUMS.txt`. The signature is made with the author's own certificate, so Windows shows the publisher as unknown on other PCs - that is expected. Never import the certificate into your system.
 
 **Does NeoBar need administrator rights?**
-No for everyday use. FPS in games, CPU temperature, disk maintenance, the NTFS file index and time sync need them; NeoBar asks only when needed, or can always start elevated (Settings → Panel).
+No for everyday use. FPS in games, CPU temperature, disk maintenance, the NTFS file index and time sync need them; NeoBar asks only when needed, or can always start elevated (Settings → Panel). In that mode the program folder is protected: only an administrator can change NeoBar's files, otherwise any program could replace NeoBar and gain rights without a prompt.
 
 **Is it safe to use in online games?**
 By default NeoBar does not inject into anti-cheat games; the overlay is then a window above the game. See [[Games and overlay]].

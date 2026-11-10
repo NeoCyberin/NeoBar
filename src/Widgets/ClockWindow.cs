@@ -376,7 +376,7 @@ sealed partial class ClockWindow : SbWindow
                 string fn = f;
                 del.DropDownItems.Add(Path.GetFileNameWithoutExtension(f), null, delegate
                 {
-                    if (MessageBox.Show(this, L.T("Видалити мелодію «") + Path.GetFileNameWithoutExtension(fn) + L.Q("»?"), "NeoBar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+                    if (Ask("NeoBar", L.T("Видалити мелодію «") + Path.GetFileNameWithoutExtension(fn) + L.Q("»?"), L.T("Видалити"), L.T("Скасувати")) != 0) return;
                     Chime.Stop();
                     try { File.Delete(Path.Combine(Chime.Dir, fn)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     foreach (Alarm al in ClockData.Alarms) if (al.Sound == "file:" + fn) al.Sound = "theme";
@@ -401,7 +401,7 @@ sealed partial class ClockWindow : SbWindow
                     string id = Chime.Import(d.FileName);
                     set(id); ClockData.Save(); Invalidate();
                 }
-                catch (Exception ex) { MessageBox.Show(this, L.T("Не вдалося додати мелодію:\n") + ex.Message, "NeoBar"); }
+                catch (Exception ex) { Ask("NeoBar", L.T("Не вдалося додати мелодію:\n") + ex.Message); }
             }
         });
         m.Items.Add(L.T("Відкрити папку мелодій"), null, delegate

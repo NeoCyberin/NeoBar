@@ -59,7 +59,7 @@ sealed class NotesWindow : SbWindow
             Switch(g, new Rectangle(cr.Right - Px(140), cr.Y + (cr.Height - Px(26)) / 2, Px(92), Px(26)), L.T("Закріп."), n.Locked, delegate { Notes.SetLocked(n, !n.Locked); });
             IconBtn(g, new Rectangle(cr.Right - Px(40), cr.Y + (cr.Height - Px(30)) / 2, Px(30), Px(30)), "trash", delegate
             {
-                if (MessageBox.Show(this, L.T("Видалити нотатку «") + n.Label + L.Q("»?"), "NeoBar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) Notes.Delete(n);
+                if (Ask("NeoBar", L.T("Видалити нотатку «") + n.Label + L.Q("»?"), L.T("Видалити"), L.T("Скасувати")) == 0) Notes.Delete(n);
             }, false);
             Hot(new Rectangle(cr.X, cr.Y, cr.Width - Px(150), cr.Height), delegate { Notes.Reveal(n); });
             y += rowH;

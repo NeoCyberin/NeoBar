@@ -613,6 +613,14 @@ sealed class SbDialog : SbWindow
 
     int ButtonW(string t) { return Math.Max(Px(110), TextRenderer.MeasureText(t, F).Width + Px(30)); }
 
+    // Enter - перша (головна) кнопка, якщо Tab-ом не вибрано іншу; Esc - закрити
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (base.ProcessCmdKey(ref msg, keyData)) return true;
+        if ((keyData & Keys.KeyCode) == Keys.Enter) { result = 0; Close(); return true; }
+        return false;
+    }
+
     public static int Show(NeoBar bar, Form owner, string title, string text, params string[] buttons)
     {
         if (bar == null) return -1;
@@ -624,6 +632,16 @@ sealed class SbDialog : SbWindow
     {
         if (buttons == null || buttons.Length == 0) buttons = new[] { L.T("Гаразд") };
         using (SbDialog d = new SbDialog(t, sc, title, text, buttons)) return Run(d, owner);
+    }
+
+    // з будь-якого вікна (нотатка, налаштування, помічник оновлення): тема панелі, а без неї - профілю
+    public static int Ask(Form owner, string title, string text, params string[] buttons)
+    {
+        NeoBar b = ClockData.Bar;
+        if (b != null && !b.IsDisposed) return Show(b, owner, title, text, buttons);
+        float sc = 1f;
+        try { using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) sc = g.DpiX / 96f; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        return Show(Prof.ThemeOf(Prof.Cur), sc, owner, title, text, buttons);
     }
 
     static int Run(SbDialog d, Form owner)

@@ -171,7 +171,7 @@ static class DropBridge
     {
         try
         {
-            if (NeoBar.Paused) { Hide(); wasDown = false; return; }         // гра на весь екран - не стежимо
+            if (NeoBar.Paused) { Hide(); wasDown = false; if (poll.Interval != IdlePoll) poll.Interval = IdlePoll; return; }         // гра на весь екран - не стежимо
             bool down = (Win.GetAsyncKeyState(GetSystemMetrics(23) != 0 ? 0x02 : 0x01) & 0x8000) != 0;
             int want = down ? DragPoll : IdlePoll;
             if (poll.Interval != want) poll.Interval = want;

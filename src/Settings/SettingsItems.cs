@@ -276,12 +276,10 @@ sealed partial class SettingsForm
 
     void AddFolder()
     {
-        using (FolderBrowserDialog d = new FolderBrowserDialog())
-        {
-            if (d.ShowDialog(this) != DialogResult.OK) return;
-            string n = Path.GetFileName(d.SelectedPath.TrimEnd('\\'));
-            AddEntry(MakeEntry(Kind.Item, n.Length > 0 ? n : d.SelectedPath, Util.Collapse(d.SelectedPath)));
-        }
+        string dir;
+        if (!FolderPick.Ask(this, null, null, out dir)) return;
+        string n = Path.GetFileName(dir.TrimEnd('\\'));
+        AddEntry(MakeEntry(Kind.Item, n.Length > 0 ? n : dir, Util.Collapse(dir)));
     }
 
     void AddSite()
@@ -486,10 +484,8 @@ sealed partial class SettingsForm
 
     void BrowseTargetFolder()
     {
-        using (FolderBrowserDialog d = new FolderBrowserDialog())
-        {
-            if (d.ShowDialog(this) == DialogResult.OK) tbTarget.Text = Util.Collapse(d.SelectedPath);
-        }
+        string dir;
+        if (FolderPick.Ask(this, null, null, out dir)) tbTarget.Text = Util.Collapse(dir);
     }
 
     void BrowseIcon()
@@ -505,14 +501,10 @@ sealed partial class SettingsForm
     {
         Entry e = Sel();
         if (e == null || e.Kind != Kind.Header) return;
-        using (ColorDialog d = new ColorDialog())
-        {
-            d.Color = e.GroupColor.IsEmpty ? owner.ThemeAccent : e.GroupColor;
-            d.FullOpen = true;
-            if (d.ShowDialog(this) != DialogResult.OK) return;
-            e.GroupColor = d.Color;
-            bColor.BackColor = d.Color;
-        }
+        Color nc;
+        if (!ColorPick.Ask(this, e.GroupColor.IsEmpty ? owner.ThemeAccent : e.GroupColor, out nc)) return;
+        e.GroupColor = nc;
+        bColor.BackColor = nc;
     }
 
     void ResetGroupColor()

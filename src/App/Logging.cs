@@ -16,13 +16,14 @@ static class SbLog
     static readonly string[] Tag = { "панель", "ігри", "бібліотека", "віджети", "датчики", "шрифти" };
 
     public static readonly string[] GroupNames = { "panel", "overlay", "widgets" };
-    public static readonly string[] GroupTitles = { L.T("Панель"), L.T("Ігровий оверлей"), L.T("Віджети й датчики") };
-    public static readonly string[] GroupDescs =
+    // тексти - щоразу заново (а не в статичному полі): журнал пишуть і з дуже раннього коду, ще до мови інтерфейсу
+    public static string[] GroupTitles { get { return new string[] { L.T("Панель"), L.T("Ігровий оверлей"), L.T("Віджети й датчики") }; } }
+    public static string[] GroupDescs { get { return new string[]
     {
         L.T("Запуск, профіль, режим закріплення, елементи, шрифти нотаток"),
         L.T("Оверлей, ліміт FPS, обгортки старих API, підрахунок кадрів; бібліотека в грі - з наступного запуску гри"),
         L.T("Погода, свята, час, місце, мережа; процесор, відеокарта, PawnIO")
-    };
+    }; } }
 
     static readonly bool[] on = new bool[GroupNames.Length];
     static readonly object gate = new object();

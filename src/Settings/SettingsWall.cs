@@ -145,11 +145,8 @@ sealed partial class SettingsForm
 
     void AddFolderToGallery()
     {
-        using (FolderBrowserDialog d = new FolderBrowserDialog())
-        {
-            d.Description = L.T("Теку із зображеннями для слайд-шоу");
-            if (d.ShowDialog(this) == DialogResult.OK) wallGallery.AddFiles(new string[] { d.SelectedPath });
-        }
+        string dir;
+        if (FolderPick.Ask(this, L.T("Теку із зображеннями для слайд-шоу"), null, out dir)) wallGallery.AddFiles(new string[] { dir });
     }
 
     void FillWall()

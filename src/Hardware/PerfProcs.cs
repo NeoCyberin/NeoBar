@@ -376,6 +376,18 @@ sealed partial class PerfWindow
                 if (lines[i].Type == 2 && lines[i].P != null && lines[i].P.Pid == scrollToPid) { procScroll = i * rowH - (list.Height - rowH) / 2; break; }
             scrollToPid = 0;
         }
+        // щойно вибраний рядок унизу ховала картка деталей - підтягуємо його, щоб лишився видно
+        if (ensureSel && selPid != 0)
+        {
+            for (int i = 0; i < lines.Count; i++)
+                if (lines[i].Type == 2 && lines[i].P != null && lines[i].P.Pid == selPid)
+                {
+                    if (i * rowH + rowH > procScroll + list.Height) procScroll = i * rowH + rowH - list.Height;
+                    if (i * rowH < procScroll) procScroll = i * rowH;
+                    break;
+                }
+        }
+        ensureSel = false;
         procScroll = Math.Max(0, Math.Min(procScroll, Math.Max(0, content - list.Height)));
         Region old = g.Clip;
         g.SetClip(list);
@@ -442,7 +454,7 @@ sealed partial class PerfWindow
             else
             {
                 int pid = p.Pid;
-                Hot(vis, delegate { selPid = selPid == pid ? 0 : pid; Invalidate(); });
+                Hot(vis, delegate { selPid = selPid == pid ? 0 : pid; ensureSel = true; Invalidate(); });
             }
         }
         g.Clip = old;
@@ -454,6 +466,7 @@ sealed partial class PerfWindow
         else if (selPid != 0) selPid = 0;
     }
 
+    bool ensureSel;
     const int SvcMax = 3;
 
     int DetailH(ProcRow p)
@@ -849,6 +862,13 @@ sealed partial class PerfWindow
 
         int rowH = Px(25);
         int content = rows.Count * rowH;
+        if (ensureSel && sel != null)
+        {
+            int si = rows.IndexOf(sel);
+            if (si >= 0 && si * rowH + rowH > svcScroll + list.Height) svcScroll = si * rowH + rowH - list.Height;
+            if (si >= 0 && si * rowH < svcScroll) svcScroll = si * rowH;
+        }
+        ensureSel = false;
         svcScroll = Math.Max(0, Math.Min(svcScroll, Math.Max(0, content - list.Height)));
         Region old = g.Clip;
         g.SetClip(list);
@@ -887,7 +907,7 @@ sealed partial class PerfWindow
             if (!vis.IsEmpty)
             {
                 string nm = s.Name;
-                Hot(vis, delegate { selSvc = string.Equals(selSvc, nm, StringComparison.OrdinalIgnoreCase) ? "" : nm; Invalidate(); });
+                Hot(vis, delegate { selSvc = string.Equals(selSvc, nm, StringComparison.OrdinalIgnoreCase) ? "" : nm; ensureSel = true; Invalidate(); });
             }
         }
         g.Clip = old;

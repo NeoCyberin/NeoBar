@@ -526,20 +526,15 @@ sealed class QrWindow : SbWindow
         return QrState.Custom.IsEmpty ? ThemeDark() : Color.FromArgb(255, QrState.Custom);
     }
 
-    // свій колір коду: стандартна панель вибору кольору, спершу - колір теми
+    // свій колір коду: вибір кольору в стилі теми, спершу - колір теми
     void PickColor()
     {
-        using (ColorDialog d = new ColorDialog())
-        {
-            d.FullOpen = true;
-            d.AnyColor = true;
-            d.Color = QrState.Custom.IsEmpty ? ThemeDark() : QrState.Custom;
-            if (d.ShowDialog(this) != DialogResult.OK) return;
-            QrState.Custom = d.Color;
-            QrState.Colored = true;
-            Rebuild();
-            Invalidate();
-        }
+        Color nc;
+        if (!ColorPick.Ask(this, QrState.Custom.IsEmpty ? ThemeDark() : QrState.Custom, out nc)) return;
+        QrState.Custom = nc;
+        QrState.Colored = true;
+        Rebuild();
+        Invalidate();
     }
 
     void Rebuild()

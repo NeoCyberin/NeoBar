@@ -788,7 +788,8 @@ static class Store
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             if (isIni)
             {
-                try { if (File.Exists(full)) File.Copy(full, full + ".bak", true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                // .old: «.bak» - попередня версія, її веде надійний запис
+                try { if (File.Exists(full)) File.Copy(full, full + ".old", true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 iniDone = true;
             }
             File.WriteAllBytes(full, data);

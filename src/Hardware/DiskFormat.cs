@@ -632,12 +632,7 @@ sealed class RecoverWindow : SbWindow
         long size = SelSize(out n);
         if (n == 0 || saving) return;
         string dir;
-        using (FolderBrowserDialog d = new FolderBrowserDialog())
-        {
-            d.Description = L.T("Куди зберегти відновлені файли (лише на ІНШИЙ диск - не на ") + SrcName + ")";
-            if (d.ShowDialog(this) != DialogResult.OK) return;
-            dir = d.SelectedPath;
-        }
+        if (!FolderPick.Ask(this, L.T("Куди зберегти відновлені файли (лише на ІНШИЙ диск - не на ") + SrcName + ")", null, out dir)) return;
         string root = Path.GetPathRoot(dir) ?? "";
         if (SameDisk(root))
         {
@@ -936,13 +931,7 @@ sealed class RecoverPickWindow : SbWindow
     void PickFolder()
     {
         string path;
-        using (FolderBrowserDialog d = new FolderBrowserDialog())
-        {
-            d.Description = L.T("Папка, з якої зникли файли (для видаленої теки - та, де вона лежала)");
-            d.ShowNewFolderButton = false;
-            if (d.ShowDialog(this) != DialogResult.OK) return;
-            path = d.SelectedPath;
-        }
+        if (!FolderPick.Ask(this, L.T("Папка, з якої зникли файли (для видаленої теки - та, де вона лежала)"), null, out path)) return;
         OpenFolder(path);
     }
 

@@ -720,15 +720,11 @@ sealed partial class SettingsForm
 
     void PickThemeColor(bool bg)
     {
-        using (ColorDialog d = new ColorDialog())
-        {
-            d.FullOpen = true;
-            d.Color = Color.FromArgb(bg ? OverlayCfg.CustomBg : OverlayCfg.CustomAccent);
-            if (d.ShowDialog(this) != DialogResult.OK) return;
-            if (bg) OverlayCfg.CustomBg = d.Color.ToArgb(); else OverlayCfg.CustomAccent = d.Color.ToArgb();
-            cbOvTheme.SelectedIndex = OvTheme.Names.Length - 1;
-            RefreshPreview();
-        }
+        Color nc;
+        if (!ColorPick.Ask(this, Color.FromArgb(bg ? OverlayCfg.CustomBg : OverlayCfg.CustomAccent), out nc)) return;
+        if (bg) OverlayCfg.CustomBg = nc.ToArgb(); else OverlayCfg.CustomAccent = nc.ToArgb();
+        cbOvTheme.SelectedIndex = OvTheme.Names.Length - 1;
+        RefreshPreview();
     }
 
     // ---------- показники ----------

@@ -59,7 +59,7 @@ sealed partial class NeoBar
         {
             BeginInvoke(new Action(delegate
             {
-                MessageBox.Show(L.T("Не вдалося запустити:\n") + target + "\n\n" + msg, "NeoBar", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SbDialog.Show(this, null, "NeoBar", L.T("Не вдалося запустити:\n") + target + "\n\n" + msg);
             }));
         }
         catch (Exception skipEx) { SbLog.Skip(skipEx); }
@@ -193,8 +193,7 @@ sealed partial class NeoBar
         }
         catch (Exception ex)
         {
-            MessageBox.Show(L.T("Не вдалося записати neobar.ini:\n") + ex.Message, "NeoBar",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            SbDialog.Show(this, this, "NeoBar", L.T("Не вдалося записати neobar.ini:\n") + ex.Message);
         }
     }
 
@@ -319,8 +318,7 @@ sealed partial class NeoBar
         }
         catch (Exception ex)
         {
-            MessageBox.Show(L.T("Не вдалося зберегти neobar.ini:\n") + ex.Message, "NeoBar",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            SbDialog.Show(this, this, "NeoBar", L.T("Не вдалося зберегти neobar.ini:\n") + ex.Message);
             return;
         }
         Reload();
@@ -342,10 +340,9 @@ sealed partial class NeoBar
         Entry e = entries[i];
         string what = e.Kind == Kind.Header ? L.T("групу «") + e.Name + L.Q("»") : (e.Kind == Kind.Widget ? L.T("віджет «") + e.Name + L.Q("»") : L.Q("«") + e.Name + L.Q("»"));
         menuOpen++;
-        DialogResult r = MessageBox.Show(L.T("Видалити ") + what + L.T(" з панелі?"), "NeoBar",
-            MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        int r = SbDialog.Show(this, this, "NeoBar", L.T("Видалити ") + what + L.T(" з панелі?"), L.T("Видалити"), L.T("Скасувати"));
         menuOpen--;
-        if (r != DialogResult.Yes) return;
+        if (r != 0) return;
         entries.RemoveAt(i);
         SaveEntries();
     }
@@ -471,8 +468,7 @@ sealed partial class NeoBar
         }
         catch (Exception ex)
         {
-            MessageBox.Show(L.T("Не вдалося записати neobar.ini:\n") + ex.Message, "NeoBar",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            SbDialog.Show(this, this, "NeoBar", L.T("Не вдалося записати neobar.ini:\n") + ex.Message);
         }
     }
 

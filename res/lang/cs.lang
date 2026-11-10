@@ -3373,9 +3373,6 @@
 < Зайняті й пропущені: 
 > Používané a přeskočené: 
 
-< Реєстр
-> Registr
-
 < Видалити вибране сміття (
 > Smazat vybrané nepotřebné soubory (
 
@@ -3397,266 +3394,14 @@
 < Системні компоненти Windows (оновлення, WinSxS) не чіпаються - для безпеки. Зайняті файли й кеш відкритих програм пропускаються. Реєстр - на вкладці «Реєстр».
 > Systémových součástí Windows (aktualizace, WinSxS) se z bezpečnostních důvodů nedotýkáme. Používané soubory a mezipaměť otevřených programů se přeskočí. Registr je na kartě «Registr».
 
-< Залишки видалених програм
-> Zbytky odinstalovaných programů
-
-< Записи в «Програми та засоби» для програм, файлів яких уже немає
-> Položky v «Programy a funkce» pro programy, jejichž soubory zmizely
-
-< Де: розділ Uninstall у HKLM і HKCU. Критерій: немає ні папки програми, ні програми видалення, ні значка. Записи Windows Installer (MSI) і системні не чіпаються.
-> Kde: klíč Uninstall v HKLM a HKCU. Kritérium: chybí složka programu, odinstalační program i ikona. Windows Installer (MSI) a systémové položky se nemění.
-
-< Налаштування видалених програм
-> Nastavení odinstalovaných programů
-
-< Розділи Software\\виробник\\програма, де папки встановлення вже немає
-> Klíče Software\\výrobce\\program, jejichž instalační složka zmizela
-
-< Обережніше: зникнуть і налаштування програм. Вимкнено за замовчуванням
-> Pozor: zmizí i nastavení programů. Ve výchozím stavu vypnuto
-
-< Де: HKCU\\Software і HKLM\\SOFTWARE (розділ виробника та програми). Критерій: у розділі є значення з папкою встановлення (InstallDir, Path тощо), її точно немає, і жоден інший шлях у розділі не існує. Розділи Microsoft, Classes і Policies не чіпаються. Якщо плануєте встановити програму знову й хочете зберегти її налаштування - не вмикайте.
-> Kde: HKCU\\Software a HKLM\\SOFTWARE (klíč výrobce a programu). Kritérium: klíč má hodnotu s instalační složkou (InstallDir, Path atd.), tato složka určitě neexistuje a neexistuje ani žádná jiná cesta v klíči. Klíče Microsoft, Classes a Policies se nemění. Pokud chcete program znovu nainstalovat a zachovat jeho nastavení, nezapínejte to.
-
-< Застарілі шляхи програм
-> Zastaralé cesty programů
-
-< Записи «App Paths» на програми, яких уже немає на диску
-> Položky «App Paths» programů, které už nejsou na disku
-
-< Де: App Paths у HKLM і HKCU. Критерій: файла, на який веде запис, точно немає.
-> Kde: App Paths v HKLM a HKCU. Kritérium: soubor, na který položka ukazuje, určitě neexistuje.
-
-< Спільні бібліотеки
-> Sdílené knihovny
-
-< Лічильники спільних DLL, яких уже немає на диску
-> Čítače sdílených DLL, které už nejsou na disku
-
-< Де: SharedDLLs у HKLM. Критерій: файла бібліотеки точно немає. Видаляється лише лічильник, не файл.
-> Kde: SharedDLLs v HKLM. Kritérium: soubor knihovny určitě neexistuje. Maže se jen čítač, ne soubor.
-
-< Кеш назв програм
-> Mezipaměť názvů programů
-
-< Назви вже видалених програм, які Windows запам'ятала для своїх списків
-> Názvy již odinstalovaných programů, které si Windows zapamatoval pro své seznamy
-
-< Де: MUICache у HKCU. Критерій: програми, чию назву запам'ятала Windows, точно немає.
-> Kde: MUICache v HKCU. Kritérium: program, jehož název si Windows zapamatoval, určitě neexistuje.
-
-< Зламаний автозапуск
-> Nefunkční automatické spouštění
-
-< Пункти автозапуску, чиї програми видалені: Windows шукає їх при кожному вході
-> Položky automatického spouštění, jejichž programy byly odinstalovány: Windows je hledá při každém přihlášení
-
-< Де: Run у HKLM і HKCU. Критерій: програми автозапуску точно немає на диску.
-> Kde: Run v HKLM a HKCU. Kritérium: program automatického spouštění určitě není na disku.
-
-< Застарілі «Відкрити за допомогою»
-> Zastaralé «Otevřít v programu»
-
-< Програми зі списку «Відкрити за допомогою», яких уже немає на диску
-> Programy ze seznamu «Otevřít v programu», které už nejsou na disku
-
-< Де: Software\\Classes\\Applications у HKCU і HKLM. Критерій: усі програми в командах запису точно відсутні.
-> Kde: Software\\Classes\\Applications v HKCU a HKLM. Kritérium: všechny programy v příkazech položky určitě chybí.
-
-< Зайві «Програми за замовчуванням»
-> Nadbytečné «Výchozí aplikace»
-
-< Програми, що лишились у списку «Програми за замовчуванням», хоча їхніх параметрів у реєстрі вже немає
-> Programy, které zůstaly v seznamu «Výchozí aplikace», ačkoli jejich nastavení už v registru nejsou
-
-< Де: RegisteredApplications у HKLM і HKCU. Критерій: розділу з можливостями програми, на який веде запис, немає в реєстрі (в обох виглядах реєстру).
-> Kde: RegisteredApplications v HKLM a HKCU. Kritérium: klíč schopností programu, na který položka ukazuje, v registru není (v obou zobrazeních registru).
-
-< Сліди шпалер
-> Stopy tapet
-
-< Історія робочого столу: шпалери, чиїх файлів уже немає (поточні шпалери не чіпаються)
-> Historie plochy: tapety, jejichž soubory zmizely (aktuální tapety se nemění)
-
-< Де: Explorer\\Wallpapers у HKCU (BackgroundHistoryPath). Критерій: файла шпалер точно немає. Поточні шпалери не чіпаються.
-> Kde: Explorer\\Wallpapers v HKCU (BackgroundHistoryPath). Kritérium: soubor tapety určitě neexistuje. Aktuální tapety se nemění.
-
-< Сліди запуску програм
-> Stopy spouštění programů
-
-< Режими сумісності й лічильник запусків програм, яких уже немає на диску
-> Režimy kompatibility a čítače spuštění programů, které už nejsou na disku
-
-< Де: AppCompatFlags (режими сумісності та помічник сумісності) і UserAssist (лічильник запусків у меню «Пуск»). Критерій: програми, про яку запис, точно немає.
-> Kde: AppCompatFlags (režimy kompatibility a asistent kompatibility) a UserAssist (čítač spuštění v nabídce Start). Kritérium: program, o kterém položka je, určitě neexistuje.
-
-< Застарілі COM-компоненти
-> Zastaralé komponenty COM
-
-< Реєстрації компонентів, чиї файли точно відсутні (не в папці Windows)
-> Registrace komponent, jejichž soubory určitě chybí (ne ve složce Windows)
-
-< Обережніше: лише ті, чий файл точно відсутній. Вимкнено за замовчуванням
-> Pozor: jen ty, jejichž soubor určitě chybí. Ve výchozím stavu vypnuto
-
-< Де: CLSID у HKLM і HKCU. Критерій: файли InprocServer32 і LocalServer32 точно відсутні; компоненти з TreatAs і Windows не чіпаються.
-> Kde: CLSID v HKLM a HKCU. Kritérium: soubory InprocServer32 a LocalServer32 určitě chybí; komponenty s TreatAs a komponenty Windows se nemění.
-
-< Застарілі бібліотеки типів
-> Zastaralé knihovny typů
-
-< Описи інтерфейсів COM, чиї файли точно відсутні
-> Popisy rozhraní COM, jejichž soubory určitě chybí
-
-< Обережніше: рідко дає користь. Вимкнено за замовчуванням
-> Pozor: užitečné jen zřídka. Ve výchozím stavu vypnuto
-
-< Де: TypeLib у HKLM і HKCU. Критерій: файли бібліотек типів точно відсутні.
-> Kde: TypeLib v HKLM a HKCU. Kritérium: soubory knihovny typů určitě chybí.
-
-< Історія «Виконати» й адресного рядка
-> Historie «Spustit» a adresního řádku
-
-< Не помилка, а слід користування: що вводили у Win+R та адресний рядок Провідника
-> Nejde o chybu, ale o stopu používání: co bylo zadáno do Win+R a do adresního řádku Průzkumníka
-
-< Де: RunMRU і TypedPaths у HKCU. Видаляються всі записи цієї історії.
-> Kde: RunMRU a TypedPaths v HKCU. Smažou se všechny položky této historie.
-
-<  (32-бітний вигляд)
->  (32bitové zobrazení)
-
-< Чого немає на диску: 
-> Chybí na disku: 
-
-< \n\nБуде видалено з реєстру:\n
-> \n\nZ registru bude smazáno:\n
-
-< розділ 
-> klíč 
-
-<  разом з усіма підрозділами
->  se všemi podklíči
-
-< усі значення розділу 
-> všechny hodnoty klíče 
-
-< запис лічильника запусків цієї програми в розділі 
-> položka čítače spuštění tohoto programu v klíči 
-
-< значення 
-> hodnota 
-
-< значення (
-> hodnoty (
-
-< (за замовчуванням)
-> (výchozí)
-
-<  і ще 
->  a 
-
-< \nу розділі 
-> \nv klíči 
-
-< \n\nПеред видаленням запис буде збережено в резервну копію.
-> \n\nPoložka se před smazáním uloží do zálohy.
-
 < (без назви)
 > (bez názvu)
-
-< Історія вікна «Виконати» (Win+R)
-> Historie okna «Spustit» (Win+R)
-
-< Адреси, введені в адресний рядок Провідника
-> Adresy zadané do adresního řádku Průzkumníka
-
-< записів: 
-> položky: 
-
-< немає розділу 
-> žádný klíč 
-
-< історія шпалер
-> historie tapet
-
-< помічник сумісності
-> asistent kompatibility
-
-< режим сумісності
-> režim kompatibility
-
-< режим сумісності (для всіх користувачів)
-> režim kompatibility (pro všechny uživatele)
-
-< лічильник запусків
-> čítač spuštění
-
-< Перевірка: 
-> Kontrola: 
-
-< Пропущено: знайдено підозріло багато (
-> Přeskočeno: nalezeno podezřele mnoho (
-
-<  із 
->  z 
-
-< ) - схоже на збій перевірки, нічого не чіпаємо
-> ) - vypadá to na chybu kontroly, ničeho se nedotýkáme
-
-< |недопустимий запис
-> |neplatná položka
-
-< |уже змінився
-> |již změněno
-
-< |немає доступу до реєстру
-> |žádný přístup k registru
-
-< |немає доступу
-> |žádný přístup
-
-< |недопустимий шлях
-> |neplatná cesta
-
-< |не вдалося створити ключ
-> |klíč se nepodařilo vytvořit
-
-< |невідомий тип значення
-> |neznámý typ hodnoty
 
 < Файл завдання змінено після створення - нічого не виконано.
 > Soubor úlohy byl po vytvoření změněn - nic se neprovedlo.
 
-< Невідомий режим.
-> Neznámý režim.
-
 < Помічник не відповів.
 > Pomocník neodpověděl.
-
-< Нічого виправляти: записи вже змінилися або їх не вдалося безпечно зберегти.
-> Není co opravit: položky se už změnily nebo je nešlo bezpečně zálohovat.
-
-< порожній файл копії
-> prázdný soubor zálohy
-
-< Не вдалося зберегти резервну копію, тож нічого не змінено: 
-> Zálohu se nepodařilo uložit, proto se nic nezměnilo: 
-
-< Не вдалося прочитати копію: 
-> Zálohu se nepodařilo přečíst: 
-
-< Невідомий формат копії.
-> Neznámý formát zálohy.
-
-< Виправлення (резервна копія вже збережена)
-> Oprava (záloha je již uložena)
-
-< Реєстр ще не перевірено
-> Registr zatím nebyl prohledán
-
-< Знайдено проблем (вибране)
-> Nalezené problémy (vybrané)
 
 < Сканувати знову
 > Prohledat znovu
@@ -3664,62 +3409,8 @@
 < Сканувати
 > Prohledat
 
-< …ще 
-> …a dalších 
-
-<  (вони теж будуть виправлені, якщо категорія ввімкнена)
->  (opraví se také, pokud je kategorie zapnutá)
-
-< Відновити з копії
-> Obnovit ze zálohy
-
-< Тека копій
-> Složka záloh
-
-< Остання копія: 
-> Poslední záloha: 
-
-< Резервних копій ще немає.
-> Zatím žádné zálohy.
-
-< Сканування лише читає реєстр. Запис вважається сміттям, лише коли всі його файли точно відсутні; перед змінами все зберігається в копію.
-> Prohledání registr jen čte. Položka se považuje za nepotřebnou jen tehdy, když všechny její soubory určitě chybí; před změnami se vše zálohuje.
-
-< Виправити записів у реєстрі: 
-> Opravit položky registru: 
-
-< \n\nПеред змінами всі ці записи зберігаються в резервну копію - її можна відновити кнопкою «Відновити з копії».
-> \n\nPřed změnami se všechny tyto položky uloží do zálohy - lze je obnovit tlačítkem «Obnovit ze zálohy».
-
-< \nДля записів, спільних для всіх користувачів, Windows попросить дозвіл адміністратора.
-> \nU položek společných pro všechny uživatele si Windows vyžádá oprávnění správce.
-
-< Прибрано записів: 
-> Odebráno položek: 
-
-< , пропущено: 
-> , přeskočeno: 
-
-<  (вже змінилися, зайняті або їх не вдалося безпечно зберегти)
->  (již změněné, používané nebo je nešlo bezpečně zálohovat)
-
-< . Копія: 
-> . Záloha: 
-
-< Повернути в реєстр записи з копії 
-> Obnovit položky ze zálohy 
-
-<  (розділів: 
->  do registru (klíče: 
-
-< )?\n\nПрава доступу до розділів (ACL) не відновлюються - вони й не змінювалися програмою.
-> )?\n\nPřístupová práva klíčů (ACL) se neobnovují - program je ani neměnil.
-
 < Відновити
 > Obnovit
-
-< Відновлено розділів: 
-> Obnoveno klíčů: 
 
 < немає відповіді за 
 > žádná odpověď do 
@@ -7561,9 +7252,6 @@
 < Системні елементи
 > Systémové položky
 
-< Швидкий доступ до Цей ПК, Кошика, особистої папки та інших місць Windows.
-> Rychlý přístup k Tento počítač, Koš, složce uživatele a dalším místům Windows.
-
 < Ярлики з робочого столу
 > Zástupci na ploše
 
@@ -8116,8 +7804,8 @@
 < Імпорт
 > Import
 
-< Замінює налаштування профілю; стара копія лишається як neobar.ini.bak
-> Nahradí nastavení profilu; stará kopie zůstane jako neobar.ini.bak
+< Замінює налаштування профілю; стара копія лишається як neobar.ini.old
+> Nahradí nastavení profilu; stará kopie zůstane jako neobar.ini.old
 
 < Імпортувати…
 > Importovat…
@@ -8128,8 +7816,8 @@
 < Скинути до початкових
 > Obnovit výchozí hodnoty
 
-< Усі налаштування й елементи профілю - як після встановлення (копія - neobar.ini.bak)
-> Všechna nastavení a položky profilu - jako po instalaci (kopie - neobar.ini.bak)
+< Усі налаштування й елементи профілю - як після встановлення (копія - neobar.ini.old)
+> Všechna nastavení a položky profilu - jako po instalaci (kopie - neobar.ini.old)
 
 < Скинути…
 > Obnovit…
@@ -8227,8 +7915,8 @@
 < Імпорт налаштувань
 > Importovat nastavení
 
-< Замінити налаштування профілю імпортованими?\nСтара копія збережеться як neobar.ini.bak.
-> Nahradit nastavení profilu importovanými?\nStará kopie se uloží jako neobar.ini.bak.
+< Замінити налаштування профілю імпортованими?\nСтара копія збережеться як neobar.ini.old.
+> Nahradit nastavení profilu importovanými?\nStará kopie se uloží jako neobar.ini.old.
 
 < Замінити
 > Nahradit
@@ -8242,8 +7930,8 @@
 < Скинути налаштування
 > Obnovit nastavení
 
-< Скинути всі налаштування й елементи профілю до початкових?\nСтара копія збережеться як neobar.ini.bak.
-> Obnovit všechna nastavení a položky profilu na výchozí hodnoty?\nStará kopie se uloží jako neobar.ini.bak.
+< Скинути всі налаштування й елементи профілю до початкових?\nСтара копія збережеться як neobar.ini.old.
+> Obnovit všechna nastavení a položky profilu na výchozí hodnoty?\nStará kopie se uloží jako neobar.ini.old.
 
 < Налаштування скинуто.
 > Nastavení obnovena.
@@ -10183,9 +9871,6 @@
 < Другий екземпляр «{0}»: у Windows він один - підроблені копії часто видають себе за нього.
 > Druhá instance „{0}“: ve Windows je jen jedna, falešné kopie se za ni často vydávají.
 
-< Запущено з «{0}»: документ чи PDF запускає командний рядок або скрипт - типова ознака шкідливого макросу.
-> Spuštěno z „{0}“: dokument nebo PDF spouští příkazový řádek či skript – typický příznak škodlivého makra.
-
 < Процесів: {0} · потоків: {1}
 > Procesů: {0} · vláken: {1}
 
@@ -10617,3 +10302,60 @@
 
 < Шифр
 > Šifry
+
+< Enter - копіювати результат
+> Enter - zkopírovat výsledek
+
+< Було - клацніть, щоб повернути
+> Původní - klepnutím vrátíte
+
+< Вибрати
+> Vybrat
+
+< Зберегти нотатку у файл…
+> Uložit poznámku do souboru…
+
+< Зразок тексту
+> Ukázka textu
+
+< Не вдалося захистити теку програми: {0}
+> Složku programu se nepodařilo ochránit: {0}
+
+< Не вдалося зберегти нотатку: {0}
+> Poznámku se nepodařilo uložit: {0}
+
+< Не вдалося повернути права теки програми: {0}
+> Oprávnění složky programu se nepodařilo obnovit: {0}
+
+< Не вдалося поставити запускач у Program Files: {0}
+> Spouštěč se nepodařilo umístit do Program Files: {0}
+
+< Нотатка
+> Poznámka
+
+< Пошук шрифту
+> Hledat písmo
+
+< Піпетка: колір з будь-якого місця екрана
+> Kapátko: barva z libovolného místa obrazovky
+
+< Режим не ввімкнено: тека програми не підтримує права доступу (наприклад, флешка FAT) або їх не вдалося змінити.
+> Režim nebyl zapnut: složka programu nepodporuje přístupová práva (např. flash disk FAT) nebo je nebylo možné změnit.
+
+< Тека програми захищена від підміни: змінювати файли NeoBar тепер може лише адміністратор.
+> Složka programu je chráněna proti podvržení: soubory NeoBar teď může měnit jen správce.
+
+< Текст (*.txt)|*.txt|Текст із форматуванням (*.rtf)|*.rtf
+> Text (*.txt)|*.txt|Formátovaný text (*.rtf)|*.rtf
+
+< нова версія не має цифрового підпису
+> nová verze nemá digitální podpis
+
+< нову версію підписано іншим сертифікатом
+> nová verze je podepsána jiným certifikátem
+
+< цифровий підпис нової версії пошкоджено
+> digitální podpis nové verze je poškozen
+
+< щомісяця {0}-го
+> měsíčně {0}.
