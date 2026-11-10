@@ -22,6 +22,7 @@ static class DropBridge
 {
     const int WM_COPYDATA = 0x4A, WM_DROPFILES = 0x233, MsgShow = 0x8000 + 0x61, MsgHide = 0x8000 + 0x62;
     static readonly IntPtr Magic = new IntPtr(0x4E42444E);
+    static readonly IntPtr MagicTool = new IntPtr(0x4E42544C);       // команда з контекстного меню файлів
 
     [StructLayout(LayoutKind.Sequential)] struct COPYDATA { public IntPtr Data; public int Size; public IntPtr Ptr; }
     [StructLayout(LayoutKind.Sequential)] struct RECT { public int L, T, R, B; }
@@ -70,11 +71,70 @@ static class DropBridge
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
 
+    // ---------- приймач команд (завжди, коли працює панель) ----------
+    // контекстне меню файлів запускає окремий процес NeoBar.exe --tool; якщо панель працює, він передає їй файл,
+    // і той відкривається в розкритому вікні панелі (як інші віджети: одне розкрите вікно замінює інше)
+    static Action<string, string> toolHandler;
+    const string RemoteTitle = "NeoBarRemote";
+
+    public static void InitRemote(Action<string, string> onTool)
+    {
+        toolHandler = onTool;
+        try { if (recv == null) recv = new Receiver(); }
+        catch (Exception ex) { Util.ErrorLog(ex); }
+    }
+
+    // з процесу контекстного меню: true - панель прийняла файл
+    public static bool SendTool(string verb, string path)
+    {
+        try
+        {
+            IntPtr w = FindWindow(null, RemoteTitle);
+            if (w == IntPtr.Zero || !FromSelf(w)) return false;
+            uint pid;
+            GetWindowThreadProcessId(w, out pid);
+            try { AllowSetForegroundWindow((int)pid); } catch { }      // щоб панель могла вивести своє вікно наперед
+            string text = verb + "\n" + path;
+            IntPtr mem = Marshal.StringToHGlobalUni(text);
+            NativeWindow me = new NativeWindow();          // від кого: панель перевіряє, що це той самий NeoBar.exe
+            try
+            {
+                me.CreateHandle(new CreateParams());
+                COPYDATA cd = new COPYDATA();
+                cd.Data = MagicTool;
+                cd.Size = text.Length * 2;
+                cd.Ptr = mem;
+                IntPtr res;
+                IntPtr ok = SendMessageTimeout(w, WM_COPYDATA, me.Handle, ref cd, 0x0002, 5000, out res);
+                return ok != IntPtr.Zero && res != IntPtr.Zero;
+            }
+            finally { Marshal.FreeHGlobal(mem); try { me.DestroyHandle(); } catch { } }
+        }
+        catch { return false; }
+    }
+
+    [DllImport("user32.dll")] static extern bool AllowSetForegroundWindow(int pid);
+
+    static bool TakeTool(IntPtr sender, IntPtr lp)
+    {
+        COPYDATA cd = (COPYDATA)Marshal.PtrToStructure(lp, typeof(COPYDATA));
+        if (cd.Data != MagicTool || cd.Size <= 2 || cd.Size > 1 << 16 || cd.Ptr == IntPtr.Zero || toolHandler == null) return false;
+        if (!FromSelf(sender)) return false;           // лише від процесу контекстного меню NeoBar
+        string s = Marshal.PtrToStringUni(cd.Ptr, cd.Size / 2);
+        int k = s.IndexOf('\n');
+        if (k <= 0) return false;
+        string verb = s.Substring(0, k), path = s.Substring(k + 1);
+        if (verb != "hash" && verb != "enc" && verb != "dec" && verb != "scan") return false;
+        try { if (!Path.IsPathRooted(path) || !File.Exists(path)) return false; } catch { return false; }
+        toolHandler(verb, path);
+        return true;
+    }
+
     static void Start()
     {
         if (launched) return;
         launched = true;
-        recv = new Receiver();
+        if (recv == null) recv = new Receiver();
         string exe = Application.ExecutablePath;
         string how = UserLaunch.Run(exe, "--drop " + recv.Handle.ToInt64());
         SbLog.W(SbLog.Panel, "перетягування від адміністратора: помічник зі звичайними правами - " + (how.Length > 0 ? how : "не запустився"));
@@ -151,7 +211,7 @@ static class DropBridge
         public Receiver()
         {
             CreateParams cp = new CreateParams();
-            cp.Caption = "NeoBarDropReceiver";
+            cp.Caption = RemoteTitle;
             CreateHandle(cp);
             try { ChangeWindowMessageFilterEx(Handle, WM_COPYDATA, 1, IntPtr.Zero); } catch { }
         }
@@ -160,7 +220,11 @@ static class DropBridge
         {
             if (m.Msg == WM_COPYDATA)
             {
-                try { if (Take(m.WParam, m.LParam)) { m.Result = new IntPtr(1); return; } }
+                try
+                {
+                    if (TakeTool(m.WParam, m.LParam)) { m.Result = new IntPtr(1); return; }
+                    if (Take(m.WParam, m.LParam)) { m.Result = new IntPtr(1); return; }
+                }
                 catch (Exception ex) { Util.ErrorLog(ex); }
             }
             base.WndProc(ref m);

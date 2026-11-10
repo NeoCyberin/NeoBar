@@ -5194,9 +5194,6 @@
 < Видалити нотатку «
 > Excluir a nota «
 
-< Клік по нотатці - редагувати; перемикач - закріпити на шпалерах.
-> Clique em uma nota para editá-la; o interruptor a fixa no papel de parede.
-
 < Індексую диски (NTFS)…
 > Indexando unidades (NTFS)…
 
@@ -5446,9 +5443,6 @@
 < Додано: ПКМ на файлі → NeoBar (у Windows 11 - «Показати додаткові параметри»).
 > Adicionado: clique direito em um arquivo → NeoBar (no Windows 11 - «Mostrar mais opções»).
 
-< Перетягніть файл у вікно або виберіть його
-> Arraste um arquivo para a janela ou escolha-o
-
 < Вибрати файл…
 > Escolher arquivo…
 
@@ -5523,9 +5517,6 @@
 
 < Файлів: 
 > Arquivos: 
-
-< Перетягніть файли у вікно або натисніть «Додати файли…»
-> Arraste arquivos para a janela ou clique em «Adicionar arquivos…»
 
 < обробка… 
 > processando… 
@@ -9670,9 +9661,6 @@
 < Чорний
 > Preto
 
-< Колір теми
-> Cor do tema
-
 < Логотип у центрі…
 > Logotipo no centro…
 
@@ -9960,9 +9948,6 @@
 
 < ● 888 мс
 > ● 888 ms
-
-< Кубик x
-> Dado x
 
 < сума з 
 > soma de 
@@ -10608,3 +10593,27 @@
 
 < Перезапустити NeoBar
 > Reiniciar o NeoBar
+
+< Клік по нотатці - показати її; перемикач - закріпити на шпалерах або редагувати.
+> Clique numa nota para mostrá-la; o interruptor a fixa no papel de parede ou permite editá-la.
+
+< Перетягніть файл сюди
+> Solte um arquivo aqui
+
+< Інший файл…
+> Outro arquivo…
+
+< Світлий колір на білому може погано скануватися - краще темніший.
+> Uma cor clara sobre branco pode ser mal lida – prefira uma mais escura.
+
+< Колір…
+> Cor…
+
+< Вибрати колір коду (спершу запропоновано колір теми)
+> Escolher a cor do código (primeiro é sugerida a cor do tema)
+
+< Відновити
+> Recuperar
+
+< Шифр
+> Cifra

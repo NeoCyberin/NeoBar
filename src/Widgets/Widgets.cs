@@ -643,6 +643,20 @@ static class Widgets
         return f;
     }
 
+    // підпис під значком: зменшується, щоб уміститися, але не дрібніше за читабельний розмір (задовге - з «…»)
+    static Font CapFont(Font basis, string text, float h, int maxW)
+    {
+        float s = h * 0.22f, min = Math.Max(7f, h * 0.22f * 0.85f);
+        Font f = PxFont(basis, s, FontStyle.Regular);
+        while (s > min && TextRenderer.MeasureText(text, f, new Size(10000, 1000), TextFormatFlags.NoPadding).Width > maxW)
+        {
+            f.Dispose();
+            s = Math.Max(min, s - 0.5f);
+            f = PxFont(basis, s, FontStyle.Regular);
+        }
+        return f;
+    }
+
     static void Txt(Graphics g, string text, Font f, Rectangle r, Color col)
     {
         TextRenderer.DrawText(g, text, f, r, col, TF);
@@ -687,6 +701,7 @@ static class Widgets
         Color back = Color.FromArgb(70, Util.Blend(Util.Opaque(t.Bg), text, 0.4f));
         Rectangle inner = Rectangle.Inflate(r, -(int)(4 * sc), -(int)(3 * sc));
         int w = inner.Width, h = inner.Height;
+        int capX = r.X + (int)(2 * sc), capW = r.Width - (int)(4 * sc);         // підписи - на всю ширину плитки
 
         switch (kind)
         {
@@ -795,8 +810,8 @@ static class Widgets
                 Color pq = PingMon.Quality(Color.FromArgb(80, 200, 110), Color.FromArgb(240, 170, 40), Color.FromArgb(230, 70, 70));
                 if (nf < 0.999f) pq = Util.Blend(nbg, pq, nf);
                 string pt = PingMon.LastAt == DateTime.MinValue ? L.T("пінг…") : (double.IsNaN(PingMon.Last) ? L.T("немає") : Math.Round(PingMon.Last) + L.T(" мс"));
-                using (Font sm2 = FitFont(font, L.T("● 888 мс"), h * 0.22f, w, FontStyle.Regular))
-                    Txt(g, "● " + pt, sm2, new Rectangle(inner.X, inner.Y + (int)(h * 0.66f), w, (int)(h * 0.32f)), pq);
+                using (Font sm2 = CapFont(font, L.T("● 888 мс"), h, capW))
+                    Txt(g, "● " + pt, sm2, new Rectangle(capX, inner.Y + (int)(h * 0.66f), capW, (int)(h * 0.32f)), pq);
                 break;
             }
             case "color":
@@ -817,8 +832,8 @@ static class Widgets
                 using (SolidBrush mb = new SolidBrush(cc)) g.FillEllipse(mb, mid);
                 g.SmoothingMode = smc;
                 string hx = ColorMath.Hex(cc);
-                using (Font sm = FitFont(font, hx, h * 0.22f, w, FontStyle.Regular))
-                    Txt(g, hx, sm, new Rectangle(inner.X, inner.Y + (int)(h * 0.6f), w, (int)(h * 0.34f)), sec);
+                using (Font sm = CapFont(font, hx, h, capW))
+                    Txt(g, hx, sm, new Rectangle(capX, inner.Y + (int)(h * 0.6f), capW, (int)(h * 0.34f)), sec);
                 break;
             }
             case "qr":
@@ -842,8 +857,8 @@ static class Widgets
                     for (int k = 0; k + 1 < mods.Length; k += 2) g.FillRectangle(qb, x0 + mods[k] * m, y0 + mods[k + 1] * m, m, m);
                 }
                 g.SmoothingMode = smq;
-                using (Font sm = FitFont(font, L.T("QR-код"), h * 0.22f, w, FontStyle.Regular))
-                    Txt(g, L.T("QR-код"), sm, new Rectangle(inner.X, inner.Y + (int)(h * 0.62f), w, (int)(h * 0.34f)), sec);
+                using (Font sm = CapFont(font, L.T("QR-код"), h, capW))
+                    Txt(g, L.T("QR-код"), sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), sec);
                 break;
             }
             case "recover":
@@ -868,8 +883,8 @@ static class Widgets
                         g.FillPolygon(hb, new PointF[] { new PointF(ex + tx * hl, ey + ty * hl), new PointF(ex + nx * hw, ey + ny * hw), new PointF(ex - nx * hw, ey - ny * hw) });
                 }
                 g.SmoothingMode = smr;
-                using (Font sm = FitFont(font, L.T("Відновлення"), h * 0.22f, w, FontStyle.Regular))
-                    Txt(g, L.T("Відновлення"), sm, new Rectangle(inner.X, inner.Y + (int)(h * 0.66f), w, (int)(h * 0.32f)), sec);
+                using (Font sm = CapFont(font, L.T("Відновити"), h, capW))
+                    Txt(g, L.T("Відновити"), sm, new Rectangle(capX, inner.Y + (int)(h * 0.66f), capW, (int)(h * 0.32f)), sec);
                 break;
             }
             case "security":
@@ -881,16 +896,16 @@ static class Widgets
                 float s = Math.Max(6 * sc, Math.Min(h * 0.5f, w * 0.7f));
                 Ico.Draw(g, "shield", new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.06f, s, s), shc);
                 string cap3 = SecScan.Busy ? "…" : (!done ? L.T("Безпека") : (sb + sw == 0 ? L.T("Гаразд") : (sb + sw).ToString()));
-                using (Font sm = FitFont(font, cap3, h * 0.22f, w, FontStyle.Regular))
-                    Txt(g, cap3, sm, new Rectangle(inner.X, inner.Y + (int)(h * 0.62f), w, (int)(h * 0.34f)), done && sb + sw > 0 ? shc : sec);
+                using (Font sm = CapFont(font, cap3, h, capW))
+                    Txt(g, cap3, sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), done && sb + sw > 0 ? shc : sec);
                 break;
             }
             case "crypt":
             {
                 float s = Math.Max(6 * sc, Math.Min(h * 0.5f, w * 0.7f));
                 Ico.Draw(g, "key", new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.06f, s, s), text);
-                using (Font sm = FitFont(font, L.T("Шифрування"), h * 0.22f, w, FontStyle.Regular))
-                    Txt(g, L.T("Шифрування"), sm, new Rectangle(inner.X, inner.Y + (int)(h * 0.62f), w, (int)(h * 0.34f)), sec);
+                using (Font sm = CapFont(font, L.T("Шифр"), h, capW))
+                    Txt(g, L.T("Шифр"), sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), sec);
                 break;
             }
             case "clean":
@@ -898,8 +913,8 @@ static class Widgets
                 float s = Math.Max(6 * sc, Math.Min(h * 0.5f, w * 0.7f));
                 Ico.Draw(g, "trash", new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.06f, s, s), Cleaner.Busy ? acc : text);
                 string cap2 = Cleaner.Busy ? "…" : (Cleaner.LastFound >= 0 ? Cleaner.Size(Cleaner.LastFound) : L.T("Очищення"));
-                using (Font sm = FitFont(font, cap2, h * 0.22f, w, FontStyle.Regular))
-                    Txt(g, cap2, sm, new Rectangle(inner.X, inner.Y + (int)(h * 0.62f), w, (int)(h * 0.34f)), Cleaner.LastFound > (1L << 30) ? acc : sec);
+                using (Font sm = CapFont(font, cap2, h, capW))
+                    Txt(g, cap2, sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), Cleaner.LastFound > (1L << 30) ? acc : sec);
                 break;
             }
             case "dice":
@@ -907,9 +922,9 @@ static class Widgets
                 int[] dv = Dice.Shown;
                 int n = Math.Max(1, Dice.Count);
                 bool lab = n == 1 && dv.Length == 1 && !Dice.Rolling && Dice.LabelOf(dv[0]).Length > 0;
-                // на панелі - один кубик: результат (для кількох кубиків - сума або їхня кількість)
-                float area = h * 0.6f;
-                float s = Math.Max(6 * sc, Math.Min(area, w * 0.8f));
+                // на панелі - один кубик: результат (для кількох кубиків - сума або їхня кількість);
+                // розмір і місце - як у значків інших віджетів (над підписом, по центру)
+                float s = Math.Max(6 * sc, Math.Min(h * 0.52f, w * 0.7f));
                 Color face = Util.Blend(Util.Opaque(t.Bg), text, Util.Lum(Util.Opaque(t.Bg)) > 140 ? 0.06f : 0.2f);
                 Color ink = text;
                 bool ready = dv.Length > 0 && !Dice.Rolling;
@@ -921,11 +936,13 @@ static class Widgets
                     else tl = "x" + n;
                 }
                 using (Font nf = FitFont(font, "88", s * 0.55f, (int)(s * 0.86f), FontStyle.Bold))
-                    Dice.DrawDie(g, new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.02f + (area - s) / 2f, s, s), tv, face, ink, nf, tl);
-                string cap = dv.Length == 0 ? (n > 1 ? L.T("Кубик x") + n : L.T("Кубик")) : (Dice.Rolling ? "…" : (lab ? Dice.LabelOf(dv[0])
-                    : (n > 1 ? (Dice.Total ? L.T("сума з ") + n : string.Join(" ", Array.ConvertAll(dv, delegate (int x) { return x.ToString(); }))) : (Dice.Faces <= 6 ? dv[0].ToString() : L.T("к") + Dice.Faces))));
-                using (Font sm = FitFont(font, cap, h * 0.22f, w, FontStyle.Regular))
-                    Txt(g, cap, sm, new Rectangle(inner.X, inner.Y + (int)(h * 0.62f), w, (int)(h * 0.34f)), lab ? text : sec);
+                    Dice.DrawDie(g, new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.05f, s, s), tv, face, ink, nf, tl);
+                // підпис: тип кубика (к4, к6, к20…) - однаково для всіх; число - на самому кубику
+                string dk = Dice.Locked ? L.T("Кубик") : (n > 1 ? n + L.T("к") + Dice.Faces : L.T("к") + Dice.Faces);
+                string cap = Dice.Rolling ? "…" : (lab ? Dice.LabelOf(dv[0])
+                    : (n > 1 && dv.Length > 0 && Dice.Total ? L.T("сума з ") + n : dk));
+                using (Font sm = CapFont(font, cap, h, capW))
+                    Txt(g, cap, sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), lab ? text : sec);
                 break;
             }
             case "notes":
@@ -955,8 +972,8 @@ static class Widgets
                     }
                 g.SmoothingMode = smn;
                 string nt = Notes.Count == 0 ? L.T("Нотатки") : L.T("Нотатки: ") + Notes.Count;
-                using (Font sm = FitFont(font, nt, h * 0.22f, w, FontStyle.Regular))
-                    Txt(g, nt, sm, new Rectangle(inner.X, inner.Y + (int)(h * 0.6f), w, (int)(h * 0.34f)), sec);
+                using (Font sm = CapFont(font, nt, h, capW))
+                    Txt(g, nt, sm, new Rectangle(capX, inner.Y + (int)(h * 0.6f), capW, (int)(h * 0.34f)), sec);
                 break;
             }
             case "perf":

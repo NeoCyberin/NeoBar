@@ -296,6 +296,7 @@ sealed partial class NeoBar : Form
     {
         base.OnShown(e);
         DropFiles.Register(this);          // повторно: після показу вікна стиль приймання файлів має стояти
+        DropBridge.InitRemote(FromShellMenu);   // контекстне меню файлів відкриває файли в розкритих вікнах панелі
         Trim();
         AfterShown();
         Seasons.Start(this);
@@ -611,8 +612,10 @@ sealed partial class NeoBar : Form
         // на кшталт знімка екрана панель не ховають
         // опцію вимкнули, поки панель була схована - повернути її
         if (!cfg.FsHide) { fsHits = 0; SetSuspended(false); return; }
-        bool sure = fsAbn || Games.InForeground;
-        bool maybe = !sure && (Nat.FullscreenBusy() || Nat.ForegroundCovers(true, IsHandleCreated ? Handle : IntPtr.Zero));
+        // власне вікно на весь екран (піпетка) - не причина ховати панель і ставити все на паузу
+        bool own = Nat.ForegroundIsOwn();
+        bool sure = (fsAbn && !own) || Games.InForeground;
+        bool maybe = !sure && !own && (Nat.FullscreenBusy() || Nat.ForegroundCovers(true, IsHandleCreated ? Handle : IntPtr.Zero));
         fsHits = maybe ? fsHits + 1 : 0;
         SetSuspended(sure || (suspended ? maybe : fsHits >= 2));
     }

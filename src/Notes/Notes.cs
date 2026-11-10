@@ -491,6 +491,13 @@ static class Notes
         Notify();
     }
 
+    // клік у списку нотаток: показати нотатку, не змінюючи закріплення (закріплюють перемикач і замочок)
+    public static void Reveal(Note n)
+    {
+        NoteForm f;
+        if (forms.TryGetValue(n, out f) && f != null && !f.IsDisposed) f.Reveal();
+    }
+
     public static void LockAll() { foreach (Note n in All) SetLocked(n, true); }
     public static void UnlockAll() { foreach (Note n in All) SetLocked(n, false); }
     public static void Modified() { Notify(); }

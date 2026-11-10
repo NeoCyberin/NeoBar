@@ -5194,9 +5194,6 @@
 < Видалити нотатку «
 > Delete note «
 
-< Клік по нотатці - редагувати; перемикач - закріпити на шпалерах.
-> Click a note to edit it; the switch pins it to the wallpaper.
-
 < Індексую диски (NTFS)…
 > Indexing drives (NTFS)…
 
@@ -5446,9 +5443,6 @@
 < Додано: ПКМ на файлі → NeoBar (у Windows 11 - «Показати додаткові параметри»).
 > Added: right-click a file → NeoBar (in Windows 11 - «Show more options»).
 
-< Перетягніть файл у вікно або виберіть його
-> Drag a file into the window or choose it
-
 < Вибрати файл…
 > Choose file…
 
@@ -5523,9 +5517,6 @@
 
 < Файлів: 
 > Files: 
-
-< Перетягніть файли у вікно або натисніть «Додати файли…»
-> Drag files into the window or click «Add files…»
 
 < обробка… 
 > processing… 
@@ -9670,9 +9661,6 @@
 < Чорний
 > Black
 
-< Колір теми
-> Theme color
-
 < Логотип у центрі…
 > Logo in the center…
 
@@ -9960,9 +9948,6 @@
 
 < ● 888 мс
 > ● 888 ms
-
-< Кубик x
-> Dice x
 
 < сума з 
 > sum of 
@@ -10608,3 +10593,27 @@
 
 < Перезапустити NeoBar
 > Restart NeoBar
+
+< Клік по нотатці - показати її; перемикач - закріпити на шпалерах або редагувати.
+> Click a note to show it; the switch pins it to the wallpaper or makes it editable.
+
+< Перетягніть файл сюди
+> Drop a file here
+
+< Інший файл…
+> Another file…
+
+< Світлий колір на білому може погано скануватися - краще темніший.
+> A light colour on white may scan poorly - a darker one is better.
+
+< Колір…
+> Colour…
+
+< Вибрати колір коду (спершу запропоновано колір теми)
+> Choose the code colour (the theme colour is offered first)
+
+< Відновити
+> Recover
+
+< Шифр
+> Crypto

@@ -32,6 +32,8 @@ sealed class NoteForm : Form
     readonly Note n;
     readonly Panel headerPanel, toolbar, bodyPanel;
     readonly NoteBox box;
+    readonly Panel boxHost;         // обрізає системну смугу прокрутки поля тексту (замість неї - власна, у кольорах теми)
+    readonly NoteScroll vbar;
     readonly Panel titlePanel;
     readonly TextBox titleBox;
     readonly List<EmojiPic> pics = new List<EmojiPic>();
@@ -200,13 +202,12 @@ sealed class NoteForm : Form
 
         box = new NoteBox();
         box.BorderStyle = BorderStyle.None;
-        box.Dock = DockStyle.Fill;
         box.Multiline = true;
         box.WordWrap = true;
         box.DetectUrls = false;
         box.AcceptsTab = true;
         box.HideSelection = false;
-        box.ScrollBars = RichTextBoxScrollBars.Vertical;
+        box.ScrollBars = RichTextBoxScrollBars.ForcedVertical;        // завжди є - ширина тексту не стрибає; сама смуга - за краєм boxHost
         box.BulletIndent = Px(16);
         box.HandleCreated += delegate
         {
@@ -230,7 +231,17 @@ sealed class NoteForm : Form
         box.ViewChanged += delegate { if (ready && fmtBusy == 0) { if (emoDirty) QueueEmoji(false); else RefreshEmoji(); } };   // перебудову (вона міняє виділення) не робимо всередині перемальовки
         box.Resize += delegate { if (ready) QueueEmoji(false); };
         box.HandleCreated += delegate { QueueEmoji(true); };
-        bodyPanel.Controls.Add(box);
+        boxHost = new Panel();
+        boxHost.Dock = DockStyle.Fill;
+        boxHost.Controls.Add(box);
+        boxHost.Resize += delegate { LayoutBox(); };
+        vbar = new NoteScroll(box, delegate { return Notes.ThemeOf(n); });
+        vbar.Dock = DockStyle.Right;
+        vbar.Width = Px(10);
+        box.ViewChanged += delegate { vbar.Invalidate(); };
+        box.TextChanged += delegate { vbar.Invalidate(); };
+        bodyPanel.Controls.Add(boxHost);
+        bodyPanel.Controls.Add(vbar);
         bodyPanel.Controls.Add(titlePanel);
 
         Controls.Add(bodyPanel);
@@ -251,6 +262,15 @@ sealed class NoteForm : Form
         VisibleChanged += delegate { if (Visible) QueueEmoji(true); };
         Move += delegate { if (ready && busy == 0 && !n.Locked && Visible) { PullRect(); Notes.Touch(); } };
         Resize += delegate { if (ready && busy == 0 && !n.Locked && Visible) { PullRect(); Notes.Touch(); if (!sizing) UpdateRegion(); } };
+    }
+
+    // поле тексту ширше за контейнер на ширину системної смуги прокрутки - вона опиняється за краєм і не видна
+    void LayoutBox()
+    {
+        Size cs = boxHost.ClientSize;
+        Rectangle want = new Rectangle(0, 0, cs.Width + SystemInformation.VerticalScrollBarWidth, cs.Height);
+        if (box.Bounds != want) box.Bounds = want;
+        vbar.Invalidate();
     }
 
     // ---- без мигтіння при зміні розміру ----
@@ -370,8 +390,10 @@ sealed class NoteForm : Form
         if (!n.Locked) Padding = new Padding(NoteFrame.Inset(t));
         headerPanel.BackColor = head;
         bodyPanel.BackColor = body;
+        boxHost.BackColor = body;
         toolbar.BackColor = tool;
         box.BackColor = body;
+        vbar.Invalidate();
         Color hi = Notes.Contrast(head);
         bAdd.Ink = hi; bTheme.Ink = hi; bLock.Ink = hi; bClose.Ink = hi; bar.Ink = hi;
         bTheme.Fill = body;
@@ -1077,6 +1099,34 @@ sealed class NoteForm : Form
         try { box.Focus(); box.Select(box.TextLength, 0); } catch { }
     }
 
+    // показати нотатку (зі списку): редагована - наперед і з фокусом, закріплена лишається закріпленою
+    public void Reveal()
+    {
+        try
+        {
+            if (!Visible) Show();
+            if (n.Locked) return;
+            Win.SetWindowPos(Handle, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+            BringToFront();
+            Activate();
+            Repaint();
+        }
+        catch { }
+    }
+
+    // повне перемалювання з усіма дочірніми елементами (після зміни стилю вікна шапка й панель самі не домальовуються)
+    [DllImport("user32.dll")] static extern bool RedrawWindow(IntPtr h, IntPtr rc, IntPtr rgn, uint flags);
+
+    void Repaint()
+    {
+        try
+        {
+            RedrawWindow(Handle, IntPtr.Zero, IntPtr.Zero, 0x0001 | 0x0004 | 0x0080 | 0x0100 | 0x0400);      // INVALIDATE | ERASE | ALLCHILDREN | UPDATENOW | FRAME
+            BeginInvoke(new Action(delegate { try { if (!IsDisposed) { Invalidate(true); Update(); } } catch { } }));
+        }
+        catch { }
+    }
+
     public void SetLocked(bool locked)
     {
         busy++;
@@ -1248,6 +1298,7 @@ sealed class NoteForm : Form
         BringToFront();
         Activate();
         Invalidate(true);
+        Repaint();
     }
 
     void SetChildrenVisible(bool on)

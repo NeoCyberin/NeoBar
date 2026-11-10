@@ -72,6 +72,28 @@ sealed partial class NeoBar
         return nw;
     }
 
+    // файл із контекстного меню Провідника (окремий процес передав його панелі): відкрити в розкритому вікні
+    public void FromShellMenu(string verb, string path)
+    {
+        BeginInvoke(new Action(delegate
+        {
+            try
+            {
+                if (verb == "scan")
+                {
+                    SecWindow s = OpenWin("security", FirstWidget("security"), delegate { return new SecWindow(this); }, false) as SecWindow;
+                    if (s != null) { s.CheckFile(path); s.Activate(); }
+                    return;
+                }
+                CryptWindow c = OpenWin("crypt", FirstWidget("crypt"), delegate { return new CryptWindow(this); }, false) as CryptWindow;
+                if (c == null) return;
+                if (verb == "hash") c.HashFile(path); else c.AddFiles(new string[] { path });
+                c.Activate();
+            }
+            catch (Exception ex) { Util.ErrorLog(ex); }
+        }));
+    }
+
     public void OpenClock(int tab)
     {
         SbWindow w = OpenWin("clock", FirstWidget("clock"), delegate { return new ClockWindow(this, tab); }, false);

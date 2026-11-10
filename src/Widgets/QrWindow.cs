@@ -67,7 +67,8 @@ static class QrState
     public static string WifiAuth = "WPA";
     public static bool WifiHidden;
     public static int Ecl = 1;
-    public static bool ThemeColor;
+    public static bool Colored;                 // кольоровий код (інакше чорний)
+    public static Color Custom = Color.Empty;   // вибраний колір; порожній - колір теми (затемнений для сканера)
     public static Image Logo;
 
     public static string Get(string k) { string v; return Values.TryGetValue(k, out v) ? v : ""; }
@@ -217,6 +218,7 @@ static class QrState
         float k = Math.Min(r.Width / Logo.Width, r.Height / Logo.Height);
         float w = Logo.Width * k, h = Logo.Height * k;
         g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
         g.DrawImage(Logo, r.X + (r.Width - w) / 2f, r.Y + (r.Height - h) / 2f, w, h);
     }
 
@@ -356,6 +358,7 @@ sealed class QrWindow : SbWindow
     readonly int baseH;
     QrCode.Result code;
     Bitmap preview;
+    int previewModule;
     string note = "", sig = "";
 
     public QrWindow(NeoBar bar) : base(bar, L.T("QR-код"), 480, 780)
@@ -515,20 +518,41 @@ sealed class QrWindow : SbWindow
         Rebuild();
     }
 
-    Color DarkColor()
+    // колір теми, але досить темний для сканера (контраст з білим) - перше значення для вибору кольору
+    Color ThemeDark()
     {
-        if (!QrState.ThemeColor) return Color.Black;
-        // колір теми, але досить темний для сканера (контраст з білим)
         Color c = Util.Opaque(P.Acc);
         for (int i = 0; i < 12 && Util.Lum(c) > 80; i++) c = Util.Blend(c, Color.Black, 0.18f);
         return c;
+    }
+
+    Color DarkColor()
+    {
+        if (!QrState.Colored) return Color.Black;
+        return QrState.Custom.IsEmpty ? ThemeDark() : Color.FromArgb(255, QrState.Custom);
+    }
+
+    // свій колір коду: стандартна панель вибору кольору, спершу - колір теми
+    void PickColor()
+    {
+        using (ColorDialog d = new ColorDialog())
+        {
+            d.FullOpen = true;
+            d.AnyColor = true;
+            d.Color = QrState.Custom.IsEmpty ? ThemeDark() : QrState.Custom;
+            if (d.ShowDialog(this) != DialogResult.OK) return;
+            QrState.Custom = d.Color;
+            QrState.Colored = true;
+            Rebuild();
+            Invalidate();
+        }
     }
 
     void Rebuild()
     {
         string pl = QrState.Payload();
         // колір теми - теж у підписі: змінилася тема - код перемальовується в новому кольорі
-        string s = pl + "|" + QrState.Ecl + "|" + QrState.ThemeColor + "|" + DarkColor().ToArgb() + "|" + (QrState.Logo != null ? QrState.Logo.GetHashCode() : 0);
+        string s = pl + "|" + QrState.Ecl + "|" + QrState.Colored + "|" + DarkColor().ToArgb() + "|" + (QrState.Logo != null ? QrState.Logo.GetHashCode() : 0);
         if (s == sig) return;
         sig = s;
         if (preview != null) { preview.Dispose(); preview = null; }
@@ -538,7 +562,8 @@ sealed class QrWindow : SbWindow
         // з логотипом - найвищий рівень корекції: центр коду закрито картинкою
         code = QrCode.EncodeText(pl, QrState.Logo != null ? 3 : QrState.Ecl, QrState.Logo == null);
         if (code == null) { note = L.T("Забагато даних для одного QR-коду (до ~2900 байтів при рівні L)."); return; }
-        preview = QrState.Render(code, 6, DarkColor());
+        previewModule = 0;              // зображення для перегляду - під розмір вікна, у PaintBody
+        if (Util.Lum(DarkColor()) > 150) note = L.T("Світлий колір на білому може погано скануватися - краще темніший.");
         if ((QrState.Kind == "tel" && QrState.PhoneOdd(QrState.Get("tnum"))) || (QrState.Kind == "sms" && QrState.PhoneOdd(QrState.Get("snum"))))
             note = L.T("У номері враховуються цифри, + на початку, * і #; дужки, дефіси, крапки й пробіли відкидаються, решта символів - теж.");
     }
@@ -728,6 +753,19 @@ sealed class QrWindow : SbWindow
         int bottomH = Px(28) + Px(8) + Px(28) + Px(10) + Px(34) + Px(8) + Px(36);
         int side = Math.Max(Px(110), Math.Min(r.Width, r.Bottom - y - bottomH));
         Rectangle pc = new Rectangle(r.X + (r.Width - side) / 2, y, side, side);
+        if (code != null)
+        {
+            // перегляд малюється 1:1 у розмірі вікна (цілий розмір модуля): і модулі чіткі, і логотип не розмитий
+            int mod = Math.Max(1, side / (code.Size + 8));
+            if (preview == null || previewModule != mod)
+            {
+                if (preview != null) preview.Dispose();
+                preview = QrState.Render(code, mod, DarkColor());
+                previewModule = mod;
+            }
+            int ps = preview.Width;
+            pc = new Rectangle(r.X + (r.Width - ps) / 2, y + (side - ps) / 2, ps, ps);
+        }
         if (preview != null)
         {
             InterpolationMode im = g.InterpolationMode;
@@ -749,7 +787,7 @@ sealed class QrWindow : SbWindow
             Card(g, pc);
             TxtC(g, note.Length > 0 && code == null && QrState.Payload().Length > 0 ? L.T("Забагато даних") : L.T("Уведіть дані вище"), F, pc, P.Sub);
         }
-        y = pc.Bottom + Px(8);
+        y = pc.Bottom + Px(8) + (code != null ? (side - pc.Height) / 2 : 0);
         string info = code != null ? L.T("Версія ") + code.Version + " · " + code.Size + "×" + code.Size + L.T(" · рівень ") + "LMQH"[code.Ecl] + (QrState.Logo == null && code.Ecl > QrState.Ecl ? L.T(" (авто: вміщається без збільшення)") : "") + " · " + code.Bytes + L.T(" з ") + code.Capacity + L.T(" байт") : "";
         TxtC(g, note.Length > 0 ? note : info, FS, new Rectangle(r.X, y, r.Width, Px(28)), note.Length > 0 ? P.Acc : P.Sub);
         y += Px(36);
@@ -765,8 +803,13 @@ sealed class QrWindow : SbWindow
             Chip(g, new Rectangle(r.X + Px(80) + i * (lw + Px(4)), y, lw, Px(28)), lv[i], sel, QrState.Logo != null ? null : (Action)delegate { QrState.Ecl = e; Rebuild(); Invalidate(); });
         }
         int cx = r.X + Px(80) + 4 * (lw + Px(4)) + Px(10), cw2 = (r.Right - cx - Px(6)) / 2;
-        Chip(g, new Rectangle(cx, y, cw2, Px(28)), L.T("Чорний"), !QrState.ThemeColor, delegate { QrState.ThemeColor = false; Rebuild(); Invalidate(); });
-        Chip(g, new Rectangle(cx + cw2 + Px(6), y, cw2, Px(28)), L.T("Колір теми"), QrState.ThemeColor, delegate { QrState.ThemeColor = true; Rebuild(); Invalidate(); });
+        Chip(g, new Rectangle(cx, y, cw2, Px(28)), L.T("Чорний"), !QrState.Colored, delegate { QrState.Colored = false; Rebuild(); Invalidate(); });
+        Rectangle cc = new Rectangle(cx + cw2 + Px(6), y, cw2, Px(28));
+        Chip(g, cc, L.T("Колір…"), QrState.Colored, PickColor);
+        // зразок кольору на кнопці
+        Color sw = QrState.Custom.IsEmpty ? ThemeDark() : QrState.Custom;
+        using (SolidBrush b = new SolidBrush(sw)) g.FillEllipse(b, new Rectangle(cc.X + Px(8), cc.Y + (cc.Height - Px(12)) / 2, Px(12), Px(12)));
+        Tip(cc, L.T("Вибрати колір коду (спершу запропоновано колір теми)"));
         y += Px(38);
         int bw = (r.Width - Px(8)) / 2;
         Btn(g, new Rectangle(r.X, y, bw, Px(34)), QrState.Logo == null ? L.T("Логотип у центрі…") : L.T("Інший логотип…"), PickLogo, 0, true);

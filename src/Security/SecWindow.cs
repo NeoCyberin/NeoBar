@@ -436,6 +436,9 @@ sealed class SecWindow : VtWindow
         lastListsTotal = total;
     }
 
+    // файл із контекстного меню («Перевірити на підозрілість»)
+    public void CheckFile(string path) { Details(path); }
+
     // довільний файл (кнопка «Перевірити файл…», перетягування) - у вкладці «Файл»
     void Details(string path)
     {

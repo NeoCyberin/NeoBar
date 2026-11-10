@@ -268,6 +268,8 @@ sealed class NoteBox : RichTextBox
 {
     public event EventHandler ViewChanged;
 
+    public void RaiseView() { if (ViewChanged != null) ViewChanged(this, EventArgs.Empty); }
+
     protected override CreateParams CreateParams
     {
         get
@@ -332,6 +334,123 @@ sealed class EmojiPic : Control
     protected override void WndProc(ref Message m)
     {
         if (m.Msg == 0x0084) { m.Result = (IntPtr)(-1); return; }      // WM_NCHITTEST -> HTTRANSPARENT
+        base.WndProc(ref m);
+    }
+}
+
+// ---------- власна смуга прокрутки нотатки: тонка, у кольорах теми (системна - за краєм поля тексту) ----------
+sealed class NoteScroll : Control
+{
+    readonly NoteBox box;
+    readonly Func<NoteTheme> theme;
+    bool drag, hover;
+    int dragOff;
+
+    [StructLayout(LayoutKind.Sequential)] struct SCROLLINFO { public int cbSize; public uint fMask; public int nMin, nMax; public uint nPage; public int nPos, nTrackPos; }
+    [StructLayout(LayoutKind.Sequential)] struct POINT { public int X, Y; }
+    [DllImport("user32.dll")] static extern bool GetScrollInfo(IntPtr h, int bar, ref SCROLLINFO si);
+    [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
+    [DllImport("user32.dll", EntryPoint = "SendMessageW")] static extern IntPtr SendPoint(IntPtr h, int msg, IntPtr w, ref POINT l);
+
+    public NoteScroll(NoteBox b, Func<NoteTheme> t)
+    {
+        box = b;
+        theme = t;
+        SetStyle(ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.ResizeRedraw, true);
+        SetStyle(ControlStyles.Selectable, false);
+        TabStop = false;
+    }
+
+    // false - прокручувати нічого (текст вміщається)
+    bool Info(out int min, out int max, out int page, out int pos)
+    {
+        min = max = page = pos = 0;
+        if (!box.IsHandleCreated) return false;
+        SCROLLINFO si = new SCROLLINFO();
+        si.cbSize = Marshal.SizeOf(typeof(SCROLLINFO));
+        si.fMask = 0x17;                    // SIF_ALL
+        if (!GetScrollInfo(box.Handle, 1, ref si)) return false;
+        min = si.nMin; max = si.nMax; page = (int)si.nPage; pos = si.nPos;
+        return page > 0 && max - min + 1 > page;
+    }
+
+    Rectangle Track() { return new Rectangle(0, 2, Width, Math.Max(1, Height - 4)); }
+
+    Rectangle Thumb(out int min, out int span, out int trackFree)
+    {
+        int max, page, pos;
+        span = 0; trackFree = 0;
+        if (!Info(out min, out max, out page, out pos)) return Rectangle.Empty;
+        Rectangle tr = Track();
+        int range = max - min + 1;
+        int th = Math.Min(tr.Height, Math.Max(Notes.Px(24), (int)((long)tr.Height * page / range)));
+        span = range - page;
+        trackFree = tr.Height - th;
+        int y = tr.Y + (span > 0 ? (int)((long)trackFree * Math.Max(0, Math.Min(span, pos - min)) / span) : 0);
+        return new Rectangle(0, y, Width, th);
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        NoteTheme t = theme();
+        e.Graphics.Clear(t.Body);
+        int min, span, free;
+        Rectangle th = Thumb(out min, out span, out free);
+        if (th.IsEmpty) return;
+        int w = hover || drag ? Notes.Px(6) : Notes.Px(4);
+        Rectangle r = new Rectangle((Width - w) / 2, th.Y, w, th.Height);
+        e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        using (SolidBrush br = new SolidBrush(Util.Blend(t.Body, t.Fg, drag ? 0.6f : (hover ? 0.45f : 0.3f)))) Util.FillRound(e.Graphics, br, r, Math.Max(1, w / 2));
+    }
+
+    void ScrollTo(int pos)
+    {
+        POINT p = new POINT();
+        SendPoint(box.Handle, 0x04DD, IntPtr.Zero, ref p);        // EM_GETSCROLLPOS
+        p.Y = Math.Max(0, pos);
+        SendPoint(box.Handle, 0x04DE, IntPtr.Zero, ref p);        // EM_SETSCROLLPOS
+        box.RaiseView();
+        Invalidate();
+    }
+
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        base.OnMouseDown(e);
+        if (e.Button != MouseButtons.Left) return;
+        int min, span, free;
+        Rectangle th = Thumb(out min, out span, out free);
+        if (th.IsEmpty) return;
+        if (th.Contains(e.Location)) { drag = true; dragOff = e.Y - th.Y; Capture = true; }
+        else { SendMessage(box.Handle, 0x115, new IntPtr(e.Y < th.Y ? 2 : 3), IntPtr.Zero); box.RaiseView(); }      // WM_VSCROLL: SB_PAGEUP / SB_PAGEDOWN
+        Invalidate();
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        if (!drag) return;
+        int min, span, free;
+        Rectangle th = Thumb(out min, out span, out free);
+        if (th.IsEmpty || free <= 0) return;
+        int y = e.Y - dragOff - Track().Y;
+        ScrollTo(min + (int)((long)Math.Max(0, Math.Min(free, y)) * span / free));
+    }
+
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+        base.OnMouseUp(e);
+        drag = false;
+        Capture = false;
+        Invalidate();
+    }
+
+    protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); hover = true; Invalidate(); }
+    protected override void OnMouseLeave(EventArgs e) { base.OnMouseLeave(e); hover = false; Invalidate(); }
+
+    // коліщатко над смугою - як над текстом
+    protected override void WndProc(ref Message m)
+    {
+        if (m.Msg == 0x20A && box.IsHandleCreated) { SendMessage(box.Handle, 0x20A, m.WParam, m.LParam); return; }
         base.WndProc(ref m);
     }
 }
