@@ -215,7 +215,7 @@ static class Battery
             b.OnAc = ps.PowerLineStatus == System.Windows.Forms.PowerLineStatus.Online;
             if (ps.BatteryLifeRemaining > 0) b.TimeLeftMin = ps.BatteryLifeRemaining / 60;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (!b.Present) return b;
         try
         {
@@ -276,7 +276,7 @@ static class Battery
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         b.Judge();
         return b;
     }
@@ -373,7 +373,7 @@ static class Vols
             string r = Path.GetPathRoot(Environment.SystemDirectory);
             if (!string.IsNullOrEmpty(r)) return r;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return "C:\\";
     }
 
@@ -381,7 +381,7 @@ static class Vols
     {
         List<Vol> res = new List<Vol>();
         uint oldMode = 0;
-        try { oldMode = SetErrorMode(1); } catch { }   // без вікон «Вставте диск»
+        try { oldMode = SetErrorMode(1); } catch (Exception skipEx) { SbLog.Skip(skipEx); }   // без вікон «Вставте диск»
         try
         {
             StringBuilder sb = new StringBuilder(260);
@@ -399,7 +399,7 @@ static class Vols
             finally { FindVolumeClose(h); }
         }
         catch { return Fallback(); }
-        finally { try { SetErrorMode(oldMode); } catch { } }
+        finally { try { SetErrorMode(oldMode); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         res.Sort(delegate (Vol a, Vol b)
         {
             if (a.Letter.Length == 0 != (b.Letter.Length == 0)) return a.Letter.Length == 0 ? 1 : -1;
@@ -430,7 +430,7 @@ static class Vols
     static void Fill(Vol v)
     {
         string r = v.Root.Length > 0 ? v.Root : v.Guid;
-        try { v.DriveType = GetDriveType(r); } catch { }
+        try { v.DriveType = GetDriveType(r); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
         {
             StringBuilder lab = new StringBuilder(261), fs = new StringBuilder(261);
@@ -443,7 +443,7 @@ static class Vols
             long fa, tot, tf;
             if (GetDiskFreeSpaceEx(r, out fa, out tot, out tf)) { v.Total = tot; v.Free = fa; }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         // оптичний привід і мережевий диск - не фізичні диски: номер пристрою CD-ROM збігся б із PhysicalDrive (показувало б чужий SSD)
         v.DiskNo = v.DriveType == 5 || v.DriveType == 4 ? -1 : DiskNumber(v);
     }
@@ -461,7 +461,7 @@ static class Vols
                 if (d.IsReady) { v.Label = d.VolumeLabel; v.Fs = d.DriveFormat; v.Total = d.TotalSize; v.Free = d.AvailableFreeSpace; }
                 res.Add(v);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return res;
     }
@@ -473,7 +473,7 @@ static class Vols
             StringBuilder sb = new StringBuilder(64);
             if (GetVolumeNameForVolumeMountPoint(root.EndsWith("\\") ? root : root + "\\", sb, sb.Capacity)) return sb.ToString();
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return "";
     }
 
@@ -516,9 +516,9 @@ static class Vols
                 return v;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         // GUID без відомої літери - лише цей том
-        try { if (id.StartsWith("\\\\?\\", StringComparison.Ordinal)) return Make(id); } catch { }
+        try { if (id.StartsWith("\\\\?\\", StringComparison.Ordinal)) return Make(id); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return Find(id);
     }
 
@@ -568,7 +568,7 @@ static class Vols
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return d;
     }
 
@@ -606,7 +606,7 @@ static class Vols
                 if (ge != null && ge.Length >= 32) d.Size = BitConverter.ToInt64(ge, 24);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return d;
     }
 
@@ -667,14 +667,14 @@ static class Vols
             uint st, pr;
             if (CM_Get_DevNode_Status(out st, out pr, inst, 0) == 0 && (st & DN_REMOVABLE) != 0) return true;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
         {
             uint type, len = 4;
             byte[] b = new byte[4];
             if (CM_Get_DevNode_Registry_PropertyW(inst, CM_DRP_CAPABILITIES, out type, b, ref len, 0) == 0 && (BitConverter.ToUInt32(b, 0) & CM_DEVCAP_REMOVABLE) != 0) return true;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return false;
     }
 
@@ -714,7 +714,7 @@ static class Vols
             foreach (Vol v in List()) if (string.Equals(v.Root, SysRoot(), StringComparison.OrdinalIgnoreCase)) sys = v;
             if (sys == null || sys.DiskNo != diskNo) res = EjectTarget(diskNo) != 0;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         lock (ejectable) ejectable[diskNo] = res;
         return res;
     }
@@ -829,6 +829,25 @@ static class Elevated
     }
 }
 
+// контрольна сума файлу завдання для підвищеного помічника: файл у %TEMP% не можна тихо змінити між створенням і запуском
+static class ElevHash
+{
+    public static string Of(byte[] b)
+    {
+        using (System.Security.Cryptography.SHA256 h = new System.Security.Cryptography.SHA256Cng())
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (byte x in h.ComputeHash(b)) sb.Append(x.ToString("x2"));
+            return sb.ToString();
+        }
+    }
+
+    public static bool Same(byte[] b, string hex)
+    {
+        return hex != null && hex.Length == 64 && string.Equals(Of(b), hex, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
 static class Helper
 {
     // Точка входу помічника: --helper op outFile args...
@@ -859,8 +878,9 @@ static class Helper
                 case "fwlist": code = Fw.Dump(w); break;
                 case "ipcfg": code = a.Length > 3 ? NetTools.IpCfg(a[3], w) : 1; break;
                 case "netcfg": code = a.Length > 4 ? NetCfg.RunFile(a[3], a[4], w) : 1; break;
-                case "regclean": code = a.Length > 5 ? RegClean.RunFile(a[3], a[4], a[5], w) : 1; break;
                 case "uninstall": code = Uninstall.Elevate(w); break;
+                case "relock": code = AppLock.Apply("", w) ? 0 : 1; if (code == 0) AppLock.InstallLauncher(); break;
+                case "unlock": code = AppLock.Remove(w) ? 0 : 1; break;
                 case "task": code = AdminTask.Configure(a[3] == "on", a.Length > 4 && a[4] == "auto", a.Length > 5 ? a[5] : "", w); break;
                 default: w.WriteLine(L.T("Невідома дія.")); code = 1; break;
             }
@@ -870,7 +890,7 @@ static class Helper
         }
         catch (Exception ex)
         {
-            try { if (w != null) { w.WriteLine(ex.Message); w.Write("<<END 1>>"); } } catch { }
+            try { if (w != null) { w.WriteLine(ex.Message); w.Write("<<END 1>>"); } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return 1;
         }
         finally { if (w != null) w.Dispose(); }
@@ -915,7 +935,7 @@ static class Helper
         psi.CreateNoWindow = true;
         psi.RedirectStandardOutput = true;
         psi.RedirectStandardError = true;
-        try { psi.StandardOutputEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage); } catch { }
+        try { psi.StandardOutputEncoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         using (Process p = Process.Start(psi))
         {
             p.ErrorDataReceived += delegate (object s, DataReceivedEventArgs e) { if (e.Data != null) lock (w) w.WriteLine(e.Data); };

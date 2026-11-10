@@ -82,7 +82,7 @@ static class RichFmt
 
     static void Set(IntPtr h, int scf, ref CF c)
     {
-        try { SendCF(h, 0x0444, (IntPtr)scf, ref c); } catch { }         // EM_SETCHARFORMAT
+        try { SendCF(h, 0x0444, (IntPtr)scf, ref c); } catch (Exception skipEx) { SbLog.Skip(skipEx); }         // EM_SETCHARFORMAT
     }
 
     public static bool Effect(IntPtr h, uint bit)
@@ -147,12 +147,12 @@ static class RichFmt
     public static void SetControlFont(Control c, IntPtr hf)
     {
         if (hf == IntPtr.Zero) return;
-        try { SendMsg(c.Handle, 0x0030, hf, (IntPtr)1); } catch { }      // WM_SETFONT
+        try { SendMsg(c.Handle, 0x0030, hf, (IntPtr)1); } catch (Exception skipEx) { SbLog.Skip(skipEx); }      // WM_SETFONT
     }
 
     public static void SetCue(Control c, string text)
     {
-        try { SendMsgS(c.Handle, 0x1501, (IntPtr)1, text); } catch { }   // EM_SETCUEBANNER
+        try { SendMsgS(c.Handle, 0x1501, (IntPtr)1, text); } catch (Exception skipEx) { SbLog.Skip(skipEx); }   // EM_SETCUEBANNER
     }
 
     // текст через GDI (так само, як малює RichEdit) у вказаний Graphics
@@ -176,7 +176,8 @@ static class RichFmt
 
 static class ColorEmoji
 {
-    static byte[] data;
+    // ресурс exe відображено в пам'ять (сторінки файлу, спільні) - копію 2 МБ не робимо, читаємо лише потрібну картинку
+    static Stream data;
     static int baseOff;
     static readonly Dictionary<int, int[]> idx = new Dictionary<int, int[]>();
     static readonly Dictionary<int, Bitmap> cache = new Dictionary<int, Bitmap>();
@@ -192,19 +193,18 @@ static class ColorEmoji
         {
             Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream("emoji.bin");
             if (s == null) return;
-            MemoryStream ms = new MemoryStream();
-            s.CopyTo(ms);
-            s.Dispose();
-            data = ms.ToArray();
-            int n = BitConverter.ToInt32(data, 0);
+            BinaryReader r = new BinaryReader(s);
+            int n = r.ReadInt32();
+            if (n <= 0 || n > 100000) { s.Dispose(); return; }
             baseOff = 4 + 12 * n;
             for (int i = 0; i < n; i++)
             {
-                int p = 4 + 12 * i;
-                idx[BitConverter.ToInt32(data, p)] = new int[] { BitConverter.ToInt32(data, p + 4), BitConverter.ToInt32(data, p + 8) };
+                int cp = r.ReadInt32(), off = r.ReadInt32(), len = r.ReadInt32();
+                idx[cp] = new int[] { off, len };
             }
+            data = s;
         }
-        catch { idx.Clear(); }
+        catch { idx.Clear(); data = null; }
     }
 
     public static int Cp(string s, int i)
@@ -232,7 +232,14 @@ static class ColorEmoji
         if (data == null || !idx.TryGetValue(cp, out e)) return null;
         try
         {
-            using (MemoryStream ms = new MemoryStream(data, baseOff + e[0], e[1]))
+            byte[] png = new byte[e[1]];
+            lock (data)
+            {
+                data.Position = baseOff + e[0];
+                int got = 0, k;
+                while (got < png.Length && (k = data.Read(png, got, png.Length - got)) > 0) got += k;
+            }
+            using (MemoryStream ms = new MemoryStream(png))
             using (Bitmap src = new Bitmap(ms))
             {
                 b = new Bitmap(src.Width, src.Height, PixelFormat.Format32bppPArgb);

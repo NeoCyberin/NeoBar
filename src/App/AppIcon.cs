@@ -25,7 +25,7 @@ static class AppIcon
                 using (Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream("NeoBar.ico"))
                     if (s != null) ico = new Icon(s);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return ico;
     }
@@ -34,7 +34,7 @@ static class AppIcon
     public static void Apply(Form f)
     {
         Icon i = Get();
-        if (i != null) try { f.Icon = i; } catch { }
+        if (i != null) try { f.Icon = i; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // мала картинка для шапки вікон без власного символу
@@ -47,7 +47,7 @@ static class AppIcon
                 using (Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream("NeoBar.ico"))
                     if (s != null) using (Icon i = new Icon(s, 64, 64)) small = i.ToBitmap();
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return small;
     }
@@ -66,7 +66,7 @@ static class AppIcon
                     using (Font t = new Font(n, 10f))
                         if (t.Name == n) { glyphOk = 1; glyphName = n; break; }
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
         }
         if (glyphOk != 1) return false;

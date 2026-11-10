@@ -16,13 +16,14 @@ static class SbLog
     static readonly string[] Tag = { "панель", "ігри", "бібліотека", "віджети", "датчики", "шрифти" };
 
     public static readonly string[] GroupNames = { "panel", "overlay", "widgets" };
-    public static readonly string[] GroupTitles = { L.T("Панель"), L.T("Ігровий оверлей"), L.T("Віджети й датчики") };
-    public static readonly string[] GroupDescs =
+    // тексти - щоразу заново (а не в статичному полі): журнал пишуть і з дуже раннього коду, ще до мови інтерфейсу
+    public static string[] GroupTitles { get { return new string[] { L.T("Панель"), L.T("Ігровий оверлей"), L.T("Віджети й датчики") }; } }
+    public static string[] GroupDescs { get { return new string[]
     {
         L.T("Запуск, профіль, режим закріплення, елементи, шрифти нотаток"),
         L.T("Оверлей, ліміт FPS, обгортки старих API, підрахунок кадрів; бібліотека в грі - з наступного запуску гри"),
         L.T("Погода, свята, час, місце, мережа; процесор, відеокарта, PawnIO")
-    };
+    }; } }
 
     static readonly bool[] on = new bool[GroupNames.Length];
     static readonly object gate = new object();
@@ -77,6 +78,26 @@ static class SbLog
         }
         catch { }
         if (value) Write(g, "журнал", "увімкнено");
+    }
+
+    // проігнорована помилка (порожній catch): видно в журналі панелі, коли його ввімкнено;
+    // одне й те саме місце - не частіше разу на хвилину (деякі місця спрацьовують щосекунди)
+    static readonly System.Collections.Generic.Dictionary<string, int> skipped = new System.Collections.Generic.Dictionary<string, int>();
+
+    public static void Skip(Exception ex,
+        [System.Runtime.CompilerServices.CallerMemberName] string member = "",
+        [System.Runtime.CompilerServices.CallerLineNumber] int line = 0)
+    {
+        if (!On(Panel) || ex == null) return;
+        // шлях до файлу не беремо (CallerFilePath вшив би в exe шлях теки, де збирали програму)
+        string at = member + ":" + line + (ex.TargetSite != null && ex.TargetSite.DeclaringType != null ? " ← " + ex.TargetSite.DeclaringType.Name + "." + ex.TargetSite.Name : "");
+        int now = Environment.TickCount, last;
+        lock (skipped)
+        {
+            if (skipped.TryGetValue(at, out last) && unchecked(now - last) < 60000) return;
+            skipped[at] = now;
+        }
+        Write(GroupOf[Panel], "пропущено", at + "  " + ex.GetType().Name + ": " + ex.Message);
     }
 
     public static void W(int cat, string msg)

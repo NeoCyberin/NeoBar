@@ -66,14 +66,14 @@ static class Updater
         Dictionary<string, string> d = new Dictionary<string, string>();
         try
         {
-            if (File.Exists(StateFile))
-                foreach (string l in File.ReadAllLines(StateFile, Encoding.UTF8))
+            if (SafeFile.Exists(StateFile))
+                foreach (string l in SafeFile.ReadLines(StateFile))
                 {
                     int i = l.IndexOf('=');
                     if (i > 0) d[l.Substring(0, i).Trim()] = l.Substring(i + 1).Trim();
                 }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return d;
     }
 
@@ -83,9 +83,9 @@ static class Updater
         {
             StringBuilder sb = new StringBuilder();
             foreach (KeyValuePair<string, string> kv in d) sb.AppendLine(kv.Key + "=" + kv.Value);
-            File.WriteAllText(StateFile, sb.ToString(), new UTF8Encoding(false));
+            SafeFile.Write(StateFile, sb.ToString(), new UTF8Encoding(false));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // запит до GitHub: тег останнього випуску (без чернеток і пре-релізів)
@@ -129,7 +129,7 @@ static class Updater
             t.Stop(); t.Dispose();
             Util.Bg(delegate
             {
-                try { if (Directory.Exists(TempRoot)) Directory.Delete(TempRoot, true); } catch { }   // залишки минулого оновлення
+                try { if (Directory.Exists(TempRoot)) Directory.Delete(TempRoot, true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }   // залишки минулого оновлення
                 if (bar.Config.UpdCheck) Run(bar);
             });
         };
@@ -144,7 +144,7 @@ static class Updater
             Dictionary<string, string> st = Load();
             long lt;
             DateTime lastAt = DateTime.MinValue;
-            try { if (long.TryParse(st.ContainsKey("last") ? st["last"] : "0", out lt) && lt > 0) lastAt = new DateTime(lt); } catch { }
+            try { if (long.TryParse(st.ContainsKey("last") ? st["last"] : "0", out lt) && lt > 0) lastAt = new DateTime(lt); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             bool due = (DateTime.Now - lastAt).TotalHours >= EveryHours || lastAt > DateTime.Now;
             if (due)
             {
@@ -167,7 +167,7 @@ static class Updater
                     delegate { Offer(bar, null, tag); });
             }));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static string Display(string tag) { Version v = ParseTag(tag); return v == null ? tag : v.Major + "." + v.Minor + "." + v.Build; }
@@ -207,7 +207,7 @@ static class Updater
             string ver = Display(tag);
             string name = "NeoBar-" + ver + (setup ? "-setup.exe" : "-portable.zip");
             // тека пакета може бути захищена від запису - тоді помічникові потрібне підтвердження прав (UAC)
-            bool needElev = !setup && !Elevated.IsAdmin && !Writable(appDir);
+            bool needElev = !Elevated.IsAdmin && !Writable(appDir);
 
             string work = Path.Combine(TempRoot, DateTime.Now.Ticks.ToString("x"));
             Job job = new Job();
@@ -220,7 +220,7 @@ static class Updater
                     try { Fetch(tag, name, work, job, w); }
                     catch (OperationCanceledException) { job.Cancel = true; }
                     catch (Exception ex) { job.Err = ex.Message; }
-                    try { w.BeginInvoke(new Action(delegate { w.End(); })); } catch { }
+                    try { w.BeginInvoke(new Action(delegate { w.End(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 });
             };
             using (w)
@@ -231,10 +231,10 @@ static class Updater
                 w.Location = new Point(Math.Max(wa.Left, ob.Left + (ob.Width - w.Width) / 2), Math.Max(wa.Top, ob.Top + (ob.Height - w.Height) / 2));
                 if (o != null) w.ShowDialog(o); else w.ShowDialog(new NoOwner());
             }
-            if (job.Cancel) { try { Directory.Delete(work, true); } catch { } return; }
+            if (job.Cancel) { try { Directory.Delete(work, true); } catch (Exception skipEx) { SbLog.Skip(skipEx); } return; }
             if (job.Err != null)
             {
-                try { Directory.Delete(work, true); } catch { }
+                try { Directory.Delete(work, true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 int r = SbDialog.Show(bar, owner, L.T("Оновлення NeoBar"),
                     L.F("Не вдалося оновити автоматично: {0}\n\nНову версію можна завантажити вручну зі сторінки випуску.", job.Err),
                     L.T("Відкрити сторінку"), L.T("Закрити"));
@@ -255,7 +255,7 @@ static class Updater
             catch (System.ComponentModel.Win32Exception)
             {
                 SbDialog.Show(bar, owner, L.T("Оновлення NeoBar"), L.T("Оновлення скасовано: без підтвердження прав адміністратора не можна змінити теку програми."), L.T("Гаразд"));
-                try { Directory.Delete(work, true); } catch { }
+                try { Directory.Delete(work, true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 return;
             }
             SbLog.W(SbLog.Panel, "оновлення до " + ver + ": запущено помічник (" + (setup ? "встановлювач" : "портативна копія") + ")");
@@ -285,6 +285,8 @@ static class Updater
     static void Fetch(string tag, string name, string work, Job job, UpdateWindow w)
     {
         Directory.CreateDirectory(work);
+        // підвищена панель запустить звідси помічника з правами - тека лише для адміністраторів (ніхто не підкладе DLL)
+        if (Elevated.IsAdmin) AppLock.Protect(work);
         string baseUrl = DlBase + tag + "/";
         w.Set(L.T("Отримання контрольних сум…"), 0, 0);
         string sums;
@@ -300,6 +302,9 @@ static class Updater
         string got = UpdateHelper.Sha256(file);
         if (!string.Equals(got, want, StringComparison.OrdinalIgnoreCase))
             throw new IOException(L.T("Контрольна сума файлу не збігається."));
+        string serr;
+        if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && !Sig.SameSigner(file, Application.ExecutablePath, out serr))
+            throw new IOException(serr);
         job.File = file;
         job.Sha = want;
     }
@@ -388,7 +393,7 @@ sealed class UpdateWindow : SbWindow
 
     public void Set(string s, long g, long t)
     {
-        try { BeginInvoke(new Action(delegate { status = s; got = g; total = t; Invalidate(); })); } catch { }
+        try { BeginInvoke(new Action(delegate { status = s; got = g; total = t; Invalidate(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public void End() { finished = true; Close(); }

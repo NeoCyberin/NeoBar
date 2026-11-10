@@ -106,7 +106,7 @@ sealed class HotkeyWindow : NativeWindow, IDisposable
         if ((k & Keys.Control) != 0) mods |= 2;
         if ((k & Keys.Shift) != 0) mods |= 4;
         bool ok = false;
-        try { ok = Win.RegisterHotKey(Handle, id, mods, (uint)(k & Keys.KeyCode)); } catch { }
+        try { ok = Win.RegisterHotKey(Handle, id, mods, (uint)(k & Keys.KeyCode)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (ok) ids.Add(id);
         Ok[id] = ok;
         return ok;
@@ -117,7 +117,7 @@ sealed class HotkeyWindow : NativeWindow, IDisposable
         if (m.Msg == 0x312)
         {
             Action<int> p = Pressed;
-            if (p != null) try { p(m.WParam.ToInt32()); } catch { }
+            if (p != null) try { p(m.WParam.ToInt32()); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return;
         }
         base.WndProc(ref m);
@@ -125,7 +125,7 @@ sealed class HotkeyWindow : NativeWindow, IDisposable
 
     public void Dispose()
     {
-        foreach (int id in ids) try { Win.UnregisterHotKey(Handle, id); } catch { }
+        foreach (int id in ids) try { Win.UnregisterHotKey(Handle, id); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         ids.Clear();
         DestroyHandle();
     }

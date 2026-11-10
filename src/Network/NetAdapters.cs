@@ -118,7 +118,7 @@ sealed partial class NetWindow
 
     void UiPost(Action a)
     {
-        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(a); } catch { }
+        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(a); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ---------- завантаження ----------
@@ -210,7 +210,7 @@ sealed partial class NetWindow
                     string t = Elevated.ReadOut(f, out done);
                     if (done) { text = t; break; }
                 }
-                try { File.Delete(f); } catch { }
+                try { File.Delete(f); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 if (text == null) err = L.T("Помічник не відповів.");
             }
             string perr = "";
@@ -416,7 +416,7 @@ sealed partial class NetWindow
             clipTimer.Tick += delegate
             {
                 clipTimer.Stop();
-                try { if (clipText.Length > 0 && Clipboard.ContainsText() && Clipboard.GetText() == clipText) Clipboard.Clear(); } catch { }
+                try { if (clipText.Length > 0 && Clipboard.ContainsText() && Clipboard.GetText() == clipText) Clipboard.Clear(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 clipText = "";
             };
         }
@@ -507,9 +507,9 @@ sealed partial class NetWindow
                 ProcessStartInfo psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "netsh.exe"), "wlan connect name=\"" + name + "\"");
                 psi.UseShellExecute = false; psi.CreateNoWindow = true;
                 using (Process pr = Process.Start(psi))
-                    if (pr.WaitForExit(15000)) code = pr.ExitCode; else { try { pr.Kill(); } catch { } }
+                    if (pr.WaitForExit(15000)) code = pr.ExitCode; else { try { pr.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             UiPost(delegate { Say(code == 0 ? L.T("Запит на підключення до «") + name + L.T("» надіслано.") : L.T("Не вдалося надіслати запит на підключення."), code != 0); });
         });
     }

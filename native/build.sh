@@ -16,4 +16,6 @@ for A in 64 32; do
   # рушій шпалер: DLL, що запускається окремим процесом через rundll32 (див. Wallpaper.cs)
   $CXX -shared -O2 -std=c++17 -fno-exceptions -fno-rtti sbwall.cpp -o $OUT/NeoBarWall$A.dll -s -static -static-libgcc -static-libstdc++ -Wl,--kill-at -ld3d11 -ld2d1 -ldxgi -lwindowscodecs -lole32 -loleaut32 -luuid -lgdi32 -luser32 -lshlwapi -lshell32
 done
+# помічник перетягування для NeoBar від адміністратора: 32-бітний, працює і в 64-бітній Windows
+i686-w64-mingw32-g++ -O2 -std=c++17 -fno-exceptions -fno-rtti -municode -mwindows sbdrop.cpp -o $OUT/NeoBarDrop.exe -s -static -static-libgcc -static-libstdc++ -lshell32 -luser32 -lgdi32
 echo OK

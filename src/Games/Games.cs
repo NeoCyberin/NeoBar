@@ -164,7 +164,7 @@ static class Games
                 if (exe.StartsWith(d, StringComparison.OrdinalIgnoreCase)) { name = g.Name; LastGame = g; return true; }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return false;
     }
 
@@ -194,8 +194,8 @@ static class Games
         bool any = false;
         try
         {
-            if (File.Exists(path))
-                foreach (string raw in File.ReadAllLines(path, Encoding.UTF8))
+            if (SafeFile.Exists(path))
+                foreach (string raw in SafeFile.ReadLines(path))
                 {
                     int eq = raw.IndexOf('=');
                     if (eq <= 0 || raw.StartsWith("#")) continue;
@@ -232,7 +232,7 @@ static class Games
                     }
                 }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (!any) Scan();
     }
 
@@ -246,9 +246,9 @@ static class Games
             foreach (Game g in List)
                 sb.AppendLine("game2=" + (g.On ? 1 : 0) + "|" + g.Source + "|" + g.Name.Replace("|", "/") + "|" + g.Dir + "|" + (g.OvOwn ? 1 : 0) + "|" + g.IntRaw + "|" + (g.LimitOn ? 1 : 0) + "|" +
                     g.LimFps.ToString(System.Globalization.CultureInfo.InvariantCulture) + "|" + g.ModeSel + "|" + (g.Api ?? "") + "|" + g.MonHz + "|" + (g.AcSeen ?? "").Replace("|", "/") + "|" + (g.AcNote ? 1 : 0) + "|" + (g.Wrap ?? "") + "|" + (g.ExeDir ?? "").Replace("|", "/") + "|" + g.Bits + "|" + (g.LookEnc ?? "").Replace("|", "/"));
-            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(path, sb.ToString(), new UTF8Encoding(true));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ---------- пошук встановлених ігор ----------
@@ -256,11 +256,11 @@ static class Games
     {
         Load();
         List<Game> found = new List<Game>();
-        try { Steam(found); } catch { }
-        try { Epic(found); } catch { }
-        try { Gog(found); } catch { }
-        try { Ubisoft(found); } catch { }
-        try { Xbox(found); } catch { }
+        try { Steam(found); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { Epic(found); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { Gog(found); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { Ubisoft(found); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { Xbox(found); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         int added = 0;
         foreach (Game f in found)
         {
@@ -352,11 +352,11 @@ static class Games
                         if (skip) continue;
                         res.Add(new string[] { name, "steam://rungameid/" + id, SteamIcon(cache, id) });
                     }
-                    catch { }
+                    catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return res;
     }
 
@@ -375,7 +375,7 @@ static class Games
                     if (n.Length >= 32 && n.IndexOf("library", StringComparison.OrdinalIgnoreCase) < 0 && n.IndexOf("header", StringComparison.OrdinalIgnoreCase) < 0) return f;
                 }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return "";
     }
 
@@ -450,7 +450,7 @@ static class Games
                 if (!Directory.Exists(x)) continue;
                 foreach (string g in Directory.GetDirectories(x)) Add(l, Path.GetFileName(g), g, "Xbox");
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 }

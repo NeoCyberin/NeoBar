@@ -46,7 +46,7 @@ static partial class Util
             if (fi.Exists && fi.Length > 256 * 1024) return;
             File.AppendAllText(p, DateTime.Now + "  " + ex + Environment.NewLine);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // подвійна буферизація для контролу й усіх вкладених (менше мерехтіння під час анімацій)
@@ -57,7 +57,7 @@ static partial class Util
             System.Reflection.PropertyInfo p = typeof(System.Windows.Forms.Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             if (p != null) p.SetValue(c, true, null);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         foreach (System.Windows.Forms.Control k in c.Controls) Buffer(k);
     }
 
@@ -189,7 +189,7 @@ static partial class Util
                 using (Font f = new Font(n, 10f))
                     if (string.Equals(f.Name, n, StringComparison.OrdinalIgnoreCase)) return n;
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return "Segoe UI";
     }
@@ -210,7 +210,7 @@ static partial class Util
                     if (own.IsStyleAvailable(bi)) return new Font(own, pt, st, GraphicsUnit.Point);
                     if (own.IsStyleAvailable(FontStyle.Regular)) return new Font(own, pt, st & ~(FontStyle.Bold | FontStyle.Italic), GraphicsUnit.Point);
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 continue;
             }
             try
@@ -224,7 +224,7 @@ static partial class Util
                 if (string.Equals(f.Name, n, StringComparison.OrdinalIgnoreCase)) return f;
                 f.Dispose();
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return new Font("Segoe UI", pt, st);
     }
@@ -375,7 +375,7 @@ static partial class Util
             }
             File.Delete(full);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // Ярлик (.lnk, .url) з Робочого столу чи іншого місця копіюється в папку links поруч із програмою, щоб панель
@@ -438,7 +438,7 @@ static partial class Util
             }
             File.Delete(full);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static bool SameBytes(byte[] a, byte[] b)
@@ -520,7 +520,7 @@ static partial class Util
                 using (bmp) bmp.Save(file, ImageFormat.Png);
                 return file;
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return null;
     }

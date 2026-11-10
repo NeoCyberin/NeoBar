@@ -3,7 +3,7 @@
 ; тому тека має бути доступна для запису - Program Files для цього не годиться.
 
 #define AppName "NeoBar"
-#define AppVersion "1.6.5"
+#define AppVersion "1.7.0"
 #define AppPublisher "NeoCyberin"
 #define AppExe "NeoBar.exe"
 #ifndef SrcDir
@@ -44,8 +44,10 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "uk"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [CustomMessages]
-uk.DeleteData=Видалити також дані NeoBar?%n%nПрофілі й налаштування, нотатки, шпалери, звуки, резервні копії реєстру та карантин.%nЯкщо залишити, вони знову будуть доступні після повторного встановлення.
-en.DeleteData=Also delete NeoBar data?%n%nProfiles and settings, notes, wallpapers, sounds, registry backups and quarantine.%nIf you keep them, they will be available again after reinstalling.
+uk.DeleteData=Видалити також дані NeoBar?%n%nПрофілі й налаштування, нотатки, шпалери, звуки та карантин.%nЯкщо залишити, вони знову будуть доступні після повторного встановлення.
+uk.Locked=Тека NeoBar захищена режимом «Завжди від імені адміністратора», а зняти захист не вдалося (запит прав скасовано?).%n%nОновіть NeoBar з самої програми (Налаштування → Оновлення) або спершу вимкніть цей режим.
+en.Locked=The NeoBar folder is protected by the "Always run as administrator" mode and the protection could not be lifted (was the permission prompt cancelled?).%n%nUpdate NeoBar from the app itself (Settings → Updates) or turn that mode off first.
+en.DeleteData=Also delete NeoBar data?%n%nProfiles and settings, notes, wallpapers, sounds and quarantine.%nIf you keep them, they will be available again after reinstalling.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -71,6 +73,29 @@ Type: filesandordirs; Name: "{app}\logs"
 Type: filesandordirs; Name: "{app}\cache"
 
 [Code]
+// тека захищена режимом «Завжди від імені адміністратора» (користувач не може в неї писати)?
+function AppDirWritable(): Boolean;
+var
+  p: String;
+begin
+  Result := True;
+  if not FileExists(ExpandConstant('{app}\{#AppExe}')) then Exit;
+  p := ExpandConstant('{app}\.neobar-setup-probe');
+  Result := SaveStringToFile(p, '', False);
+  if Result then DeleteFile(p);
+end;
+
+// ручне оновлення поверх захищеної теки: NeoBar знімає захист (запит UAC); повертає його сам під час наступного запуску
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  rc: Integer;
+begin
+  Result := '';
+  if AppDirWritable() then Exit;
+  Exec(ExpandConstant('{app}\{#AppExe}'), '--unlock', '', SW_HIDE, ewWaitUntilTerminated, rc);
+  if not AppDirWritable() then Result := CustomMessage('Locked');
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   if CurUninstallStep = usPostUninstall then

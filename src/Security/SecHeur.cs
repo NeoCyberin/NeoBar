@@ -212,6 +212,31 @@ static class Sig
         }
     }
 
+    // оновлення NeoBar: новий файл підписано тим самим сертифікатом, що й запущена програма, і підпис цілий
+    // (сертифікат автора може бути самопідписаним - тоді Windows йому не довіряє, але відбиток мусить збігтися).
+    // Запущена копія без підпису (власна збірка) - порівнювати нема з чим, лишається контрольна сума.
+    public static bool SameSigner(string file, string current, out string err)
+    {
+        err = "";
+        string cur = Thumb(current);
+        if (cur.Length == 0) return true;
+        string now = Thumb(file);
+        if (now.Length == 0) { err = L.T("нова версія не має цифрового підпису"); return false; }
+        if (!string.Equals(cur, now, StringComparison.OrdinalIgnoreCase)) { err = L.T("нову версію підписано іншим сертифікатом"); return false; }
+        int v;
+        try { v = Embedded(file); } catch { v = -1; }
+        // 0 - дійсний; 0x800B0109 / 0x800B010A - недовірений корінь чи ланцюжок (самопідписаний); 0x800B0101 - прострочений
+        if (v == 0 || v == unchecked((int)0x800B0109) || v == unchecked((int)0x800B010A) || v == unchecked((int)0x800B0101)) return true;
+        err = L.T("цифровий підпис нової версії пошкоджено");
+        return false;
+    }
+
+    static string Thumb(string file)
+    {
+        try { return X509Certificate.CreateFromSignedFile(file).GetCertHashString(); }
+        catch { return ""; }
+    }
+
     public static bool Microsoft(string signer) { return signer.IndexOf("Microsoft", StringComparison.OrdinalIgnoreCase) >= 0; }
 }
 
@@ -276,7 +301,7 @@ sealed class PeInfo
         pi.Is64 = magic == 0x20b;
         pi.Dll = (chars & 0x2000) != 0;
         pi.Native = U16(b, opt + 68) == 1;
-        try { pi.Stamp = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(stamp); } catch { }
+        try { pi.Stamp = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(stamp); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         long dd = opt + (pi.Is64 ? 112 : 96);
         uint entry = U32(b, opt + 16);
         uint impRva = U32(b, dd + 8), clrRva = U32(b, dd + 14 * 8);
@@ -540,7 +565,7 @@ static class SecHeur
                 if ((r.FileSystemRights & w) != 0) return true;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return false;
     }
 

@@ -57,7 +57,7 @@ sealed class WeatherWindow : SbWindow
             for (int i = 0; i < 2; i++)
             {
                 DeskSpec s = new DeskSpec(); s.Kind = "weather"; s.Opacity = 100; s.Opt = ThemeIds[i];
-                try { previews[i] = DeskClock.Preview(s); } catch { }
+                try { previews[i] = DeskClock.Preview(s); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
         }
         int y = r.Y + Px(34);

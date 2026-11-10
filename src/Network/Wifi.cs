@@ -26,15 +26,15 @@ sealed class WifiNet
 
 static class WifiList
 {
-    [DllImport("wlanapi.dll")] static extern int WlanOpenHandle(int ver, IntPtr res, out int neg, out IntPtr h);
-    [DllImport("wlanapi.dll")] static extern int WlanCloseHandle(IntPtr h, IntPtr res);
-    [DllImport("wlanapi.dll")] static extern int WlanEnumInterfaces(IntPtr h, IntPtr res, out IntPtr list);
-    [DllImport("wlanapi.dll")] static extern int WlanQueryInterface(IntPtr h, ref Guid g, int op, IntPtr res, out int size, out IntPtr data, IntPtr type);
+    [DllImport("wlanapi.dll")] internal static extern int WlanOpenHandle(int ver, IntPtr res, out int neg, out IntPtr h);
+    [DllImport("wlanapi.dll")] internal static extern int WlanCloseHandle(IntPtr h, IntPtr res);
+    [DllImport("wlanapi.dll")] internal static extern int WlanEnumInterfaces(IntPtr h, IntPtr res, out IntPtr list);
+    [DllImport("wlanapi.dll")] internal static extern int WlanQueryInterface(IntPtr h, ref Guid g, int op, IntPtr res, out int size, out IntPtr data, IntPtr type);
     [DllImport("wlanapi.dll")] static extern int WlanGetProfileList(IntPtr h, ref Guid g, IntPtr res, out IntPtr list);
-    [DllImport("wlanapi.dll", CharSet = CharSet.Unicode)] static extern int WlanGetProfile(IntPtr h, ref Guid g, string name, IntPtr res, out IntPtr xml, ref int flags, out int access);
+    [DllImport("wlanapi.dll", CharSet = CharSet.Unicode)] internal static extern int WlanGetProfile(IntPtr h, ref Guid g, string name, IntPtr res, out IntPtr xml, ref int flags, out int access);
     [DllImport("wlanapi.dll", CharSet = CharSet.Unicode)] static extern int WlanSetProfile(IntPtr h, ref Guid g, int flags, string xml, string sec, bool overwrite, IntPtr res, out int reason);
     [DllImport("wlanapi.dll", CharSet = CharSet.Unicode)] static extern int WlanDeleteProfile(IntPtr h, ref Guid g, string name, IntPtr res);
-    [DllImport("wlanapi.dll")] static extern void WlanFreeMemory(IntPtr p);
+    [DllImport("wlanapi.dll")] internal static extern void WlanFreeMemory(IntPtr p);
 
     static string Tag(string xml, string tag)
     {
@@ -346,7 +346,7 @@ static class WifiList
     public static int RunFile(string file, string hash, TextWriter w)
     {
         byte[] raw = File.ReadAllBytes(file);
-        try { File.Delete(file); } catch { }
+        try { File.Delete(file); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (!ElevHash.Same(raw, hash)) { w.WriteLine(L.T("ERR|Файл завдання змінено після створення - нічого не виконано.")); return 1; }
         ExecPlan(Encoding.UTF8.GetString(raw).Split('\n'), w);
         return 0;
@@ -397,7 +397,7 @@ static class WifiList
         List<WifiNet> l = new List<WifiNet>();
         foreach (string line in (text ?? "").Split('\n'))
         {
-            if (line.StartsWith("E|", StringComparison.Ordinal)) { try { error = U(line.Substring(2).Trim()); } catch { } continue; }
+            if (line.StartsWith("E|", StringComparison.Ordinal)) { try { error = U(line.Substring(2).Trim()); } catch (Exception skipEx) { SbLog.Skip(skipEx); } continue; }
             WifiNet w = Unpack(line);
             if (w != null) l.Add(w);
         }

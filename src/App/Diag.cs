@@ -22,6 +22,13 @@ sealed class CheckItem
 
 static class SysCheck
 {
+    // швидкі перевірки (без WMI й мережі) знайшли справжню проблему (а не лише «до відома» чи «увага»)?
+    public static bool HasProblems(NeoBar bar)
+    {
+        try { return Collect(bar, null, false, null).Exists(delegate (CheckItem i) { return i.State == 2; }); }
+        catch { return true; }
+    }
+
     static string wmiOs;                    // назва системи з WMI (запит повільний - один раз за запуск)
 
     // Перевірки побудовані за можливостями програми: що їм потрібно і чи воно є на цьому комп'ютері.
@@ -34,7 +41,7 @@ static class SysCheck
         Cfg cfg = bar != null ? bar.Config : null;
         // перезапуск від адміністратора - лише коли панель уже працює (у першому знайомстві для цього окрема кнопка)
         bool running = false;
-        try { running = bar != null && bar.IsHandleCreated && bar.Visible; } catch { }
+        try { running = bar != null && bar.IsHandleCreated && bar.Visible; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Action restart = delegate { if (Elevated.RestartAsAdmin()) bar.Quit(); };
 
         // ---------- права адміністратора ----------
@@ -79,7 +86,7 @@ static class SysCheck
             if (run.Length > 0)
             {
                 bool same = true;
-                try { same = string.Equals(Path.GetFullPath(run), Path.GetFullPath(Application.ExecutablePath), StringComparison.OrdinalIgnoreCase); } catch { }
+                try { same = string.Equals(Path.GetFullPath(run), Path.GetFullPath(Application.ExecutablePath), StringComparison.OrdinalIgnoreCase); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 if (same) l.Add(new CheckItem(L.T("Автозапуск"), 0, L.T("NeoBar запускається разом з Windows.")));
                 else l.Add(new CheckItem(L.T("Автозапуск"), 1, L.T("Автозапуск вказує на іншу копію програми: ") + run + L.T(". Схоже, теку NeoBar перенесли."))
                     .Add(L.T("Виправити"), delegate { NeoBar.SetAutostart(true); if (refresh != null) refresh(); }));
@@ -107,7 +114,7 @@ static class SysCheck
                     L.T(" (у новіших випусках назва може трохи відрізнятися). Його можна завантажити автоматично або покласти вручну в теку pawnio поруч з програмою."));
                 if (ph == 2) mi.Add(L.T("Завантажити модуль"), delegate { DownloadModule(bar, ui, refresh); });
                 mi.Add(L.T("Сторінка модулів"), delegate { Open("https://github.com/namazso/PawnIO.Modules/releases"); });
-                mi.Add(L.T("Відкрити теку pawnio"), delegate { try { Directory.CreateDirectory(modDir); } catch { } OpenDir(modDir); });
+                mi.Add(L.T("Відкрити теку pawnio"), delegate { try { Directory.CreateDirectory(modDir); } catch (Exception skipEx) { SbLog.Skip(skipEx); } OpenDir(modDir); });
                 l.Add(mi);
             }
             else
@@ -200,7 +207,7 @@ static class SysCheck
                     List<Dictionary<string, object>> q = Wmi.Query(@"root\cimv2", "SELECT Caption FROM Win32_OperatingSystem", "Caption");
                     if (q.Count > 0) wmiOs = Wmi.S(q[0], "Caption");
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
             if (!string.IsNullOrEmpty(wmiOs)) l.Add(new CheckItem(L.T("Служба WMI"), 0, L.T("Працює (") + wmiOs + L.T(") - характеристики ПК і стан дисків доступні.")));
             else l.Add(new CheckItem(L.T("Служба WMI"), 2, L.T("Недоступна - не буде характеристик ПК і стану дисків. Перевірте службу «Інструментарій керування Windows» (winmgmt): тип запуску «Автоматично», стан «Виконується»."))
@@ -223,11 +230,11 @@ static class SysCheck
         }
         string log = Path.Combine(appDir, "neobar-error.log");
         long logLen = 0;
-        try { if (File.Exists(log)) logLen = new FileInfo(log).Length; } catch { }
+        try { if (File.Exists(log)) logLen = new FileInfo(log).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (logLen > 0)
             l.Add(new CheckItem(L.T("Журнал помилок"), 1, L.T("Програма записала помилки (") + (logLen / 1024.0).ToString("0.#") + L.T(" КБ). Якщо щось працює не так - відкрийте журнал і надішліть його разом з описом проблеми."))
                 .Add(L.T("Відкрити журнал"), delegate { Run("notepad.exe", "\"" + log + "\""); })
-                .Add(L.T("Очистити"), delegate { try { File.Delete(log); } catch { } if (refresh != null) refresh(); }));
+                .Add(L.T("Очистити"), delegate { try { File.Delete(log); } catch (Exception skipEx) { SbLog.Skip(skipEx); } if (refresh != null) refresh(); }));
 
         // від важливого до менш важливого: проблеми, увага, до відома, гаразд (усередині - як було)
         List<CheckItem> sorted = new List<CheckItem>();
@@ -240,7 +247,7 @@ static class SysCheck
     static CheckItem GpuSensors()
     {
         string gpu = "";
-        try { List<GpuAdapter> al = Gpu.Adapters(); if (al.Count > 0) gpu = al[0].Name; } catch { }
+        try { List<GpuAdapter> al = Gpu.Adapters(); if (al.Count > 0) gpu = al[0].Name; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         string sys = Environment.GetFolderPath(Environment.SpecialFolder.System);
         string low = gpu.ToLowerInvariant();
         if (low.Contains("nvidia") || low.Contains("geforce") || low.Contains("rtx") || low.Contains("gtx"))
@@ -355,8 +362,8 @@ static class SysCheck
     }
 
     static void Run(string exe) { Run(exe, ""); }
-    static void Run(string exe, string args) { try { using (Process.Start(exe, args)) { } } catch { } }
-    static void OpenDir(string dir) { try { using (Process.Start("explorer.exe", "\"" + dir + "\"")) { } } catch { } }
+    static void Run(string exe, string args) { try { using (Process.Start(exe, args)) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
+    static void OpenDir(string dir) { try { using (Process.Start("explorer.exe", "\"" + dir + "\"")) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
     // порожньо - усе гаразд; інакше пояснення, чому розташування Windows недоступне
     public static string LocationOff()
@@ -367,13 +374,13 @@ static class SysCheck
             using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\lfsvc"))
                 if (k != null && k.GetValue("Start") is int && (int)k.GetValue("Start") == 4) return L.T("Службу визначення розташування (lfsvc) вимкнено.");
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
         {
             using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors"))
                 if (k != null && k.GetValue("DisableLocation") is int && (int)k.GetValue("DisableLocation") == 1) return L.T("Розташування вимкнено політикою системи.");
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
         {
             using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(cm))
@@ -383,11 +390,11 @@ static class SysCheck
             using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(cm + @"\NonPackaged"))
                 if (k != null && string.Equals(k.GetValue("Value") as string, "Deny", StringComparison.OrdinalIgnoreCase)) return L.T("Класичним застосункам (до яких належить NeoBar) заборонено доступ до розташування.");
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return "";
     }
 
-    static void Open(string url) { try { using (Process.Start(url)) { } } catch { } }
+    static void Open(string url) { try { using (Process.Start(url)) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
     public static void DownloadModule(NeoBar bar, Control ui, Action refresh)
     {
@@ -409,15 +416,15 @@ static class SysCheck
                             L.T("Відкрити сторінку й папку"), L.T("Закрити"));
                         if (r == 0)
                         {
-                            try { Directory.CreateDirectory(dir); } catch { }
+                            try { Directory.CreateDirectory(dir); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                             Open("https://github.com/namazso/PawnIO.Modules/releases");
-                            try { using (Process.Start("explorer.exe", "\"" + dir + "\"")) { } } catch { }
+                            try { using (Process.Start("explorer.exe", "\"" + dir + "\"")) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                         }
                     }
                     if (refresh != null) refresh();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 }
@@ -536,7 +543,7 @@ sealed class DiagList : Control
     {
         base.OnMouseClick(e);
         foreach (KeyValuePair<Rectangle, Action> kv in hits)
-            if (kv.Key.Contains(e.Location) && kv.Value != null) { try { kv.Value(); } catch { } return; }
+            if (kv.Key.Contains(e.Location) && kv.Value != null) { try { kv.Value(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } return; }
     }
 
     protected override void OnMouseWheel(MouseEventArgs e)
@@ -548,7 +555,7 @@ sealed class DiagList : Control
         Invalidate();
     }
 
-    protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); try { Focus(); } catch { } }
+    protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); try { Focus(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 }
 
 // повідомлення в стилі панелі (замість системного MessageBox); повертає номер натиснутої кнопки
@@ -606,6 +613,14 @@ sealed class SbDialog : SbWindow
 
     int ButtonW(string t) { return Math.Max(Px(110), TextRenderer.MeasureText(t, F).Width + Px(30)); }
 
+    // Enter - перша (головна) кнопка, якщо Tab-ом не вибрано іншу; Esc - закрити
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (base.ProcessCmdKey(ref msg, keyData)) return true;
+        if ((keyData & Keys.KeyCode) == Keys.Enter) { result = 0; Close(); return true; }
+        return false;
+    }
+
     public static int Show(NeoBar bar, Form owner, string title, string text, params string[] buttons)
     {
         if (bar == null) return -1;
@@ -617,6 +632,16 @@ sealed class SbDialog : SbWindow
     {
         if (buttons == null || buttons.Length == 0) buttons = new[] { L.T("Гаразд") };
         using (SbDialog d = new SbDialog(t, sc, title, text, buttons)) return Run(d, owner);
+    }
+
+    // з будь-якого вікна (нотатка, налаштування, помічник оновлення): тема панелі, а без неї - профілю
+    public static int Ask(Form owner, string title, string text, params string[] buttons)
+    {
+        NeoBar b = ClockData.Bar;
+        if (b != null && !b.IsDisposed) return Show(b, owner, title, text, buttons);
+        float sc = 1f;
+        try { using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) sc = g.DpiX / 96f; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        return Show(Prof.ThemeOf(Prof.Cur), sc, owner, title, text, buttons);
     }
 
     static int Run(SbDialog d, Form owner)
@@ -684,7 +709,7 @@ sealed class WelcomeWindow : SbWindow
         Util.Bg(delegate
         {
             List<CheckItem> l = null;
-            try { l = SysCheck.Collect(Bar, this, true, delegate { try { BeginInvoke(new Action(Refill)); } catch { } }); } catch { }
+            try { l = SysCheck.Collect(Bar, this, true, delegate { try { BeginInvoke(new Action(Refill)); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             try { BeginInvoke(new Action(delegate { refBusy = false; if (!IsDisposed && l != null) Apply(l); })); } catch { refBusy = false; }
         });
     }

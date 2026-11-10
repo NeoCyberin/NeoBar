@@ -14,7 +14,6 @@ using System.Windows.Forms;
 static class NoteUnlock
 {
     [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(Point p);
-    [DllImport("user32.dll")] static extern IntPtr GetAncestor(IntPtr h, uint flags);
 
     static Timer timer;
     static Badge badge;
@@ -24,7 +23,7 @@ static class NoteUnlock
         if (timer != null) return;
         timer = new Timer();
         timer.Interval = 150;
-        timer.Tick += delegate { try { Tick(); } catch { } };
+        timer.Tick += delegate { try { Tick(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } };
         timer.Start();
     }
 
@@ -33,26 +32,40 @@ static class NoteUnlock
     {
         IntPtr h = WindowFromPoint(p);
         if (h == IntPtr.Zero) return false;
-        IntPtr root = GetAncestor(h, 2);
+        IntPtr root = Win.GetAncestor(h, 2);
         StringBuilder sb = new StringBuilder(64);
         Win.GetClassName(root != IntPtr.Zero ? root : h, sb, 64);
         string c = sb.ToString();
         return c == "Progman" || c == "WorkerW";
     }
 
+    // частота - за обставинами: немає закріплених нотаток (чи гра) - раз на секунду, миша далеко - 4 рази, над нотаткою - частіше
+    static void Rate(int ms) { if (timer.Interval != ms) timer.Interval = ms; }
+
     static void Tick()
     {
+        List<KeyValuePair<Note, NoteForm>> locked = NeoBar.Paused ? null : Notes.LockedForms();
+        if (locked == null || locked.Count == 0)
+        {
+            if (badge != null && !badge.IsDisposed && badge.Visible) badge.Hide();
+            Rate(1000);
+            return;
+        }
         Point p = Cursor.Position;
-        if (badge != null && !badge.IsDisposed && badge.Visible && badge.Bounds.Contains(p)) return;
-        foreach (KeyValuePair<Note, NoteForm> kv in Notes.LockedForms())
+        if (badge != null && !badge.IsDisposed && badge.Visible && badge.Bounds.Contains(p)) { Rate(150); return; }
+        bool near = false;
+        foreach (KeyValuePair<Note, NoteForm> kv in locked)
         {
             Rectangle r = kv.Value.Bounds;
+            if (Rectangle.Inflate(r, 40, 40).Contains(p)) near = true;
             if (!r.Contains(p) || !DesktopAt(p)) continue;
             if (badge == null || badge.IsDisposed) badge = new Badge();
             badge.ShowFor(kv.Key, r);
+            Rate(150);
             return;
         }
         if (badge != null && !badge.IsDisposed && badge.Visible) badge.Hide();
+        Rate(near ? 150 : 250);
     }
 
     sealed class Badge : LayeredForm
@@ -69,7 +82,7 @@ static class NoteUnlock
             note = n;
             Rectangle b = new Rectangle(r.Right - S - (int)(6 * Notes.Scale), r.Top + (int)(6 * Notes.Scale), S, S);
             if (Bounds != b) Bounds = b;
-            if (!Visible) { Show(); try { Win.SetWindowPos(Handle, IntPtr.Zero, 0, 0, 0, 0, 0x1 | 0x2 | 0x10); } catch { } }
+            if (!Visible) { Show(); try { Win.SetWindowPos(Handle, IntPtr.Zero, 0, 0, 0, 0, 0x1 | 0x2 | 0x10); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
             if (changed) Redraw();
         }
 

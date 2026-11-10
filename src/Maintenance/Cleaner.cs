@@ -12,7 +12,8 @@ using System.Windows.Forms;
 //  Очищення Windows від сміття. Головне - безпека: лише кеші й тимчасові файли, які програми
 //  й Windows відтворюють самі; зайняті файли пропускаються; посилання (junction, symlink) ніколи
 //  не відкриваються; кеш програми чиститься лише коли вона закрита. Системні компоненти
-//  (оновлення, WinSxS) не чіпаються - краще щось лишити, ніж зламати. Реєстр - окремо, у RegClean.cs.
+//  (оновлення, WinSxS) не чіпаються - краще щось лишити, ніж зламати. Реєстр не чиститься: користі для
+//  швидкодії це не дає, а ризик зламати програми є (Microsoft такі засоби не підтримує).
 // ======================================================================
 sealed class JunkTarget
 {
@@ -68,7 +69,7 @@ static class Cleaner
                 if (n == "Default" || n.StartsWith("Profile ", StringComparison.Ordinal) || n == "Guest Profile") profiles.Add(d);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (File.Exists(Path.Combine(userData, "Cache", "Cache_Data", "index")) || Directory.Exists(Path.Combine(userData, "Code Cache"))) profiles.Add(userData);     // Opera: профіль у корені
         foreach (string p in profiles)
             foreach (string sub in new[] { "Cache", "Code Cache", "GPUCache" })
@@ -102,7 +103,7 @@ static class Cleaner
             Chromium(l, Path.Combine(Local, "Opera Software\\Opera Stable"));
             Chromium(l, Path.Combine(Local, "Opera Software\\Opera GX Stable"));
             string ff = Path.Combine(Local, "Mozilla\\Firefox\\Profiles");
-            try { if (Directory.Exists(ff)) foreach (string d in Directory.GetDirectories(ff)) { l.Add(T(Path.Combine(d, "cache2"), 0)); l.Add(T(Path.Combine(d, "startupCache"), 0)); } } catch { }
+            try { if (Directory.Exists(ff)) foreach (string d in Directory.GetDirectories(ff)) { l.Add(T(Path.Combine(d, "cache2"), 0)); l.Add(T(Path.Combine(d, "startupCache"), 0)); } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return l;
         });
         Add("apps", L.T("Кеш програм"), L.T("Discord, Steam (вбудований браузер), Microsoft Teams (класичний). Програма має бути закрита"), true,
@@ -198,7 +199,7 @@ static class Cleaner
                 foreach (Process x in ps) x.Dispose();
                 if (any) return p;
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return null;
     }
 
@@ -226,7 +227,7 @@ static class Cleaner
     {
         if (t.Single)
         {
-            try { FileInfo f = new FileInfo(t.Dir); if (f.Exists && !Reparse(f)) act(f); } catch { }
+            try { FileInfo f = new FileInfo(t.Dir); if (f.Exists && !Reparse(f)) act(f); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return;
         }
         if (!SafeRoot(t.Dir)) return;
@@ -257,7 +258,7 @@ static class Cleaner
                     if (!skip) st.Push(s);
                 }
             }
-            catch { }       // немає доступу - пропускаємо
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }       // немає доступу - пропускаємо
         }
     }
 
@@ -275,15 +276,15 @@ static class Cleaner
             while (st.Count > 0)
             {
                 DirectoryInfo d = st.Pop();
-                try { foreach (DirectoryInfo s in d.GetDirectories()) if (!Reparse(s)) { all.Add(s); st.Push(s); } } catch { }
+                try { foreach (DirectoryInfo s in d.GetDirectories()) if (!Reparse(s)) { all.Add(s); st.Push(s); } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
             for (int i = all.Count - 1; i >= 0; i--)
-                try { if (all[i].GetFileSystemInfos().Length == 0) all[i].Delete(false); } catch { }
+                try { if (all[i].GetFileSystemInfos().Length == 0) all[i].Delete(false); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
-    static void Fire() { Action a = Changed; if (a != null) try { a(); } catch { } }
+    static void Fire() { Action a = Changed; if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
     // аналіз (clean = false) або очищення ввімкнених категорій; у фоновому потоці
     public static void Run(Cfg cfg, bool clean)
@@ -308,10 +309,10 @@ static class Cleaner
                     if (c.Recycle)
                     {
                         SHQUERYRBINFO qi = new SHQUERYRBINFO(); qi.cbSize = Marshal.SizeOf(typeof(SHQUERYRBINFO));
-                        try { if (SHQueryRecycleBin(null, ref qi) == 0) { size = qi.i64Size; files = (int)Math.Min(int.MaxValue, qi.i64NumItems); } } catch { }
+                        try { if (SHQueryRecycleBin(null, ref qi) == 0) { size = qi.i64Size; files = (int)Math.Min(int.MaxValue, qi.i64NumItems); } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                         if (clean && files > 0)
                         {
-                            try { SHEmptyRecycleBin(IntPtr.Zero, null, 0x1 | 0x2 | 0x4); } catch { }      // без підтвердження, вікна прогресу й звуку
+                            try { SHEmptyRecycleBin(IntPtr.Zero, null, 0x1 | 0x2 | 0x4); } catch (Exception skipEx) { SbLog.Skip(skipEx); }      // без підтвердження, вікна прогресу й звуку
                             freedAll += size; size = 0; files = 0;
                         }
                     }
@@ -333,7 +334,7 @@ static class Cleaner
                             Walk(t, delegate (FileInfo f)
                             {
                                 long len = 0;
-                                try { len = f.Length; } catch { }
+                                try { len = f.Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                                 if (!clean) { size += len; files++; return; }
                                 try
                                 {
@@ -376,7 +377,7 @@ static class Cleaner
     }
 }
 
-sealed partial class CleanWindow : SbWindow
+sealed class CleanWindow : SbWindow
 {
     int scroll;
     bool cleaned;
@@ -384,22 +385,18 @@ sealed partial class CleanWindow : SbWindow
     public CleanWindow(NeoBar bar) : base(bar, L.T("Очищення"), 540, 800)
     { Glyph = "\uE74D";
         Cleaner.Init();
-        RegClean.Init();
-        Tabs = new string[] { L.T("Файли"), L.T("Реєстр") };
         Cleaner.Changed += OnData;
-        RegClean.Changed += OnData;
         if (!Cleaner.Busy && Cleaner.LastAt == DateTime.MinValue) Cleaner.Run(Bar.Config, false);     // перший аналіз - одразу
     }
 
     void OnData()
     {
-        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(new Action(delegate { Invalidate(); if (!Cleaner.Busy && Bar != null) Bar.CleanRedraw(); })); } catch { }
+        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(new Action(delegate { Invalidate(); if (!Cleaner.Busy && Bar != null) Bar.CleanRedraw(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // зліва направо: «на робочий стіл» (віджет-кошик), закрити
     protected override void HeadButtons(Graphics g, ref int right)
     {
-        if (Tab == 1) return;          // у вкладці «Реєстр» кошик на стіл не потрібен
         Rectangle rr = new Rectangle(right - Px(32), Px(7), Px(32), Px(32));
         IconBtn(g, rr, "desk", delegate { ClockData.AddDesk("trash"); }, false);
         right = rr.Left - Px(4);
@@ -408,7 +405,6 @@ sealed partial class CleanWindow : SbWindow
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         Cleaner.Changed -= OnData;
-        RegClean.Changed -= OnData;
         base.OnFormClosed(e);
     }
 
@@ -437,7 +433,6 @@ sealed partial class CleanWindow : SbWindow
 
     protected override void PaintBody(Graphics g, Rectangle r)
     {
-        if (Tab == 1) { PaintReg(g, r); return; }
         PaintFiles(g, r);
     }
 

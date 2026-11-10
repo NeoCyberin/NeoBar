@@ -13,7 +13,7 @@ static class Wall
         {
             if ((WallCfg.Mode == 1 || WallCfg.Mode == 2) && WallMgr.CurrentFile.Length > 0 && File.Exists(WallMgr.CurrentFile)) return WallMgr.CurrentFile;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return SystemPath();
     }
 
@@ -25,7 +25,7 @@ static class Wall
             if (Win.SystemParametersInfo(0x73, 520, sb, 0) && sb.Length > 0 && File.Exists(sb.ToString()))
                 return sb.ToString();
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         string t = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                                 @"Microsoft\Windows\Themes\TranscodedWallpaper");
         return File.Exists(t) ? t : null;

@@ -35,13 +35,13 @@ static class Wmi
                 foreach (string p in props)
                 {
                     object v = null;
-                    try { v = o.Properties_.Item(p).Value; } catch { }
+                    try { v = o.Properties_.Item(p).Value; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     d[p] = v;
                 }
                 res.Add(d);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return res;
     }
 
@@ -94,7 +94,7 @@ static class HwInfo
         Util.Bg(delegate
         {
             List<InfoGroup> l = new List<InfoGroup>();
-            try { Collect(l); } catch { }
+            try { Collect(l); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Groups = l;
             Done = true;
             Loading = false;
@@ -288,7 +288,7 @@ static class HwInfo
                 g.Add(L.T("Стан"), ni.OperationalStatus == OperationalStatus.Up ? L.T("підключено") + (ni.Speed > 0 ? " · " + (ni.Speed >= 1000000000L ? (ni.Speed / 1e9).ToString("0.##", ic) + L.T(" Гбіт/с") : Math.Round(ni.Speed / 1e6) + L.T(" Мбіт/с")) : "") : L.T("не підключено"));
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (g.Rows.Count > 0) l.Add(g);
 
         // ---- Windows ----

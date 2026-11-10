@@ -11,7 +11,9 @@ using System.Windows.Forms;
 // ======================================================================
 //  Перетягування файлів у NeoBar, запущений від імені адміністратора.
 //  Windows (UIPI) не пускає перетягування зі звичайного Провідника у вікна з вищими правами - курсор стає
-//  «заборонено». Тому поруч працює маленький помічник зі звичайними правами (та сама NeoBar.exe з --drop).
+//  «заборонено». Тому поруч працює маленький помічник зі звичайними правами (NeoBarDrop.exe - нативний, близько
+//  мегабайта пам'яті; якщо його немає - та сама NeoBar.exe з --drop). Він запускається лише при першому
+//  перетягуванні і сам закривається після 2 хвилин без роботи.
 //  Стежить сама NeoBar (процесу з вищими правами Windows показує стан миші завжди, а звичайному - ні, коли активне
 //  вікно NeoBar): кнопку затиснули поза NeoBar і з нею зайшли на вікно, що приймає файли, - NeoBar просить помічника
 //  поставити над цим вікном невидиме вікно-приймач. Помічник отримує файли звичайним перетягуванням і передає їхні
@@ -28,30 +30,17 @@ static class DropBridge
     [StructLayout(LayoutKind.Sequential)] struct RECT { public int L, T, R, B; }
     [StructLayout(LayoutKind.Sequential)] struct POINT { public int X, Y; }
 
-    [DllImport("user32.dll")] static extern bool ChangeWindowMessageFilterEx(IntPtr h, uint msg, uint action, IntPtr info);
-    [DllImport("user32.dll")] static extern bool PostMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindow(string cls, string title);
     [DllImport("user32.dll", SetLastError = true)] static extern IntPtr SendMessageTimeout(IntPtr h, int msg, IntPtr w, ref COPYDATA l, int flags, int timeout, out IntPtr res);
-    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
-    [DllImport("user32.dll")] static extern bool IsWindow(IntPtr h);
-    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
     [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out RECT r);
     [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(POINT p);
-    [DllImport("user32.dll")] static extern IntPtr GetAncestor(IntPtr h, uint flags);
     [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT p);
-    [DllImport("user32.dll")] static extern short GetAsyncKeyState(int vk);
     [DllImport("user32.dll")] static extern int GetSystemMetrics(int i);
-    [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int w, int hh, uint flags);
-    [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr h, int cmd);
     [DllImport("user32.dll")] static extern bool ScreenToClient(IntPtr h, ref POINT p);
     [DllImport("user32.dll")] static extern bool SetLayeredWindowAttributes(IntPtr h, uint key, byte alpha, uint flags);
     [DllImport("kernel32.dll")] static extern IntPtr GlobalAlloc(uint flags, UIntPtr size);
     [DllImport("kernel32.dll")] static extern IntPtr GlobalLock(IntPtr h);
     [DllImport("kernel32.dll")] static extern bool GlobalUnlock(IntPtr h);
     [DllImport("kernel32.dll")] static extern IntPtr GlobalFree(IntPtr h);
-    [DllImport("kernel32.dll")] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
-    [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool QueryFullProcessImageNameW(IntPtr h, int flags, StringBuilder sb, ref int size);
 
     // ---------------- сторона NeoBar (адміністратор) ----------------
     static Receiver recv;
@@ -89,11 +78,11 @@ static class DropBridge
     {
         try
         {
-            IntPtr w = FindWindow(null, RemoteTitle);
+            IntPtr w = Win.FindWindow(null, RemoteTitle);
             if (w == IntPtr.Zero || !FromSelf(w)) return false;
             uint pid;
-            GetWindowThreadProcessId(w, out pid);
-            try { AllowSetForegroundWindow((int)pid); } catch { }      // щоб панель могла вивести своє вікно наперед
+            Win.GetWindowThreadProcessId(w, out pid);
+            try { Win.AllowSetForegroundWindow((int)pid); } catch (Exception skipEx) { SbLog.Skip(skipEx); }      // щоб панель могла вивести своє вікно наперед
             string text = verb + "\n" + path;
             IntPtr mem = Marshal.StringToHGlobalUni(text);
             NativeWindow me = new NativeWindow();          // від кого: панель перевіряє, що це той самий NeoBar.exe
@@ -108,12 +97,11 @@ static class DropBridge
                 IntPtr ok = SendMessageTimeout(w, WM_COPYDATA, me.Handle, ref cd, 0x0002, 5000, out res);
                 return ok != IntPtr.Zero && res != IntPtr.Zero;
             }
-            finally { Marshal.FreeHGlobal(mem); try { me.DestroyHandle(); } catch { } }
+            finally { Marshal.FreeHGlobal(mem); try { me.DestroyHandle(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         }
         catch { return false; }
     }
 
-    [DllImport("user32.dll")] static extern bool AllowSetForegroundWindow(int pid);
 
     static bool TakeTool(IntPtr sender, IntPtr lp)
     {
@@ -135,14 +123,27 @@ static class DropBridge
         if (launched) return;
         launched = true;
         if (recv == null) recv = new Receiver();
-        string exe = Application.ExecutablePath;
-        string how = UserLaunch.Run(exe, "--drop " + recv.Handle.ToInt64());
-        SbLog.W(SbLog.Panel, "перетягування від адміністратора: помічник зі звичайними правами - " + (how.Length > 0 ? how : "не запустився"));
-        if (how.Length == 0) return;
         poll = new System.Windows.Forms.Timer();
-        poll.Interval = 50;
+        poll.Interval = IdlePoll;
         poll.Tick += delegate { Watch(); };
         poll.Start();
+    }
+
+    // кнопка миші відпущена - перевіряємо рідко; затиснута - часто (щоб устигнути поставити приймач)
+    const int IdlePoll = 150, DragPoll = 40;
+    static int lastLaunch = Environment.TickCount - 60000;
+
+    static string DropExe { get { return Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "NeoBarDrop.exe"); } }
+
+    // помічник запускається, лише коли справді тягнуть файл на NeoBar (не частіше разу на 5 с)
+    static void Launch()
+    {
+        if (unchecked(Environment.TickCount - lastLaunch) < 5000) return;
+        lastLaunch = Environment.TickCount;
+        string how = File.Exists(DropExe)
+            ? UserLaunch.Run(DropExe, recv.Handle.ToInt64().ToString())
+            : UserLaunch.Run(Application.ExecutablePath, "--drop " + recv.Handle.ToInt64());
+        SbLog.W(SbLog.Panel, "перетягування від адміністратора: помічник зі звичайними правами - " + (how.Length > 0 ? how : "не запустився"));
     }
 
     // ---------- стеження за перетягуванням (у NeoBar) ----------
@@ -153,8 +154,8 @@ static class DropBridge
 
     static IntPtr Helper()
     {
-        if (helper != IntPtr.Zero && IsWindow(helper)) return helper;
-        helper = recv != null ? FindWindow(null, "NeoBarDrop " + recv.Handle.ToInt64()) : IntPtr.Zero;
+        if (helper != IntPtr.Zero && Win.IsWindow(helper)) return helper;
+        helper = recv != null ? Win.FindWindow(null, "NeoBarDrop " + recv.Handle.ToInt64()) : IntPtr.Zero;
         return helper;
     }
 
@@ -162,7 +163,7 @@ static class DropBridge
     {
         IntPtr w = WindowFromPoint(pt);
         if (w == IntPtr.Zero) return IntPtr.Zero;
-        IntPtr root = GetAncestor(w, 2);
+        IntPtr root = Win.GetAncestor(w, 2);
         return root != IntPtr.Zero ? root : w;
     }
 
@@ -170,8 +171,10 @@ static class DropBridge
     {
         try
         {
-            if (NeoBar.Paused) { Hide(); wasDown = false; return; }         // гра на весь екран - не стежимо
-            bool down = (GetAsyncKeyState(GetSystemMetrics(23) != 0 ? 0x02 : 0x01) & 0x8000) != 0;
+            if (NeoBar.Paused) { Hide(); wasDown = false; if (poll.Interval != IdlePoll) poll.Interval = IdlePoll; return; }         // гра на весь екран - не стежимо
+            bool down = (Win.GetAsyncKeyState(GetSystemMetrics(23) != 0 ? 0x02 : 0x01) & 0x8000) != 0;
+            int want = down ? DragPoll : IdlePoll;
+            if (poll.Interval != want) poll.Interval = want;
             POINT pt;
             if (!GetCursorPos(out pt)) return;
             if (down && !wasDown)
@@ -179,21 +182,21 @@ static class DropBridge
                 // натиснули на власному вікні NeoBar - це її дії (перетягування значків тощо), не чіпаємо
                 uint pid;
                 IntPtr root = RootAt(pt);
-                pressOutside = shownZone == IntPtr.Zero && (root == IntPtr.Zero || GetWindowThreadProcessId(root, out pid) == 0 || pid != selfPid);
+                pressOutside = shownZone == IntPtr.Zero && (root == IntPtr.Zero || Win.GetWindowThreadProcessId(root, out pid) == 0 || pid != selfPid);
             }
             wasDown = down;
             if (!down || !pressOutside) { Hide(); return; }
             if (shownZone != IntPtr.Zero)
             {
                 RECT rc;
-                if (IsWindow(shownZone) && IsWindowVisible(shownZone) && GetWindowRect(shownZone, out rc) && pt.X >= rc.L && pt.X < rc.R && pt.Y >= rc.T && pt.Y < rc.B) return;
+                if (Win.IsWindow(shownZone) && Win.IsWindowVisible(shownZone) && GetWindowRect(shownZone, out rc) && pt.X >= rc.L && pt.X < rc.R && pt.Y >= rc.T && pt.Y < rc.B) return;
                 Hide();
             }
             IntPtr z = RootAt(pt);
-            if (z == IntPtr.Zero || !zones.Contains(z) || !IsWindowVisible(z)) return;
+            if (z == IntPtr.Zero || !zones.Contains(z) || !Win.IsWindowVisible(z)) return;
             IntPtr h = Helper();
-            if (h == IntPtr.Zero) return;
-            if (PostMessage(h, MsgShow, z, IntPtr.Zero)) shownZone = z;
+            if (h == IntPtr.Zero) { Launch(); return; }     // наступний тик покаже приймач, щойно помічник запуститься
+            if (Win.PostMessage(h, MsgShow, z, IntPtr.Zero)) shownZone = z;
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
@@ -203,7 +206,7 @@ static class DropBridge
         if (shownZone == IntPtr.Zero) return;
         shownZone = IntPtr.Zero;
         IntPtr h = Helper();
-        if (h != IntPtr.Zero) PostMessage(h, MsgHide, IntPtr.Zero, IntPtr.Zero);
+        if (h != IntPtr.Zero) Win.PostMessage(h, MsgHide, IntPtr.Zero, IntPtr.Zero);
     }
 
     sealed class Receiver : NativeWindow
@@ -213,7 +216,7 @@ static class DropBridge
             CreateParams cp = new CreateParams();
             cp.Caption = RemoteTitle;
             CreateHandle(cp);
-            try { ChangeWindowMessageFilterEx(Handle, WM_COPYDATA, 1, IntPtr.Zero); } catch { }
+            try { Win.ChangeWindowMessageFilterEx(Handle, WM_COPYDATA, 1, IntPtr.Zero); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
 
         protected override void WndProc(ref Message m)
@@ -231,22 +234,26 @@ static class DropBridge
         }
     }
 
-    // приймаємо лише від своєї ж програми (той самий файл NeoBar.exe)
-    static bool FromSelf(IntPtr sender)
+    // приймаємо лише від своєї ж програми (той самий файл NeoBar.exe; файли - ще й від NeoBarDrop.exe поруч)
+    static bool FromSelf(IntPtr sender) { return FromSelf(sender, false); }
+
+    static bool FromSelf(IntPtr sender, bool dropHelper)
     {
         uint pid;
-        if (sender == IntPtr.Zero || GetWindowThreadProcessId(sender, out pid) == 0 || pid == 0) return false;
-        IntPtr h = OpenProcess(0x1000, false, pid);
+        if (sender == IntPtr.Zero || Win.GetWindowThreadProcessId(sender, out pid) == 0 || pid == 0) return false;
+        IntPtr h = Win.OpenProcess(0x1000, false, pid);
         if (h == IntPtr.Zero) return false;
         try
         {
             StringBuilder sb = new StringBuilder(1024);
             int n = sb.Capacity;
-            if (!QueryFullProcessImageNameW(h, 0, sb, ref n)) return false;
-            return string.Equals(Path.GetFullPath(sb.ToString()), Path.GetFullPath(Application.ExecutablePath), StringComparison.OrdinalIgnoreCase);
+            if (!Win.QueryFullProcessImageNameW(h, 0, sb, ref n)) return false;
+            string p = Path.GetFullPath(sb.ToString());
+            return string.Equals(p, Path.GetFullPath(Application.ExecutablePath), StringComparison.OrdinalIgnoreCase) ||
+                   (dropHelper && string.Equals(p, Path.GetFullPath(DropExe), StringComparison.OrdinalIgnoreCase));
         }
         catch { return false; }
-        finally { CloseHandle(h); }
+        finally { Win.CloseHandle(h); }
     }
 
     static bool Take(IntPtr sender, IntPtr lp)
@@ -254,17 +261,17 @@ static class DropBridge
         COPYDATA cd = (COPYDATA)Marshal.PtrToStructure(lp, typeof(COPYDATA));
         if (cd.Data != Magic || cd.Size <= 2 || cd.Size > 1 << 20 || cd.Ptr == IntPtr.Zero) return false;
         string s = Marshal.PtrToStringUni(cd.Ptr, cd.Size / 2);
-        if (!FromSelf(sender)) { SbLog.W(SbLog.Panel, "перетягування: відхилено повідомлення не від помічника"); return false; }
+        if (!FromSelf(sender, true)) { SbLog.W(SbLog.Panel, "перетягування: відхилено повідомлення не від помічника"); return false; }
         string[] parts = s.Split('\n');
         long zl;
         if (parts.Length < 2 || !long.TryParse(parts[0], out zl)) return true;
         IntPtr zone = new IntPtr(zl);
-        if (!zones.Contains(zone) || !IsWindow(zone)) { SbLog.W(SbLog.Panel, "перетягування: вікно вже закрите"); return true; }
+        if (!zones.Contains(zone) || !Win.IsWindow(zone)) { SbLog.W(SbLog.Panel, "перетягування: вікно вже закрите"); return true; }
         List<string> files = new List<string>();
         for (int i = 1; i < parts.Length; i++)
         {
             string f = parts[i];
-            try { if (f.Length > 0 && Path.IsPathRooted(f) && (File.Exists(f) || Directory.Exists(f))) files.Add(f); } catch { }
+            try { if (f.Length > 0 && Path.IsPathRooted(f) && (File.Exists(f) || Directory.Exists(f))) files.Add(f); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         if (files.Count == 0) return true;
         SbLog.W(SbLog.Panel, "перетягування через помічника: " + files.Count);
@@ -272,7 +279,7 @@ static class DropBridge
         GetCursorPos(out pt);
         ScreenToClient(zone, ref pt);
         IntPtr hd = HDrop(files, pt);
-        if (hd != IntPtr.Zero && !PostMessage(zone, WM_DROPFILES, hd, IntPtr.Zero)) GlobalFree(hd);
+        if (hd != IntPtr.Zero && !Win.PostMessage(zone, WM_DROPFILES, hd, IntPtr.Zero)) GlobalFree(hd);
         return true;
     }
 
@@ -304,7 +311,7 @@ static class DropBridge
         long r;
         if (args.Length < 2 || !long.TryParse(args[1], out r)) return 1;
         IntPtr target = new IntPtr(r);
-        if (!IsWindow(target)) return 1;
+        if (!Win.IsWindow(target)) return 1;
         bool created;
         using (Mutex mx = new Mutex(true, "Local\\NeoBarDrop" + r, out created))
         {
@@ -327,6 +334,7 @@ static class DropBridge
         readonly System.Windows.Forms.Timer tm = new System.Windows.Forms.Timer();
         IntPtr zone = IntPtr.Zero;
         bool logged;
+        int lastWork = Environment.TickCount;
 
         public Overlay(IntPtr t)
         {
@@ -342,9 +350,12 @@ static class DropBridge
             DragEnter += OnDrag;
             DragOver += OnDrag;
             DragDrop += OnDrop;
-            // NeoBar закрилася - помічник теж
             tm.Interval = 1000;
-            tm.Tick += delegate { if (!IsWindow(target)) { tm.Stop(); Application.ExitThread(); } };
+            tm.Tick += delegate
+            {
+                // NeoBar закрилась або 2 хв без роботи - помічник теж (NeoBar запустить знову за потреби)
+                if (!Win.IsWindow(target) || (!Win.IsWindowVisible(Handle) && unchecked(Environment.TickCount - lastWork) > 120000)) { tm.Stop(); Application.ExitThread(); }
+            };
             tm.Start();
         }
 
@@ -371,15 +382,16 @@ static class DropBridge
         void On(IntPtr z)
         {
             RECT rc;
-            if (!IsWindow(z) || !GetWindowRect(z, out rc)) return;
+            lastWork = Environment.TickCount;
+            if (!Win.IsWindow(z) || !GetWindowRect(z, out rc)) return;
             if (!logged) { logged = true; SbLog.W(SbLog.Panel, "помічник перетягування: перетягування над вікном NeoBar " + rc.L + "," + rc.T + " " + (rc.R - rc.L) + "x" + (rc.B - rc.T)); }
             zone = z;
-            SetWindowPos(Handle, new IntPtr(-1), rc.L, rc.T, rc.R - rc.L, rc.B - rc.T, 0x0010 | 0x0040);      // TOPMOST, NOACTIVATE | SHOWWINDOW
+            Win.SetWindowPos(Handle, new IntPtr(-1), rc.L, rc.T, rc.R - rc.L, rc.B - rc.T, 0x0010 | 0x0040);      // TOPMOST, NOACTIVATE | SHOWWINDOW
         }
 
         void Off()
         {
-            ShowWindow(Handle, 0);
+            Win.ShowWindow(Handle, 0);
         }
 
         static void OnDrag(object s, DragEventArgs e)
@@ -391,7 +403,7 @@ static class DropBridge
         void OnDrop(object s, DragEventArgs e)
         {
             string[] f = null;
-            try { f = e.Data.GetData(DataFormats.FileDrop) as string[]; } catch { }
+            try { f = e.Data.GetData(DataFormats.FileDrop) as string[]; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             IntPtr z = zone;
             Off();
             SbLog.W(SbLog.Panel, "помічник перетягування: скинуто файлів " + (f != null ? f.Length : 0));
@@ -414,7 +426,7 @@ static class DropBridge
                 IntPtr ok = SendMessageTimeout(target, WM_COPYDATA, Handle, ref cd, 0x0002, 5000, out res);       // SMTO_ABORTIFHUNG
                 if (ok == IntPtr.Zero || res == IntPtr.Zero) SbLog.W(SbLog.Panel, "помічник перетягування: NeoBar не прийняла файли (" + Marshal.GetLastWin32Error() + ")");
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             finally { Marshal.FreeHGlobal(mem); }
         }
     }
@@ -436,11 +448,6 @@ static class UserLaunch
     }
     [StructLayout(LayoutKind.Sequential)] struct PROCESS_INFORMATION { public IntPtr hProcess, hThread; public int dwProcessId, dwThreadId; }
 
-    [DllImport("user32.dll")] static extern IntPtr GetShellWindow();
-    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
-    [DllImport("kernel32.dll")] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
-    [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
-    [DllImport("advapi32.dll", SetLastError = true)] static extern bool OpenProcessToken(IntPtr p, uint access, out IntPtr tok);
     [DllImport("advapi32.dll", SetLastError = true)] static extern bool DuplicateTokenEx(IntPtr tok, uint access, IntPtr attr, int level, int type, out IntPtr dup);
     [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     static extern bool CreateProcessWithTokenW(IntPtr tok, int logon, string app, StringBuilder cmd, int flags, IntPtr env, string dir, ref STARTUPINFO si, out PROCESS_INFORMATION pi);
@@ -470,7 +477,7 @@ static class UserLaunch
     static void Quota()
     {
         IntPtr tok;
-        if (!OpenProcessToken(GetCurrentProcess(), 0x0020 | 0x0008, out tok)) return;      // ADJUST_PRIVILEGES | QUERY
+        if (!Win.OpenProcessToken(GetCurrentProcess(), 0x0020 | 0x0008, out tok)) return;      // ADJUST_PRIVILEGES | QUERY
         try
         {
             long luid;
@@ -479,20 +486,20 @@ static class UserLaunch
             tp.Count = 1; tp.P.Luid = luid; tp.P.Attr = 2;          // SE_PRIVILEGE_ENABLED
             AdjustTokenPrivileges(tok, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero);
         }
-        finally { CloseHandle(tok); }
+        finally { Win.CloseHandle(tok); }
     }
 
     static bool ViaToken(string exe, string args)
     {
-        IntPtr shell = GetShellWindow();
+        IntPtr shell = Win.GetShellWindow();
         uint pid;
-        if (shell == IntPtr.Zero || GetWindowThreadProcessId(shell, out pid) == 0 || pid == 0) return false;
-        IntPtr hp = OpenProcess(0x1000, false, pid);
+        if (shell == IntPtr.Zero || Win.GetWindowThreadProcessId(shell, out pid) == 0 || pid == 0) return false;
+        IntPtr hp = Win.OpenProcess(0x1000, false, pid);
         if (hp == IntPtr.Zero) return false;
         IntPtr tok = IntPtr.Zero, dup = IntPtr.Zero;
         try
         {
-            if (!OpenProcessToken(hp, 0x0002, out tok)) return false;                                 // TOKEN_DUPLICATE
+            if (!Win.OpenProcessToken(hp, 0x0002, out tok)) return false;                                 // TOKEN_DUPLICATE
             if (!DuplicateTokenEx(tok, 0x018B, IntPtr.Zero, 2, 1, out dup)) return false;              // первинний токен для нового процесу
             Quota();
             STARTUPINFO si = new STARTUPINFO();
@@ -507,15 +514,15 @@ static class UserLaunch
                 SbLog.W(SbLog.Panel, "запуск зі звичайними правами (токен): помилка " + Marshal.GetLastWin32Error());
                 return false;
             }
-            CloseHandle(pi.hThread);
-            CloseHandle(pi.hProcess);
+            Win.CloseHandle(pi.hThread);
+            Win.CloseHandle(pi.hProcess);
             return true;
         }
         finally
         {
-            if (dup != IntPtr.Zero) CloseHandle(dup);
-            if (tok != IntPtr.Zero) CloseHandle(tok);
-            CloseHandle(hp);
+            if (dup != IntPtr.Zero) Win.CloseHandle(dup);
+            if (tok != IntPtr.Zero) Win.CloseHandle(tok);
+            Win.CloseHandle(hp);
         }
     }
 
@@ -605,14 +612,14 @@ static class UserLaunch
             Marshal.Release(pf);
             app = fv.GetType().InvokeMember("Application", BindingFlags.GetProperty, null, fv, null);
             string dir = "";
-            try { if (Path.IsPathRooted(exe)) dir = Path.GetDirectoryName(exe) ?? ""; } catch { }
+            try { if (Path.IsPathRooted(exe)) dir = Path.GetDirectoryName(exe) ?? ""; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             app.GetType().InvokeMember("ShellExecute", BindingFlags.InvokeMethod, null, app, new object[] { exe, args, dir, "", 1 });
             return true;
         }
         finally
         {
             foreach (object o in new object[] { app, fv, view, disp, windows })
-                try { if (o != null && Marshal.IsComObject(o)) Marshal.ReleaseComObject(o); } catch { }
+                try { if (o != null && Marshal.IsComObject(o)) Marshal.ReleaseComObject(o); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 }

@@ -99,7 +99,7 @@ class LayeredForm : Form
 
     protected void PushFrame(Point at, Size sz)
     {
-        try { Ulw(at, sz); } catch { }
+        try { Ulw(at, sz); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // bmp - 32bpp ARGB розміром з вікно
@@ -116,13 +116,13 @@ class LayeredForm : Form
             }
             Ulw(at, new Size(w, h));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // Лише нова загальна непрозорість (PushAlpha) для щойно показаного кадру - без копіювання пікселів
     protected void Refade(Bitmap frame, Point at)
     {
-        if (surf != null && shown == frame.Size) { try { Ulw(at, shown); } catch { } }
+        if (surf != null && shown == frame.Size) { try { Ulw(at, shown); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         else Push(frame, at);
     }
 
@@ -143,7 +143,7 @@ class LayeredForm : Form
             Win.BLENDFUNCTION bl = new Win.BLENDFUNCTION(); bl.BlendOp = 0; bl.SourceConstantAlpha = PushAlpha; bl.AlphaFormat = 1;
             Win.UpdateLayeredWindow(Handle, scr, ref pos, ref sz, mem, ref src, 0, ref bl, 2);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         finally
         {
             try
@@ -153,13 +153,13 @@ class LayeredForm : Form
                 if (mem != IntPtr.Zero) Win.DeleteDC(mem);
                 if (scr != IntPtr.Zero) Win.ReleaseDC(IntPtr.Zero, scr);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 
     protected override void Dispose(bool disposing)
     {
-        try { FreeSurface(); } catch { }
+        try { FreeSurface(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         base.Dispose(disposing);
     }
 }

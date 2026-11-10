@@ -103,7 +103,7 @@ sealed partial class ClockWindow : SbWindow
         if (previews == null)
         {
             previews = new Bitmap[DeskKinds.Length];
-            for (int i = 0; i < DeskKinds.Length; i++) try { previews[i] = DeskClock.Preview(DeskKinds[i]); } catch { }
+            for (int i = 0; i < DeskKinds.Length; i++) try { previews[i] = DeskClock.Preview(DeskKinds[i]); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         int y = r.Y + Px(34);
         int numH = Px(38);              // рядок «Цифри» під плитками (активний для стрілкового)
@@ -285,7 +285,7 @@ sealed partial class ClockWindow : SbWindow
             TxtC(g, ClockData.Fmt(left, false), FHuge, tr, run ? P.Acc : P.Fg);
             float frac = t.Set.TotalSeconds > 0 ? (float)(1 - left.TotalSeconds / t.Set.TotalSeconds) : 0;
             ProgressBar(g, new Rectangle(r.X + Px(30), tr.Bottom + Px(8), r.Width - Px(60), Px(8)), frac, P.Acc);
-            TxtC(g, run ? L.T("Сигнал о ") + t.End.ToString("HH:mm:ss") : L.T("Пауза"), FS, new Rectangle(r.X, tr.Bottom + Px(24), r.Width, Px(20)), P.Sub);
+            TxtC(g, run ? L.T("Сигнал о ") + t.End.ToLocalTime().ToString("HH:mm:ss") : L.T("Пауза"), FS, new Rectangle(r.X, tr.Bottom + Px(24), r.Width, Px(20)), P.Sub);
         }
         int y = tr.Bottom + Px(54);
         // швидкий вибір
@@ -376,9 +376,9 @@ sealed partial class ClockWindow : SbWindow
                 string fn = f;
                 del.DropDownItems.Add(Path.GetFileNameWithoutExtension(f), null, delegate
                 {
-                    if (MessageBox.Show(this, L.T("Видалити мелодію «") + Path.GetFileNameWithoutExtension(fn) + L.Q("»?"), "NeoBar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+                    if (Ask("NeoBar", L.T("Видалити мелодію «") + Path.GetFileNameWithoutExtension(fn) + L.Q("»?"), L.T("Видалити"), L.T("Скасувати")) != 0) return;
                     Chime.Stop();
-                    try { File.Delete(Path.Combine(Chime.Dir, fn)); } catch { }
+                    try { File.Delete(Path.Combine(Chime.Dir, fn)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     foreach (Alarm al in ClockData.Alarms) if (al.Sound == "file:" + fn) al.Sound = "theme";
                     foreach (TimerItem ti in ClockData.Timers) if (ti.Sound == "file:" + fn) ti.Sound = "theme";
                     if (edit != null && edit.Sound == "file:" + fn) edit.Sound = "theme";
@@ -401,12 +401,12 @@ sealed partial class ClockWindow : SbWindow
                     string id = Chime.Import(d.FileName);
                     set(id); ClockData.Save(); Invalidate();
                 }
-                catch (Exception ex) { MessageBox.Show(this, L.T("Не вдалося додати мелодію:\n") + ex.Message, "NeoBar"); }
+                catch (Exception ex) { Ask("NeoBar", L.T("Не вдалося додати мелодію:\n") + ex.Message); }
             }
         });
         m.Items.Add(L.T("Відкрити папку мелодій"), null, delegate
         {
-            try { using (System.Diagnostics.Process.Start("explorer.exe", "\"" + Chime.Dir + "\"")) { } } catch { }
+            try { using (System.Diagnostics.Process.Start("explorer.exe", "\"" + Chime.Dir + "\"")) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         m.Show(this, new Point(at.X, at.Bottom));
     }
@@ -447,9 +447,9 @@ sealed partial class ClockWindow : SbWindow
             string sub2 = "";
             if (snoozed)
             {
-                TimeSpan sd = a.Snooze - now;
+                TimeSpan sd = a.Snooze - DateTime.UtcNow;
                 int sm = Math.Max(0, (int)Math.Ceiling(sd.TotalMinutes));
-                sub2 = L.T("Відкладено до ") + a.Snooze.ToString("HH:mm") + L.T(" · ще ") + sm + L.T(" хв");
+                sub2 = L.T("Відкладено до ") + a.Snooze.ToLocalTime().ToString("HH:mm") + L.T(" · ще ") + sm + L.T(" хв");
             }
             else if (a.On)
             {

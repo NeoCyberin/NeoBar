@@ -178,7 +178,7 @@ sealed partial class NeoBar
             foreach (Entry x in entries)
                 if (x.Kind == Kind.Widget && x.Target == "clean") { x.Sig = ""; Invalidate(RectOf(x)); }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // змінився стан, який показує віджет (наприклад, завершилося сканування безпеки) - перемалювати його на панелі
@@ -190,7 +190,7 @@ sealed partial class NeoBar
             foreach (Entry x in entries)
                 if (x.Kind == Kind.Widget && x.Target == kind) { x.Sig = ""; Invalidate(RectOf(x)); }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // кубик кинули чи змінили - перемалювати віджети кубика на панелі
@@ -202,7 +202,7 @@ sealed partial class NeoBar
             foreach (Entry x in entries)
                 if (x.Kind == Kind.Widget && x.Target == "dice") { x.Sig = ""; Invalidate(RectOf(x)); }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public void OpenColor(Entry e) { OpenWin("color", e, delegate { return new ColorWindow(this, e); }, false); }
@@ -315,7 +315,7 @@ sealed partial class NeoBar
 
     void SaveCfg()
     {
-        try { Store.Save(cfgPath, cfg, entries); } catch { }
+        try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         foreach (Entry e in entries) e.Sig = "";
         Invalidate();
     }
@@ -395,7 +395,7 @@ sealed partial class NeoBar
                 foreach (Entry x in entries) if (x.Kind == Kind.Widget && x.Target == "disk") x.Sig = "";
                 Invalidate();
                 Action a = DisksChanged;
-                if (a != null) try { a(); } catch { }
+                if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             };
         }
         devTimer.Stop();
@@ -482,7 +482,7 @@ sealed partial class NeoBar
                 t.Start();
             }));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ---------- запуск підсистем віджетів ----------
@@ -526,8 +526,8 @@ sealed partial class NeoBar
         // підрахунок кадрів (потрібен лише оверлею) зупиняється, коли гри з оверлеєм давно немає
         if (Fps.Running && (DateTime.Now - lastOvGame).TotalSeconds > 30 && Sensors.Level < 2) Fps.Stop();
         // вигляд оверлею залежить від гри (загальний або власний)
-        if (!object.ReferenceEquals(Games.Current, lookGame)) { lookGame = Games.Current; try { OverlayCfg.UseGame(lookGame); } catch { } }
-        try { FpsLimiter.Tick(); } catch { }
+        if (!object.ReferenceEquals(Games.Current, lookGame)) { lookGame = Games.Current; try { OverlayCfg.UseGame(lookGame); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
+        try { FpsLimiter.Tick(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (cfg.FsHide) CheckFullscreen();
         if (OverlayModule.Visible != OverlayModule.Want) OverlayModule.Tick();
     }
@@ -541,13 +541,13 @@ sealed partial class NeoBar
             Games.Load();
             gameTimer = new System.Windows.Forms.Timer();
             gameTimer.Interval = 1000;
-            gameTimer.Tick += delegate { try { GameWatch(); } catch { } };
+            gameTimer.Tick += delegate { try { GameWatch(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } };
             gameTimer.Start();
         }
-        catch { }
-        try { ClockData.Init(this); } catch { }
-        try { RefreshDataNeeds(); } catch { }
-        try { OverlayModule.Init(this); } catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { ClockData.Init(this); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { RefreshDataNeeds(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { OverlayModule.Init(this); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void AfterReloadWidgets()
@@ -576,7 +576,7 @@ sealed partial class NeoBar
                         foreach (Entry x in entries) if (x.Kind == Kind.Widget && x.Target == "disk") { x.Sig = ""; Invalidate(RectOf(x)); }
                     }));
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             };
         }
         if (wkinds.Contains("disk")) Widgets.ReadDisks(true);

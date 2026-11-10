@@ -202,29 +202,59 @@ static class WinFs
 }
 
 // ---------- індекс NTFS  ----------
+// Список імен з MFT (FSCTL_ENUM_USN_DATA) у компактних масивах: номер запису, батько, ім'я (однакові
+// імена - один рядок), тека чи файл. Між пошуками індекс доповнюється з журналу змін NTFS (USN), тож
+// нові, видалені й перейменовані файли видно без перезапуску. Без пошуку 10 хвилин - пам'ять звільняється.
 static class MftIndex
 {
     sealed class Rec
     {
-        public ulong Parent;
+        public long Parent;
         public string Name;
         public bool Dir;
     }
 
     sealed class Vol
     {
-        public string Root;                                  // "C:\"
-        public Dictionary<ulong, Rec> Map = new Dictionary<ulong, Rec>();
+        public string Root;                 // "C:\"
+        public int N;
+        public long[] Frn, Par;             // відсортовано за Frn
+        public string[] Name;
+        public bool[] Dir, Dead;            // Dead - запис видалено або змінено (нова версія - в Added)
+        public readonly Dictionary<long, Rec> Added = new Dictionary<long, Rec>();
+        public long Journal, NextUsn;       // журнал змін тому і звідки читати далі
+        public bool Stale;                  // журнал скинуто чи переповнено - потрібна повна перебудова
+
+        public int Find(long frn)
+        {
+            int i = Array.BinarySearch(Frn, 0, N, frn);
+            return i >= 0 && !Dead[i] ? i : -1;
+        }
+
+        public bool Get(long frn, out long parent, out string name)
+        {
+            Rec r;
+            if (Added.TryGetValue(frn, out r)) { parent = r.Parent; name = r.Name; return r.Name != null; }
+            int i = Find(frn);
+            if (i < 0) { parent = 0; name = null; return false; }
+            parent = Par[i]; name = Name[i];
+            return true;
+        }
+
+        public int Live { get { int c = 0; foreach (Rec r in Added.Values) if (r.Name != null) c++; for (int i = 0; i < N; i++) if (!Dead[i]) c++; return c; } }
     }
 
-    const uint FSCTL_ENUM_USN_DATA = 0x000900B3;
-    const int MaxPerVolume = 3000000;      // запобіжник проти величезних томів
+    const uint FSCTL_ENUM_USN_DATA = 0x000900B3, FSCTL_READ_USN_JOURNAL = 0x000900BB, FSCTL_QUERY_USN_JOURNAL = 0x000900F4;
+    const int MaxPerVolume = 6000000;      // запобіжник проти величезних томів
+    const int IdleMinutes = 10;
 
-    static readonly object gate = new object();
+    static readonly object gate = new object(), qgate = new object();
     static List<Vol> vols = new List<Vol>();
     static Thread worker;
     static volatile bool ready, building, failed;
     static volatile int count;
+    static long lastUse, lastSync;
+    static System.Threading.Timer idle;
 
     public static bool Ready { get { return ready; } }
     public static bool Building { get { return building; } }
@@ -235,13 +265,29 @@ static class MftIndex
     {
         lock (gate)
         {
+            Interlocked.Exchange(ref lastUse, Environment.TickCount);
             if (ready || building || failed || worker != null) return;
             building = true;
-            worker = new Thread(delegate () { try { Build(); } catch (Exception ex) { Util.ErrorLog(ex); } });
+            worker = new Thread(delegate () { try { Build(); } catch (Exception ex) { Util.ErrorLog(ex); } finally { lock (gate) worker = null; } });
             worker.IsBackground = true;
             worker.Priority = ThreadPriority.BelowNormal;
             worker.Start();
         }
+    }
+
+    // звільнити пам'ять, якщо пошуком довго не користувались (наступний пошук збудує індекс знову)
+    static void IdleCheck(object o)
+    {
+        lock (gate)
+        {
+            if (!ready || building) return;
+            if (unchecked(Environment.TickCount - (int)Interlocked.Read(ref lastUse)) < IdleMinutes * 60000) return;
+            vols = new List<Vol>();
+            ready = false; count = 0;
+            if (idle != null) { idle.Dispose(); idle = null; }
+        }
+        SbLog.W(SbLog.Panel, "індекс NTFS звільнено (пошуком не користувались " + IdleMinutes + " хв)");
+        GC.Collect();
     }
 
     static void Build()
@@ -256,101 +302,246 @@ static class MftIndex
                 {
                     if (d.DriveType != DriveType.Fixed || !d.IsReady) continue;
                     if (!string.Equals(d.DriveFormat, "NTFS", StringComparison.OrdinalIgnoreCase)) continue;
-                    Vol v = new Vol();
-                    v.Root = d.RootDirectory.FullName;
-                    if (ReadVolume(v))
+                    Vol v = ReadVolume(d.RootDirectory.FullName);
+                    if (v != null)
                     {
                         built.Add(v);
-                        total += v.Map.Count;
+                        total += v.N;
                         count = total;
                     }
                 }
-                catch { }
+                catch (Exception ex) { Util.ErrorLog(ex); }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
 
         lock (gate)
         {
             building = false;
             if (built.Count == 0) { failed = true; ready = false; }
-            else { vols = built; count = total; ready = true; }
+            else
+            {
+                vols = built; count = total; ready = true;
+                lastSync = Environment.TickCount;
+                if (idle == null) idle = new System.Threading.Timer(IdleCheck, null, 60000, 60000);
+            }
         }
     }
 
-    static bool ReadVolume(Vol v)
+    static IntPtr OpenVol(string root)
     {
-        string letter = v.Root.Substring(0, 2);                 // "C:"
-        IntPtr h = WinFs.CreateFileW("\\\\.\\" + letter, 0x80000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
-        if (h == IntPtr.Zero || h == new IntPtr(-1)) return false;    // немає прав адміністратора
+        IntPtr h = WinFs.CreateFileW("\\\\.\\" + root.Substring(0, 2), 0x80000000, 3, IntPtr.Zero, 3, 0, IntPtr.Zero);
+        return h == new IntPtr(-1) ? IntPtr.Zero : h;
+    }
+
+    // журнал змін: ідентифікатор і наступний номер запису
+    static bool QueryJournal(IntPtr h, out long id, out long next)
+    {
+        id = next = 0;
+        IntPtr o = Marshal.AllocHGlobal(80);
+        try
+        {
+            int ret;
+            if (!Win.DeviceIoControl(h, FSCTL_QUERY_USN_JOURNAL, IntPtr.Zero, 0, o, 80, out ret, IntPtr.Zero) || ret < 24) return false;
+            id = Marshal.ReadInt64(o, 0);
+            next = Marshal.ReadInt64(o, 16);
+            return true;
+        }
+        finally { Marshal.FreeHGlobal(o); }
+    }
+
+    static Vol ReadVolume(string root)
+    {
+        IntPtr h = OpenVol(root);
+        if (h == IntPtr.Zero) return null;    // немає прав адміністратора
+        Vol v = new Vol();
+        v.Root = root;
+        int cap = 1 << 16, n = 0;
+        long[] frn = new long[cap], par = new long[cap];
+        string[] name = new string[cap];
+        bool[] dir = new bool[cap];
+        Dictionary<string, string> pool = new Dictionary<string, string>(StringComparer.Ordinal);   // однакові імена - один рядок
         int bufSize = 1 << 20;
         IntPtr buf = Marshal.AllocHGlobal(bufSize);
         IntPtr inBuf = Marshal.AllocHGlobal(24);
         try
         {
-            ulong start = 0;
-            while (true)
+            // журнал - до читання MFT: зміни під час читання потраплять у перше оновлення
+            if (!QueryJournal(h, out v.Journal, out v.NextUsn)) v.Stale = true;
+            long start = 0;
+            while (n < MaxPerVolume)
             {
-                Marshal.WriteInt64(inBuf, 0, (long)start);
+                Marshal.WriteInt64(inBuf, 0, start);
                 Marshal.WriteInt64(inBuf, 8, 0);
                 Marshal.WriteInt64(inBuf, 16, long.MaxValue);
                 int ret;
                 if (!Win.DeviceIoControl(h, FSCTL_ENUM_USN_DATA, inBuf, 24, buf, bufSize, out ret, IntPtr.Zero)) break;
                 if (ret <= 8) break;
-                start = (ulong)Marshal.ReadInt64(buf, 0);
+                start = Marshal.ReadInt64(buf, 0);
                 long baseAddr = buf.ToInt64();
                 int off = 8;
                 while (off + 60 <= ret)
                 {
                     int recLen = Marshal.ReadInt32(buf, off);
                     if (recLen <= 0 || off + recLen > ret) break;
-                    int major = Marshal.ReadInt16(buf, off + 4);
-                    if (major == 2)
+                    if (Marshal.ReadInt16(buf, off + 4) == 2)
                     {
-                        ulong frn = (ulong)Marshal.ReadInt64(buf, off + 8);
-                        ulong parent = (ulong)Marshal.ReadInt64(buf, off + 16);
-                        uint attr = (uint)Marshal.ReadInt32(buf, off + 52);
                         int nameLen = (ushort)Marshal.ReadInt16(buf, off + 56);
                         int nameOff = (ushort)Marshal.ReadInt16(buf, off + 58);
                         if (nameLen > 0 && nameOff >= 60 && off + nameOff + nameLen <= ret)
                         {
-                            Rec r = new Rec();
-                            r.Parent = parent;
-                            r.Dir = (attr & 0x10) != 0;
-                            r.Name = Marshal.PtrToStringUni(new IntPtr(baseAddr + off + nameOff), nameLen / 2);
-                            v.Map[frn] = r;
+                            if (n == cap)
+                            {
+                                cap *= 2;
+                                Array.Resize(ref frn, cap); Array.Resize(ref par, cap);
+                                Array.Resize(ref name, cap); Array.Resize(ref dir, cap);
+                            }
+                            frn[n] = Marshal.ReadInt64(buf, off + 8);
+                            par[n] = Marshal.ReadInt64(buf, off + 16);
+                            dir[n] = (Marshal.ReadInt32(buf, off + 52) & 0x10) != 0;
+                            string s = Marshal.PtrToStringUni(new IntPtr(baseAddr + off + nameOff), nameLen / 2), p;
+                            if (pool.TryGetValue(s, out p)) s = p; else pool[s] = s;
+                            name[n] = s;
+                            n++;
                         }
                     }
                     off += recLen;
                 }
-                if (v.Map.Count > MaxPerVolume) break;
-                count = count + 0;    // показник оновлюється по томах
             }
         }
-        catch { }
+        catch (Exception ex) { Util.ErrorLog(ex); }
         finally
         {
             Marshal.FreeHGlobal(buf);
             Marshal.FreeHGlobal(inBuf);
             Win.CloseHandle(h);
         }
-        return v.Map.Count > 0;
+        if (n == 0) return null;
+        pool = null;
+        // впорядкувати за номером запису (пошук батька - двійковий)
+        int[] idx = new int[n];
+        for (int i = 0; i < n; i++) idx[i] = i;
+        long[] keys = new long[n];
+        Array.Copy(frn, keys, n);
+        Array.Sort(keys, idx);
+        v.N = n;
+        v.Frn = keys;
+        v.Par = new long[n]; v.Name = new string[n]; v.Dir = new bool[n]; v.Dead = new bool[n];
+        for (int i = 0; i < n; i++) { int k = idx[i]; v.Par[i] = par[k]; v.Name[i] = name[k]; v.Dir[i] = dir[k]; }
+        return v;
     }
 
-    static string PathOf(Vol v, ulong frn, Rec r)
+    // ---------- оновлення з журналу змін ----------
+    const uint ReasonCreate = 0x100, ReasonDelete = 0x200, ReasonRenameNew = 0x2000;
+
+    static void Sync()
+    {
+        if (unchecked(Environment.TickCount - (int)Interlocked.Read(ref lastSync)) < 1500) return;
+        Interlocked.Exchange(ref lastSync, Environment.TickCount);
+        bool rebuild = false;
+        foreach (Vol v in vols)
+        {
+            if (!v.Stale) SyncVol(v);
+            if (v.Stale || v.Added.Count > 200000) rebuild = true;
+        }
+        if (!rebuild) return;
+        // журнал скинуто чи змін забагато - тихо перебудовуємо, старий індекс працює до кінця
+        lock (gate)
+        {
+            if (building || worker != null) return;
+            building = true;
+            worker = new Thread(delegate () { try { Build(); } catch (Exception ex) { Util.ErrorLog(ex); } finally { lock (gate) worker = null; } });
+            worker.IsBackground = true;
+            worker.Priority = ThreadPriority.BelowNormal;
+            worker.Start();
+        }
+    }
+
+    static void SyncVol(Vol v)
+    {
+        IntPtr h = OpenVol(v.Root);
+        if (h == IntPtr.Zero) return;
+        const int bufSize = 1 << 16;
+        IntPtr buf = Marshal.AllocHGlobal(bufSize);
+        IntPtr inBuf = Marshal.AllocHGlobal(40);
+        try
+        {
+            long id, next;
+            if (!QueryJournal(h, out id, out next) || id != v.Journal) { v.Stale = true; return; }
+            for (int guard = 0; guard < 4096 && v.NextUsn < next; guard++)
+            {
+                Marshal.WriteInt64(inBuf, 0, v.NextUsn);
+                Marshal.WriteInt32(inBuf, 8, unchecked((int)(ReasonCreate | ReasonDelete | ReasonRenameNew)));
+                Marshal.WriteInt32(inBuf, 12, 0);       // не чекати закриття файлу
+                Marshal.WriteInt64(inBuf, 16, 0);       // не чекати нових записів
+                Marshal.WriteInt64(inBuf, 24, 0);
+                Marshal.WriteInt64(inBuf, 32, v.Journal);
+                int ret;
+                if (!Win.DeviceIoControl(h, FSCTL_READ_USN_JOURNAL, inBuf, 40, buf, bufSize, out ret, IntPtr.Zero)) { v.Stale = true; return; }
+                if (ret <= 8) break;
+                long nu = Marshal.ReadInt64(buf, 0);
+                long baseAddr = buf.ToInt64();
+                int off = 8;
+                while (off + 60 <= ret)
+                {
+                    int recLen = Marshal.ReadInt32(buf, off);
+                    if (recLen <= 0 || off + recLen > ret) break;
+                    if (Marshal.ReadInt16(buf, off + 4) == 2)
+                    {
+                        long frn = Marshal.ReadInt64(buf, off + 8);
+                        uint reason = (uint)Marshal.ReadInt32(buf, off + 40);
+                        if ((reason & ReasonDelete) != 0) Remove(v, frn);
+                        else
+                        {
+                            int nameLen = (ushort)Marshal.ReadInt16(buf, off + 56), nameOff = (ushort)Marshal.ReadInt16(buf, off + 58);
+                            if (nameLen > 0 && off + nameOff + nameLen <= ret)
+                            {
+                                Rec r = new Rec();
+                                r.Parent = Marshal.ReadInt64(buf, off + 16);
+                                r.Dir = (Marshal.ReadInt32(buf, off + 52) & 0x10) != 0;
+                                r.Name = Marshal.PtrToStringUni(new IntPtr(baseAddr + off + nameOff), nameLen / 2);
+                                int i = Array.BinarySearch(v.Frn, 0, v.N, frn);
+                                if (i >= 0) v.Dead[i] = true;
+                                v.Added[frn] = r;
+                            }
+                        }
+                    }
+                    off += recLen;
+                }
+                if (nu <= v.NextUsn) break;
+                v.NextUsn = nu;
+            }
+        }
+        catch (Exception ex) { Util.ErrorLog(ex); v.Stale = true; }
+        finally
+        {
+            Marshal.FreeHGlobal(buf);
+            Marshal.FreeHGlobal(inBuf);
+            Win.CloseHandle(h);
+        }
+    }
+
+    static void Remove(Vol v, long frn)
+    {
+        int i = Array.BinarySearch(v.Frn, 0, v.N, frn);
+        if (i >= 0) v.Dead[i] = true;
+        if (v.Added.ContainsKey(frn)) v.Added.Remove(frn);
+    }
+
+    static string PathOf(Vol v, string name, long parent)
     {
         string[] parts = new string[64];
         int n = 0;
-        parts[n++] = r.Name;
-        ulong p = r.Parent;
+        parts[n++] = name;
+        long p = parent;
         for (int i = 0; i < 60; i++)
         {
-            if (p == 5 || p == 0) break;               // 5 = корінь тому
-            Rec up;
-            if (!v.Map.TryGetValue(p, out up)) break;
+            if ((p & 0xFFFFFFFFFFFFL) == 5 || p == 0) break;      // 5 = корінь тому
+            long up; string nm;
+            if (!v.Get(p, out up, out nm)) break;
             if (n >= parts.Length) break;
-            parts[n++] = up.Name;
-            p = up.Parent;
+            parts[n++] = nm;
+            p = up;
         }
         StringBuilder sb = new StringBuilder(v.Root);
         for (int i = n - 1; i >= 0; i--)
@@ -364,33 +555,50 @@ static class MftIndex
     public static List<FileHit> Query(FindSpec s, int max)
     {
         List<FileHit> res = new List<FileHit>();
-        List<Vol> snap;
-        lock (gate) { snap = vols; }
-        foreach (Vol v in snap)
+        Interlocked.Exchange(ref lastUse, Environment.TickCount);
+        lock (qgate)
         {
-            foreach (KeyValuePair<ulong, Rec> kv in v.Map)
+            List<Vol> snap;
+            lock (gate) { snap = vols; }
+            try { Sync(); } catch (Exception ex) { Util.ErrorLog(ex); }
+            int total = 0;
+            foreach (Vol v in snap) total += v.Live;
+            count = total;
+            foreach (Vol v in snap)
             {
-                Rec r = kv.Value;
-                if (!s.NameOk(r.Name, r.Dir)) continue;
-                string path = PathOf(v, kv.Key, r);
-                if (!s.PathOk(path)) continue;
-                FileHit h = new FileHit();
-                h.Name = r.Name; h.Path = path; h.IsDir = r.Dir;
-                if (s.NeedStat)
+                for (int i = 0; i < v.N; i++)
                 {
-                    try
-                    {
-                        if (r.Dir) { h.Modified = Directory.GetLastWriteTime(path); h.Size = 0; }
-                        else { FileInfo fi = new FileInfo(path); h.Size = fi.Length; h.Modified = fi.LastWriteTime; }
-                    }
-                    catch { continue; }
-                    if (!s.StatOk(h.Size, h.Modified)) continue;
+                    if (v.Dead[i] || !s.NameOk(v.Name[i], v.Dir[i])) continue;
+                    if (Add(res, s, v, v.Name[i], v.Par[i], v.Dir[i]) && res.Count >= max) return res;
                 }
-                res.Add(h);
-                if (res.Count >= max) return res;
+                foreach (Rec r in v.Added.Values)
+                {
+                    if (r.Name == null || !s.NameOk(r.Name, r.Dir)) continue;
+                    if (Add(res, s, v, r.Name, r.Parent, r.Dir) && res.Count >= max) return res;
+                }
             }
         }
         return res;
+    }
+
+    static bool Add(List<FileHit> res, FindSpec s, Vol v, string name, long parent, bool dir)
+    {
+        string path = PathOf(v, name, parent);
+        if (!s.PathOk(path)) return false;
+        FileHit h = new FileHit();
+        h.Name = name; h.Path = path; h.IsDir = dir;
+        if (s.NeedStat)
+        {
+            try
+            {
+                if (dir) { h.Modified = Directory.GetLastWriteTime(path); h.Size = 0; }
+                else { FileInfo fi = new FileInfo(path); h.Size = fi.Length; h.Modified = fi.LastWriteTime; }
+            }
+            catch { return false; }
+            if (!s.StatOk(h.Size, h.Modified)) return false;
+        }
+        res.Add(h);
+        return true;
     }
 }
 
@@ -446,6 +654,8 @@ static class FileFind
             report(new List<FileHit>(), "", myGen);
             return;
         }
+        // індекс звільнили через бездіяльність - збудувати знову (поки будується, шукає Windows)
+        if (IsWindows && (engine == EngineAuto || engine == EngineMft)) MftIndex.Begin();
         Util.Bg(delegate
         {
             List<FileHit> res = null;
@@ -481,11 +691,11 @@ static class FileFind
                     note = L.T("Перегляд дисків");
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (res == null) res = new List<FileHit>();
             Sort(res, s);
             LastStatus = note;
-            try { report(res, note, myGen); } catch { }
+            try { report(res, note, myGen); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -568,8 +778,8 @@ static class FileFind
                 h.Name = name;
                 h.Path = path;
                 h.IsDir = string.Equals(type, "Directory", StringComparison.OrdinalIgnoreCase);
-                try { h.Size = rd.IsDBNull(3) ? -1 : Convert.ToInt64(rd.GetValue(3)); } catch { }
-                try { h.Modified = rd.IsDBNull(4) ? DateTime.MinValue : Convert.ToDateTime(rd.GetValue(4)); } catch { }
+                try { h.Size = rd.IsDBNull(3) ? -1 : Convert.ToInt64(rd.GetValue(3)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                try { h.Modified = rd.IsDBNull(4) ? DateTime.MinValue : Convert.ToDateTime(rd.GetValue(4)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 if (!s.NameOk(h.Name, h.IsDir)) continue;
                 if (!s.PathOk(h.Path)) continue;
                 if (s.NeedStat && !s.StatOk(h.Size, h.Modified)) continue;
@@ -588,8 +798,8 @@ static class FileFind
     static void Kill(IDisposable c)
     {
         if (c == null) return;
-        try { GC.SuppressFinalize(c); } catch { }
-        try { c.Dispose(); } catch { }
+        try { GC.SuppressFinalize(c); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { c.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static string Esc(string v)
@@ -603,21 +813,21 @@ static class FileFind
         List<FileHit> res = new List<FileHit>();
         DateTime deadline = DateTime.UtcNow.AddMilliseconds(2500);
         Queue<string> q = new Queue<string>();
-        try { q.Enqueue(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)); } catch { }
+        try { q.Enqueue(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
         {
             foreach (DriveInfo d in DriveInfo.GetDrives())
                 if (d.DriveType == DriveType.Fixed && d.IsReady) q.Enqueue(d.RootDirectory.FullName);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
 
         while (q.Count > 0)
         {
             if (res.Count >= max || DateTime.UtcNow > deadline || myGen != gen) break;
             string dir = q.Dequeue();
             string[] subs = null, files = null;
-            try { subs = Directory.GetDirectories(dir); } catch { }
-            try { if (s.Kind != 2) files = Directory.GetFiles(dir); } catch { }
+            try { subs = Directory.GetDirectories(dir); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { if (s.Kind != 2) files = Directory.GetFiles(dir); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (subs != null)
             {
                 foreach (string sd in subs)

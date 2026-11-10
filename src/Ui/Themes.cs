@@ -402,7 +402,7 @@ static class IconFactory
                     }
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         using (Font f = letter
             ? new Font(fontName, fs, FontStyle.Bold, GraphicsUnit.Pixel)

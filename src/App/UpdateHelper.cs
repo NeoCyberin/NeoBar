@@ -39,7 +39,7 @@ static class UpdateHelper
         catch (Exception ex) { err = ex.Message; }
         if (err != null)
         {
-            try { MessageBox.Show(L.F("Оновлення не вдалося: {0}", err), "NeoBar", MessageBoxButtons.OK, MessageBoxIcon.Warning); } catch { }
+            try { SbDialog.Ask(null, L.T("Оновлення NeoBar"), L.F("Оновлення не вдалося: {0}", err)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         try
         {
@@ -55,7 +55,7 @@ static class UpdateHelper
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return err == null ? 0 : 1;
     }
 
@@ -73,7 +73,7 @@ static class UpdateHelper
     public static string Sha256(string path)
     {
         using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-        using (SHA256 h = SHA256.Create())
+        using (SHA256 h = new SHA256Cng())
         {
             byte[] b = h.ComputeHash(fs);
             StringBuilder sb = new StringBuilder(64);
@@ -112,8 +112,8 @@ static class UpdateHelper
     {
         string work = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(zip)), "x");
         string backup = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(zip)), "backup");
-        try { if (Directory.Exists(work)) Directory.Delete(work, true); } catch { }
-        try { if (Directory.Exists(backup)) Directory.Delete(backup, true); } catch { }
+        try { if (Directory.Exists(work)) Directory.Delete(work, true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { if (Directory.Exists(backup)) Directory.Delete(backup, true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Directory.CreateDirectory(work);
         string workFull = Path.GetFullPath(work).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
         List<string> files = new List<string>();
@@ -133,6 +133,8 @@ static class UpdateHelper
             }
         }
         if (!files.Contains("NeoBar.exe")) throw new IOException(L.T("Архів не схожий на пакет NeoBar."));
+        string serr;
+        if (!Sig.SameSigner(Path.Combine(work, "NeoBar.exe"), Path.Combine(appDir, "NeoBar.exe"), out serr)) throw new IOException(serr);
 
         List<Done> done = new List<Done>();
         try
@@ -169,7 +171,7 @@ static class UpdateHelper
                     if (done[i].Existed) CopyRetry(done[i].Backup, done[i].Dst);
                     else File.Delete(done[i].Dst);
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
             throw;
         }

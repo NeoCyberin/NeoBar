@@ -109,7 +109,7 @@ sealed partial class PerfWindow
         if (search == null)
         {
             search = MakeInput();
-            try { SendMessage(search.Handle, 0x1501, new IntPtr(1), L.T("Пошук: ім'я або PID")); } catch { }     // EM_SETCUEBANNER
+            try { SendMessage(search.Handle, 0x1501, new IntPtr(1), L.T("Пошук: ім'я або PID")); } catch (Exception skipEx) { SbLog.Skip(skipEx); }     // EM_SETCUEBANNER
             search.TextChanged += delegate { query = search.Text.Trim(); procScroll = 0; svcScroll = 0; RebuildView(); Invalidate(); };
             search.KeyDown += delegate (object s, KeyEventArgs e) { if (e.KeyCode == Keys.Escape) { e.SuppressKeyPress = true; search.Text = ""; } };
         }
@@ -376,6 +376,18 @@ sealed partial class PerfWindow
                 if (lines[i].Type == 2 && lines[i].P != null && lines[i].P.Pid == scrollToPid) { procScroll = i * rowH - (list.Height - rowH) / 2; break; }
             scrollToPid = 0;
         }
+        // щойно вибраний рядок унизу ховала картка деталей - підтягуємо його, щоб лишився видно
+        if (ensureSel && selPid != 0)
+        {
+            for (int i = 0; i < lines.Count; i++)
+                if (lines[i].Type == 2 && lines[i].P != null && lines[i].P.Pid == selPid)
+                {
+                    if (i * rowH + rowH > procScroll + list.Height) procScroll = i * rowH + rowH - list.Height;
+                    if (i * rowH < procScroll) procScroll = i * rowH;
+                    break;
+                }
+        }
+        ensureSel = false;
         procScroll = Math.Max(0, Math.Min(procScroll, Math.Max(0, content - list.Height)));
         Region old = g.Clip;
         g.SetClip(list);
@@ -442,7 +454,7 @@ sealed partial class PerfWindow
             else
             {
                 int pid = p.Pid;
-                Hot(vis, delegate { selPid = selPid == pid ? 0 : pid; Invalidate(); });
+                Hot(vis, delegate { selPid = selPid == pid ? 0 : pid; ensureSel = true; Invalidate(); });
             }
         }
         g.Clip = old;
@@ -454,6 +466,7 @@ sealed partial class PerfWindow
         else if (selPid != 0) selPid = 0;
     }
 
+    bool ensureSel;
     const int SvcMax = 3;
 
     int DetailH(ProcRow p)
@@ -483,11 +496,11 @@ sealed partial class PerfWindow
         Btn(g, bRe, L.T("Перезапустити"), delegate { AskEnd(ppid, true); }, 0, can && (has || p.Svcs.Count > 0));
         Btn(g, bDir, L.T("Показати теку"), delegate
         {
-            try { if (File.Exists(pth)) Process.Start("explorer.exe", "/select,\"" + pth + "\""); } catch { }
+            try { if (File.Exists(pth)) Process.Start("explorer.exe", "/select,\"" + pth + "\""); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }, 0, has && File.Exists(pth));
         Btn(g, bCopy, okC ? L.T("Скопійовано") : L.T("Копіювати шлях"), delegate
         {
-            try { Clipboard.SetText(pth); procCopied = "p" + ppid; procCopiedAt = DateTime.Now; Invalidate(); } catch { }
+            try { Clipboard.SetText(pth); procCopied = "p" + ppid; procCopiedAt = DateTime.Now; Invalidate(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }, 0, has);
         Tip(bEnd, p.Svcs.Count > 0 ? L.T("Зупинити служби процесу (разом із залежними) і завершити його") : L.T("Завершити разом із пов'язаними процесами - перед цим буде список і підтвердження"));
         Tip(bRe, p.Svcs.Count > 0 ? L.T("Перезапустити служби процесу") : L.T("Завершити й запустити знову з тими самими параметрами"));
@@ -778,7 +791,6 @@ sealed partial class PerfWindow
         Invalidate();
     }
 
-    [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)] static extern int SHLoadIndirectString(string src, StringBuilder buf, int size, IntPtr reserved);
 
     // шлях до файла служби й опис (з реєстру; опис буває посиланням на ресурс DLL)
     string[] SvcMeta(string name)
@@ -798,13 +810,13 @@ sealed partial class PerfWindow
                     if (d.StartsWith("@"))
                     {
                         StringBuilder sb = new StringBuilder(1024);
-                        if (SHLoadIndirectString(d, sb, sb.Capacity, IntPtr.Zero) == 0) d = sb.ToString(); else d = "";
+                        if (Win.SHLoadIndirectString(d, sb, sb.Capacity, IntPtr.Zero) == 0) d = sb.ToString(); else d = "";
                     }
                     v[1] = d;
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         svcInfo[name] = v;
         return v;
     }
@@ -850,6 +862,13 @@ sealed partial class PerfWindow
 
         int rowH = Px(25);
         int content = rows.Count * rowH;
+        if (ensureSel && sel != null)
+        {
+            int si = rows.IndexOf(sel);
+            if (si >= 0 && si * rowH + rowH > svcScroll + list.Height) svcScroll = si * rowH + rowH - list.Height;
+            if (si >= 0 && si * rowH < svcScroll) svcScroll = si * rowH;
+        }
+        ensureSel = false;
         svcScroll = Math.Max(0, Math.Min(svcScroll, Math.Max(0, content - list.Height)));
         Region old = g.Clip;
         g.SetClip(list);
@@ -888,7 +907,7 @@ sealed partial class PerfWindow
             if (!vis.IsEmpty)
             {
                 string nm = s.Name;
-                Hot(vis, delegate { selSvc = string.Equals(selSvc, nm, StringComparison.OrdinalIgnoreCase) ? "" : nm; Invalidate(); });
+                Hot(vis, delegate { selSvc = string.Equals(selSvc, nm, StringComparison.OrdinalIgnoreCase) ? "" : nm; ensureSel = true; Invalidate(); });
             }
         }
         g.Clip = old;
@@ -987,7 +1006,7 @@ static class TaskLauncher
             return;
         }
         string ex = Environment.ExpandEnvironmentVariables(l);
-        try { if (File.Exists(ex) || Directory.Exists(ex)) { file = l; return; } } catch { }
+        try { if (File.Exists(ex) || Directory.Exists(ex)) { file = l; return; } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         int sp = l.IndexOf(' ');
         if (sp > 0) { file = l.Substring(0, sp); args = l.Substring(sp + 1).Trim(); }
     }
@@ -1009,7 +1028,7 @@ static class TaskLauncher
             ProcessStartInfo psi = new ProcessStartInfo(file, args);
             psi.UseShellExecute = true;
             if (admin && !Elevated.IsAdmin) psi.Verb = "runas";
-            try { string dir = Path.GetDirectoryName(file); if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir)) psi.WorkingDirectory = dir; } catch { }
+            try { string dir = Path.GetDirectoryName(file); if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir)) psi.WorkingDirectory = dir; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             using (Process p = Process.Start(psi)) { }
             return "";
         }

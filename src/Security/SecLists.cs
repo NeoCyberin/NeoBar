@@ -43,9 +43,9 @@ static class SecLists
             All.Clear();
             try
             {
-                if (!File.Exists(FilePath)) return;
+                if (!SafeFile.Exists(FilePath)) return;
                 ListEntry cur = null;
-                foreach (string line in File.ReadAllLines(FilePath, Encoding.UTF8))
+                foreach (string line in SafeFile.ReadLines(FilePath))
                 {
                     if (line.StartsWith("#"))
                     {
@@ -76,7 +76,7 @@ static class SecLists
                      .Append(B(e.Title)).Append('\t').Append(e.When).Append('\t').Append(B(e.QFile)).Append('\t').Append(e.Size).Append('\t').Append(e.Admin ? "1" : "0").Append('\t').Append("1\r\n");
                     foreach (FixOp o in e.Undo) b.Append(o.Line()).Append("\r\n");
                 }
-            File.WriteAllText(FilePath, b.ToString(), new UTF8Encoding(false));
+            SafeFile.Write(FilePath, b.ToString(), new UTF8Encoding(false));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
@@ -212,7 +212,7 @@ static class SecLists
         Load();
         long size = -1;
         string sha = "";
-        try { size = new FileInfo(f.Path).Length; sha = ShaOf(f.Path); } catch { }
+        try { size = new FileInfo(f.Path).Length; sha = ShaOf(f.Path); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         List<FixOp> undo;
         string err = SecFix.ApplyRaw(fx, out undo);
         if (err.Length > 0) return err;

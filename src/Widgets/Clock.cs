@@ -86,7 +86,7 @@ sealed class TimerItem
     {
         get
         {
-            if (Running) { TimeSpan l = End - DateTime.Now; return l < TimeSpan.Zero ? TimeSpan.Zero : l; }
+            if (Running) { TimeSpan l = End - DateTime.UtcNow; return l < TimeSpan.Zero ? TimeSpan.Zero : l; }
             if (Paused > TimeSpan.Zero) return Paused;
             return Set;
         }
@@ -179,6 +179,7 @@ static class ClockData
     public static readonly List<TimerItem> Timers = new List<TimerItem>();
     public static int SelTimer;                              // вибраний у вікні таймер
     public const int MaxTimers = 8;
+    // секундомір, кінець таймера й відкладений будильник - у UTC: перехід на літній час чи зміна годинника їх не зсувають
     public static DateTime SwStart = DateTime.MinValue;      // MinValue - стоїть
     public static TimeSpan SwAcc = TimeSpan.Zero;
     public static readonly List<TimeSpan> Laps = new List<TimeSpan>();
@@ -223,7 +224,7 @@ static class ClockData
                 {
                     string msg;
                     TimeSync.Run(out msg);
-                    try { bar.BeginInvoke(new Action(delegate { SyncNote = L.T("Під час запуску: ") + msg; Fire(); })); } catch { }
+                    try { bar.BeginInvoke(new Action(delegate { SyncNote = L.T("Під час запуску: ") + msg; Fire(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 });
             };
             st.Start();
@@ -295,7 +296,7 @@ static class ClockData
         {
             TimeSpan left = t.Paused > TimeSpan.Zero ? t.Paused : t.Set;
             if (left <= TimeSpan.Zero) return;
-            t.End = DateTime.Now + left;
+            t.End = DateTime.UtcNow + left;
             t.Paused = TimeSpan.Zero;
         }
         Save(); Fire();
@@ -308,12 +309,12 @@ static class ClockData
     }
 
     public static bool SwRunning { get { return SwStart != DateTime.MinValue; } }
-    public static TimeSpan SwElapsed { get { return SwAcc + (SwRunning ? DateTime.Now - SwStart : TimeSpan.Zero); } }
+    public static TimeSpan SwElapsed { get { return SwAcc + (SwRunning ? DateTime.UtcNow - SwStart : TimeSpan.Zero); } }
 
     public static void SwStartPause()
     {
-        if (SwRunning) { SwAcc += DateTime.Now - SwStart; SwStart = DateTime.MinValue; }
-        else SwStart = DateTime.Now;
+        if (SwRunning) { SwAcc += DateTime.UtcNow - SwStart; SwStart = DateTime.MinValue; }
+        else SwStart = DateTime.UtcNow;
         Save(); Fire();
     }
 
@@ -334,7 +335,7 @@ static class ClockData
     static void Fire()
     {
         Action a = Changed;
-        if (a != null) try { a(); } catch { }
+        if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         foreach (DeskSpec d in Desk) if (d.Form != null && !d.Form.IsDisposed) d.Form.Redraw();
     }
 
@@ -358,9 +359,9 @@ static class ClockData
 
     static void Check()
     {
-        DateTime now = DateTime.Now;
+        DateTime now = DateTime.Now, utc = DateTime.UtcNow;
         foreach (TimerItem t in Timers.ToArray())
-            if (t.Running && now >= t.End)
+            if (t.Running && utc >= t.End)
             {
                 t.End = DateTime.MinValue;
                 t.Paused = TimeSpan.Zero;
@@ -370,7 +371,7 @@ static class ClockData
             }
         foreach (Alarm a in Alarms.ToArray())
         {
-            if (a.Snooze != DateTime.MinValue && now >= a.Snooze)
+            if (a.Snooze != DateTime.MinValue && utc >= a.Snooze)
             {
                 a.Snooze = DateTime.MinValue;
                 RingAlarm(a);
@@ -391,6 +392,9 @@ static class ClockData
         foreach (DeskSpec d in Desk)
             if (d.Form != null && !d.Form.IsDisposed && m != lastMinute && !NeoBar.Paused) d.Form.TickRedraw();
         lastMinute = m;
+        // наступна перевірка - одразу після зміни секунди: раз на секунду замість двох, а секунди на столі не запізнюються
+        int next = Math.Max(50, 1015 - DateTime.Now.Millisecond);
+        if (Math.Abs(tick.Interval - next) > 30) tick.Interval = next;
     }
 
     // Сповіщення про свята: о заданій годині або через кілька хвилин після запуску, якщо ПК увімкнули пізніше
@@ -415,7 +419,7 @@ static class ClockData
     {
         Alarm al = a;
         Toast(L.T("Будильник ") + al.H.ToString("00") + ":" + al.M.ToString("00"), al.Label.Length > 0 ? al.Label : L.T("Час прокидатися!"), true,
-            delegate { al.Snooze = DateTime.Now.AddMinutes(al.SnoozeMin); Save(); }, al.Sound, al.SnoozeMin, al.Volume);
+            delegate { al.Snooze = DateTime.UtcNow.AddMinutes(al.SnoozeMin); Save(); }, al.Sound, al.SnoozeMin, al.Volume);
         Fire();
     }
 
@@ -450,7 +454,7 @@ static class ClockData
         if (loc.Length == 0) { text = L.T("Дані сайту про пояс ще не отримано."); return true; }
         TimeZoneInfo local = TimeZoneInfo.Local;
         TimeSpan sysOff = TimeSpan.Zero;
-        try { sysOff = local.GetUtcOffset(DateTime.Now); } catch { }
+        try { sysOff = local.GetUtcOffset(DateTime.Now); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         string win = TzMap.ToWindows(loc);
         string dst = "";
         TimeSpan siteOff = TimeSpan.FromSeconds(Widgets.WTzOffset);
@@ -462,7 +466,7 @@ static class ClockData
                 TimeZoneInfo z = TimeZoneInfo.FindSystemTimeZoneById(win);
                 if (haveOff && z.SupportsDaylightSavingTime) dst = siteOff > z.BaseUtcOffset ? L.T("літній час") : L.T("зимовий час");
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         string off = haveOff ? (siteOff < TimeSpan.Zero ? "UTC−" : "UTC+") + siteOff.Duration().Hours.ToString("00") + ":" + siteOff.Duration().Minutes.ToString("00") : "";
         text = L.T("Сайт (") + Widgets.CityLabel(bar != null ? bar.Config : new Cfg()) + "): " + loc +
@@ -516,7 +520,7 @@ static class ClockData
                     Fire();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -539,7 +543,7 @@ static class ClockData
                     Fire();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -566,9 +570,9 @@ static class ClockData
                 sb.AppendLine("alarm=" + a.H + "|" + a.M + "|" + a.Days + "|" + (a.On ? 1 : 0) + "|" + Dt(a.Snooze) + "|" + a.Label.Replace("|", "/").Replace("\n", " ") + "|" + a.MonthDay + "|" + a.Sound + "|" + a.SnoozeMin + "|" + a.Volume);
             foreach (DeskSpec d in Desk)
                 sb.AppendLine("desk=" + d.Kind + "|" + d.X + "|" + d.Y + "|" + d.Size + "|" + d.Opacity + "|" + (d.Locked ? 1 : 0) + "|" + d.Numbers + "|" + d.Tm + "|" + (d.Opt ?? "").Replace("|", "").Replace("\n", "") + "|" + d.Scale.ToString("0.###", CultureInfo.InvariantCulture));
-            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(path, sb.ToString(), new UTF8Encoding(true));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static long LongOf(string s) { long v; return long.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out v) ? v : 0; }
@@ -577,7 +581,7 @@ static class ClockData
     static void Load()
     {
         string[] lines;
-        try { if (!File.Exists(path)) return; lines = File.ReadAllLines(path, Encoding.UTF8); }
+        try { if (!SafeFile.Exists(path)) return; lines = SafeFile.ReadLines(path); }
         catch { return; }
         foreach (string raw in lines)
         {
@@ -599,14 +603,14 @@ static class ClockData
                         string[] tp = v.Split('|');
                         if (tp.Length < 3) break;
                         TimerItem ti = new TimerItem();
-                        ti.Set = new TimeSpan(LongOf(tp[0])); ti.End = new DateTime(LongOf(tp[1])); ti.Paused = new TimeSpan(LongOf(tp[2]));
+                        ti.Set = new TimeSpan(LongOf(tp[0])); ti.End = new DateTime(LongOf(tp[1]), DateTimeKind.Utc); ti.Paused = new TimeSpan(LongOf(tp[2]));
                         if (tp.Length > 3) ti.Label = tp[3].Trim();
                         ti.Sound = tp.Length > 4 ? Chime.Normalize(tp[4].Trim()) : "theme";
                         if (tp.Length > 5) ti.Volume = Math.Max(0, Math.Min(100, I(tp[5])));
                         Timers.Add(ti);
                         break;
                     }
-                    case "swstart": SwStart = new DateTime(LongOf(v)); break;
+                    case "swstart": SwStart = new DateTime(LongOf(v), DateTimeKind.Utc); break;
                     case "swacc": SwAcc = new TimeSpan(LongOf(v)); break;
                     case "lap": Laps.Add(new TimeSpan(LongOf(v))); break;
                     case "alarm":
@@ -616,7 +620,7 @@ static class ClockData
                         Alarm a = new Alarm();
                         a.H = Math.Max(0, Math.Min(23, I(p[0]))); a.M = Math.Max(0, Math.Min(59, I(p[1])));
                         a.Days = I(p[2]) & 0x7F; a.On = p[3] == "1";
-                        if (p.Length > 4) a.Snooze = new DateTime(LongOf(p[4]));
+                        if (p.Length > 4) a.Snooze = new DateTime(LongOf(p[4]), DateTimeKind.Utc);
                         if (p.Length > 5) a.Label = p[5];
                         if (p.Length > 6) a.MonthDay = Math.Max(0, Math.Min(31, I(p[6])));
                         a.Sound = p.Length > 7 ? Chime.Normalize(p[7].Trim()) : "theme";
@@ -644,7 +648,7 @@ static class ClockData
                     }
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 

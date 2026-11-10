@@ -258,7 +258,7 @@ sealed partial class SettingsForm
         lb.DragDrop += delegate (object s, DragEventArgs e)
         {
             string[] fs = null;
-            try { fs = e.Data.GetData(DataFormats.FileDrop) as string[]; } catch { }
+            try { fs = e.Data.GetData(DataFormats.FileDrop) as string[]; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (fs != null)
             {
                 SetDropRow(-1);
@@ -463,12 +463,12 @@ sealed partial class SettingsForm
             SaveGames();
             // вигляд для гри, що зараз на екрані (загальний або власний)
             bool ed = OverlayCfg.Editing; OverlayCfg.Editing = false;
-            try { OverlayCfg.UseGame(Games.Current); } catch { }
+            try { OverlayCfg.UseGame(Games.Current); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             OverlayCfg.Editing = ed;
         }
         if (all || OnPage(PgWall)) ApplyWall(all);
         // повторне збереження з урахуванням ігор і оверлея
-        try { Store.Save(owner.CfgPath, c, list); } catch { }
+        try { Store.Save(owner.CfgPath, c, list); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ---------- Ігри ----------
@@ -720,15 +720,11 @@ sealed partial class SettingsForm
 
     void PickThemeColor(bool bg)
     {
-        using (ColorDialog d = new ColorDialog())
-        {
-            d.FullOpen = true;
-            d.Color = Color.FromArgb(bg ? OverlayCfg.CustomBg : OverlayCfg.CustomAccent);
-            if (d.ShowDialog(this) != DialogResult.OK) return;
-            if (bg) OverlayCfg.CustomBg = d.Color.ToArgb(); else OverlayCfg.CustomAccent = d.Color.ToArgb();
-            cbOvTheme.SelectedIndex = OvTheme.Names.Length - 1;
-            RefreshPreview();
-        }
+        Color nc;
+        if (!ColorPick.Ask(this, Color.FromArgb(bg ? OverlayCfg.CustomBg : OverlayCfg.CustomAccent), out nc)) return;
+        if (bg) OverlayCfg.CustomBg = nc.ToArgb(); else OverlayCfg.CustomAccent = nc.ToArgb();
+        cbOvTheme.SelectedIndex = OvTheme.Names.Length - 1;
+        RefreshPreview();
     }
 
     // ---------- показники ----------
@@ -766,8 +762,8 @@ sealed partial class SettingsForm
         if (preview == null || cbOvCorner == null) return;
         MetricsToCfg();
         PushLookToCfg();
-        try { OvTheme.Panel = Themes.Get(c.ThemeId, c); } catch { }
-        try { preview.Live = chLive == null || chLive.Checked; preview.Rebuild(); UpdateZoomLabel(); } catch { }
+        try { OvTheme.Panel = Themes.Get(c.ThemeId, c); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { preview.Live = chLive == null || chLive.Checked; preview.Rebuild(); UpdateZoomLabel(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // перенести контроли вигляду в OverlayCfg (для перегляду; фінально - в ApplyOverlay)
@@ -951,10 +947,10 @@ sealed partial class SettingsForm
 
     void OverlayClosed()
     {
-        try { if (ovPreview != null) { ovPreview.Stop(); ovPreview.Dispose(); ovPreview = null; } } catch { }
+        try { if (ovPreview != null) { ovPreview.Stop(); ovPreview.Dispose(); ovPreview = null; } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         // скасовані правки не лишаються: загальний вигляд - знову з файлу, у грі - вигляд поточної гри
-        try { OverlayCfg.Editing = false; OverlayCfg.Load(); OverlayCfg.UseGame(Games.Current); } catch { }
-        try { Sensors.Use("ovpreview", 0); } catch { }
+        try { OverlayCfg.Editing = false; OverlayCfg.Load(); OverlayCfg.UseGame(Games.Current); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { Sensors.Use("ovpreview", 0); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ---------- ігри: оверлей і обмеження кадрів для кожної ----------
@@ -1107,6 +1103,6 @@ sealed partial class SettingsForm
         }
         if (cbGenOv != null) Games.GenOv = cbGenOv.Checked;
         Games.Save();
-        try { GameWrap.SyncAll(); } catch { }
+        try { GameWrap.SyncAll(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 }

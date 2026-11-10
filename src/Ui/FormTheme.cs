@@ -63,7 +63,7 @@ static class FormTheme
             Win.DwmSetWindowAttribute(f.Handle, 36, ref txt, 4);
             Win.DwmSetWindowAttribute(f.Handle, 34, ref edge, 4);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static void Apply(Control root)
@@ -74,7 +74,7 @@ static class FormTheme
         foreach (Control c in root.Controls) Apply(c);
         // елементи, додані пізніше (рядки списків, сторінки), отримують той самий вигляд
         if (!(root is ButtonBase) && !(root is TextBoxBase) && !(root is Label))
-            root.ControlAdded += delegate (object s, ControlEventArgs e) { try { Apply(e.Control); } catch { } };
+            root.ControlAdded += delegate (object s, ControlEventArgs e) { try { Apply(e.Control); } catch (Exception skipEx) { SbLog.Skip(skipEx); } };
     }
 
     static void One(Control c)

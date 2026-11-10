@@ -45,8 +45,8 @@ static class WallCfg
         Fx = 1; TransMs = 1200;
         try
         {
-            if (!File.Exists(Path_)) return;
-            foreach (string raw in File.ReadAllLines(Path_, Encoding.UTF8))
+            if (!SafeFile.Exists(Path_)) return;
+            foreach (string raw in SafeFile.ReadLines(Path_))
             {
                 int eq = raw.IndexOf('=');
                 if (eq <= 0) continue;
@@ -69,7 +69,7 @@ static class WallCfg
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static void Save()
@@ -90,7 +90,7 @@ static class WallCfg
             sb.AppendLine("pausebattery=" + (PauseBattery ? 1 : 0));
             sb.AppendLine("fx=" + Fx);
             sb.AppendLine("transms=" + TransMs);
-            File.WriteAllText(Path_, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(Path_, sb.ToString(), new UTF8Encoding(true));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
@@ -121,7 +121,7 @@ static class WallOrig
             File.Copy(Image, Path.Combine(Prof.Root, name), true);
             Copy = name;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static string File_ { get { return Path.Combine(Prof.Root, "wallpaper-original.ini"); } }
@@ -134,8 +134,8 @@ static class WallOrig
         loaded = true;
         try
         {
-            if (!File.Exists(File_)) return;
-            foreach (string raw in File.ReadAllLines(File_, Encoding.UTF8))
+            if (!SafeFile.Exists(File_)) return;
+            foreach (string raw in SafeFile.ReadLines(File_))
             {
                 int eq = raw.IndexOf('=');
                 if (eq <= 0) continue;
@@ -147,14 +147,14 @@ static class WallOrig
                 else if (k == "copy") Copy = v;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static void Save()
     {
         try
         {
-            if (Image.Length == 0 && Set.Length == 0) { if (File.Exists(File_)) File.Delete(File_); return; }
+            if (Image.Length == 0 && Set.Length == 0) { SafeFile.Delete(File_); return; }
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(L.T("# NeoBar - шпалери Windows до NeoBar (щоб повернути)"));
             sb.AppendLine("image=" + Image);
@@ -162,14 +162,14 @@ static class WallOrig
             sb.AppendLine("tile=" + Tile);
             sb.AppendLine("set=" + Set);
             sb.AppendLine("copy=" + Copy);
-            File.WriteAllText(File_, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(File_, sb.ToString(), new UTF8Encoding(true));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
 
     public static void Clear()
     {
-        try { if (Copy.Length > 0 && File.Exists(CopyPath)) File.Delete(CopyPath); } catch { }
+        try { if (Copy.Length > 0 && File.Exists(CopyPath)) File.Delete(CopyPath); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Image = Style = Tile = Set = Copy = "";
         Save();
     }
@@ -193,7 +193,6 @@ static class WallEngine
     [StructLayout(LayoutKind.Sequential)] struct PROCESS_INFORMATION { public IntPtr hProcess, hThread; public int dwProcessId, dwThreadId; }
     [StructLayout(LayoutKind.Sequential)] struct COPYDATASTRUCT { public IntPtr dwData; public int cbData; public IntPtr lpData; }
 
-    [DllImport("user32.dll")] static extern IntPtr GetShellWindow();
     [DllImport("user32.dll")] static extern IntPtr SendMessageTimeout(IntPtr h, uint msg, IntPtr w, ref COPYDATASTRUCT l, uint flags, uint timeout, out IntPtr result);
     [DllImport("kernel32.dll", SetLastError = true)] static extern bool InitializeProcThreadAttributeList(IntPtr list, int count, int flags, ref IntPtr size);
     [DllImport("kernel32.dll", SetLastError = true)] static extern bool UpdateProcThreadAttribute(IntPtr list, uint flags, IntPtr attr, IntPtr value, IntPtr size, IntPtr prev, IntPtr ret);
@@ -219,7 +218,7 @@ static class WallEngine
             foreach (string l in File.ReadAllLines(StatusFile, Encoding.UTF8))
                 if (l.StartsWith(key + "=", StringComparison.Ordinal)) return l.Substring(key.Length + 1);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return "";
     }
 
@@ -282,7 +281,7 @@ static class WallEngine
             Error = L.T("Немає ") + DllName + L.T(" поруч із NeoBar.exe - розпакуйте архів повністю");
             return false;
         }
-        try { File.Delete(StatusFile); } catch { }
+        try { File.Delete(StatusFile); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         args = a;
         queue.Clear();
         string how;
@@ -328,7 +327,7 @@ static class WallEngine
         try
         {
             uint pid;
-            IntPtr shell = GetShellWindow();
+            IntPtr shell = Win.GetShellWindow();
             if (shell == IntPtr.Zero || Win.GetWindowThreadProcessId(shell, out pid) == 0 || pid == 0) return null;
             hp = Win.OpenProcess(0x0080, false, pid);                      // PROCESS_CREATE_PROCESS
             if (hp == IntPtr.Zero) return null;
@@ -423,7 +422,7 @@ static class WallEngine
         try
         {
             int mine = -1;
-            try { if (proc != null && !proc.HasExited) mine = proc.Id; } catch { }
+            try { if (proc != null && !proc.HasExited) mine = proc.Id; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             // чужий екземпляр знаходимо за його вікном команд; зупиняємо лише процес rundll32 або старий NeoBarWall*.exe
             IntPtr w = Window;
             if (w != IntPtr.Zero)
@@ -439,10 +438,10 @@ static class WallEngine
                             if (n == "rundll32" || n.StartsWith("neobarwall")) { p.Kill(); p.WaitForExit(1500); }
                         }
                     }
-                    catch { }
+                    catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static void Stop()
@@ -453,8 +452,8 @@ static class WallEngine
         if (w != IntPtr.Zero) Post(w, "quit");
         if (proc != null)
         {
-            try { if (!proc.WaitForExit(1500)) proc.Kill(); } catch { }
-            try { proc.Dispose(); } catch { }
+            try { if (!proc.WaitForExit(1500)) proc.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { proc.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             proc = null;
         }
         args = "";
@@ -488,7 +487,7 @@ static class WallEngine
                 if (!File.Exists(StatusFile)) return false;
                 foreach (string l in File.ReadAllLines(StatusFile, Encoding.UTF8)) if (l == "state=error") return true;
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return false;
         }
     }
@@ -542,7 +541,7 @@ static class WallMgr
         inited = true;
         tick.Interval = 1500;
         tick.Tick += delegate { try { Tick(); } catch (Exception ex) { Util.ErrorLog(ex); } };
-        SystemEvents.DisplaySettingsChanged += delegate { try { if (engine) WallEngine.Send("refresh"); } catch { } };
+        SystemEvents.DisplaySettingsChanged += delegate { try { if (engine) WallEngine.Send("refresh"); } catch (Exception skipEx) { SbLog.Skip(skipEx); } };
     }
 
     // застосувати поточні WallCfg (після запуску й після «Застосувати» в налаштуваннях)
@@ -585,7 +584,7 @@ static class WallMgr
             WallOrig.MakeCopy();
             WallOrig.Save();
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // шлях, який зараз записано як шпалери Windows (навіть якщо файлу вже немає)
@@ -596,7 +595,7 @@ static class WallMgr
             StringBuilder sb = new StringBuilder(520);
             if (Win.SystemParametersInfo(0x73, 520, sb, 0)) return sb.ToString();
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return "";
     }
 
@@ -642,7 +641,7 @@ static class WallMgr
             Win.SystemParametersInfoSet(0x14, 0, File.Exists(WallOrig.Image) ? WallOrig.Image : (WallOrig.Copy.Length > 0 && File.Exists(WallOrig.CopyPath) ? WallOrig.CopyPath : ""), 3);
             SbLog.W(SbLog.Panel, "шпалери: повернуто шпалери Windows " + Path.GetFileName(WallOrig.Image));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         WallOrig.Clear();
     }
 
@@ -701,7 +700,7 @@ static class WallMgr
                 foreach (string f in Directory.GetFiles(dir))
                     if (WallLib.Accepts(WallLib.Slideshow, f)) files.Add(f);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (files.Count == 0) { msg = L.T("У галереї слайд-шоу немає зображень - додайте їх"); return; }
         files.Sort(StringComparer.CurrentCultureIgnoreCase);
         if (!StartEngine())
@@ -842,6 +841,6 @@ static class WallMgr
                 if (pm != IntPtr.Zero) Win.RedrawWindow(pm, IntPtr.Zero, IntPtr.Zero, 0x1 | 0x4 | 0x80 | 0x100);     // INVALIDATE | ERASE | ALLCHILDREN | UPDATENOW
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 }

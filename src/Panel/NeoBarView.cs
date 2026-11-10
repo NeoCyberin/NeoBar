@@ -289,7 +289,7 @@ sealed partial class NeoBar
                 else if (Path.IsPathRooted(tgt) && !Util.SlowPath(tgt)) raw = IconCache.Load(tgt);     // програму видалено чи ще не встановлено: справжня іконка з кешу
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (raw == null)
         {
             raw = IconFactory.Make(T, null, e.Name, sl);
@@ -307,7 +307,7 @@ sealed partial class NeoBar
             string lt = IconHi.LinkTarget(lnk);
             if (!string.IsNullOrEmpty(lt) && Path.IsPathRooted(lt) && !Util.SlowPath(lt) && !File.Exists(lt) && !Directory.Exists(lt)) return IconCache.Load(lnk);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return null;
     }
 
@@ -919,7 +919,7 @@ sealed partial class NeoBar
             if (sp.Y < sb.Top + 4) y += sb.Top + 4 - sp.Y;
             else if (sp.Y + sz.Height > sb.Bottom - 4) y -= sp.Y + sz.Height - (sb.Bottom - 4);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         tip.Show(text, this, x, y, 5000);
     }
 

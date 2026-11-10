@@ -67,7 +67,7 @@ static class Backdrop
                         DrawWall(g, im, mon.Size, style);
                     }
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
         }
         if (!blur) return small;

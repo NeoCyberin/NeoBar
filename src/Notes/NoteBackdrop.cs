@@ -376,18 +376,14 @@ sealed class ThemeDialog : Form
 
     void Pick(int which)
     {
-        using (ColorDialog cd = new ColorDialog())
-        {
-            cd.FullOpen = true;
-            cd.Color = which == 0 ? t.Header : which == 1 ? t.Body : which == 2 ? t.Fg : Util.Opaque(t.Border);
-            if (cd.ShowDialog(this) != DialogResult.OK) return;
-            if (which == 0) t.Header = cd.Color;
-            else if (which == 1) t.Body = cd.Color;
-            else if (which == 2) t.Fg = cd.Color;
-            else t.Border = cd.Color;
-            Sync();
-            Notes.ThemeChanged(t);
-        }
+        Color nc;
+        if (!ColorPick.Ask(this, which == 0 ? t.Header : which == 1 ? t.Body : which == 2 ? t.Fg : Util.Opaque(t.Border), out nc)) return;
+        if (which == 0) t.Header = nc;
+        else if (which == 1) t.Body = nc;
+        else if (which == 2) t.Fg = nc;
+        else t.Border = nc;
+        Sync();
+        Notes.ThemeChanged(t);
     }
 
     // власні шрифти NeoBar (з прикладом написання) + "інший шрифт" зі списку Windows
@@ -400,7 +396,7 @@ sealed class ThemeDialog : Form
             string name = nm;
             ToolStripMenuItem it = new ToolStripMenuItem(name + L.T("   Привіт, Київ! Abc 123"));
             it.Checked = string.Equals(cur, name, StringComparison.OrdinalIgnoreCase);
-            try { FontFamily ff = SBFonts.Family(name); if (ff != null) it.Font = new Font(ff, 12f, FontStyle.Regular, GraphicsUnit.Point); } catch { }
+            try { FontFamily ff = SBFonts.Family(name); if (ff != null) it.Font = new Font(ff, 12f, FontStyle.Regular, GraphicsUnit.Point); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             it.Click += delegate
             {
                 t.FontName = name + "|Segoe UI";
@@ -412,16 +408,13 @@ sealed class ThemeDialog : Form
         m.Items.Add(new ToolStripSeparator());
         m.Items.Add(L.T("Інший шрифт Windows…"), null, delegate
         {
-            using (FontDialog fd = new FontDialog())
-            {
-                try { fd.Font = new Font(cur, t.FontSize); } catch { }
-                fd.ShowEffects = false;
-                if (fd.ShowDialog(this) != DialogResult.OK) return;
-                t.FontName = fd.Font.Name;
-                t.FontSize = fd.Font.SizeInPoints;
-                Sync();
-                Notes.ThemeChanged(t);
-            }
+            string face = cur;
+            float sz = t.FontSize;
+            if (!FontPick.Ask(this, ref face, ref sz)) return;
+            t.FontName = face;
+            t.FontSize = sz;
+            Sync();
+            Notes.ThemeChanged(t);
         });
         m.Closed += delegate { BeginInvoke(new Action(m.Dispose)); };
         m.Show(bFont, new Point(0, bFont.Height));

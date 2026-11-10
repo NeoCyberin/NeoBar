@@ -288,10 +288,10 @@ static class Fps
             ControlTrace(session, Session, p, 1);
             Marshal.FreeHGlobal(p);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (running) Log(L.T("ETW зупинено, кадрів: ") + Events);
-        try { if (logBuf != IntPtr.Zero) { Marshal.FreeHGlobal(logBuf); logBuf = IntPtr.Zero; } } catch { }
-        try { if (loggerNamePtr != IntPtr.Zero) { Marshal.FreeHGlobal(loggerNamePtr); loggerNamePtr = IntPtr.Zero; } } catch { }
+        try { if (logBuf != IntPtr.Zero) { Marshal.FreeHGlobal(logBuf); logBuf = IntPtr.Zero; } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { if (loggerNamePtr != IntPtr.Zero) { Marshal.FreeHGlobal(loggerNamePtr); loggerNamePtr = IntPtr.Zero; } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         trace = 0; session = 0;
         running = false;
     }
@@ -326,7 +326,7 @@ static class Fps
                 t.Add(ts);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static readonly long[] guidCache = new long[6];
@@ -458,7 +458,7 @@ static class Fps
                     else if (n == "opengl32.dll") gl = true;
                 }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         string api = "";
         if (src == SrcD3d9) api = "DirectX 9";
         else if (src == SrcDxgi) api = d3d12 ? "DirectX 12" : (d3d11 ? "DirectX 11" : (d3d10 ? "DirectX 10" : "DirectX"));

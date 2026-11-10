@@ -514,7 +514,7 @@ sealed class SeasonFx : LayeredForm
     public static void Start(NeoBar bar, string theme)
     {
         if (bar == null || NeoBar.Paused) return;
-        try { Chime.PlayFx(theme, 60); } catch { }
+        try { Chime.PlayFx(theme, 60); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (!bar.Config.Anim) return;
         try
         {
@@ -538,7 +538,7 @@ sealed class SeasonFx : LayeredForm
         else if (theme == "easter") scene = new EasterScene(area.Width, area.Height, bar.Dpi, seed);
         else scene = new BirthdayScene(area.Width, area.Height, bar.Dpi, seed);
         timer.Interval = 33;
-        timer.Tick += delegate { try { Step(); } catch (Exception ex) { Util.ErrorLog(ex); try { Close(); } catch { } } };
+        timer.Tick += delegate { try { Step(); } catch (Exception ex) { Util.ErrorLog(ex); try { Close(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } } };
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)

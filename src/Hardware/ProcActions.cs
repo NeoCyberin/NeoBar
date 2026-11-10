@@ -29,23 +29,10 @@ sealed class KillPlan
 
 static class ProcAct
 {
-    [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
-    [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
     [DllImport("kernel32.dll")] static extern bool TerminateProcess(IntPtr h, uint code);
-    [DllImport("kernel32.dll")] static extern uint WaitForSingleObject(IntPtr h, uint ms);
-    [DllImport("ntdll.dll")] static extern int NtQueryInformationProcess(IntPtr h, int cls, out int val, int len, out int ret);
-    [DllImport("advapi32.dll", SetLastError = true)] static extern bool OpenProcessToken(IntPtr p, uint access, out IntPtr tok);
     [DllImport("advapi32.dll", SetLastError = true)] static extern bool GetTokenInformation(IntPtr tok, int cls, out int val, int len, out int ret);
-    [DllImport("user32.dll")] static extern bool PostMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
-    delegate bool EnumProc(IntPtr h, IntPtr l);
-    [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc cb, IntPtr l);
-    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
-    [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr h, uint cmd);
-    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
-    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern IntPtr OpenSCManager(string machine, string db, uint access);
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern IntPtr OpenService(IntPtr scm, string name, uint access);
     [DllImport("advapi32.dll", SetLastError = true)] static extern bool EnumDependentServices(IntPtr svc, uint state, IntPtr buf, int size, out int need, out int count);
-    [DllImport("advapi32.dll")] static extern bool CloseServiceHandle(IntPtr h);
 
     // без цих процесів Windows зупиняється (синій екран) або втрачає вхід у систему
     static readonly string[] Critical = { "system", "registry", "secure system", "memory compression", "smss.exe", "csrss.exe", "wininit.exe", "winlogon.exe", "services.exe", "lsass.exe", "lsaiso.exe", "lsm.exe" };
@@ -58,26 +45,26 @@ static class ProcAct
     {
         try
         {
-            IntPtr h = OpenProcess(0x1000, false, (uint)pid);
+            IntPtr h = Win.OpenProcess(0x1000, false, (uint)pid);
             if (h == IntPtr.Zero) return false;
-            try { int v, r; return NtQueryInformationProcess(h, 29, out v, 4, out r) == 0 && v != 0; }     // ProcessBreakOnTermination
-            finally { CloseHandle(h); }
+            try { int v, r; return Win.NtQueryInformationProcess(h, 29, out v, 4, out r) == 0 && v != 0; }     // ProcessBreakOnTermination
+            finally { Win.CloseHandle(h); }
         }
         catch { return false; }
     }
 
     public static bool IsElevated(int pid)
     {
-        IntPtr h = OpenProcess(0x1000, false, (uint)pid);
+        IntPtr h = Win.OpenProcess(0x1000, false, (uint)pid);
         if (h == IntPtr.Zero) return true;              // не відкривається - вважаємо, що з підвищеними правами
         IntPtr tok;
         try
         {
-            if (!OpenProcessToken(h, 0x0008, out tok)) return true;
+            if (!Win.OpenProcessToken(h, 0x0008, out tok)) return true;
             try { int v, r; return GetTokenInformation(tok, 20, out v, 4, out r) && v != 0; }     // TokenElevation
-            finally { CloseHandle(tok); }
+            finally { Win.CloseHandle(tok); }
         }
-        finally { CloseHandle(h); }
+        finally { Win.CloseHandle(h); }
     }
 
     // чому процес не можна завершувати (або "")
@@ -141,7 +128,7 @@ static class ProcAct
     public static List<string> DependentsOf(string name)
     {
         List<string> r = new List<string>();
-        IntPtr scm = OpenSCManager(null, null, 0x0001);
+        IntPtr scm = Win.OpenSCManager(null, null, 0x0001);
         if (scm == IntPtr.Zero) return r;
         IntPtr s = OpenService(scm, name, 0x0008);              // SERVICE_ENUMERATE_DEPENDENTS
         IntPtr b = IntPtr.Zero;
@@ -166,8 +153,8 @@ static class ProcAct
         finally
         {
             if (b != IntPtr.Zero) Marshal.FreeHGlobal(b);
-            if (s != IntPtr.Zero) CloseServiceHandle(s);
-            CloseServiceHandle(scm);
+            if (s != IntPtr.Zero) Win.CloseServiceHandle(s);
+            Win.CloseServiceHandle(scm);
         }
         return r;
     }
@@ -183,33 +170,33 @@ static class ProcAct
     static bool Kill(int pid, int waitMs, out string err)
     {
         err = "";
-        IntPtr h = OpenProcess(0x0001 | 0x00100000, false, (uint)pid);       // TERMINATE | SYNCHRONIZE
+        IntPtr h = Win.OpenProcess(0x0001 | 0x00100000, false, (uint)pid);       // TERMINATE | SYNCHRONIZE
         if (h == IntPtr.Zero) { err = Marshal.GetLastWin32Error() == 5 ? L.T("немає доступу") : L.T("не відкривається"); return false; }
         try
         {
             if (!TerminateProcess(h, 1)) { err = L.T("немає доступу (захищений процес)"); return false; }
-            return WaitForSingleObject(h, (uint)waitMs) == 0;
+            return Win.WaitForSingleObject(h, (uint)waitMs) == 0;
         }
-        finally { CloseHandle(h); }
+        finally { Win.CloseHandle(h); }
     }
 
     // спершу ввічливо: закрити вікна програми, як хрестиком
     static bool CloseNicely(int pid, int waitMs)
     {
         List<IntPtr> wins = new List<IntPtr>();
-        EnumWindows(delegate (IntPtr w, IntPtr l)
+        Win.EnumWindows(delegate (IntPtr w, IntPtr l)
         {
             uint p;
-            GetWindowThreadProcessId(w, out p);
-            if (p == pid && IsWindowVisible(w) && GetWindow(w, 4) == IntPtr.Zero) wins.Add(w);
+            Win.GetWindowThreadProcessId(w, out p);
+            if (p == pid && Win.IsWindowVisible(w) && Win.GetWindow(w, 4) == IntPtr.Zero) wins.Add(w);
             return true;
         }, IntPtr.Zero);
         if (wins.Count == 0) return false;
-        foreach (IntPtr w in wins) PostMessage(w, 0x0010, IntPtr.Zero, IntPtr.Zero);         // WM_CLOSE
-        IntPtr h = OpenProcess(0x00100000, false, (uint)pid);
+        foreach (IntPtr w in wins) Win.PostMessage(w, 0x0010, IntPtr.Zero, IntPtr.Zero);         // WM_CLOSE
+        IntPtr h = Win.OpenProcess(0x00100000, false, (uint)pid);
         if (h == IntPtr.Zero) return false;
-        try { return WaitForSingleObject(h, (uint)waitMs) == 0; }
-        finally { CloseHandle(h); }
+        try { return Win.WaitForSingleObject(h, (uint)waitMs) == 0; }
+        finally { Win.CloseHandle(h); }
     }
 
     static string Net { get { return Path.Combine(Environment.SystemDirectory, "net.exe"); } }
@@ -308,7 +295,7 @@ static class ProcAct
         foreach (Process p in Process.GetProcessesByName(name))
         {
             try { if (p.StartTime.ToUniversalTime() >= after.AddSeconds(-1)) return true; }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             finally { p.Dispose(); }
         }
         return false;

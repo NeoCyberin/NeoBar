@@ -3373,9 +3373,6 @@
 < Зайняті й пропущені: 
 > In use and skipped: 
 
-< Реєстр
-> Registry
-
 < Видалити вибране сміття (
 > Delete selected junk (
 
@@ -3397,266 +3394,14 @@
 < Системні компоненти Windows (оновлення, WinSxS) не чіпаються - для безпеки. Зайняті файли й кеш відкритих програм пропускаються. Реєстр - на вкладці «Реєстр».
 > Windows system components (updates, WinSxS) are not touched - for safety. Files in use and the cache of open programs are skipped. Registry is on the «Registry» tab.
 
-< Залишки видалених програм
-> Leftovers of uninstalled programs
-
-< Записи в «Програми та засоби» для програм, файлів яких уже немає
-> Entries in «Programs and Features» for programs whose files are gone
-
-< Де: розділ Uninstall у HKLM і HKCU. Критерій: немає ні папки програми, ні програми видалення, ні значка. Записи Windows Installer (MSI) і системні не чіпаються.
-> Where: the Uninstall key in HKLM and HKCU. Criterion: no program folder, no uninstaller and no icon. Windows Installer (MSI) and system entries are not touched.
-
-< Налаштування видалених програм
-> Settings of uninstalled programs
-
-< Розділи Software\\виробник\\програма, де папки встановлення вже немає
-> Software\\vendor\\program keys whose install folder is gone
-
-< Обережніше: зникнуть і налаштування програм. Вимкнено за замовчуванням
-> Careful: the programs' settings will disappear too. Off by default
-
-< Де: HKCU\\Software і HKLM\\SOFTWARE (розділ виробника та програми). Критерій: у розділі є значення з папкою встановлення (InstallDir, Path тощо), її точно немає, і жоден інший шлях у розділі не існує. Розділи Microsoft, Classes і Policies не чіпаються. Якщо плануєте встановити програму знову й хочете зберегти її налаштування - не вмикайте.
-> Where: HKCU\\Software and HKLM\\SOFTWARE (vendor and program key). Criterion: the key has a value with the install folder (InstallDir, Path etc.), that folder definitely does not exist, and no other path in the key exists. Microsoft, Classes and Policies keys are not touched. If you plan to install the program again and want to keep its settings - do not enable this.
-
-< Застарілі шляхи програм
-> Obsolete program paths
-
-< Записи «App Paths» на програми, яких уже немає на диску
-> «App Paths» entries for programs no longer on disk
-
-< Де: App Paths у HKLM і HKCU. Критерій: файла, на який веде запис, точно немає.
-> Where: App Paths in HKLM and HKCU. Criterion: the file the entry points to definitely does not exist.
-
-< Спільні бібліотеки
-> Shared libraries
-
-< Лічильники спільних DLL, яких уже немає на диску
-> Counters of shared DLLs that are no longer on disk
-
-< Де: SharedDLLs у HKLM. Критерій: файла бібліотеки точно немає. Видаляється лише лічильник, не файл.
-> Where: SharedDLLs in HKLM. Criterion: the library file definitely does not exist. Only the counter is deleted, not the file.
-
-< Кеш назв програм
-> Program name cache
-
-< Назви вже видалених програм, які Windows запам'ятала для своїх списків
-> Names of already uninstalled programs that Windows remembered for its lists
-
-< Де: MUICache у HKCU. Критерій: програми, чию назву запам'ятала Windows, точно немає.
-> Where: MUICache in HKCU. Criterion: the program whose name Windows remembered definitely does not exist.
-
-< Зламаний автозапуск
-> Broken autostart
-
-< Пункти автозапуску, чиї програми видалені: Windows шукає їх при кожному вході
-> Autostart entries whose programs were uninstalled: Windows looks for them at every sign-in
-
-< Де: Run у HKLM і HKCU. Критерій: програми автозапуску точно немає на диску.
-> Where: Run in HKLM and HKCU. Criterion: the autostart program is definitely not on disk.
-
-< Застарілі «Відкрити за допомогою»
-> Obsolete «Open with»
-
-< Програми зі списку «Відкрити за допомогою», яких уже немає на диску
-> Programs from the «Open with» list that are no longer on disk
-
-< Де: Software\\Classes\\Applications у HKCU і HKLM. Критерій: усі програми в командах запису точно відсутні.
-> Where: Software\\Classes\\Applications in HKCU and HKLM. Criterion: all programs in the entry's commands are definitely missing.
-
-< Зайві «Програми за замовчуванням»
-> Extra «Default apps»
-
-< Програми, що лишились у списку «Програми за замовчуванням», хоча їхніх параметрів у реєстрі вже немає
-> Programs left in the «Default apps» list although their settings are no longer in the registry
-
-< Де: RegisteredApplications у HKLM і HKCU. Критерій: розділу з можливостями програми, на який веде запис, немає в реєстрі (в обох виглядах реєстру).
-> Where: RegisteredApplications in HKLM and HKCU. Criterion: the program capabilities key the entry points to is not in the registry (in both registry views).
-
-< Сліди шпалер
-> Wallpaper traces
-
-< Історія робочого столу: шпалери, чиїх файлів уже немає (поточні шпалери не чіпаються)
-> Desktop history: wallpapers whose files are gone (current wallpapers are not touched)
-
-< Де: Explorer\\Wallpapers у HKCU (BackgroundHistoryPath). Критерій: файла шпалер точно немає. Поточні шпалери не чіпаються.
-> Where: Explorer\\Wallpapers in HKCU (BackgroundHistoryPath). Criterion: the wallpaper file definitely does not exist. Current wallpapers are not touched.
-
-< Сліди запуску програм
-> Program launch traces
-
-< Режими сумісності й лічильник запусків програм, яких уже немає на диску
-> Compatibility modes and launch counters of programs no longer on disk
-
-< Де: AppCompatFlags (режими сумісності та помічник сумісності) і UserAssist (лічильник запусків у меню «Пуск»). Критерій: програми, про яку запис, точно немає.
-> Where: AppCompatFlags (compatibility modes and compatibility assistant) and UserAssist (launch counter in the Start menu). Criterion: the program the entry is about definitely does not exist.
-
-< Застарілі COM-компоненти
-> Obsolete COM components
-
-< Реєстрації компонентів, чиї файли точно відсутні (не в папці Windows)
-> Registrations of components whose files are definitely missing (not in the Windows folder)
-
-< Обережніше: лише ті, чий файл точно відсутній. Вимкнено за замовчуванням
-> Careful: only those whose file is definitely missing. Off by default
-
-< Де: CLSID у HKLM і HKCU. Критерій: файли InprocServer32 і LocalServer32 точно відсутні; компоненти з TreatAs і Windows не чіпаються.
-> Where: CLSID in HKLM and HKCU. Criterion: InprocServer32 and LocalServer32 files are definitely missing; components with TreatAs and Windows components are not touched.
-
-< Застарілі бібліотеки типів
-> Obsolete type libraries
-
-< Описи інтерфейсів COM, чиї файли точно відсутні
-> COM interface descriptions whose files are definitely missing
-
-< Обережніше: рідко дає користь. Вимкнено за замовчуванням
-> Careful: rarely useful. Off by default
-
-< Де: TypeLib у HKLM і HKCU. Критерій: файли бібліотек типів точно відсутні.
-> Where: TypeLib in HKLM and HKCU. Criterion: the type library files are definitely missing.
-
-< Історія «Виконати» й адресного рядка
-> «Run» and address bar history
-
-< Не помилка, а слід користування: що вводили у Win+R та адресний рядок Провідника
-> Not an error but a usage trace: what was typed into Win+R and the Explorer address bar
-
-< Де: RunMRU і TypedPaths у HKCU. Видаляються всі записи цієї історії.
-> Where: RunMRU and TypedPaths in HKCU. All entries of this history are deleted.
-
-<  (32-бітний вигляд)
->  (32-bit view)
-
-< Чого немає на диску: 
-> Missing on disk: 
-
-< \n\nБуде видалено з реєстру:\n
-> \n\nWill be deleted from the registry:\n
-
-< розділ 
-> key 
-
-<  разом з усіма підрозділами
->  with all subkeys
-
-< усі значення розділу 
-> all values of the key 
-
-< запис лічильника запусків цієї програми в розділі 
-> launch counter entry of this program in the key 
-
-< значення 
-> value 
-
-< значення (
-> values (
-
-< (за замовчуванням)
-> (default)
-
-<  і ще 
->  and 
-
-< \nу розділі 
-> \nin the key 
-
-< \n\nПеред видаленням запис буде збережено в резервну копію.
-> \n\nThe entry will be saved to a backup before deletion.
-
 < (без назви)
 > (unnamed)
-
-< Історія вікна «Виконати» (Win+R)
-> «Run» window history (Win+R)
-
-< Адреси, введені в адресний рядок Провідника
-> Addresses typed into the Explorer address bar
-
-< записів: 
-> entries: 
-
-< немає розділу 
-> no key 
-
-< історія шпалер
-> wallpaper history
-
-< помічник сумісності
-> compatibility assistant
-
-< режим сумісності
-> compatibility mode
-
-< режим сумісності (для всіх користувачів)
-> compatibility mode (for all users)
-
-< лічильник запусків
-> launch counter
-
-< Перевірка: 
-> Checking: 
-
-< Пропущено: знайдено підозріло багато (
-> Skipped: suspiciously many found (
-
-<  із 
->  of 
-
-< ) - схоже на збій перевірки, нічого не чіпаємо
-> ) - looks like a check failure, nothing is touched
-
-< |недопустимий запис
-> |invalid entry
-
-< |уже змінився
-> |already changed
-
-< |немає доступу до реєстру
-> |no access to the registry
-
-< |немає доступу
-> |no access
-
-< |недопустимий шлях
-> |invalid path
-
-< |не вдалося створити ключ
-> |could not create the key
-
-< |невідомий тип значення
-> |unknown value type
 
 < Файл завдання змінено після створення - нічого не виконано.
 > The task file was changed after it was created - nothing was done.
 
-< Невідомий режим.
-> Unknown mode.
-
 < Помічник не відповів.
 > The helper did not respond.
-
-< Нічого виправляти: записи вже змінилися або їх не вдалося безпечно зберегти.
-> Nothing to fix: the entries have already changed or could not be safely backed up.
-
-< порожній файл копії
-> empty backup file
-
-< Не вдалося зберегти резервну копію, тож нічого не змінено: 
-> Could not save the backup, so nothing was changed: 
-
-< Не вдалося прочитати копію: 
-> Could not read the backup: 
-
-< Невідомий формат копії.
-> Unknown backup format.
-
-< Виправлення (резервна копія вже збережена)
-> Fixing (the backup is already saved)
-
-< Реєстр ще не перевірено
-> Registry not scanned yet
-
-< Знайдено проблем (вибране)
-> Problems found (selected)
 
 < Сканувати знову
 > Scan again
@@ -3664,62 +3409,8 @@
 < Сканувати
 > Scan
 
-< …ще 
-> …and 
-
-<  (вони теж будуть виправлені, якщо категорія ввімкнена)
->  more (they will be fixed too if the category is enabled)
-
-< Відновити з копії
-> Restore from backup
-
-< Тека копій
-> Backups folder
-
-< Остання копія: 
-> Last backup: 
-
-< Резервних копій ще немає.
-> No backups yet.
-
-< Сканування лише читає реєстр. Запис вважається сміттям, лише коли всі його файли точно відсутні; перед змінами все зберігається в копію.
-> Scanning only reads the registry. An entry counts as junk only when all its files are definitely missing; everything is backed up before changes.
-
-< Виправити записів у реєстрі: 
-> Fix registry entries: 
-
-< \n\nПеред змінами всі ці записи зберігаються в резервну копію - її можна відновити кнопкою «Відновити з копії».
-> \n\nBefore changes, all these entries are saved to a backup - it can be restored with the «Restore from backup» button.
-
-< \nДля записів, спільних для всіх користувачів, Windows попросить дозвіл адміністратора.
-> \nFor entries shared by all users, Windows will ask for administrator permission.
-
-< Прибрано записів: 
-> Entries removed: 
-
-< , пропущено: 
-> , skipped: 
-
-<  (вже змінилися, зайняті або їх не вдалося безпечно зберегти)
->  (already changed, in use or could not be safely backed up)
-
-< . Копія: 
-> . Backup: 
-
-< Повернути в реєстр записи з копії 
-> Restore the entries from backup 
-
-<  (розділів: 
->  to the registry (keys: 
-
-< )?\n\nПрава доступу до розділів (ACL) не відновлюються - вони й не змінювалися програмою.
-> )?\n\nKey access permissions (ACL) are not restored - the program did not change them either.
-
 < Відновити
 > Restore
-
-< Відновлено розділів: 
-> Keys restored: 
 
 < немає відповіді за 
 > no response within 
@@ -7561,9 +7252,6 @@
 < Системні елементи
 > System items
 
-< Швидкий доступ до Цей ПК, Кошика, особистої папки та інших місць Windows.
-> Quick access to This PC, Recycle Bin, home folder and other Windows places.
-
 < Ярлики з робочого столу
 > Desktop shortcuts
 
@@ -8116,8 +7804,8 @@
 < Імпорт
 > Import
 
-< Замінює налаштування профілю; стара копія лишається як neobar.ini.bak
-> Replaces the profile settings; the old copy stays as neobar.ini.bak
+< Замінює налаштування профілю; стара копія лишається як neobar.ini.old
+> Replaces the profile settings; the old copy stays as neobar.ini.old
 
 < Імпортувати…
 > Import…
@@ -8128,8 +7816,8 @@
 < Скинути до початкових
 > Reset to defaults
 
-< Усі налаштування й елементи профілю - як після встановлення (копія - neobar.ini.bak)
-> All profile settings and items - as after installation (copy - neobar.ini.bak)
+< Усі налаштування й елементи профілю - як після встановлення (копія - neobar.ini.old)
+> All profile settings and items - as after installation (copy - neobar.ini.old)
 
 < Скинути…
 > Reset…
@@ -8227,8 +7915,8 @@
 < Імпорт налаштувань
 > Import settings
 
-< Замінити налаштування профілю імпортованими?\nСтара копія збережеться як neobar.ini.bak.
-> Replace the profile settings with the imported ones?\nThe old copy will be saved as neobar.ini.bak.
+< Замінити налаштування профілю імпортованими?\nСтара копія збережеться як neobar.ini.old.
+> Replace the profile settings with the imported ones?\nThe old copy will be saved as neobar.ini.old.
 
 < Замінити
 > Replace
@@ -8242,8 +7930,8 @@
 < Скинути налаштування
 > Reset settings
 
-< Скинути всі налаштування й елементи профілю до початкових?\nСтара копія збережеться як neobar.ini.bak.
-> Reset all profile settings and items to defaults?\nThe old copy will be saved as neobar.ini.bak.
+< Скинути всі налаштування й елементи профілю до початкових?\nСтара копія збережеться як neobar.ini.old.
+> Reset all profile settings and items to defaults?\nThe old copy will be saved as neobar.ini.old.
 
 < Налаштування скинуто.
 > Settings reset.
@@ -10183,9 +9871,6 @@
 < Другий екземпляр «{0}»: у Windows він один - підроблені копії часто видають себе за нього.
 > A second instance of “{0}”: Windows has only one, and fake copies often pose as it.
 
-< Запущено з «{0}»: документ чи PDF запускає командний рядок або скрипт - типова ознака шкідливого макросу.
-> Started from “{0}”: a document or PDF launches a command line or script, a typical sign of a malicious macro.
-
 < Процесів: {0} · потоків: {1}
 > Processes: {0} · threads: {1}
 
@@ -10617,3 +10302,60 @@
 
 < Шифр
 > Crypto
+
+< Enter - копіювати результат
+> Enter - copy the result
+
+< Було - клацніть, щоб повернути
+> Before - click to restore
+
+< Вибрати
+> Select
+
+< Зберегти нотатку у файл…
+> Save note to a file…
+
+< Зразок тексту
+> Sample text
+
+< Не вдалося захистити теку програми: {0}
+> Could not protect the program folder: {0}
+
+< Не вдалося зберегти нотатку: {0}
+> Could not save the note: {0}
+
+< Не вдалося повернути права теки програми: {0}
+> Could not restore the program folder permissions: {0}
+
+< Не вдалося поставити запускач у Program Files: {0}
+> Could not install the launcher in Program Files: {0}
+
+< Нотатка
+> Note
+
+< Пошук шрифту
+> Search fonts
+
+< Піпетка: колір з будь-якого місця екрана
+> Eyedropper: a color from anywhere on the screen
+
+< Режим не ввімкнено: тека програми не підтримує права доступу (наприклад, флешка FAT) або їх не вдалося змінити.
+> The mode was not turned on: the program folder does not support access permissions (for example, a FAT USB stick) or they could not be changed.
+
+< Тека програми захищена від підміни: змінювати файли NeoBar тепер може лише адміністратор.
+> The program folder is protected against tampering: only an administrator can now change NeoBar's files.
+
+< Текст (*.txt)|*.txt|Текст із форматуванням (*.rtf)|*.rtf
+> Text (*.txt)|*.txt|Formatted text (*.rtf)|*.rtf
+
+< нова версія не має цифрового підпису
+> the new version has no digital signature
+
+< нову версію підписано іншим сертифікатом
+> the new version is signed with a different certificate
+
+< цифровий підпис нової версії пошкоджено
+> the digital signature of the new version is damaged
+
+< щомісяця {0}-го
+> monthly on day {0}

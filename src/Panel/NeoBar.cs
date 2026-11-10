@@ -297,7 +297,7 @@ sealed partial class NeoBar : Form
         base.OnShown(e);
         DropFiles.Register(this);          // повторно: після показу вікна стиль приймання файлів має стояти
         DropBridge.InitRemote(FromShellMenu);   // контекстне меню файлів відкриває файли в розкритих вікнах панелі
-        Trim();
+        Trim(true);
         AfterShown();
         Seasons.Start(this);
         Dice.Changed += DiceRedraw;
@@ -314,11 +314,12 @@ sealed partial class NeoBar : Form
         Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnPrefChanged;
         Dice.Changed -= DiceRedraw;
         anim.Stop(); poll.Stop(); wtick.Stop();
-        try { Win.UnregisterHotKey(Handle, 1); } catch { }
-        try { if (searchHk != null) searchHk.Dispose(); } catch { }
-        try { Notes.Shutdown(); } catch { }
-        try { OverlayModule.Shutdown(); Fps.Stop(); } catch { }
-        try { WallMgr.Shutdown(); } catch { }
+        UnhookForeground();
+        try { Win.UnregisterHotKey(Handle, 1); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { if (searchHk != null) searchHk.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { Notes.Shutdown(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { OverlayModule.Shutdown(); Fps.Stop(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { WallMgr.Shutdown(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (backdrop != null) backdrop.Dispose();
         RemoveBar();
         AppBarQ.Flush(1500);
@@ -445,16 +446,60 @@ sealed partial class NeoBar : Form
         Invalidate();
     }
 
+    // автоприховання стежить за мишею (150 мс); без нього лише повноекранні програми - рідко (2 с),
+    // а зміну активного вікна повідомляє сама Windows (подія, без опитування)
     void UpdatePoll()
     {
+        poll.Interval = autohide ? 150 : 2000;
         if (autohide || cfg.FsHide) poll.Start(); else poll.Stop();
+        if (cfg.FsHide) HookForeground(); else UnhookForeground();
+    }
+
+    delegate void WinEventProc(IntPtr hook, uint ev, IntPtr hwnd, int obj, int child, uint thread, uint time);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid, uint tid, uint flags);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
+    IntPtr fgHook;
+    WinEventProc fgProc;                      // посилання тримаємо, щоб збирач сміття не прибрав делегат
+    System.Windows.Forms.Timer fgRecheck;
+
+    void HookForeground()
+    {
+        if (fgHook != IntPtr.Zero) return;
+        fgProc = delegate { OnForegroundChanged(); };
+        fgHook = SetWinEventHook(0x0003, 0x0003, IntPtr.Zero, fgProc, 0, 0, 0x0000 | 0x0002);   // EVENT_SYSTEM_FOREGROUND, OUTOFCONTEXT | SKIPOWNPROCESS
+    }
+
+    void UnhookForeground()
+    {
+        if (fgHook == IntPtr.Zero) return;
+        UnhookWinEvent(fgHook);
+        fgHook = IntPtr.Zero;
+        fgProc = null;
+    }
+
+    void OnForegroundChanged()
+    {
+        if (!IsHandleCreated || IsDisposed) return;
+        CheckFullscreen();
+        // «можливо повноекранне» підтверджує друга перевірка - за 0,4 с, а не на наступному тику
+        if (fsHits == 1)
+        {
+            if (fgRecheck == null)
+            {
+                fgRecheck = new System.Windows.Forms.Timer();
+                fgRecheck.Interval = 400;
+                fgRecheck.Tick += delegate { fgRecheck.Stop(); if (fsHits == 1) CheckFullscreen(); };
+            }
+            fgRecheck.Stop();
+            fgRecheck.Start();
+        }
     }
 
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
         // панель від адміністратора має отримати повідомлення й від звичайної копії (інакше UIPI його відкине)
-        try { if (runMsg != 0) Win.ChangeWindowMessageFilterEx(Handle, runMsg, 1, IntPtr.Zero); } catch { }
+        try { if (runMsg != 0) Win.ChangeWindowMessageFilterEx(Handle, runMsg, 1, IntPtr.Zero); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         DropFiles.Register(this);
     }
 
@@ -476,7 +521,7 @@ sealed partial class NeoBar : Form
                     if (autohide) SetExpanded(true);
                     ShowTipText(L.T("NeoBar уже запущено - друга копія не відкривається"), TbRect(0));
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }));
             return;
         }
@@ -487,7 +532,7 @@ sealed partial class NeoBar : Form
         {
             registered = false;
             shapeKey = null;
-            BeginInvoke(new Action(delegate { DropBackdrop(); ApplyMode(true); try { WallMgr.Restart(); } catch { } }));
+            BeginInvoke(new Action(delegate { DropBackdrop(); ApplyMode(true); try { WallMgr.Restart(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }));
         }
         if (m.Msg == (int)cbMsg)
         {
@@ -600,7 +645,7 @@ sealed partial class NeoBar : Form
                 else if (++leave >= 3) { leave = 0; SetExpanded(false); }
             }
         }
-        if (pollN % 5 == 0 && (cfg.FsHide || suspended)) CheckFullscreen();
+        if ((!autohide || pollN % 13 == 0) && (cfg.FsHide || suspended)) CheckFullscreen();
     }
 
     int fsHits;
@@ -641,7 +686,7 @@ sealed partial class NeoBar : Form
                 pausedForms.Clear();
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // Під час повноекранного режиму панель ховається, а таймери й анімації зупиняються
@@ -705,12 +750,16 @@ sealed partial class NeoBar : Form
         if (!busy) anim.Stop();
     }
 
-    static void Trim()
+    // прибрати сміття після великої разової роботи (запуск, закрите вікно налаштувань, нова тема);
+    // робочий набір обрізаємо лише після запуску: інакше сторінки однаково довантажуються назад
+    static void Trim() { Trim(false); }
+
+    static void Trim(bool workingSet)
     {
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
-        try { Win.SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, (IntPtr)(-1), (IntPtr)(-1)); } catch { }
+        if (workingSet) try { Win.SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, (IntPtr)(-1), (IntPtr)(-1)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // види віджетів, чиї дані потрібні: на панелі і на робочому столі
@@ -780,7 +829,7 @@ sealed partial class NeoBar : Form
                     ClockData.RedrawKind("net");
                 }
                 Action a = WeatherFadeTick;
-                if (a != null) try { a(); } catch { }
+                if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 if (!Widgets.WeatherFadeActive && !net)
                 {
                     wfTimer.Stop();
@@ -805,14 +854,14 @@ sealed partial class NeoBar : Form
                     if (Widgets.GeoChanged)
                     {
                         Widgets.GeoChanged = false;
-                        try { Store.Save(cfgPath, cfg, entries); } catch { }
+                        try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     }
                     for (int i = 0; i < entries.Count; i++)
                         if (entries[i].Kind == Kind.Widget && entries[i].Target == "weather") Invalidate(RectOf(entries[i]));
                     ClockData.CheckTz();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         StartWeatherFade();
         Invalidate();
@@ -865,13 +914,13 @@ sealed partial class NeoBar : Form
             if (File.Exists(cfgPath)) return;
             Store.Save(cfgPath, new Cfg(), DefaultEntries());
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void ApplyTheme()
     {
         T = Themes.Get(cfg.ThemeId, cfg);
-        try { ProfileArt.SyncStyle(T); } catch { }      // значок профілю - у стилі теми
+        try { ProfileArt.SyncStyle(T); } catch (Exception skipEx) { SbLog.Skip(skipEx); }      // значок профілю - у стилі теми
         OvTheme.Panel = T;
         Notes.SetPanelTheme(T);
         Chime.ThemeId = T.Id;
@@ -914,8 +963,8 @@ sealed partial class NeoBar : Form
         entries = new List<Entry>();
         Store.Load(cfgPath, cfg, entries);
         // ярлики, що ще лежать на Робочому столі чи деінде, копіюємо в links - щоб панель не зламалась, коли їх видалять
-        if (Store.ImportLinks(entries)) try { Store.Save(cfgPath, cfg, entries); } catch { }
-        if (firstLoad && Seasons.Expire(cfg)) try { Store.Save(cfgPath, cfg, entries); } catch { }   // святкова тема відслужила
+        if (Store.ImportLinks(entries)) try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        if (firstLoad && Seasons.Expire(cfg)) try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }   // святкова тема відслужила
         ApplyTheme();
         themeDirty = true;
 
@@ -964,7 +1013,7 @@ sealed partial class NeoBar : Form
         {
             themeDirty = false;
             Action a = ThemeChanged;
-            if (a != null) try { a(); } catch { }
+            if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 
@@ -976,13 +1025,13 @@ sealed partial class NeoBar : Form
         CheckFullscreen();
         InitWidgetSystems();
         LocateAtStart();
-        try { Updater.StartupCheck(this); } catch { }
+        try { Updater.StartupCheck(this); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
         {
             Notes.Changed += delegate { foreach (Entry e in entries) e.Sig = ""; Invalidate(); };
             Notes.Start(Path.GetDirectoryName(Path.GetFullPath(cfgPath)), scale);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ---------- автозапуск ----------
@@ -1008,7 +1057,7 @@ sealed partial class NeoBar : Form
                 else k.DeleteValue("NeoBar", false);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 }
 
@@ -1044,7 +1093,7 @@ static class AppBarQ
                 while (q.Count == 0) System.Threading.Monitor.Wait(q);
                 a = q.Dequeue();
             }
-            try { a(); } catch { }
+            try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 

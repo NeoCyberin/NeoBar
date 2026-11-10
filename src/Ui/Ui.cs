@@ -325,6 +325,13 @@ class SbWindow : Form
 
     protected int Px(float v) { return (int)Math.Round(v * Sc); }
 
+    // питання чи повідомлення в стилі теми; повертає номер кнопки (-1 - закрили)
+    protected int Ask(string title, string text, params string[] buttons)
+    {
+        if (Bar != null) return SbDialog.Show(Bar, this, title, text, buttons);
+        return SbDialog.Show(T, Sc, this, title, text, buttons);
+    }
+
     public SbWindow(NeoBar owner, string caption, int w, int h) : this(owner, owner.CurrentTheme, owner.Dpi, owner.LabelFont, caption, w, h) { }
 
     // вікно без панелі (вибір профілю до запуску NeoBar): тема й масштаб задаються явно
@@ -438,7 +445,7 @@ class SbWindow : Form
     {
         base.OnLoad(e);
         Util.Buffer(this);
-        try { if (Bar.Config.Anim) Opacity = 0; } catch { }
+        try { if (Bar.Config.Anim) Opacity = 0; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void OnShown(EventArgs e)
@@ -447,7 +454,7 @@ class SbWindow : Form
         Ticker.Start();
         OnTick();
         bool anim = false;
-        try { anim = Bar.Config.Anim; } catch { }
+        try { anim = Bar.Config.Anim; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (!anim) { Opacity = 1; return; }
         showTop = Top;
         int lift = Px(14);
@@ -481,7 +488,7 @@ class SbWindow : Form
             if (P.Rad > 2 && Width > 0 && Height > 0)
                 using (GraphicsPath gp = Util.Round(new Rectangle(0, 0, Width, Height), P.Rad + Px(2))) Util.SetRegion(this, gp);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ширина вкладки: найдовший рядок (назва може бути у два рядки)
@@ -664,6 +671,21 @@ class SbWindow : Form
         using (GraphicsPath gp = Util.Round(new Rectangle(0, 0, Width - 1, Height - 1), P.Rad + Px(2)))
             g.DrawPath(ep, gp);
 
+        // клавіатура: рамка навколо вибраного Tab-ом елемента
+        if (kbMode)
+        {
+            List<int> fk = Focusable(build);
+            if (fk.Count == 0) kbFocus = -1;
+            else
+            {
+                kbFocus = Math.Max(0, Math.Min(fk.Count - 1, kbFocus));
+                Rectangle fr = Rectangle.Inflate(build[fk[kbFocus]].R, Px(2), Px(2));
+                using (Pen fp = new Pen(P.Acc, Math.Max(2f, Px(2))))
+                using (GraphicsPath gp = Util.Round(fr, Math.Min(P.Rad + Px(2), fr.Height / 2)))
+                    g.DrawPath(fp, gp);
+            }
+        }
+
         hits.Clear();
         hits.AddRange(build);
         tips = tipBuild;
@@ -689,7 +711,7 @@ class SbWindow : Form
     {
         tipNow = ""; tipWait = "";
         if (tipTimer != null) tipTimer.Stop();
-        if (tipBox != null) try { tipBox.Hide(this); } catch { }
+        if (tipBox != null) try { tipBox.Hide(this); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void TipMove()
@@ -738,7 +760,7 @@ class SbWindow : Form
     {
         int pad = Height - body.Bottom;
         int want = Math.Max(minH, contentBottom + pad);
-        try { want = Math.Min(want, Screen.FromControl(this).WorkingArea.Height - Px(40)); } catch { }
+        try { want = Math.Min(want, Screen.FromControl(this).WorkingArea.Height - Px(40)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (Math.Abs(want - Height) <= Px(3) || fitBusy || !IsHandleCreated) return;
         fitBusy = true;
         BeginInvoke(new Action(delegate
@@ -751,7 +773,7 @@ class SbWindow : Form
                 Rectangle wa = Screen.FromControl(this).WorkingArea;
                 if (Bottom > wa.Bottom) Top = Math.Max(wa.Top, wa.Bottom - Height);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Invalidate();
         }));
     }
@@ -1097,6 +1119,7 @@ class SbWindow : Form
             return;
         }
         mouse = e.Location;
+        if (kbMode) { kbMode = false; Invalidate(); }       // мишею - рамка клавіатури зникає
         if (dragging != null) { TipHide(); dragging(e.Location); Invalidate(); return; }
         TipMove();
         int h = HitAt(mouse);
@@ -1152,6 +1175,56 @@ class SbWindow : Form
     {
         base.OnKeyDown(e);
         if (e.KeyCode == Keys.Escape) Close();
+    }
+
+    // ---------- клавіатура: Tab / Shift+Tab - між кнопками, перемикачами, вкладками; Enter чи пробіл - натиснути ----------
+    bool kbMode;
+    int kbFocus = -1;
+
+    List<int> Focusable(List<Hit> l)
+    {
+        List<int> r = new List<int>();
+        Rectangle cl = ClientRectangle;
+        for (int i = 0; i < l.Count; i++)
+        {
+            Hit h = l[i];
+            if (h.Click == null || h.Drag != null || h.R.Width < 4 || h.R.Height < 4) continue;
+            if (!cl.Contains(new Point(h.R.X + h.R.Width / 2, h.R.Y + h.R.Height / 2))) continue;
+            r.Add(i);
+        }
+        return r;
+    }
+
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        Keys k = keyData & Keys.KeyCode;
+        bool inText = ActiveControl is TextBoxBase;
+        if (k == Keys.Tab && (keyData & (Keys.Control | Keys.Alt)) == 0)
+        {
+            List<int> fk = Focusable(hits);
+            if (fk.Count > 0)
+            {
+                bool back = (keyData & Keys.Shift) != 0;
+                if (!kbMode) kbFocus = back ? fk.Count - 1 : 0;
+                else kbFocus = (kbFocus + (back ? -1 : 1) + fk.Count) % fk.Count;
+                kbMode = true;
+                if (inText) { ActiveControl = null; Focus(); }
+                Invalidate();
+                return true;
+            }
+        }
+        if (kbMode && !inText && (k == Keys.Enter || k == Keys.Space))
+        {
+            List<int> fk = Focusable(hits);
+            if (kbFocus >= 0 && kbFocus < fk.Count)
+            {
+                Hit h = hits[fk[kbFocus]];
+                h.Click();
+                Invalidate();
+                return true;
+            }
+        }
+        return base.ProcessCmdKey(ref msg, keyData);
     }
 
     // тематичне контекстне меню для вікна

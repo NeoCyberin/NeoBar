@@ -59,15 +59,15 @@ sealed partial class NeoBar
         {
             BeginInvoke(new Action(delegate
             {
-                MessageBox.Show(L.T("Не вдалося запустити:\n") + target + "\n\n" + msg, "NeoBar", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SbDialog.Show(this, null, "NeoBar", L.T("Не вдалося запустити:\n") + target + "\n\n" + msg);
             }));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static void RunShell(System.Threading.ThreadStart a)
     {
-        System.Threading.Thread t = new System.Threading.Thread(delegate () { try { a(); } catch { } });
+        System.Threading.Thread t = new System.Threading.Thread(delegate () { try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } });
         t.SetApartmentState(System.Threading.ApartmentState.STA);
         t.IsBackground = true;
         t.Start();
@@ -129,8 +129,8 @@ sealed partial class NeoBar
         Invalidate();
         string[] files = null;
         string text = null;
-        try { files = e.Data.GetData(DataFormats.FileDrop) as string[]; } catch { }
-        if (files == null) try { text = e.Data.GetData(DataFormats.Text) as string; } catch { }
+        try { files = e.Data.GetData(DataFormats.FileDrop) as string[]; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        if (files == null) try { text = e.Data.GetData(DataFormats.Text) as string; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         BeginInvoke(new Action(delegate { AddDropped(files, text, slot); }));
     }
 
@@ -193,8 +193,7 @@ sealed partial class NeoBar
         }
         catch (Exception ex)
         {
-            MessageBox.Show(L.T("Не вдалося записати neobar.ini:\n") + ex.Message, "NeoBar",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            SbDialog.Show(this, this, "NeoBar", L.T("Не вдалося записати neobar.ini:\n") + ex.Message);
         }
     }
 
@@ -277,7 +276,7 @@ sealed partial class NeoBar
     {
         float from = GroupOpen(e);
         e.Collapsed = !e.Collapsed;
-        try { Store.Save(cfgPath, cfg, entries); } catch { }   // стан згортання запам'ятовується
+        try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }   // стан згортання запам'ятовується
         if (cfg.Anim)
         {
             grpT[e] = from;
@@ -297,7 +296,7 @@ sealed partial class NeoBar
                     FitCompact();
                     ClampScroll();
                     Invalidate();
-                    if (grpT.Count == 0) { grpTimer.Stop(); BuildFolderIcons(); if (IsHandleCreated) Trim(); }
+                    if (grpT.Count == 0) { grpTimer.Stop(); BuildFolderIcons(); }
                 };
             }
             grpTimer.Start();
@@ -319,8 +318,7 @@ sealed partial class NeoBar
         }
         catch (Exception ex)
         {
-            MessageBox.Show(L.T("Не вдалося зберегти neobar.ini:\n") + ex.Message, "NeoBar",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            SbDialog.Show(this, this, "NeoBar", L.T("Не вдалося зберегти neobar.ini:\n") + ex.Message);
             return;
         }
         Reload();
@@ -342,10 +340,9 @@ sealed partial class NeoBar
         Entry e = entries[i];
         string what = e.Kind == Kind.Header ? L.T("групу «") + e.Name + L.Q("»") : (e.Kind == Kind.Widget ? L.T("віджет «") + e.Name + L.Q("»") : L.Q("«") + e.Name + L.Q("»"));
         menuOpen++;
-        DialogResult r = MessageBox.Show(L.T("Видалити ") + what + L.T(" з панелі?"), "NeoBar",
-            MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        int r = SbDialog.Show(this, this, "NeoBar", L.T("Видалити ") + what + L.T(" з панелі?"), L.T("Видалити"), L.T("Скасувати"));
         menuOpen--;
-        if (r != DialogResult.Yes) return;
+        if (r != 0) return;
         entries.RemoveAt(i);
         SaveEntries();
     }
@@ -378,14 +375,14 @@ sealed partial class NeoBar
     // повний перезапуск NeoBar (новий процес з тим самим профілем і правами; нова копія чекає, поки ця закриється)
     public void RestartApp()
     {
-        try { Store.Save(cfgPath, cfg, entries); } catch { }
+        try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         SbLog.W(SbLog.Panel, "повний перезапуск NeoBar");
         if (Prof.Restart()) Close();
     }
 
     public void SwitchProfile()
     {
-        try { Store.Save(cfgPath, cfg, entries); } catch { }
+        try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Prof.Last = "";
         Prof.Save();
         SbLog.W(SbLog.Panel, "зміна профілю: перезапуск у вікно вибору");
@@ -423,7 +420,7 @@ sealed partial class NeoBar
     {
         cfg.Mode = cfg.Mode == "fixed" ? "autohide" : "fixed";
         SbLog.W(SbLog.Panel, "режим панелі: " + cfg.Mode);
-        try { Store.Save(cfgPath, cfg, entries); } catch { }
+        try { Store.Save(cfgPath, cfg, entries); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Reload();
     }
 
@@ -471,8 +468,7 @@ sealed partial class NeoBar
         }
         catch (Exception ex)
         {
-            MessageBox.Show(L.T("Не вдалося записати neobar.ini:\n") + ex.Message, "NeoBar",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            SbDialog.Show(this, this, "NeoBar", L.T("Не вдалося записати neobar.ini:\n") + ex.Message);
         }
     }
 

@@ -87,7 +87,7 @@ static class NetSources
                 if (Interlocked.Decrement(ref busy) == 0)
                 {
                     LastAt = DateTime.Now;
-                    if (done != null) try { done(); } catch { }
+                    if (done != null) try { done(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 }
             });
         }

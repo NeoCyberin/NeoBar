@@ -261,12 +261,6 @@ static class QrState
 // поточна мережа Wi-Fi і її пароль (через WLAN API; пароль у відкритому вигляді Windows дає лише адміністратору)
 static class WifiInfo
 {
-    [DllImport("wlanapi.dll")] static extern int WlanOpenHandle(int ver, IntPtr res, out int neg, out IntPtr h);
-    [DllImport("wlanapi.dll")] static extern int WlanCloseHandle(IntPtr h, IntPtr res);
-    [DllImport("wlanapi.dll")] static extern int WlanEnumInterfaces(IntPtr h, IntPtr res, out IntPtr list);
-    [DllImport("wlanapi.dll")] static extern int WlanQueryInterface(IntPtr h, ref Guid g, int op, IntPtr res, out int size, out IntPtr data, IntPtr type);
-    [DllImport("wlanapi.dll", CharSet = CharSet.Unicode)] static extern int WlanGetProfile(IntPtr h, ref Guid g, string name, IntPtr res, out IntPtr xml, ref int flags, out int access);
-    [DllImport("wlanapi.dll")] static extern void WlanFreeMemory(IntPtr p);
 
     static string Tag(string xml, string tag)
     {
@@ -285,8 +279,8 @@ static class WifiInfo
         try
         {
             int neg;
-            if (WlanOpenHandle(2, IntPtr.Zero, out neg, out h) != 0) { error = L.T("Wi-Fi недоступний на цьому ПК."); return false; }
-            if (WlanEnumInterfaces(h, IntPtr.Zero, out list) != 0) { error = L.T("Не вдалося прочитати адаптери Wi-Fi."); return false; }
+            if (WifiList.WlanOpenHandle(2, IntPtr.Zero, out neg, out h) != 0) { error = L.T("Wi-Fi недоступний на цьому ПК."); return false; }
+            if (WifiList.WlanEnumInterfaces(h, IntPtr.Zero, out list) != 0) { error = L.T("Не вдалося прочитати адаптери Wi-Fi."); return false; }
             int n = Marshal.ReadInt32(list, 0);
             for (int i = 0; i < n; i++)
             {
@@ -297,16 +291,16 @@ static class WifiInfo
                 int state = Marshal.ReadInt32(item, 16 + 512);
                 if (state != 1) continue;           // wlan_interface_state_connected
                 int sz; IntPtr data;
-                if (WlanQueryInterface(h, ref g, 7, IntPtr.Zero, out sz, out data, IntPtr.Zero) != 0) continue;   // current_connection
+                if (WifiList.WlanQueryInterface(h, ref g, 7, IntPtr.Zero, out sz, out data, IntPtr.Zero) != 0) continue;   // current_connection
                 string prof;
                 try { prof = Marshal.PtrToStringUni(new IntPtr(data.ToInt64() + 8)); }
-                finally { WlanFreeMemory(data); }
+                finally { WifiList.WlanFreeMemory(data); }
                 if (string.IsNullOrEmpty(prof)) continue;
                 IntPtr xp; int flags = 4, access;       // WLAN_PROFILE_GET_PLAINTEXT_KEY
-                if (WlanGetProfile(h, ref g, prof, IntPtr.Zero, out xp, ref flags, out access) != 0) { ssid = prof; return true; }
+                if (WifiList.WlanGetProfile(h, ref g, prof, IntPtr.Zero, out xp, ref flags, out access) != 0) { ssid = prof; return true; }
                 string xml;
                 try { xml = Marshal.PtrToStringUni(xp); }
-                finally { WlanFreeMemory(xp); }
+                finally { WifiList.WlanFreeMemory(xp); }
                 int ss = xml.IndexOf("<SSID>", StringComparison.Ordinal);
                 ssid = ss >= 0 ? Tag(xml.Substring(ss), "name") : "";
                 if (ssid.Length == 0) ssid = prof;
@@ -323,8 +317,8 @@ static class WifiInfo
         catch (Exception ex) { error = ex.Message; return false; }
         finally
         {
-            if (list != IntPtr.Zero) WlanFreeMemory(list);
-            if (h != IntPtr.Zero) WlanCloseHandle(h, IntPtr.Zero);
+            if (list != IntPtr.Zero) WifiList.WlanFreeMemory(list);
+            if (h != IntPtr.Zero) WifiList.WlanCloseHandle(h, IntPtr.Zero);
         }
     }
 }
@@ -478,7 +472,7 @@ sealed class QrWindow : SbWindow
                     Invalidate();
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -532,20 +526,15 @@ sealed class QrWindow : SbWindow
         return QrState.Custom.IsEmpty ? ThemeDark() : Color.FromArgb(255, QrState.Custom);
     }
 
-    // свій колір коду: стандартна панель вибору кольору, спершу - колір теми
+    // свій колір коду: вибір кольору в стилі теми, спершу - колір теми
     void PickColor()
     {
-        using (ColorDialog d = new ColorDialog())
-        {
-            d.FullOpen = true;
-            d.AnyColor = true;
-            d.Color = QrState.Custom.IsEmpty ? ThemeDark() : QrState.Custom;
-            if (d.ShowDialog(this) != DialogResult.OK) return;
-            QrState.Custom = d.Color;
-            QrState.Colored = true;
-            Rebuild();
-            Invalidate();
-        }
+        Color nc;
+        if (!ColorPick.Ask(this, QrState.Custom.IsEmpty ? ThemeDark() : QrState.Custom, out nc)) return;
+        QrState.Custom = nc;
+        QrState.Colored = true;
+        Rebuild();
+        Invalidate();
     }
 
     void Rebuild()

@@ -272,7 +272,7 @@ sealed class GlyphGrid : Control
         if (hot != -1) { hot = -1; Invalidate(); if (Hover != null) Hover(null); }
     }
 
-    protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); try { if (!Focused) Focus(); } catch { } }
+    protected override void OnMouseEnter(EventArgs e) { base.OnMouseEnter(e); try { if (!Focused) Focus(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
     protected override void OnMouseClick(MouseEventArgs e)
     {
@@ -468,7 +468,7 @@ sealed class SymbolPicker : Form
         {
             using (GraphicsPath gp = Util.Round(new Rectangle(0, 0, Width, Height), Notes.Px(16))) Util.SetRegion(this, gp);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     string Count() { return list[cats.Sel].Items.Count + L.T(" символів"); }

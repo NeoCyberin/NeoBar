@@ -398,7 +398,7 @@ sealed class SPage : Control, IGradHost
                 int free = Height - End;
                 if (free > SUi.S(90)) Festive.Decor(g, t, new Rectangle(0, End + SUi.S(6), Width, free - SUi.S(6)), sc, true);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
 
         const int ThinBarGap = 6;
@@ -499,7 +499,7 @@ sealed class SPage : Control, IGradHost
                 SCard k = c as SCard;
                 if (k == null || k.When == null) continue;
                 bool show = true;
-                try { show = k.When(); } catch { }
+                try { show = k.When(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 k.Visible = show;
                 if (k.Head != null) k.Head.Visible = show;
                 if (!show) { off.Add(k); if (k.Head != null) off.Add(k.Head); }
@@ -562,7 +562,7 @@ sealed class SPage : Control, IGradHost
             if (top < pos + SUi.S(8)) ScrollTo(top - SUi.S(24), true);
             else if (bottom > pos + ClientSize.Height - SUi.S(8)) ScrollTo(bottom - ClientSize.Height + SUi.S(24), true);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void OnResize(EventArgs e) { base.OnResize(e); Relayout(); }

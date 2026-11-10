@@ -104,17 +104,13 @@ sealed partial class SettingsForm
     {
         if (c.ThemeId != "custom") return;
         Color cur = k == 0 ? c.CBg : (k == 1 ? c.CHover : (k == 2 ? c.CText : c.CAccent));
-        using (ColorDialog d = new ColorDialog())
+        Color nc;
+        if (ColorPick.Ask(this, Util.Opaque(cur), out nc))
         {
-            d.Color = Util.Opaque(cur);
-            d.FullOpen = true;
-            if (d.ShowDialog(this) == DialogResult.OK)
-            {
-                if (k == 0) c.CBg = d.Color;
-                else if (k == 1) c.CHover = Color.FromArgb(cur.A, d.Color);
-                else if (k == 2) c.CText = Color.FromArgb(cur.A, d.Color);
-                else c.CAccent = Color.FromArgb(cur.A, d.Color);
-            }
+            if (k == 0) c.CBg = nc;
+            else if (k == 1) c.CHover = Color.FromArgb(cur.A, nc);
+            else if (k == 2) c.CText = Color.FromArgb(cur.A, nc);
+            else c.CAccent = Color.FromArgb(cur.A, nc);
         }
         UpdateSwatches();
     }
@@ -135,12 +131,8 @@ sealed partial class SettingsForm
 
     void PickTrayColor(int i)
     {
-        using (ColorDialog d = new ColorDialog())
-        {
-            d.Color = Util.Opaque(trayCol[i]);
-            d.FullOpen = true;
-            if (d.ShowDialog(this) == DialogResult.OK) trayCol[i] = d.Color;
-        }
+        Color nc;
+        if (ColorPick.Ask(this, Util.Opaque(trayCol[i]), out nc)) trayCol[i] = nc;
         UpdateTraySwatches();
     }
 
@@ -344,7 +336,7 @@ sealed partial class SettingsForm
                     SetCitySug(list.Count > 0);
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -420,7 +412,7 @@ sealed partial class SettingsForm
                     else lCity.Text = L.T("Місто не знайдено або немає інтернету.");
                 }));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
     }
 
@@ -449,7 +441,7 @@ sealed partial class SettingsForm
         {
             d.Filter = L.T("Налаштування NeoBar (*.nbpack)|*.nbpack|Усі файли|*.*");
             if (d.ShowDialog(this) != DialogResult.OK) return;
-            if (SbDialog.Show(owner, this, L.T("Імпорт налаштувань"), L.T("Замінити налаштування профілю імпортованими?\nСтара копія збережеться як neobar.ini.bak."), L.T("Замінити"), L.T("Скасувати")) != 0) return;
+            if (SbDialog.Show(owner, this, L.T("Імпорт налаштувань"), L.T("Замінити налаштування профілю імпортованими?\nСтара копія збережеться як neobar.ini.old."), L.T("Замінити"), L.T("Скасувати")) != 0) return;
             try
             {
                 int n = Store.Import(d.FileName, AppDomain.CurrentDomain.BaseDirectory, owner.CfgPath);
@@ -463,10 +455,10 @@ sealed partial class SettingsForm
 
     void DoReset()
     {
-        if (SbDialog.Show(owner, this, L.T("Скинути налаштування"), L.T("Скинути всі налаштування й елементи профілю до початкових?\nСтара копія збережеться як neobar.ini.bak."), L.T("Скинути"), L.T("Скасувати")) != 0) return;
+        if (SbDialog.Show(owner, this, L.T("Скинути налаштування"), L.T("Скинути всі налаштування й елементи профілю до початкових?\nСтара копія збережеться як neobar.ini.old."), L.T("Скинути"), L.T("Скасувати")) != 0) return;
         try
         {
-            if (File.Exists(owner.CfgPath)) File.Copy(owner.CfgPath, owner.CfgPath + ".bak", true);
+            if (File.Exists(owner.CfgPath)) File.Copy(owner.CfgPath, owner.CfgPath + ".old", true);
             Store.Save(owner.CfgPath, new Cfg(), NeoBar.DefaultEntries());
             ReloadFromDisk();
             owner.Reload();

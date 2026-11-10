@@ -58,7 +58,7 @@ static class PhotoSrc
                     if (rf != RotateFlipType.RotateNoneFlipNone) b.RotateFlip(rf);
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return b;
         }
     }

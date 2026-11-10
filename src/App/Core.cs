@@ -386,7 +386,7 @@ static class Store
     public static void Load(string path, Cfg cfg, List<Entry> list)
     {
         string[] lines;
-        try { lines = File.ReadAllLines(path, Encoding.UTF8); }
+        try { lines = SafeFile.ReadLines(path); }
         catch { lines = new string[0]; }
         LoadLines(lines, cfg, list);
         Normalize(list);
@@ -631,7 +631,7 @@ static class Store
                 if (e.Kind == Kind.Item && s.StartsWith(Util.LinksRef, StringComparison.OrdinalIgnoreCase) && !r.Contains(s)) r.Add(s);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return r;
     }
 
@@ -640,7 +640,7 @@ static class Store
         ImportLinks(list);
         List<string> oldLinks = LinkRefs(path);            // ярлики, що були в попередньому файлі
         List<string> old = IconRefs(path);                 // іконки, що були в попередньому файлі
-        File.WriteAllText(path, Serialize(c, list), new UTF8Encoding(true));
+        SafeFile.Write(path, Serialize(c, list), new UTF8Encoding(true));
         try
         {
             // елемент видалили або змінили іконку: власну копію в icons, якої більше ніхто не використовує, прибираємо
@@ -654,7 +654,7 @@ static class Store
                 if (!list.Exists(delegate (Entry x) { return x.Kind == Kind.Item && string.Equals((x.Target ?? "").Trim(), s, StringComparison.OrdinalIgnoreCase); }))
                     Util.DeleteLinkIfUnused(s);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static List<string> IconRefs(string path)
@@ -672,7 +672,7 @@ static class Store
                 if (s.Length > 0 && !r.Contains(s)) r.Add(s);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return r;
     }
 
@@ -788,7 +788,8 @@ static class Store
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             if (isIni)
             {
-                try { if (File.Exists(full)) File.Copy(full, full + ".bak", true); } catch { }
+                // .old: «.bak» - попередня версія, її веде надійний запис
+                try { if (File.Exists(full)) File.Copy(full, full + ".old", true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 iniDone = true;
             }
             File.WriteAllBytes(full, data);

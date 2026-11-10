@@ -49,8 +49,8 @@ static class Dice
         Labels.Clear(); Last = new int[0];
         try
         {
-            if (File.Exists(File_))
-                foreach (string raw in File.ReadAllLines(File_, Encoding.UTF8))
+            if (SafeFile.Exists(File_))
+                foreach (string raw in SafeFile.ReadLines(File_))
                 {
                     int eq = raw.IndexOf('=');
                     if (eq <= 0) continue;
@@ -62,7 +62,7 @@ static class Dice
                     else if (k == "label") Labels.Add(v.Trim());
                 }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         while (Labels.Count > 0 && Labels[Labels.Count - 1].Length == 0) Labels.RemoveAt(Labels.Count - 1);
         if (Locked) { Faces = Math.Min(100, Labels.Count); Count = 1; }
         shown = (int[])Last.Clone();
@@ -78,7 +78,7 @@ static class Dice
             sb.AppendLine("faces=" + Faces);
             sb.AppendLine("total=" + (Total ? 1 : 0));
             foreach (string l in Labels) sb.AppendLine("label=" + l.Replace("\r", "").Replace("\n", " "));
-            File.WriteAllText(File_, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(File_, sb.ToString(), new UTF8Encoding(true));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
@@ -133,7 +133,7 @@ static class Dice
         return string.Join(HasLabels ? "; " : ", ", parts.ToArray());
     }
 
-    static void Fire() { seq++; Action h = Changed; if (h != null) { try { h(); } catch { } } }
+    static void Fire() { seq++; Action h = Changed; if (h != null) { try { h(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } } }
 
     // чесне випадкове число 1..n (без перекосу від остачі)
     public static int Next(int n)
@@ -505,7 +505,7 @@ sealed class DiceThrow : LayeredForm
                 cOne = p.Acc;
                 cCapBg = Util.Opaque(p.Bg); cCapFg = p.Fg; cCapEdge = p.Acc;
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         Screen scr = bar != null ? Screen.FromControl(bar) : Screen.PrimaryScreen;
         area = scr.WorkingArea;
@@ -629,7 +629,7 @@ sealed class DiceThrow : LayeredForm
         base.OnFormClosed(e);
     }
 
-    void Finish() { try { Close(); } catch { } }
+    void Finish() { try { Close(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
     // ---------- кадр ----------
     void Step()
@@ -1118,7 +1118,7 @@ sealed class DiceWindow : SbWindow
         tbLabels.Leave += delegate { CommitLabels(); };
     }
 
-    void OnData() { try { if (!IsDisposed) Invalidate(); } catch { } }
+    void OnData() { try { if (!IsDisposed) Invalidate(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
     void CommitLabels()
     {

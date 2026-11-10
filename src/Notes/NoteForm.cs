@@ -58,7 +58,6 @@ sealed class NoteForm : Form
     static readonly IntPtr HWND_TOP = IntPtr.Zero;
     const uint SWP_NOSIZE = 0x1, SWP_NOMOVE = 0x2, SWP_NOACTIVATE = 0x10, SWP_SHOWWINDOW = 0x40;
 
-    [DllImport("user32.dll", SetLastError = true)] static extern int GetWindowLong(IntPtr h, int i);
     [DllImport("user32.dll", SetLastError = true)] static extern int SetWindowLong(IntPtr h, int i, int v);
     [DllImport("user32.dll")] static extern bool ReleaseCapture();
     [DllImport("gdi32.dll")] static extern int GetDeviceCaps(IntPtr dc, int index);
@@ -211,7 +210,7 @@ sealed class NoteForm : Form
         box.BulletIndent = Px(16);
         box.HandleCreated += delegate
         {
-            try { Win.SendMessage(box.Handle, 0xD3, 3, 0); } catch { }   // EM_SETMARGINS: без внутрішніх полів
+            try { Win.SendMessage(box.Handle, 0xD3, 3, 0); } catch (Exception skipEx) { SbLog.Skip(skipEx); }   // EM_SETMARGINS: без внутрішніх полів
         };
         box.TextChanged += delegate
         {
@@ -248,7 +247,7 @@ sealed class NoteForm : Form
         Controls.Add(toolbar);
         Controls.Add(headerPanel);
 
-        try { NoteTheme t0 = Notes.ThemeOf(n); box.Font = Util.MakeFont(t0.FontName, Notes.FontPt(n, t0), FontStyle.Regular); } catch { }
+        try { NoteTheme t0 = Notes.ThemeOf(n); box.Font = Util.MakeFont(t0.FontName, Notes.FontPt(n, t0), FontStyle.Regular); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
         {
             if (!string.IsNullOrEmpty(n.Rtf)) box.Rtf = n.Rtf; else box.Text = n.Text;
@@ -292,7 +291,7 @@ sealed class NoteForm : Form
         // заокруглений Region міняти на кожен піксель дорого й мигає - на час перетягування прибираємо
         if (!gripDrag) return;          // це переміщення, а не зміна розміру
         sizing = true;
-        try { if (Region != null) { Region.Dispose(); Region = null; } } catch { }
+        try { if (Region != null) { Region.Dispose(); Region = null; } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void OnResizeEnd(EventArgs e)
@@ -322,7 +321,7 @@ sealed class NoteForm : Form
             ReleaseCapture();
             Win.SendMessage(Handle, 0xA1, hit, 0);       // WM_NCLBUTTONDOWN
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override bool ShowWithoutActivation { get { return n != null && n.Locked; } }
@@ -341,7 +340,7 @@ sealed class NoteForm : Form
             ToolStripMenuItem it = new ToolStripMenuItem(Notes.SizeNames[i]);
             it.ForeColor = tx;
             it.Checked = n.Size == i;
-            try { it.Font = new Font("Segoe UI", 9f + i * 2.5f, FontStyle.Regular); } catch { }
+            try { it.Font = new Font("Segoe UI", 9f + i * 2.5f, FontStyle.Regular); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             it.Click += delegate { ApplyNoteSize(k); };
             m.Items.Add(it);
         }
@@ -365,7 +364,7 @@ sealed class NoteForm : Form
                 RichFmt.SetSize(box.Handle, RichFmt.SCF_DEFAULT, pt);
                 themeBase = pt;
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             finally { fmtBusy--; }
             ApplyTheme(false);
         }
@@ -410,7 +409,7 @@ sealed class NoteForm : Form
         bool fontChanged = force || key != themeFont;
         themeFont = key;
         int ss = 0, sl = 0;
-        try { ss = box.SelectionStart; sl = box.SelectionLength; } catch { }
+        try { ss = box.SelectionStart; sl = box.SelectionLength; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Redraw(false);
         fmtBusy++;
         try
@@ -423,7 +422,7 @@ sealed class NoteForm : Form
             box.BulletIndent = Px(16);
             box.Select(Math.Min(ss, box.TextLength), sl);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         finally { fmtBusy--; }
         ApplyTitle(t, pt, face);
         Redraw(true);
@@ -559,7 +558,7 @@ sealed class NoteForm : Form
                 }
                 else titleBox.Font = Util.MakeFont(t.FontName, tpt, FontStyle.Regular);
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         // панель назви підлаштовується під висоту поля (лінія знизу не має ховатися під ним)
         int need = Math.Max(Notes.Px(30), titleBox.PreferredHeight + Px(10));
@@ -589,7 +588,7 @@ sealed class NoteForm : Form
             }
             using (GraphicsPath p = Util.Round(new Rectangle(0, 0, Width, Height), rad)) Util.SetRegion(this, p);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void OnPaint(PaintEventArgs e)
@@ -629,7 +628,7 @@ sealed class NoteForm : Form
             if (box.IsHandleCreated) Win.SendMessage(box.Handle, 0x000B, on ? 1 : 0, 0);   // WM_SETREDRAW
             if (on) box.Invalidate();
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ---------- форматування по символах ----------
@@ -641,7 +640,7 @@ sealed class NoteForm : Form
             // напряму через формат символів: шрифт і розмір виділеного не змінюються
             uint bit = fs == FontStyle.Bold ? RichFmt.CFM_BOLD : fs == FontStyle.Italic ? RichFmt.CFM_ITALIC
                      : fs == FontStyle.Underline ? RichFmt.CFM_UNDERLINE : RichFmt.CFM_STRIKEOUT;
-            try { RichFmt.SetEffect(box.Handle, bit, !RichFmt.Effect(box.Handle, bit)); } catch { }
+            try { RichFmt.SetEffect(box.Handle, bit, !RichFmt.Effect(box.Handle, bit)); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Notes.Touch();
             SyncToolbar();
             QueueEmoji(true);
@@ -697,7 +696,7 @@ sealed class NoteForm : Form
             box.BulletIndent = Px(16);
             box.SelectionBullet = !box.SelectionBullet;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Notes.Touch();
         SyncToolbar();
         QueueEmoji(true);     // відступ списку зсуває текст - картинки емодзі мають піти за ним
@@ -720,7 +719,7 @@ sealed class NoteForm : Form
                 }
                 bL.Active = box.SelectionBullet;
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             return;
         }
         try
@@ -732,7 +731,7 @@ sealed class NoteForm : Form
             bS.Active = f != null && f.Strikeout;
             bL.Active = box.SelectionBullet;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void OnBoxKey(object s, KeyEventArgs e)
@@ -764,7 +763,7 @@ sealed class NoteForm : Form
         if (y < wa.Top) y = Math.Min(wa.Bottom - pk.Height, pt.Y + bE.Height + Px(6));
         pk.StartPosition = FormStartPosition.Manual;
         pk.Location = new Point(x, y);
-        pk.FormClosed += delegate { try { box.Focus(); } catch { } };
+        pk.FormClosed += delegate { try { box.Focus(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } };
         picker = pk;
         pk.Show(this);
     }
@@ -785,7 +784,7 @@ sealed class NoteForm : Form
                 i += w;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Notes.Touch();
         QueueEmoji(true);
     }
@@ -799,7 +798,7 @@ sealed class NoteForm : Form
             if (RichFmt.Native) pt = RichFmt.SizeOf(box.Handle);
             else { Font f = box.SelectionFont; if (f != null) pt = f.SizeInPoints; }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (pt <= 0f) pt = themeBase > 0f ? themeBase : box.Font.SizeInPoints;
         return pt;
     }
@@ -859,7 +858,7 @@ sealed class NoteForm : Form
             else box.SelectionFont = box.Font;
             box.SelectionColor = fg;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         finally { fmtBusy--; }
     }
 
@@ -891,7 +890,7 @@ sealed class NoteForm : Form
         }
         if (found.Count == 0) return;
         int ss = 0, sl = 0;
-        try { ss = box.SelectionStart; sl = box.SelectionLength; } catch { }
+        try { ss = box.SelectionStart; sl = box.SelectionLength; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         fmtBusy++;
         try
         {
@@ -904,7 +903,7 @@ sealed class NoteForm : Form
                     if (RichFmt.Native) pt = RichFmt.SizeOf(box.Handle);
                     else { Font sf = box.SelectionFont; if (sf != null) pt = sf.SizeInPoints; }
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 if (pt <= 0f) pt = themeBase > 0f ? themeBase : box.Font.SizeInPoints;
                 f[3] = (int)Math.Round(pt * 20f);
                 emo.Add(f);
@@ -912,7 +911,7 @@ sealed class NoteForm : Form
         }
         finally
         {
-            try { Sel(ss, sl); } catch { }
+            try { Sel(ss, sl); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             fmtBusy--;
         }
     }
@@ -967,7 +966,7 @@ sealed class NoteForm : Form
             }
             HidePics(used);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         finally { emoBusy = false; }
     }
 
@@ -979,7 +978,7 @@ sealed class NoteForm : Form
             if (emoDirty) RebuildEmoji();
             if (emo.Count == 0) return;
             int ss = 0, sl = 0;
-            try { ss = box.SelectionStart; sl = box.SelectionLength; } catch { }
+            try { ss = box.SelectionStart; sl = box.SelectionLength; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             fmtBusy++;
             try
             {
@@ -987,11 +986,11 @@ sealed class NoteForm : Form
             }
             finally
             {
-                try { Sel(ss, sl); } catch { }
+                try { Sel(ss, sl); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 fmtBusy--;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // кольорові картинки емодзі в піксельний знімок закріпленої нотатки
@@ -1040,7 +1039,7 @@ sealed class NoteForm : Form
                 if (first > 0) Win.SendMessage(hb, 0x00B6, 0, first);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // висота назви в закріпленій нотатці (порожня назва місця не займає)
@@ -1073,13 +1072,38 @@ sealed class NoteForm : Form
         cust.Image = NoteFrame.Swatch(cur);
         cust.Click += delegate { Notes.EditTheme(Notes.ThemeOf(n)); };
         m.Items.Add(cust);
+        m.Items.Add(new ToolStripSeparator());
+        m.Items.Add(L.T("Зберегти нотатку у файл…"), null, delegate { Export(); });
         m.Closed += delegate { BeginInvoke(new Action(m.Dispose)); };
         m.Show(host, at);
     }
 
+    // експорт: звичайний текст (.txt) або з форматуванням (.rtf - відкривається у WordPad і Word)
+    void Export()
+    {
+        string name = (n.Label ?? "").Trim();
+        foreach (char c in System.IO.Path.GetInvalidFileNameChars()) name = name.Replace(c, '_');
+        if (name.Length > 60) name = name.Substring(0, 60).Trim();
+        if (name.Length == 0) name = L.T("Нотатка");
+        using (SaveFileDialog d = new SaveFileDialog())
+        {
+            d.Filter = L.T("Текст (*.txt)|*.txt|Текст із форматуванням (*.rtf)|*.rtf");
+            d.FileName = name;
+            d.AddExtension = true;
+            d.OverwritePrompt = true;
+            if (d.ShowDialog(this) != DialogResult.OK) return;
+            try
+            {
+                if (d.FilterIndex == 2 || d.FileName.EndsWith(".rtf", StringComparison.OrdinalIgnoreCase)) box.SaveFile(d.FileName, RichTextBoxStreamType.RichText);
+                else System.IO.File.WriteAllText(d.FileName, box.Text.Replace("\r\n", "\n").Replace("\n", "\r\n"), new System.Text.UTF8Encoding(true));
+            }
+            catch (Exception ex) { SbDialog.Ask(this, "NeoBar", L.F("Не вдалося зберегти нотатку: {0}", ex.Message)); }
+        }
+    }
+
     void AskDelete()
     {
-        if (MessageBox.Show(L.T("Видалити цю нотатку?"), "NeoBar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+        if (SbDialog.Ask(this, "NeoBar", L.T("Видалити цю нотатку?"), L.T("Видалити"), L.T("Скасувати")) == 0)
             Notes.Delete(n);
     }
 
@@ -1096,7 +1120,7 @@ sealed class NoteForm : Form
     public void Edit()
     {
         SetLocked(false);
-        try { box.Focus(); box.Select(box.TextLength, 0); } catch { }
+        try { box.Focus(); box.Select(box.TextLength, 0); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // показати нотатку (зі списку): редагована - наперед і з фокусом, закріплена лишається закріпленою
@@ -1111,20 +1135,19 @@ sealed class NoteForm : Form
             Activate();
             Repaint();
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // повне перемалювання з усіма дочірніми елементами (після зміни стилю вікна шапка й панель самі не домальовуються)
-    [DllImport("user32.dll")] static extern bool RedrawWindow(IntPtr h, IntPtr rc, IntPtr rgn, uint flags);
 
     void Repaint()
     {
         try
         {
-            RedrawWindow(Handle, IntPtr.Zero, IntPtr.Zero, 0x0001 | 0x0004 | 0x0080 | 0x0100 | 0x0400);      // INVALIDATE | ERASE | ALLCHILDREN | UPDATENOW | FRAME
-            BeginInvoke(new Action(delegate { try { if (!IsDisposed) { Invalidate(true); Update(); } } catch { } }));
+            Win.RedrawWindow(Handle, IntPtr.Zero, IntPtr.Zero, 0x0001 | 0x0004 | 0x0080 | 0x0100 | 0x0400);      // INVALIDATE | ERASE | ALLCHILDREN | UPDATENOW | FRAME
+            BeginInvoke(new Action(delegate { try { if (!IsDisposed) { Invalidate(true); Update(); } } catch (Exception skipEx) { SbLog.Skip(skipEx); } }));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public void SetLocked(bool locked)
@@ -1158,7 +1181,7 @@ sealed class NoteForm : Form
 
     void ApplyLocked()
     {
-        try { box.Select(box.TextLength, 0); } catch { }
+        try { box.Select(box.TextLength, 0); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Rectangle tr = TextRect();
         NoteTheme t = Notes.ThemeOf(n);
         bool ok = false;
@@ -1260,9 +1283,9 @@ sealed class NoteForm : Form
     {
         if (pw != null)
         {
-            try { pw.Close(); pw.Dispose(); } catch { }
+            try { pw.Close(); pw.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             pw = null;
-            try { bodyPanel.Visible = true; UpdateRegion(); Invalidate(true); } catch { }
+            try { bodyPanel.Visible = true; UpdateRegion(); Invalidate(true); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 
@@ -1294,7 +1317,7 @@ sealed class NoteForm : Form
         titleBox.ReadOnly = false;
         QueueEmoji(true);
         UpdateRegion();
-        try { Win.SetWindowPos(Handle, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW); } catch { }
+        try { Win.SetWindowPos(Handle, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         BringToFront();
         Activate();
         Invalidate(true);
@@ -1314,21 +1337,21 @@ sealed class NoteForm : Form
     {
         try
         {
-            int ex = GetWindowLong(Handle, GWL_EXSTYLE);
+            int ex = Win.GetWindowLong(Handle, GWL_EXSTYLE);
             ex &= ~(WS_EX_LAYERED | WS_EX_TRANSPARENT | 0x02000000);
             SetWindowLong(Handle, GWL_EXSTYLE, ex);
             ex |= WS_EX_TOOLWINDOW;
             if (locked) ex |= WS_EX_LAYERED | WS_EX_TRANSPARENT; else ex |= 0x02000000;
             SetWindowLong(Handle, GWL_EXSTYLE, ex);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public void SendToBottom()
     {
         if (!IsHandleCreated || !n.Locked) return;
         try { Win.SetWindowPos(Handle, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE); }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ---------- рендер тексту RichEdit у картинку (EM_FORMATRANGE) ----------
@@ -1422,7 +1445,7 @@ sealed class NoteForm : Form
     public void Pull()
     {
         if (!n.Locked && IsHandleCreated && Visible) PullRect();
-        try { n.Title = titleBox.Text; n.Text = box.Text; n.Rtf = box.Rtf; } catch { }
+        try { n.Title = titleBox.Text; n.Text = box.Text; n.Rtf = box.Rtf; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void WndProc(ref Message m)
@@ -1443,9 +1466,9 @@ sealed class NoteForm : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) { try { tip.Dispose(); } catch { } }
+        if (disposing) { try { tip.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         base.Dispose(disposing);
-        try { RichFmt.FreeHFont(titleHF); titleHF = IntPtr.Zero; } catch { }
+        try { RichFmt.FreeHFont(titleHF); titleHF = IntPtr.Zero; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 }
 

@@ -329,8 +329,8 @@ sealed class ProfileEdit : SbWindow
     {
         if (p == null) return;
         if (p.HasPin && !Prof.Check(p, curPin.Text)) { err = Prof.PinErr(p, L.T("Щоб видалити, введіть поточний PIN")); Invalidate(); return; }
-        if (MessageBox.Show(this, L.T("Видалити профіль «") + p.Name + L.T("» разом з усіма його налаштуваннями, нотатками й списком ігор?"),
-                            "NeoBar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
+        if (Ask("NeoBar", L.T("Видалити профіль «") + p.Name + L.T("» разом з усіма його налаштуваннями, нотатками й списком ігор?"),
+                L.T("Скасувати"), L.T("Видалити")) != 1) return;
         if (!Prof.Delete(p)) { err = L.T("Не вдалося видалити профіль"); Invalidate(); return; }
         Changed = true;
         Close();
@@ -457,7 +457,7 @@ sealed class ProfileWindow : SbWindow
     {
         base.OnDeactivate(e);
         if (busy || IsDisposed) return;
-        try { BeginInvoke(new Action(delegate { if (!busy && !IsDisposed) Close(); })); } catch { }
+        try { BeginInvoke(new Action(delegate { if (!busy && !IsDisposed) Close(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override void PaintBody(Graphics g, Rectangle r)

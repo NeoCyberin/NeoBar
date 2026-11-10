@@ -131,8 +131,6 @@ static class NetTools
     }
 
     // ---------- порти ----------
-    [DllImport("iphlpapi.dll", SetLastError = true)] static extern int GetExtendedTcpTable(IntPtr tbl, ref int size, bool sort, int af, int cls, int reserved);
-    [DllImport("iphlpapi.dll", SetLastError = true)] static extern int GetExtendedUdpTable(IntPtr tbl, ref int size, bool sort, int af, int cls, int reserved);
 
     public sealed class PortRow
     {
@@ -153,12 +151,12 @@ static class NetTools
         IntPtr p = IntPtr.Zero;
         try
         {
-            int rc = tcp ? GetExtendedTcpTable(IntPtr.Zero, ref size, true, 2, cls, 0) : GetExtendedUdpTable(IntPtr.Zero, ref size, true, 2, cls, 0);
+            int rc = tcp ? Win.GetExtendedTcpTable(IntPtr.Zero, ref size, true, 2, cls, 0) : Win.GetExtendedUdpTable(IntPtr.Zero, ref size, true, 2, cls, 0);
             for (int attempt = 0; attempt < 4 && size > 0 && size < 16000000; attempt++)
             {
                 if (p != IntPtr.Zero) Marshal.FreeHGlobal(p);
                 p = Marshal.AllocHGlobal(size);
-                rc = tcp ? GetExtendedTcpTable(p, ref size, true, 2, cls, 0) : GetExtendedUdpTable(p, ref size, true, 2, cls, 0);
+                rc = tcp ? Win.GetExtendedTcpTable(p, ref size, true, 2, cls, 0) : Win.GetExtendedUdpTable(p, ref size, true, 2, cls, 0);
                 if (rc == 0) break;
                 if (rc != 122) return;              // 122 - буфер замалий, пробуємо ще
             }
@@ -185,7 +183,7 @@ static class NetTools
     public static List<PortRow> ListeningPorts()
     {
         List<PortRow> l = new List<PortRow>();
-        try { ReadTable(l, true); ReadTable(l, false); } catch { }
+        try { ReadTable(l, true); ReadTable(l, false); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         Dictionary<int, string> names = new Dictionary<int, string>();
         foreach (PortRow r in l)
         {
@@ -193,7 +191,7 @@ static class NetTools
             if (!names.TryGetValue(r.Pid, out nm))
             {
                 nm = r.Pid == 0 ? L.T("система") : (r.Pid == 4 ? "System" : "?");
-                if (r.Pid > 4) try { using (Process pr = Process.GetProcessById(r.Pid)) nm = pr.ProcessName; } catch { }
+                if (r.Pid > 4) try { using (Process pr = Process.GetProcessById(r.Pid)) nm = pr.ProcessName; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 names[r.Pid] = nm;
             }
             r.Proc = nm;
@@ -272,7 +270,7 @@ static class NetTools
             catch (SocketException ex) { return ex.SocketErrorCode == SocketError.ConnectionRefused ? 1 : 2; }
         }
         catch { return 2; }
-        finally { try { s.Close(); } catch { } }
+        finally { try { s.Close(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
     }
 
     // ---------- підмережа ----------
@@ -323,8 +321,8 @@ static class NetTools
             k.UseShellExecute = false; k.CreateNoWindow = true;
             using (Process kp = Process.Start(k)) kp.WaitForExit(3000);
         }
-        catch { }
-        try { if (!pr.HasExited) pr.Kill(); } catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { if (!pr.HasExited) pr.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // запускає утиліту й віддає рядки виводу; stop() - чи треба перервати

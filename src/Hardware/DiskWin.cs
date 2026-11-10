@@ -33,7 +33,7 @@ sealed class DiskWindow : SbWindow
         entry = e;
         Tabs = new string[] { L.T("Огляд"), L.T("Стан"), L.T("Швидкість"), L.T("Обслуговування") };
         Ticker.Interval = 500;
-        try { if (qcap == 0) qcap = Win.RegisterWindowMessage("QueryCancelAutoPlay"); } catch { }
+        try { if (qcap == 0) qcap = Win.RegisterWindowMessage("QueryCancelAutoPlay"); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         NeoBar.DisksChanged += OnDevices;
     }
 
@@ -46,7 +46,7 @@ sealed class DiskWindow : SbWindow
 
     void Post(Action a)
     {
-        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(a); } catch { }
+        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(a); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // зліва направо: оновити, на робочий стіл (лише «Огляд»), закрити
@@ -190,7 +190,7 @@ sealed class DiskWindow : SbWindow
                     det = DiskDetails.Get(found, nd);
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Post(delegate
             {
                 if (gen != loadGen) return;
@@ -263,7 +263,7 @@ sealed class DiskWindow : SbWindow
                         det = DiskDetails.Get(v, nd);
                     }
                 }
-                catch { }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 Post(delegate
                 {
                     if (pg != pickGen || cur != v) return;
@@ -285,7 +285,7 @@ sealed class DiskWindow : SbWindow
         Util.Bg(delegate
         {
             WinDiskHealth h = null;
-            try { h = DiskHealth.Get(no); } catch { }
+            try { h = DiskHealth.Get(no); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Post(delegate
             {
                 whBusy = false;

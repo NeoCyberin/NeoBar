@@ -11,7 +11,6 @@ using System.Windows.Forms;
 // ======================================================================
 static class SecTray
 {
-    [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr h);
 
     static NotifyIcon ni;
     static Icon icoOk, icoAlert;
@@ -68,7 +67,7 @@ static class SecTray
             }
             IntPtr h = bmp.GetHicon();
             try { using (Icon tmp = Icon.FromHandle(h)) return (Icon)tmp.Clone(); }
-            finally { DestroyIcon(h); }
+            finally { Win.DestroyIcon(h); }
         }
     }
 
@@ -108,7 +107,7 @@ static class SecTray
             if (icoOk != null) { icoOk.Dispose(); icoOk = null; }
             if (icoAlert != null) { icoAlert.Dispose(); icoAlert = null; }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static void Open() { try { if (bar != null) bar.OpenSecurity(); } catch (Exception ex) { Util.ErrorLog(ex); } }
@@ -125,7 +124,7 @@ static class SecTray
     {
         SecWatch.SetWatch(false);
         try { ToastForm.ShowClick(bar, L.T("Безпека: стеження вимкнено"), L.T("Значок прибрано. Увімкнути знову можна у вікні «Безпека» - клік по цьому повідомленню відкриє його."), "shield", delegate { bar.OpenSecurity(); }); }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // нові знахідки: червона крапка до відкриття вікна «Безпеки»
@@ -149,6 +148,6 @@ static class SecTray
             if (miStatus != null)
                 miStatus.Text = SecScan.LastAt == DateTime.MinValue ? st : st + L.T(" · перевірено о ") + SecScan.LastAt.ToString("HH:mm");
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 }

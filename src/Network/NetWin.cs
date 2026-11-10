@@ -84,7 +84,7 @@ static class PingMon
                 if (System.Net.IPAddress.TryParse(host, out ip))
                 {
                     string name = "";
-                    try { name = System.Net.Dns.GetHostEntry(ip).HostName; } catch { }
+                    try { name = System.Net.Dns.GetHostEntry(ip).HostName; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     d = ip + (name.Length > 0 && name != ip.ToString() ? " · " + name : "");
                 }
                 else
@@ -95,13 +95,13 @@ static class PingMon
                     d = host + (addr.Length > 0 ? " · " + addr : "");
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Action done = delegate
             {
                 if (host != Host) return;
                 Detail = d;
                 Action u = Updated;
-                if (u != null) try { u(); } catch { }
+                if (u != null) try { u(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             };
             if (ui != null) ui.Post(delegate { done(); }, null); else done();
         });
@@ -134,7 +134,7 @@ static class PingMon
                     if (r != null && r.Status == IPStatus.Success) ms = r.RoundtripTime;
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Action done = delegate
             {
                 busy = false;
@@ -146,7 +146,7 @@ static class PingMon
                 Hist.Add(double.IsNaN(ms) ? float.NaN : (float)ms);
                 if (Hist.Count > 120) Hist.RemoveAt(0);
                 Action u = Updated;
-                if (u != null) try { u(); } catch { }
+                if (u != null) try { u(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             };
             if (ui != null) ui.Post(delegate { done(); }, null); else done();
         });
@@ -409,7 +409,7 @@ sealed partial class NetWindow : ToolWindow
     {
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
         lock (outLines) foreach (string[] l in outLines) sb.AppendLine(l[0]);
-        try { Clipboard.SetText(sb.ToString()); } catch { }
+        try { Clipboard.SetText(sb.ToString()); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void Add(int id, string text, string kind)
@@ -424,12 +424,12 @@ sealed partial class NetWindow : ToolWindow
                 Invalidate();
             }));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void Finish(int id)
     {
-        try { BeginInvoke(new Action(delegate { if (id == runId) { running = false; Invalidate(); } })); } catch { }
+        try { BeginInvoke(new Action(delegate { if (id == runId) { running = false; Invalidate(); } })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     void Stop() { runId++; running = false; lock (outLines) outLines.Add(new[] { L.T("Зупинено"), "" }); Invalidate(); }
@@ -462,7 +462,7 @@ sealed partial class NetWindow : ToolWindow
         {
             int ok = 0; long mn = long.MaxValue, mx = 0, sum = 0;
             System.Net.IPAddress ip = null;
-            try { ip = Resolve(host); } catch { }
+            try { ip = Resolve(host); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (ip == null) { Add(id, L.T("Не вдалося знайти адресу «") + host + L.Q("»"), "bad"); Finish(id); return; }
             if (ip.ToString() != host) Add(id, L.T("Адреса: ") + ip, "");
             byte[] buf = new byte[32];
@@ -504,7 +504,7 @@ sealed partial class NetWindow : ToolWindow
         Util.Bg(delegate
         {
             System.Net.IPAddress ip = null;
-            try { ip = Resolve(host); } catch { }
+            try { ip = Resolve(host); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (ip == null) { Add(id, L.T("Не вдалося знайти адресу «") + host + L.Q("»"), "bad"); Finish(id); return; }
             Add(id, L.T("Ціль: ") + ip, "");
             byte[] buf = new byte[32];

@@ -43,13 +43,13 @@ static class SecWatch
     {
         try
         {
-            if (!File.Exists(FilePath)) return;
-            string[] l = File.ReadAllLines(FilePath, Encoding.UTF8);
+            if (!SafeFile.Exists(FilePath)) return;
+            string[] l = SafeFile.ReadLines(FilePath);
             long b;
             if (l.Length == 0 || !long.TryParse(l[0], out b) || Math.Abs(b - boot) > TimeSpan.FromMinutes(2).Ticks) return;
             for (int i = 1; i < l.Length; i++) if (l[i].Length > 0) told.Add(l[i]);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static void SaveTold()
@@ -59,9 +59,9 @@ static class SecWatch
             StringBuilder sb = new StringBuilder();
             sb.Append(boot).Append("\r\n");
             lock (told) foreach (string k in told) sb.Append(k.Replace("\r", " ").Replace("\n", " ")).Append("\r\n");
-            File.WriteAllText(FilePath, sb.ToString(), new UTF8Encoding(false));
+            SafeFile.Write(FilePath, sb.ToString(), new UTF8Encoding(false));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // стеження ввімкнене й «озброєне» (значок у треї є)
@@ -145,7 +145,7 @@ static class SecWatch
             }
             catch (Exception ex) { Util.ErrorLog(ex); }
             finally { busy = false; }
-            try { bar.BeginInvoke(new Action(delegate { Done(fresh); })); } catch { }
+            try { bar.BeginInvoke(new Action(delegate { Done(fresh); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         });
         t.IsBackground = true;
         t.Priority = ThreadPriority.Lowest;
@@ -154,7 +154,7 @@ static class SecWatch
 
     static void Done(List<Finding> fresh)
     {
-        try { bar.WidgetRedraw("security"); } catch { }
+        try { bar.WidgetRedraw("security"); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (fresh.Count == 0 || !Active) return;
         SecTray.Alert(true);
         fresh.Sort(delegate (Finding a, Finding b) { return b.Score.CompareTo(a.Score); });

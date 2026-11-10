@@ -47,7 +47,7 @@ static class IconCache
             if (File.Exists(f)) File.Delete(f);
             File.Move(tmp, f);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // збережена копія іконки для файла, якого вже (ще) немає; null - копії немає

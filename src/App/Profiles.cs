@@ -115,7 +115,7 @@ static class Prof
         return png;
     }
 
-    static void Unhide(string f) { try { if (System.IO.File.Exists(f)) System.IO.File.SetAttributes(f, FileAttributes.Normal); } catch { } }
+    static void Unhide(string f) { try { if (System.IO.File.Exists(f)) System.IO.File.SetAttributes(f, FileAttributes.Normal); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
     // зберегти фото профілю (атомарно: спершу тимчасовий файл)
     public static void SavePhoto(Profile p, Image img)
@@ -129,7 +129,7 @@ static class Prof
         Unhide(f);
         if (System.IO.File.Exists(f)) System.IO.File.Delete(f);
         System.IO.File.Move(tmp, f);
-        try { System.IO.File.SetAttributes(f, FileAttributes.Hidden); } catch { }
+        try { System.IO.File.SetAttributes(f, FileAttributes.Hidden); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static void DropPhoto(Profile p)
@@ -159,7 +159,7 @@ static class Prof
     public static string File(string name)
     {
         string d = Dir;
-        try { if (!Directory.Exists(d)) Directory.CreateDirectory(d); } catch { }
+        try { if (!Directory.Exists(d)) Directory.CreateDirectory(d); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return Path.Combine(d, name);
     }
 
@@ -215,9 +215,9 @@ static class Prof
         All.Clear();
         Last = "";
         Drop = "";
-        if (!System.IO.File.Exists(ListPath)) return;
+        if (!SafeFile.Exists(ListPath)) return;
         Profile cur = null;
-        foreach (string raw in System.IO.File.ReadAllLines(ListPath, Encoding.UTF8))
+        foreach (string raw in SafeFile.ReadLines(ListPath))
         {
             string l = raw.Trim();
             if (l.Length == 0 || l.StartsWith(";")) continue;
@@ -269,14 +269,7 @@ static class Prof
                 if (p.HasPin) sb.AppendLine("pin=" + p.Salt + ":" + p.Hash);
             }
             // запис через тимчасовий файл: обірваний запис не зіпсує список профілів
-            string tmp = ListPath + ".tmp";
-            System.IO.File.WriteAllText(tmp, sb.ToString(), new UTF8Encoding(true));
-            if (!System.IO.File.Exists(ListPath)) System.IO.File.Move(tmp, ListPath);
-            else
-            {
-                try { System.IO.File.Replace(tmp, ListPath, null); }
-                catch { System.IO.File.Copy(tmp, ListPath, true); System.IO.File.Delete(tmp); }   // диск без підтримки заміни файлу
-            }
+            SafeFile.Write(ListPath, sb.ToString(), new UTF8Encoding(true));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
@@ -406,7 +399,7 @@ static class Prof
             Profile p = ById(Last);
             if (p != null) return Path.Combine(DirOf(p), name);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return Path.Combine(Root, name);
     }
 
@@ -433,7 +426,7 @@ static class Prof
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return Themes.Get("dark", new Cfg());
     }
 
@@ -659,7 +652,7 @@ static class ProfileArt
         string list = style == "sketch" ? "Segoe Print|Ink Free|Comic Sans MS|Segoe UI" : (style == "plate" ? "Georgia|Segoe UI Semibold|Segoe UI" :
                       (style == "spark" ? "Bahnschrift SemiBold|Bahnschrift|Segoe UI Semibold|Segoe UI" : "Segoe UI Semibold|Segoe UI|Arial"));
         foreach (string n in list.Split('|'))
-            try { FontFamily f = new FontFamily(n); return f; } catch { }
+            try { FontFamily f = new FontFamily(n); return f; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return new FontFamily(System.Drawing.Text.GenericFontFamilies.SansSerif);
     }
 
@@ -721,7 +714,7 @@ static class ProfileArt
                 using (Pen pn = new Pen(ring, pw)) g.DrawPath(pn, ring2);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         g.PixelOffsetMode = pm;
         g.SmoothingMode = sm;
     }

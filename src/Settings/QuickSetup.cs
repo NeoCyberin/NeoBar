@@ -72,7 +72,7 @@ sealed class QuickSetup : SbWindow
             int maxH = wa.Height - Px(12), maxW = wa.Width - Px(12);
             if (ClientSize.Height > maxH || ClientSize.Width > maxW) ClientSize = new Size(Math.Min(ClientSize.Width, maxW), Math.Min(ClientSize.Height, maxH));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     protected override CreateParams CreateParams

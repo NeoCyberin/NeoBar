@@ -23,16 +23,16 @@ static class Uninstall
             using (RegistryKey k = Registry.CurrentUser.OpenSubKey(RunKey, true))
                 if (k != null) k.DeleteValue("NeoBar", false);
         }
-        catch { }
-        try { ShellMenu.RemoveAll(); } catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { ShellMenu.RemoveAll(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         VkValues(RegistryHive.CurrentUser);
         try
         {
             foreach (string dir in ProfileDirs()) Wrappers(Path.Combine(dir, "games.ini"));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         // завдання з найвищими правами й шар Vulkan у HKLM прибирає лише адміністратор
-        if (TaskExists() || VkValues(RegistryHive.LocalMachine, true))
+        if (TaskExists() || AppLock.Applied() || VkValues(RegistryHive.LocalMachine, true))
         {
             if (Elevated.IsAdmin) Elevate(null);
             else
@@ -47,7 +47,7 @@ static class Uninstall
                         if (done) break;
                         Thread.Sleep(100);
                     }
-                try { if (outFile != null) File.Delete(outFile); } catch { }
+                try { if (outFile != null) File.Delete(outFile); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
         }
         return 0;
@@ -56,7 +56,8 @@ static class Uninstall
     // підвищена частина (помічник «--helper uninstall»)
     public static int Elevate(StreamWriter w)
     {
-        if (TaskExists()) AdminTask.Configure(false, false, "", w ?? new StreamWriter(Stream.Null));
+        if (TaskExists()) AdminTask.Configure(false, false, "", w);
+        else if (AppLock.Applied()) { AppLock.RemoveLauncher(); AppLock.Remove(w); }
         VkValues(RegistryHive.LocalMachine);
         return 0;
     }
@@ -96,11 +97,11 @@ static class Uninstall
                         string f = Path.GetFileName(n);
                         if (!f.StartsWith("NeoBarVkLayer", StringComparison.OrdinalIgnoreCase) || !n.StartsWith(dir, StringComparison.OrdinalIgnoreCase)) continue;
                         found = true;
-                        if (!onlyCheck) try { k.DeleteValue(n, false); } catch { }
+                        if (!onlyCheck) try { k.DeleteValue(n, false); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                     }
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return found;
     }

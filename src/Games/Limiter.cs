@@ -84,7 +84,7 @@ static class FpsLimiter
             g.WrapMiss = miss;
             Fps.Log("Обгортка: " + g.Name + ": " + (miss ? "гра завантажила системну бібліотеку, а не обгортку" : "гра завантажила обгортку"));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
     [DllImport("kernel32.dll", SetLastError = true)] static extern bool IsWow64Process(IntPtr h, out bool wow);
     [DllImport("kernel32.dll", SetLastError = true)] static extern IntPtr VirtualAllocEx(IntPtr h, IntPtr addr, UIntPtr size, uint type, uint protect);
@@ -135,7 +135,7 @@ static class FpsLimiter
             dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
             if (EnumDisplaySettingsW(scr.DeviceName, -1 /*ENUM_CURRENT_SETTINGS*/, ref dm) && dm.dmDisplayFrequency > 1) return dm.dmDisplayFrequency;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return 60;
     }
 
@@ -154,7 +154,7 @@ static class FpsLimiter
             if (pref > 0 && all.Contains(pref)) r.Add(pref);
             foreach (int hz in all) if (!r.Contains(hz)) r.Add(hz);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (r.Count == 0) r.Add(60);
         return r.ToArray();
     }
@@ -167,7 +167,7 @@ static class FpsLimiter
             if (pref <= 0) return false;
             foreach (Screen sc in Screen.AllScreens) if (HzOf(sc) == pref) return true;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return false;
     }
 
@@ -184,7 +184,7 @@ static class FpsLimiter
             if (fp == s.Pid) w = fg;
             else using (Process p = Process.GetProcessById(s.Pid)) w = p.MainWindowHandle;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         s.Hz = HzOf(w != IntPtr.Zero ? Screen.FromHandle(w) : Screen.PrimaryScreen);
         s.HzReal = w != IntPtr.Zero;
         s.HzAt = DateTime.Now;
@@ -276,7 +276,7 @@ static class FpsLimiter
     public static string ExeDirOf(Game g)
     {
         foreach (LimSession s in sessions.Values)
-            if (s.Game == g && s.Exe.Length > 0) { try { return Path.GetDirectoryName(s.Exe) ?? ""; } catch { } }
+            if (s.Game == g && s.Exe.Length > 0) { try { return Path.GetDirectoryName(s.Exe) ?? ""; } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         return "";
     }
 
@@ -326,7 +326,7 @@ static class FpsLimiter
                 if (ca == 11) return "dx11";
                 if (ca == 12) return "dx12";
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         return "";
     }
@@ -370,7 +370,7 @@ static class FpsLimiter
             int fp;
             Win.GetWindowThreadProcessId(fg, out fp);
             if (fp == s.Pid) s.Wnd = fg;
-            else if (s.Wnd == IntPtr.Zero || !IsWindow(s.Wnd)) using (Process p = Process.GetProcessById(s.Pid)) s.Wnd = p.MainWindowHandle;
+            else if (s.Wnd == IntPtr.Zero || !Win.IsWindow(s.Wnd)) using (Process p = Process.GetProcessById(s.Pid)) s.Wnd = p.MainWindowHandle;
             if (s.Wnd == IntPtr.Zero) return false;
             Screen scr = Screen.FromHandle(s.Wnd);
             RECT r;
@@ -393,7 +393,6 @@ static class FpsLimiter
 
     [StructLayout(LayoutKind.Sequential)] struct RECT { public int Left, Top, Right, Bottom; }
     [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out RECT r);
-    [DllImport("user32.dll")] static extern bool IsWindow(IntPtr h);
 
     // раз на секунду: чи гра у справжньому повноекрані; чи не вийшов показ у кадрі / підміна
     static void UpdateMode(LimSession s)
@@ -415,7 +414,7 @@ static class FpsLimiter
                 return;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         s.Excl = ex;
     }
 
@@ -449,11 +448,11 @@ static class FpsLimiter
                             (code == 0 ? L.T(" (звичайний вихід)") : code == 0xC0000005 ? L.T(" (порушення доступу - збій)") : code == 0xC0000409 || code == 0xC0000374 ? L.T(" (збій купи / стека)") : "") +
                             L.T(", працювала ") + Math.Round((DateTime.Now - kv.Value.Start).TotalSeconds) + L.T(" с"));
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (done == null) done = new List<int>();
             done.Add(kv.Key);
         }
-        if (done != null) foreach (int p in done) { try { Win.CloseHandle(exitWatch[p].H); } catch { } exitWatch.Remove(p); }
+        if (done != null) foreach (int p in done) { try { Win.CloseHandle(exitWatch[p].H); } catch (Exception skipEx) { SbLog.Skip(skipEx); } exitWatch.Remove(p); }
     }
 
     static int exeNotedPid;
@@ -478,7 +477,7 @@ static class FpsLimiter
             g.ExeFile = exe;
             if (g.ExeDir != d || g.Bits != bits) { g.ExeDir = d; g.Bits = bits; Games.Save(); }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static bool IsRunning(Game g)
@@ -487,7 +486,7 @@ static class FpsLimiter
         return g != null && Games.CurrentPid > 0 && Games.ByPid(Games.CurrentPid) == g;
     }
 
-    public static void LogWrap(Game g, string msg) { try { Fps.Log("Обгортка: " + g.Name + ": " + msg); } catch { } }
+    public static void LogWrap(Game g, string msg) { try { Fps.Log("Обгортка: " + g.Name + ": " + msg); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
     // запам'ятати API гри: показується біля назви в списку ігор
     static void RememberApi(Game g, LimSession s)
@@ -531,7 +530,7 @@ static class FpsLimiter
             if (vk && a.StartsWith("dx") && s.Injected && s.View != IntPtr.Zero && Marshal.ReadInt32(s.View, OffFrames) == 0 &&
                 s.InjAt != DateTime.MinValue && (DateTime.Now - s.InjAt).TotalSeconds > 20) a = "vulkan";
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (a.Length > 0) { if (a != s.Api) s.ApiSince = DateTime.Now; s.Api = a; }
     }
 
@@ -627,7 +626,7 @@ static class FpsLimiter
             WrapDiag(g, pid);
         }
         foreach (LimSession s in sessions.Values) Push(s);
-        if ((DateTime.Now - syncAllAt).TotalSeconds > 30) { syncAllAt = DateTime.Now; try { GameWrap.SyncAll(); } catch { } }     // обгортки лягають у теки відомих ігор ще до запуску
+        if ((DateTime.Now - syncAllAt).TotalSeconds > 30) { syncAllAt = DateTime.Now; try { GameWrap.SyncAll(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }     // обгортки лягають у теки відомих ігор ще до запуску
         if (SbLog.On(SbLog.Games)) DiagLog();
     }
 
@@ -667,7 +666,7 @@ static class FpsLimiter
             lastDiag = d;
             Fps.Log("Діагностика: " + d);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // записати в гру ліміт і стан
@@ -817,7 +816,7 @@ static class FpsLimiter
         {
             g.LimitOn = true;
             OverlayCfg.LimOn = true;
-            try { Games.Save(); } catch { }
+            try { Games.Save(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
         else OverlayCfg.LimOn = !OverlayCfg.LimOn;
         foreach (LimSession s in sessions.Values) Push(s);
@@ -838,7 +837,7 @@ static class FpsLimiter
         VkLayer.Shutdown();
         // гра лишається з бібліотекою, але без обмеження
         foreach (LimSession s in sessions.Values)
-            try { if (s.View != IntPtr.Zero) Marshal.WriteInt32(s.View, OffEnabled, 0); } catch { }
+            try { if (s.View != IntPtr.Zero) Marshal.WriteInt32(s.View, OffEnabled, 0); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         foreach (int p in new List<int>(sessions.Keys)) Close(p);
     }
 
@@ -895,10 +894,10 @@ static class FpsLimiter
         LimSession s;
         if (!sessions.TryGetValue(pid, out s)) return;
         sessions.Remove(pid);
-        try { if (s.View != IntPtr.Zero) UnmapViewOfFile(s.View); } catch { }
-        try { if (s.Map != IntPtr.Zero) Win.CloseHandle(s.Map); } catch { }
-        try { if (s.ImgView != IntPtr.Zero) UnmapViewOfFile(s.ImgView); } catch { }
-        try { if (s.ImgMap != IntPtr.Zero) Win.CloseHandle(s.ImgMap); } catch { }
+        try { if (s.View != IntPtr.Zero) UnmapViewOfFile(s.View); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { if (s.Map != IntPtr.Zero) Win.CloseHandle(s.Map); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { if (s.ImgView != IntPtr.Zero) UnmapViewOfFile(s.ImgView); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { if (s.ImgMap != IntPtr.Zero) Win.CloseHandle(s.ImgMap); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     // ---------- впровадження ----------

@@ -17,7 +17,6 @@ static class IconHi
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     static extern uint PrivateExtractIcons(string file, int index, int cx, int cy, IntPtr[] phicon, uint[] piconid, uint nIcons, uint flags);
-    [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr h);
 
     [ComImport, Guid("00021401-0000-0000-C000-000000000046")]
     class ShellLinkCoClass { }
@@ -69,7 +68,7 @@ static class IconHi
                 case ".url": return FromUrl(path);
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return null;
     }
 
@@ -92,8 +91,8 @@ static class IconHi
             string t = Environment.ExpandEnvironmentVariables(tg.ToString().Trim());
             if (t.Length > 0 && File.Exists(t)) return Extract(t, 0);
         }
-        catch { }
-        finally { if (link != null) try { Marshal.ReleaseComObject(link); } catch { } }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        finally { if (link != null) try { Marshal.ReleaseComObject(link); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         return null;
     }
 
@@ -111,7 +110,7 @@ static class IconHi
             return t.Length > 0 ? t : null;
         }
         catch { return null; }
-        finally { if (link != null) try { Marshal.ReleaseComObject(link); } catch { } }
+        finally { if (link != null) try { Marshal.ReleaseComObject(link); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
     }
 
     // інтернет-ярлик: рядки IconFile= та IconIndex=
@@ -141,6 +140,6 @@ static class IconHi
             using (Icon ic = Icon.FromHandle(h[0]))
             using (Bitmap bm = ic.ToBitmap()) return new Bitmap(bm);
         }
-        finally { DestroyIcon(h[0]); }
+        finally { Win.DestroyIcon(h[0]); }
     }
 }

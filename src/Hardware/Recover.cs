@@ -42,7 +42,6 @@ sealed class FileDev : IBlockDev
 sealed class VolumeDev : IBlockDev
 {
     [DllImport("kernel32.dll", SetLastError = true)] static extern bool ReadFile(SafeFileHandle h, byte[] buf, int n, out int done, IntPtr ovl);
-    [DllImport("kernel32.dll", SetLastError = true)] static extern bool SetFilePointerEx(SafeFileHandle h, long dist, out long np, int method);
 
     readonly SafeFileHandle h;
     readonly long len;
@@ -77,7 +76,7 @@ sealed class VolumeDev : IBlockDev
         if (a == cacheAt) return cacheLen > 0;
         cacheAt = a; cacheLen = 0;
         long np;
-        if (!SetFilePointerEx(h, a, out np, 0)) return false;
+        if (!Win.SetFilePointerEx(h, a, out np, 0)) return false;
         int want = (int)Math.Min(Chunk, len - a), done;
         want = (want + sector - 1) / sector * sector;
         if (ReadFile(h, cache, want, out done, IntPtr.Zero)) { cacheLen = done; return done > 0; }
@@ -85,7 +84,7 @@ sealed class VolumeDev : IBlockDev
         Array.Clear(cache, 0, Chunk);
         for (int o = 0; o < want; o += sector)
         {
-            if (!SetFilePointerEx(h, a + o, out np, 0)) break;
+            if (!Win.SetFilePointerEx(h, a + o, out np, 0)) break;
             byte[] one = new byte[sector];
             if (ReadFile(h, one, sector, out done, IntPtr.Zero) && done > 0) Buffer.BlockCopy(one, 0, cache, o, done);
         }
@@ -164,7 +163,7 @@ static class PartTable
                 if (l[i].Len < ss * 64L || l[i].Start < 0 || l[i].Start + l[i].Len > d.Length + ss) l.RemoveAt(i);
             foreach (Part p in l) p.Fs = Detect(d, p.Start);
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return l;
     }
 
@@ -381,7 +380,7 @@ sealed class RecoverScan
             if (type == 0x10 && !nonRes)
             {
                 int c = a + U16(r, a + 20);
-                if (c + 16 <= a + len) try { m.When = DateTime.FromFileTimeUtc(I64(r, c + 8)).ToLocalTime(); } catch { }
+                if (c + 16 <= a + len) try { m.When = DateTime.FromFileTimeUtc(I64(r, c + 8)).ToLocalTime(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
             else if (type == 0x30 && !nonRes)
             {
@@ -457,7 +456,7 @@ sealed class RecoverScan
                 else if (b6.Resident != null) ntfsBitmap = b6.Resident;
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
 
         // перший прохід: імена й батьки всіх записів (для шляхів), видалені - в окремий список
         Dictionary<long, long> parent = new Dictionary<long, long>();
@@ -974,7 +973,7 @@ sealed class RecoverScan
             // Matroska / WebM
             if (c == 0x1A && b[o + 1] == 0x45 && b[o + 2] == 0xDF && b[o + 3] == 0xA3) { long n = MkvLen(at); if (n > 0) { Carved("mkv", at, n, null); return at + n; } }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return -1;
     }
 
@@ -1343,6 +1342,6 @@ sealed class RecoverScan
                 }
             }
         }
-        try { if (f.When != DateTime.MinValue) File.SetLastWriteTime(path, f.When); } catch { }
+        try { if (f.When != DateTime.MinValue) File.SetLastWriteTime(path, f.When); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 }

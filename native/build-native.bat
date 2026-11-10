@@ -18,6 +18,8 @@ g++ -c -O2 -std=c++17 -fno-exceptions -fno-rtti -Ivk sbvk.cpp -o obj/sbvk.o || g
 g++ -shared -O2 -s -static -static-libgcc -static-libstdc++ obj/*.o -o ../bin/NeoBarFps%BITS%.dll -Wl,--kill-at -lgdi32 || goto fail
 rem рушій шпалер: DLL, NeoBar запускає її окремим процесом через rundll32
 g++ -shared -O2 -std=c++17 -fno-exceptions -fno-rtti sbwall.cpp -o ../bin/NeoBarWall%BITS%.dll -s -static -static-libgcc -static-libstdc++ -Wl,--kill-at -ld3d11 -ld2d1 -ldxgi -lwindowscodecs -lole32 -loleaut32 -luuid -lgdi32 -luser32 -lshlwapi -lshell32 || goto fail
+rem помічник перетягування (NeoBar від адміністратора): 32-бітний, збирається x86-версією w64devkit
+if "%BITS%"=="32" g++ -O2 -std=c++17 -fno-exceptions -fno-rtti -municode -mwindows sbdrop.cpp -o ../bin/NeoBarDrop.exe -s -static -static-libgcc -static-libstdc++ -lshell32 -luser32 -lgdi32 || goto fail
 rmdir /s /q obj
 echo OK: NeoBarFps%BITS%.dll, NeoBarWall%BITS%.dll
 pause

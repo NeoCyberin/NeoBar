@@ -99,7 +99,7 @@ sealed class LookProfile
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return p;
     }
 }
@@ -247,9 +247,9 @@ static class OverlayCfg
         Defaults();
         try
         {
-            if (!File.Exists(path)) return;
+            if (!SafeFile.Exists(path)) return;
 
-            foreach (string raw in File.ReadAllLines(path, Encoding.UTF8))
+            foreach (string raw in SafeFile.ReadLines(path))
             {
                 int eq = raw.IndexOf('=');
                 if (eq <= 0 || raw.StartsWith("#")) continue;
@@ -296,7 +296,7 @@ static class OverlayCfg
                 }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static void Save()
@@ -324,9 +324,9 @@ static class OverlayCfg
             List<string> ms = new List<string>();
             foreach (OvMetric m in Metrics) ms.Add(m.Key + ":" + (m.Show ? 1 : 0) + ":" + (m.Graph ? 1 : 0));
             sb.AppendLine("metrics=" + string.Join(",", ms.ToArray()));
-            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
+            SafeFile.Write(path, sb.ToString(), new UTF8Encoding(true));
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static string KeyText(Keys k)
@@ -505,11 +505,10 @@ sealed class OverlayForm : LayeredForm
         if (first || fg != lastFg || ((DateTime.Now - lastTop).TotalSeconds >= 1 && GameAboveUs()))
         {
             lastFg = fg; lastTop = DateTime.Now;
-            try { Win.SetWindowPos(Handle, new IntPtr(-1), 0, 0, 0, 0, 0x1 | 0x2 | 0x10); } catch { }
+            try { Win.SetWindowPos(Handle, new IntPtr(-1), 0, 0, 0, 0, 0x1 | 0x2 | 0x10); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
     }
 
-    [DllImport("user32.dll")] static extern IntPtr GetWindow(IntPtr h, uint cmd);
 
     // чи є над нашим вікном видиме вікно процесу гри
     bool GameAboveUs()
@@ -519,7 +518,7 @@ sealed class OverlayForm : LayeredForm
         IntPtr w = Handle;
         for (int i = 0; i < 200; i++)
         {
-            w = GetWindow(w, 3);                 // GW_HWNDPREV - вікно вище в порядку накладання
+            w = Win.GetWindow(w, 3);                 // GW_HWNDPREV - вікно вище в порядку накладання
             if (w == IntPtr.Zero) return false;
             if (!Win.IsWindowVisible(w)) continue;
             int pid;
@@ -594,7 +593,7 @@ sealed class OverlayForm : LayeredForm
             float refSc = RefScale > 0 ? RefScale : sc;
             int maxW = 100000, maxH = 100000;
             Screen scr = null;
-            try { scr = Screen.FromHandle(Win.GetForegroundWindow()); } catch { }
+            try { scr = Screen.FromHandle(Win.GetForegroundWindow()); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             try
             {
                 if (scr == null) scr = Screen.PrimaryScreen;
@@ -605,7 +604,7 @@ sealed class OverlayForm : LayeredForm
                     maxH = (int)((scr.Bounds.Height - 2 * (int)(OverlayCfg.OffY * refSc)) * r);
                 }
             }
-            catch { }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (FrameBox.Width > 0 && FrameBox.Height > 0)
             {
                 maxW = FrameBox.Width - 2 * (int)(OverlayCfg.OffX * sc);
@@ -794,7 +793,7 @@ static class OvTheme
                 if (ok) { r = n; break; }
             }
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         fontCache[list] = r;
         return r;
     }
@@ -935,7 +934,7 @@ static class OverlayModule
         }
         catch { hk = null; }
         timer = new Timer();
-        timer.Tick += delegate { try { Tick(); } catch { } };
+        timer.Tick += delegate { try { Tick(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } };
         Apply();
     }
 
@@ -959,11 +958,11 @@ static class OverlayModule
 
     public static void Shutdown()
     {
-        try { if (timer != null) timer.Stop(); } catch { }
-        try { if (hk != null) hk.Dispose(); } catch { }
-        try { FpsLimiter.Shutdown(); } catch { }
-        try { GamePing.Shutdown(); } catch { }
-        try { if (form != null && !form.IsDisposed) form.Close(); } catch { }
+        try { if (timer != null) timer.Stop(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { if (hk != null) hk.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { FpsLimiter.Shutdown(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { GamePing.Shutdown(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { if (form != null && !form.IsDisposed) form.Close(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     static void OnHotkey(int id)
@@ -1021,7 +1020,7 @@ static class OverlayModule
             Screen scr = Screen.FromHandle(Win.GetForegroundWindow());
             if (scr != null && scr.Bounds.Height > 0) ratio = (float)fh / scr.Bounds.Height;
         }
-        catch { }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         ratio = Math.Max(0.75f, Math.Min(2f, ratio));      // гра в нижчій роздільності, ніж екран: не робимо картинку нечитабельною
         float sc = bar.Dpi * ratio;
         Bitmap b = null;
