@@ -297,7 +297,7 @@ sealed partial class NeoBar
                     FitCompact();
                     ClampScroll();
                     Invalidate();
-                    if (grpT.Count == 0) { grpTimer.Stop(); BuildFolderIcons(); if (IsHandleCreated) Trim(); }
+                    if (grpT.Count == 0) { grpTimer.Stop(); BuildFolderIcons(); }
                 };
             }
             grpTimer.Start();

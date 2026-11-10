@@ -12,7 +12,8 @@ using System.Windows.Forms;
 //  Очищення Windows від сміття. Головне - безпека: лише кеші й тимчасові файли, які програми
 //  й Windows відтворюють самі; зайняті файли пропускаються; посилання (junction, symlink) ніколи
 //  не відкриваються; кеш програми чиститься лише коли вона закрита. Системні компоненти
-//  (оновлення, WinSxS) не чіпаються - краще щось лишити, ніж зламати. Реєстр - окремо, у RegClean.cs.
+//  (оновлення, WinSxS) не чіпаються - краще щось лишити, ніж зламати. Реєстр не чиститься: користі для
+//  швидкодії це не дає, а ризик зламати програми є (Microsoft такі засоби не підтримує).
 // ======================================================================
 sealed class JunkTarget
 {
@@ -376,7 +377,7 @@ static class Cleaner
     }
 }
 
-sealed partial class CleanWindow : SbWindow
+sealed class CleanWindow : SbWindow
 {
     int scroll;
     bool cleaned;
@@ -384,10 +385,7 @@ sealed partial class CleanWindow : SbWindow
     public CleanWindow(NeoBar bar) : base(bar, L.T("Очищення"), 540, 800)
     { Glyph = "\uE74D";
         Cleaner.Init();
-        RegClean.Init();
-        Tabs = new string[] { L.T("Файли"), L.T("Реєстр") };
         Cleaner.Changed += OnData;
-        RegClean.Changed += OnData;
         if (!Cleaner.Busy && Cleaner.LastAt == DateTime.MinValue) Cleaner.Run(Bar.Config, false);     // перший аналіз - одразу
     }
 
@@ -399,7 +397,6 @@ sealed partial class CleanWindow : SbWindow
     // зліва направо: «на робочий стіл» (віджет-кошик), закрити
     protected override void HeadButtons(Graphics g, ref int right)
     {
-        if (Tab == 1) return;          // у вкладці «Реєстр» кошик на стіл не потрібен
         Rectangle rr = new Rectangle(right - Px(32), Px(7), Px(32), Px(32));
         IconBtn(g, rr, "desk", delegate { ClockData.AddDesk("trash"); }, false);
         right = rr.Left - Px(4);
@@ -408,7 +405,6 @@ sealed partial class CleanWindow : SbWindow
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         Cleaner.Changed -= OnData;
-        RegClean.Changed -= OnData;
         base.OnFormClosed(e);
     }
 
@@ -437,7 +433,6 @@ sealed partial class CleanWindow : SbWindow
 
     protected override void PaintBody(Graphics g, Rectangle r)
     {
-        if (Tab == 1) { PaintReg(g, r); return; }
         PaintFiles(g, r);
     }
 

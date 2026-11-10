@@ -11,7 +11,9 @@ using System.Windows.Forms;
 // ======================================================================
 //  Перетягування файлів у NeoBar, запущений від імені адміністратора.
 //  Windows (UIPI) не пускає перетягування зі звичайного Провідника у вікна з вищими правами - курсор стає
-//  «заборонено». Тому поруч працює маленький помічник зі звичайними правами (та сама NeoBar.exe з --drop).
+//  «заборонено». Тому поруч працює маленький помічник зі звичайними правами (NeoBarDrop.exe - нативний, близько
+//  мегабайта пам'яті; якщо його немає - та сама NeoBar.exe з --drop). Він запускається лише при першому
+//  перетягуванні і сам закривається після 2 хвилин без роботи.
 //  Стежить сама NeoBar (процесу з вищими правами Windows показує стан миші завжди, а звичайному - ні, коли активне
 //  вікно NeoBar): кнопку затиснули поза NeoBar і з нею зайшли на вікно, що приймає файли, - NeoBar просить помічника
 //  поставити над цим вікном невидиме вікно-приймач. Помічник отримує файли звичайним перетягуванням і передає їхні
@@ -135,14 +137,27 @@ static class DropBridge
         if (launched) return;
         launched = true;
         if (recv == null) recv = new Receiver();
-        string exe = Application.ExecutablePath;
-        string how = UserLaunch.Run(exe, "--drop " + recv.Handle.ToInt64());
-        SbLog.W(SbLog.Panel, "перетягування від адміністратора: помічник зі звичайними правами - " + (how.Length > 0 ? how : "не запустився"));
-        if (how.Length == 0) return;
         poll = new System.Windows.Forms.Timer();
-        poll.Interval = 50;
+        poll.Interval = IdlePoll;
         poll.Tick += delegate { Watch(); };
         poll.Start();
+    }
+
+    // кнопка миші відпущена - перевіряємо рідко; затиснута - часто (щоб устигнути поставити приймач)
+    const int IdlePoll = 150, DragPoll = 40;
+    static int lastLaunch = Environment.TickCount - 60000;
+
+    static string DropExe { get { return Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "NeoBarDrop.exe"); } }
+
+    // помічник запускається, лише коли справді тягнуть файл на NeoBar (не частіше разу на 5 с)
+    static void Launch()
+    {
+        if (unchecked(Environment.TickCount - lastLaunch) < 5000) return;
+        lastLaunch = Environment.TickCount;
+        string how = File.Exists(DropExe)
+            ? UserLaunch.Run(DropExe, recv.Handle.ToInt64().ToString())
+            : UserLaunch.Run(Application.ExecutablePath, "--drop " + recv.Handle.ToInt64());
+        SbLog.W(SbLog.Panel, "перетягування від адміністратора: помічник зі звичайними правами - " + (how.Length > 0 ? how : "не запустився"));
     }
 
     // ---------- стеження за перетягуванням (у NeoBar) ----------
@@ -172,6 +187,8 @@ static class DropBridge
         {
             if (NeoBar.Paused) { Hide(); wasDown = false; return; }         // гра на весь екран - не стежимо
             bool down = (GetAsyncKeyState(GetSystemMetrics(23) != 0 ? 0x02 : 0x01) & 0x8000) != 0;
+            int want = down ? DragPoll : IdlePoll;
+            if (poll.Interval != want) poll.Interval = want;
             POINT pt;
             if (!GetCursorPos(out pt)) return;
             if (down && !wasDown)
@@ -192,7 +209,7 @@ static class DropBridge
             IntPtr z = RootAt(pt);
             if (z == IntPtr.Zero || !zones.Contains(z) || !IsWindowVisible(z)) return;
             IntPtr h = Helper();
-            if (h == IntPtr.Zero) return;
+            if (h == IntPtr.Zero) { Launch(); return; }     // наступний тик покаже приймач, щойно помічник запуститься
             if (PostMessage(h, MsgShow, z, IntPtr.Zero)) shownZone = z;
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
@@ -231,8 +248,10 @@ static class DropBridge
         }
     }
 
-    // приймаємо лише від своєї ж програми (той самий файл NeoBar.exe)
-    static bool FromSelf(IntPtr sender)
+    // приймаємо лише від своєї ж програми (той самий файл NeoBar.exe; файли - ще й від NeoBarDrop.exe поруч)
+    static bool FromSelf(IntPtr sender) { return FromSelf(sender, false); }
+
+    static bool FromSelf(IntPtr sender, bool dropHelper)
     {
         uint pid;
         if (sender == IntPtr.Zero || GetWindowThreadProcessId(sender, out pid) == 0 || pid == 0) return false;
@@ -243,7 +262,9 @@ static class DropBridge
             StringBuilder sb = new StringBuilder(1024);
             int n = sb.Capacity;
             if (!QueryFullProcessImageNameW(h, 0, sb, ref n)) return false;
-            return string.Equals(Path.GetFullPath(sb.ToString()), Path.GetFullPath(Application.ExecutablePath), StringComparison.OrdinalIgnoreCase);
+            string p = Path.GetFullPath(sb.ToString());
+            return string.Equals(p, Path.GetFullPath(Application.ExecutablePath), StringComparison.OrdinalIgnoreCase) ||
+                   (dropHelper && string.Equals(p, Path.GetFullPath(DropExe), StringComparison.OrdinalIgnoreCase));
         }
         catch { return false; }
         finally { CloseHandle(h); }
@@ -254,7 +275,7 @@ static class DropBridge
         COPYDATA cd = (COPYDATA)Marshal.PtrToStructure(lp, typeof(COPYDATA));
         if (cd.Data != Magic || cd.Size <= 2 || cd.Size > 1 << 20 || cd.Ptr == IntPtr.Zero) return false;
         string s = Marshal.PtrToStringUni(cd.Ptr, cd.Size / 2);
-        if (!FromSelf(sender)) { SbLog.W(SbLog.Panel, "перетягування: відхилено повідомлення не від помічника"); return false; }
+        if (!FromSelf(sender, true)) { SbLog.W(SbLog.Panel, "перетягування: відхилено повідомлення не від помічника"); return false; }
         string[] parts = s.Split('\n');
         long zl;
         if (parts.Length < 2 || !long.TryParse(parts[0], out zl)) return true;
@@ -327,6 +348,7 @@ static class DropBridge
         readonly System.Windows.Forms.Timer tm = new System.Windows.Forms.Timer();
         IntPtr zone = IntPtr.Zero;
         bool logged;
+        int lastWork = Environment.TickCount;
 
         public Overlay(IntPtr t)
         {
@@ -342,9 +364,12 @@ static class DropBridge
             DragEnter += OnDrag;
             DragOver += OnDrag;
             DragDrop += OnDrop;
-            // NeoBar закрилася - помічник теж
             tm.Interval = 1000;
-            tm.Tick += delegate { if (!IsWindow(target)) { tm.Stop(); Application.ExitThread(); } };
+            tm.Tick += delegate
+            {
+                // NeoBar закрилась або 2 хв без роботи - помічник теж (NeoBar запустить знову за потреби)
+                if (!IsWindow(target) || (!IsWindowVisible(Handle) && unchecked(Environment.TickCount - lastWork) > 120000)) { tm.Stop(); Application.ExitThread(); }
+            };
             tm.Start();
         }
 
@@ -371,6 +396,7 @@ static class DropBridge
         void On(IntPtr z)
         {
             RECT rc;
+            lastWork = Environment.TickCount;
             if (!IsWindow(z) || !GetWindowRect(z, out rc)) return;
             if (!logged) { logged = true; SbLog.W(SbLog.Panel, "помічник перетягування: перетягування над вікном NeoBar " + rc.L + "," + rc.T + " " + (rc.R - rc.L) + "x" + (rc.B - rc.T)); }
             zone = z;

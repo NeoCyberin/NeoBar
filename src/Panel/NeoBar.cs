@@ -297,7 +297,7 @@ sealed partial class NeoBar : Form
         base.OnShown(e);
         DropFiles.Register(this);          // повторно: після показу вікна стиль приймання файлів має стояти
         DropBridge.InitRemote(FromShellMenu);   // контекстне меню файлів відкриває файли в розкритих вікнах панелі
-        Trim();
+        Trim(true);
         AfterShown();
         Seasons.Start(this);
         Dice.Changed += DiceRedraw;
@@ -705,12 +705,16 @@ sealed partial class NeoBar : Form
         if (!busy) anim.Stop();
     }
 
-    static void Trim()
+    // прибрати сміття після великої разової роботи (запуск, закрите вікно налаштувань, нова тема);
+    // робочий набір обрізаємо лише після запуску: інакше сторінки однаково довантажуються назад
+    static void Trim() { Trim(false); }
+
+    static void Trim(bool workingSet)
     {
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
-        try { Win.SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, (IntPtr)(-1), (IntPtr)(-1)); } catch { }
+        if (workingSet) try { Win.SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, (IntPtr)(-1), (IntPtr)(-1)); } catch { }
     }
 
     // види віджетів, чиї дані потрібні: на панелі і на робочому столі

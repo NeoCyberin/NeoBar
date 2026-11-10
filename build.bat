@@ -24,6 +24,7 @@ copy /y bin\NeoBarFps32.dll "%OUT%\" >nul || goto fail
 copy /y bin\NeoBarFps64.dll "%OUT%\" >nul || goto fail
 copy /y bin\NeoBarWall32.dll "%OUT%\" >nul || goto fail
 copy /y bin\NeoBarWall64.dll "%OUT%\" >nul || goto fail
+copy /y bin\NeoBarDrop.exe "%OUT%\" >nul || goto fail
 if not exist "%OUT%\d3d8to9" mkdir "%OUT%\d3d8to9"
 copy /y third-party\d3d8to9\d3d8.dll "%OUT%\d3d8to9\" >nul || goto fail
 copy /y third-party\d3d8to9\LICENSE.md "%OUT%\d3d8to9\" >nul

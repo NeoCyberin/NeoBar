@@ -44,10 +44,10 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "uk"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [CustomMessages]
-uk.DeleteData=Видалити також дані NeoBar?%n%nПрофілі й налаштування, нотатки, шпалери, звуки, резервні копії реєстру та карантин.%nЯкщо залишити, вони знову будуть доступні після повторного встановлення.
+uk.DeleteData=Видалити також дані NeoBar?%n%nПрофілі й налаштування, нотатки, шпалери, звуки та карантин.%nЯкщо залишити, вони знову будуть доступні після повторного встановлення.
 uk.Locked=Тека NeoBar захищена режимом «Завжди від імені адміністратора», а зняти захист не вдалося (запит прав скасовано?).%n%nОновіть NeoBar з самої програми (Налаштування → Оновлення) або спершу вимкніть цей режим.
 en.Locked=The NeoBar folder is protected by the "Always run as administrator" mode and the protection could not be lifted (was the permission prompt cancelled?).%n%nUpdate NeoBar from the app itself (Settings → Updates) or turn that mode off first.
-en.DeleteData=Also delete NeoBar data?%n%nProfiles and settings, notes, wallpapers, sounds, registry backups and quarantine.%nIf you keep them, they will be available again after reinstalling.
+en.DeleteData=Also delete NeoBar data?%n%nProfiles and settings, notes, wallpapers, sounds and quarantine.%nIf you keep them, they will be available again after reinstalling.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked

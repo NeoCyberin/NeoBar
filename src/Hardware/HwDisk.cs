@@ -829,6 +829,25 @@ static class Elevated
     }
 }
 
+// контрольна сума файлу завдання для підвищеного помічника: файл у %TEMP% не можна тихо змінити між створенням і запуском
+static class ElevHash
+{
+    public static string Of(byte[] b)
+    {
+        using (System.Security.Cryptography.SHA256 h = new System.Security.Cryptography.SHA256Cng())
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (byte x in h.ComputeHash(b)) sb.Append(x.ToString("x2"));
+            return sb.ToString();
+        }
+    }
+
+    public static bool Same(byte[] b, string hex)
+    {
+        return hex != null && hex.Length == 64 && string.Equals(Of(b), hex, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
 static class Helper
 {
     // Точка входу помічника: --helper op outFile args...
@@ -859,7 +878,6 @@ static class Helper
                 case "fwlist": code = Fw.Dump(w); break;
                 case "ipcfg": code = a.Length > 3 ? NetTools.IpCfg(a[3], w) : 1; break;
                 case "netcfg": code = a.Length > 4 ? NetCfg.RunFile(a[3], a[4], w) : 1; break;
-                case "regclean": code = a.Length > 5 ? RegClean.RunFile(a[3], a[4], a[5], w) : 1; break;
                 case "uninstall": code = Uninstall.Elevate(w); break;
                 case "relock": code = AppLock.Apply("", w) ? 0 : 1; if (code == 0) AppLock.InstallLauncher(); break;
                 case "unlock": code = AppLock.Remove(w) ? 0 : 1; break;
