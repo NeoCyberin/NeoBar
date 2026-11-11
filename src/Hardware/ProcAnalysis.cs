@@ -264,6 +264,16 @@ static class ProcRecorder
         if (was) { SbLog.W(SbLog.Panel, "аналіз процесу: запис зупинено" + (why != null ? " (" + why + ")" : "")); Fire(); }
     }
 
+    // прибрати показані результати з пам'яті (файли журналу й підсумку лишаються на диску)
+    public static void Clear()
+    {
+        if (Recording) return;
+        lock (gate) { samples.Clear(); samples.TrimExcess(); }
+        FromFile = false;
+        Pid = 0; ProcName = ""; ProcPath = ""; LogPath = ""; Note = "";
+        Fire();
+    }
+
     // ---------- підсумки ----------
     public sealed class Stat { public double Min = double.NaN, Max = double.NaN, Avg = double.NaN, P95 = double.NaN; public DateTime MaxAt; }
 

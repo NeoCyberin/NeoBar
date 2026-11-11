@@ -173,6 +173,7 @@ sealed partial class PerfWindow
         Rectangle b1 = new Rectangle(top.Right - Px(12) - bw, top.Y + (top.Height - bh) / 2, bw, bh);
         Rectangle b2 = new Rectangle(b1.X - Px(8) - bw, b1.Y, bw, bh);
         Rectangle b3 = new Rectangle(b2.X - Px(8) - Px(110), b1.Y, Px(110), bh);
+        Rectangle b4 = new Rectangle(b3.X - Px(8) - Px(110), b1.Y, Px(110), bh);
         string title, sub;
         if (anData.Count == 0 && !rec)
         {
@@ -189,10 +190,10 @@ sealed partial class PerfWindow
         if (rec)
         {
             using (SolidBrush b = new SolidBrush(P.Bad)) g.FillEllipse(b, new Rectangle(top.X + Px(14), top.Y + Px(14), Px(10), Px(10)));
-            TxtL(g, title, FB, new Rectangle(top.X + Px(30), top.Y + Px(6), b3.X - top.X - Px(40), Px(26)), P.Fg);
+            TxtL(g, title, FB, new Rectangle(top.X + Px(30), top.Y + Px(6), b4.X - top.X - Px(40), Px(26)), P.Fg);
         }
-        else TxtL(g, title, FB, new Rectangle(top.X + Px(14), top.Y + Px(6), b3.X - top.X - Px(24), Px(26)), P.Fg);
-        TxtL(g, sub, FS, new Rectangle(top.X + Px(14), top.Y + Px(32), b3.X - top.X - Px(24), Px(22)), P.Sub);
+        else TxtL(g, title, FB, new Rectangle(top.X + Px(14), top.Y + Px(6), b4.X - top.X - Px(24), Px(26)), P.Fg);
+        TxtL(g, sub, FS, new Rectangle(top.X + Px(14), top.Y + Px(32), b4.X - top.X - Px(24), Px(22)), P.Sub);
         if (rec) DangerBtn(g, b1, L.T("Зупинити запис"), delegate { ProcRecorder.Stop(null); AnReload(); Invalidate(); }, true);
         else Btn(g, b1, L.T("Новий запис…"), delegate
         {
@@ -203,6 +204,8 @@ sealed partial class PerfWindow
         string lp = ProcRecorder.LogPath;
         Btn(g, b3, L.T("Тека"), delegate { try { if (File.Exists(lp)) Process.Start("explorer.exe", "/select,\"" + lp + "\""); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }, 0, lp.Length > 0 && File.Exists(lp));
         Tip(b3, lp);
+        Btn(g, b4, L.T("Очистити"), delegate { StopPlay(); anHead = -1; ProcRecorder.Clear(); AnReload(); Invalidate(); }, 0, !rec && anData.Count > 0);
+        Tip(b4, L.T("Прибрати результати з вікна. Файли журналу лишаються в теці."));
         y = top.Bottom + Px(10);
 
         // показники
