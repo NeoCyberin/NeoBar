@@ -167,6 +167,19 @@ static class DropBridge
         return root != IntPtr.Zero ? root : w;
     }
 
+    // місце для скидання під курсором: саме вікно або будь-який його предок (галерея шпалер - дочірній
+    // елемент вікна налаштувань, а не окреме вікно)
+    static IntPtr ZoneAt(POINT pt)
+    {
+        IntPtr w = WindowFromPoint(pt);
+        for (int i = 0; i < 32 && w != IntPtr.Zero; i++)
+        {
+            if (zones.Contains(w)) return w;
+            w = Win.GetAncestor(w, 1);          // GA_PARENT
+        }
+        return IntPtr.Zero;
+    }
+
     static void Watch()
     {
         try
@@ -192,8 +205,8 @@ static class DropBridge
                 if (Win.IsWindow(shownZone) && Win.IsWindowVisible(shownZone) && GetWindowRect(shownZone, out rc) && pt.X >= rc.L && pt.X < rc.R && pt.Y >= rc.T && pt.Y < rc.B) return;
                 Hide();
             }
-            IntPtr z = RootAt(pt);
-            if (z == IntPtr.Zero || !zones.Contains(z) || !Win.IsWindowVisible(z)) return;
+            IntPtr z = ZoneAt(pt);
+            if (z == IntPtr.Zero || !Win.IsWindowVisible(z)) return;
             IntPtr h = Helper();
             if (h == IntPtr.Zero) { Launch(); return; }     // наступний тик покаже приймач, щойно помічник запуститься
             if (Win.PostMessage(h, MsgShow, z, IntPtr.Zero)) shownZone = z;
@@ -489,11 +502,28 @@ static class UserLaunch
         finally { Win.CloseHandle(tok); }
     }
 
-    static bool ViaToken(string exe, string args)
+    // процес користувача зі звичайними правами, чий токен беремо: Провідник (вікно робочого столу), а коли
+    // Провідника немає (його перезапускають) - інший процес сеансу користувача без підвищення
+    static uint UserPid()
     {
         IntPtr shell = Win.GetShellWindow();
         uint pid;
-        if (shell == IntPtr.Zero || Win.GetWindowThreadProcessId(shell, out pid) == 0 || pid == 0) return false;
+        if (shell != IntPtr.Zero && Win.GetWindowThreadProcessId(shell, out pid) != 0 && pid != 0) return pid;
+        int session = System.Diagnostics.Process.GetCurrentProcess().SessionId;
+        foreach (string n in new string[] { "sihost", "ctfmon", "taskhostw", "RuntimeBroker", "ShellExperienceHost", "StartMenuExperienceHost" })
+            foreach (System.Diagnostics.Process p in System.Diagnostics.Process.GetProcessesByName(n))
+            {
+                try { if (p.SessionId == session && !ProcAct.IsElevated(p.Id)) return (uint)p.Id; }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                finally { p.Dispose(); }
+            }
+        return 0;
+    }
+
+    static bool ViaToken(string exe, string args)
+    {
+        uint pid = UserPid();
+        if (pid == 0) return false;
         IntPtr hp = Win.OpenProcess(0x1000, false, pid);
         if (hp == IntPtr.Zero) return false;
         IntPtr tok = IntPtr.Zero, dup = IntPtr.Zero;

@@ -10359,3 +10359,189 @@
 
 < щомісяця {0}-го
 > monthly on day {0}
+
+< /с
+> /s
+
+< 95 % часу
+> 95% of time
+
+< 95-й процентиль: 95 % замірів були не більші за це значення (короткі піки не враховано)
+> 95th percentile: 95% of samples were no higher than this value (short spikes are ignored)
+
+< NeoBar закрито.
+> NeoBar was closed.
+
+< {0}  ·  PID {1}
+> {0}  ·  PID {1}
+
+< Інші програми, які він запустив, працюватимуть далі.
+> Other programs it started will keep running.
+
+< Аналіз навантаження процесу
+> Process load analysis
+
+< Аналіз процесу «{0}» (PID {1})
+> Analysis of process "{0}" (PID {1})
+
+< Великі написи (час, температура, назви) - шрифтом теми, як у нотатках
+> Large captions (time, temperature, titles) use the theme font, as in notes
+
+< Виберіть процес у «Завданнях» і натисніть «Аналіз» - або відкрийте збережений журнал.
+> Pick a process in Tasks and press Analysis - or open a saved log.
+
+< Відкрити журнал…
+> Open log…
+
+< Досягнуто найбільшої кількості замірів.
+> The maximum number of samples was reached.
+
+< Журнал (усі заміри, CSV) і підсумок (.txt) поруч:
+> Log (every sample, CSV) and summary (.txt) next to it:
+
+< Журнал CSV (*.csv)|*.csv
+> CSV log (*.csv)|*.csv
+
+< З файлу
+> From file
+
+< Заміряти кожні
+> Sample every
+
+< Запис на диск
+> Disk writes
+
+< Запис триває, навіть якщо закрити вікно монітора; зупиняється сам, коли процес завершиться.
+> Recording continues even if you close the monitor window; it stops by itself when the process exits.
+
+< Запис, КБ/с
+> Writes, KB/s
+
+< Запис: {0} - {1}, замірів: {2}, інтервал: {3} мс
+> Recording: {0} - {1}, samples: {2}, interval: {3} ms
+
+< Записувати навантаження цього процесу протягом часу: графік, мін, макс, середнє, журнал
+> Record this process's load over time: graph, min, max, average, log
+
+< Збираю перші заміри…
+> Collecting the first samples…
+
+< Зупинити запис
+> Stop recording
+
+< Макс
+> Max
+
+< Мін
+> Min
+
+< Наживо
+> Live
+
+< Не вдалося завершити Провідник: {0}
+> Could not end Explorer: {0}
+
+< Не вдалося прочитати файл: {0}
+> Could not read the file: {0}
+
+< Не вдалося створити журнал: {0}
+> Could not create the log: {0}
+
+< Новий запис навантаження
+> New load recording
+
+< Новий запис…
+> New recording…
+
+< Об'єкти GDI
+> GDI objects
+
+< Об'єкти USER
+> USER objects
+
+< Пам'ять (робочий набір)
+> Memory (working set)
+
+< Перезапустити Провідник? Панель завдань і робочий стіл зникнуть на кілька секунд; відкриті програми й вікна працюватимуть далі.
+> Restart Explorer? The taskbar and desktop will disappear for a few seconds; open programs and windows keep running.
+
+< Показник
+> Metric
+
+< Почати запис
+> Start recording
+
+< Приватна пам'ять
+> Private memory
+
+< Приватна пам'ять, МБ
+> Private memory, MB
+
+< Провідник завершено, але запустити знову не вдалося. Натисніть Ctrl+Shift+Esc → «Запустити нове завдання» → explorer.exe.
+> Explorer was ended but could not be started again. Press Ctrl+Shift+Esc → Run new task → explorer.exe.
+
+< Провідник запущено, але панель завдань ще не з'явилась - зачекайте кілька секунд.
+> Explorer was started, but the taskbar has not appeared yet - wait a few seconds.
+
+< Провідник перезапущено.
+> Explorer restarted.
+
+< Процес завершився.
+> The process exited.
+
+< Процес не відкривається: він уже завершився або захищений.
+> The process cannot be opened: it has already exited or is protected.
+
+< Пік о
+> Peak at
+
+< Робочий набір, МБ
+> Working set, MB
+
+< Секунд від початку
+> Seconds from start
+
+< Середнє
+> Average
+
+< Спершу зупиніть поточний запис.
+> Stop the current recording first.
+
+< Тека
+> Folder
+
+< Тут буде графік навантаження
+> The load graph will appear here
+
+< У файлі немає замірів NeoBar.
+> The file has no NeoBar samples.
+
+< У цей момент
+> At this moment
+
+< Уже йде запис іншого процесу - спершу зупиніть його у вкладці «Аналіз»
+> Another process is already being recorded - stop it first in the Analysis tab
+
+< ЦП, %
+> CPU, %
+
+< Читання з диска
+> Disk reads
+
+< Читання, КБ/с
+> Reads, KB/s
+
+< Швидкість відтворення: у скільки разів швидше за реальний час
+> Playback speed: how many times faster than real time
+
+< Шрифт нотаток у віджетах на столі
+> Notes font in desktop widgets
+
+< замірів: {0}
+> samples: {0}
+
+< мін {0}, макс {1} (о {2}), середнє {3}, 95 % часу - не більше {4}
+> min {0}, max {1} (at {2}), average {3}, 95% of the time no more than {4}
+
+< шлях невідомий
+> path unknown

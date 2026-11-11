@@ -33,8 +33,8 @@ sealed partial class PerfWindow : SbWindow
 
     public PerfWindow(NeoBar bar, int tab) : base(bar, L.T("Монітор системи"), 880, 740)
     { Glyph = "\uE9D9";
-        Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики"), L.T("Завдання") };
-        Tab = Math.Max(0, Math.Min(2, tab));
+        Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики"), L.T("Завдання"), L.T("Аналіз") };
+        Tab = Math.Max(0, Math.Min(3, tab));
         Sensors.Use("perfwin", 2);
         Sensors.Updated += OnData;
         OnTab();
@@ -42,7 +42,7 @@ sealed partial class PerfWindow : SbWindow
 
     void OnData() { if (!IsDisposed) Invalidate(); }
 
-    public void SetTab(int t) { Tab = Math.Max(0, Math.Min(2, t)); OnTab(); Invalidate(); }
+    public void SetTab(int t) { Tab = Math.Max(0, Math.Min(3, t)); OnTab(); Invalidate(); }
 
     protected override void HeadButtons(Graphics g, ref int right)
     {
@@ -62,14 +62,17 @@ sealed partial class PerfWindow : SbWindow
         scroll = 0;
         if (Tab == 1) HwInfo.Load(false);
         if (Tab == 2) EnterProcs();
+        if (Tab == TabAnalysis) EnterAnalysis(); else LeaveAnalysis();
         if (search != null) search.Visible = Tab == 2;
     }
 
-    protected override void OnTick() { if (Tab == 2) TickProcs(); else if (Tab == 1 && (HwInfo.Loading || (DateTime.Now - copiedAt).TotalMilliseconds < 1800)) Invalidate(); }
+    protected override void OnTick() { if (Tab == 2) TickProcs(); else if (Tab == TabAnalysis) { if (ProcRecorder.Recording) Invalidate(); } else if (Tab == 1 && (HwInfo.Loading || (DateTime.Now - copiedAt).TotalMilliseconds < 1800)) Invalidate(); }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         Sensors.Updated -= OnData;
+        LeaveAnalysis();
+        if (anTimer != null) anTimer.Dispose();
         Sensors.Use("perfwin", 0);
         ProcMon.Reset();
         base.OnFormClosed(e);
@@ -77,7 +80,7 @@ sealed partial class PerfWindow : SbWindow
 
     protected override void PaintBody(Graphics g, Rectangle r)
     {
-        if (Tab == 2) PaintProcs(g, r); else if (Tab == 1) PaintSpecs(g, r); else PaintMonitor(g, r);
+        if (Tab == TabAnalysis) PaintAnalysis(g, r); else if (Tab == 2) PaintProcs(g, r); else if (Tab == 1) PaintSpecs(g, r); else PaintMonitor(g, r);
     }
 
     // ---------- характеристики ----------

@@ -10359,3 +10359,189 @@
 
 < щомісяця {0}-го
 > monatlich am {0}.
+
+< /с
+> /s
+
+< 95 % часу
+> 95 % der Zeit
+
+< 95-й процентиль: 95 % замірів були не більші за це значення (короткі піки не враховано)
+> 95. Perzentil: 95 % der Messungen lagen nicht über diesem Wert (kurze Spitzen werden ignoriert)
+
+< NeoBar закрито.
+> NeoBar wurde geschlossen.
+
+< {0}  ·  PID {1}
+> {0}  ·  PID {1}
+
+< Інші програми, які він запустив, працюватимуть далі.
+> Andere von ihm gestartete Programme laufen weiter.
+
+< Аналіз навантаження процесу
+> Lastanalyse eines Prozesses
+
+< Аналіз процесу «{0}» (PID {1})
+> Analyse des Prozesses „{0}“ (PID {1})
+
+< Великі написи (час, температура, назви) - шрифтом теми, як у нотатках
+> Große Beschriftungen (Uhrzeit, Temperatur, Titel) in der Schrift des Designs, wie bei Notizen
+
+< Виберіть процес у «Завданнях» і натисніть «Аналіз» - або відкрийте збережений журнал.
+> Wählen Sie einen Prozess unter „Aufgaben“ und klicken Sie auf „Analyse“ - oder öffnen Sie ein gespeichertes Protokoll.
+
+< Відкрити журнал…
+> Protokoll öffnen…
+
+< Досягнуто найбільшої кількості замірів.
+> Die maximale Anzahl an Messungen wurde erreicht.
+
+< Журнал (усі заміри, CSV) і підсумок (.txt) поруч:
+> Protokoll (alle Messungen, CSV) und Zusammenfassung (.txt) daneben:
+
+< Журнал CSV (*.csv)|*.csv
+> CSV-Protokoll (*.csv)|*.csv
+
+< З файлу
+> Aus Datei
+
+< Заміряти кожні
+> Messen alle
+
+< Запис на диск
+> Schreiben auf Datenträger
+
+< Запис триває, навіть якщо закрити вікно монітора; зупиняється сам, коли процес завершиться.
+> Die Aufzeichnung läuft weiter, auch wenn Sie das Monitorfenster schließen; sie endet von selbst, wenn der Prozess beendet wird.
+
+< Запис, КБ/с
+> Schreiben, KB/s
+
+< Запис: {0} - {1}, замірів: {2}, інтервал: {3} мс
+> Aufzeichnung: {0} - {1}, Messungen: {2}, Intervall: {3} ms
+
+< Записувати навантаження цього процесу протягом часу: графік, мін, макс, середнє, журнал
+> Last dieses Prozesses über die Zeit aufzeichnen: Diagramm, Min, Max, Mittel, Protokoll
+
+< Збираю перші заміри…
+> Erste Messungen werden gesammelt…
+
+< Зупинити запис
+> Aufzeichnung stoppen
+
+< Макс
+> Max
+
+< Мін
+> Min
+
+< Наживо
+> Live
+
+< Не вдалося завершити Провідник: {0}
+> Explorer konnte nicht beendet werden: {0}
+
+< Не вдалося прочитати файл: {0}
+> Datei konnte nicht gelesen werden: {0}
+
+< Не вдалося створити журнал: {0}
+> Protokoll konnte nicht erstellt werden: {0}
+
+< Новий запис навантаження
+> Neue Lastaufzeichnung
+
+< Новий запис…
+> Neue Aufzeichnung…
+
+< Об'єкти GDI
+> GDI-Objekte
+
+< Об'єкти USER
+> USER-Objekte
+
+< Пам'ять (робочий набір)
+> Speicher (Arbeitssatz)
+
+< Перезапустити Провідник? Панель завдань і робочий стіл зникнуть на кілька секунд; відкриті програми й вікна працюватимуть далі.
+> Explorer neu starten? Taskleiste und Desktop verschwinden für einige Sekunden; geöffnete Programme und Fenster laufen weiter.
+
+< Показник
+> Kennwert
+
+< Почати запис
+> Aufzeichnung starten
+
+< Приватна пам'ять
+> Privater Speicher
+
+< Приватна пам'ять, МБ
+> Privater Speicher, MB
+
+< Провідник завершено, але запустити знову не вдалося. Натисніть Ctrl+Shift+Esc → «Запустити нове завдання» → explorer.exe.
+> Explorer wurde beendet, konnte aber nicht neu gestartet werden. Drücken Sie Strg+Umschalt+Esc → Neuen Task ausführen → explorer.exe.
+
+< Провідник запущено, але панель завдань ще не з'явилась - зачекайте кілька секунд.
+> Explorer wurde gestartet, aber die Taskleiste ist noch nicht da - warten Sie einige Sekunden.
+
+< Провідник перезапущено.
+> Explorer wurde neu gestartet.
+
+< Процес завершився.
+> Der Prozess wurde beendet.
+
+< Процес не відкривається: він уже завершився або захищений.
+> Der Prozess lässt sich nicht öffnen: Er wurde bereits beendet oder ist geschützt.
+
+< Пік о
+> Spitze um
+
+< Робочий набір, МБ
+> Arbeitssatz, MB
+
+< Секунд від початку
+> Sekunden seit Beginn
+
+< Середнє
+> Mittelwert
+
+< Спершу зупиніть поточний запис.
+> Beenden Sie zuerst die laufende Aufzeichnung.
+
+< Тека
+> Ordner
+
+< Тут буде графік навантаження
+> Hier erscheint das Lastdiagramm
+
+< У файлі немає замірів NeoBar.
+> Die Datei enthält keine NeoBar-Messungen.
+
+< У цей момент
+> In diesem Moment
+
+< Уже йде запис іншого процесу - спершу зупиніть його у вкладці «Аналіз»
+> Ein anderer Prozess wird bereits aufgezeichnet - stoppen Sie ihn zuerst im Tab „Analyse“
+
+< ЦП, %
+> CPU, %
+
+< Читання з диска
+> Lesen vom Datenträger
+
+< Читання, КБ/с
+> Lesen, KB/s
+
+< Швидкість відтворення: у скільки разів швидше за реальний час
+> Wiedergabegeschwindigkeit: wie viel schneller als Echtzeit
+
+< Шрифт нотаток у віджетах на столі
+> Notizschrift in Desktop-Widgets
+
+< замірів: {0}
+> Messungen: {0}
+
+< мін {0}, макс {1} (о {2}), середнє {3}, 95 % часу - не більше {4}
+> Min {0}, Max {1} (um {2}), Mittel {3}, 95 % der Zeit höchstens {4}
+
+< шлях невідомий
+> Pfad unbekannt

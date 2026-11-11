@@ -52,7 +52,34 @@ sealed class DeskClock : LayeredForm
     float Sc { get { return ClockData.Bar != null ? ClockData.Bar.Dpi : 1f; } }
     int Px(float v) { return (int)Math.Round(v * Sc); }
 
-    float K { get { return spec.Scale > 0 ? spec.Scale : (spec.Size == 0 ? 0.75f : (spec.Size == 2 ? 1.35f : 1f)); } }
+    float K { get { return Math.Max(MinK, Math.Min(MaxK, spec.Scale > 0 ? spec.Scale : (spec.Size == 0 ? 0.75f : (spec.Size == 2 ? 1.35f : 1f)))); } }
+
+    // межі масштабу: менше - дрібні підписи вже не прочитати (у брандмауера й кошика вони найдрібніші), більше - віджет
+    // закриває пів робочого столу
+    const float MaxK = 2.5f;
+    float MinK { get { return spec.Kind == "trash" || spec.Kind == "fw" ? 1f : (spec.Kind == "calendar" || spec.Kind == "clockcal" ? 0.95f : 0.85f); } }
+
+    // великі написи (час, температура, підсумок): шрифтом нотаток - тим, що в теми (за налаштуванням), і так,
+    // щоб напис вмістився по ширині (власні шрифти тем бувають ширшими за системний)
+    Font Big(Graphics g, Pal p, string text, float pt, FontStyle st, float maxW)
+    {
+        NeoBar b = ClockData.Bar;
+        string face = p.Face;
+        if (b != null && b.Config.DeskNoteFont) face = SBFonts.ForTheme(b.CurrentTheme.Id) + "|" + p.Face;
+        Font f = Util.MakeFont(face, pt, st);
+        try
+        {
+            float w = g.MeasureString(text ?? "", f, PointF.Empty, StringFormat.GenericTypographic).Width;
+            if (maxW > 0 && w > maxW * 0.96f)
+            {
+                float np = Math.Max(pt * 0.55f, pt * maxW * 0.94f / w);
+                f.Dispose();
+                f = Util.MakeFont(face, np, st);
+            }
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        return f;
+    }
 
     Size Want() { return Want(K); }
 
@@ -350,7 +377,7 @@ sealed class DeskClock : LayeredForm
             {
                 DateTime now0 = DateTime.Now;
                 string tv = now0.ToString((bar.Config.Clock24 ? "HH:mm" : "h:mm") + (bar.Config.ClockSec ? ":ss" : ""), CultureInfo.InvariantCulture);
-                using (Font fv = p.Font(30f * kk * Sc, FontStyle.Bold))
+                using (Font fv = Big(g, p, tv, 30f * kk * Sc, FontStyle.Bold, sz.Width - Px(16)))
                 using (Font fs = p.Font(8.5f * kk * Sc, FontStyle.Regular))
                 using (StringFormat sf = new StringFormat())
                 {
@@ -443,7 +470,7 @@ sealed class DeskClock : LayeredForm
         }
         float fk = k * Sc;    // растр 96 dpi: масштаб екрана додаємо вручну
         using (Font ft = p.Font(8.5f * fk, FontStyle.Bold))
-        using (Font fv = p.Font(30f * fk, FontStyle.Bold))
+        using (Font fv = Big(g, p, value, 30f * fk, FontStyle.Bold, sz.Width - Px(16)))
         using (Font fs = p.Font(8.5f * fk, FontStyle.Regular))
         using (StringFormat sf = new StringFormat())
         {
@@ -591,7 +618,7 @@ sealed class DeskClock : LayeredForm
     {
         Func<float, int> U = delegate (float v) { return (int)Math.Round(Px(v) * kk); };
         using (Font fc = p.Font(8.5f * kk * Sc, FontStyle.Bold))
-        using (Font fv = p.Font(28f * kk * Sc, FontStyle.Bold))
+        using (Font fv = Big(g, p, double.IsNaN(Widgets.Temp) ? "" : Widgets.TempText(Widgets.Temp, spec.Opt == "us"), 28f * kk * Sc, FontStyle.Bold, sz.Width - (int)Math.Round(Px(100) * kk)))
         using (Font fm = p.Font(9.5f * kk * Sc, FontStyle.Regular))
         using (Font fs = p.Font(8f * kk * Sc, FontStyle.Regular))
         using (StringFormat lf = LeftFmt())
@@ -761,7 +788,7 @@ sealed class DeskClock : LayeredForm
         using (SolidBrush zb = new SolidBrush(Color.FromArgb(1, 0, 0, 0))) g.FillRectangle(zb, Rectangle.Inflate(ir, U(6), U(6)));
         Ico.Draw(g, "trash", ir, busy ? p.Acc : (done ? p.Good : p.Fg));
         using (Font ft = p.Font(8f * kk * Sc, FontStyle.Bold))
-        using (Font fv = p.Font(13f * kk * Sc, FontStyle.Bold))
+        using (Font fv = Big(g, p, big, 13f * kk * Sc, FontStyle.Bold, sz.Width - U(8)))
         using (Font fm = p.Font(7f * kk * Sc, FontStyle.Regular))
         using (StringFormat cf = new StringFormat(StringFormatFlags.NoWrap))
         using (SolidBrush bs = new SolidBrush(p.Sub))
@@ -966,7 +993,7 @@ sealed class DeskClock : LayeredForm
         Size b = Want(1f);
         float ky = (pt.Y - T0) / (float)Math.Max(1, b.Height);
         float k = dx0 > 0 ? ky : Math.Max(pt.X / (float)Math.Max(1, b.Width), ky);   // у ширшій рамці - за висотою
-        k = Math.Max(0.5f, Math.Min(3.5f, k));
+        k = Math.Max(MinK, Math.Min(MaxK, k));
         if (Math.Abs(k - K) < 0.004f) return;
         spec.Scale = k;
         Redraw();

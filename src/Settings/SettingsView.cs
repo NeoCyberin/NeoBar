@@ -151,6 +151,7 @@ sealed partial class SettingsForm
         cbGroups.SelectedIndex = c.GroupMode == "fold" ? 1 : 0;
         cbFx.SelectedIndex = Math.Max(0, Math.Min(4, c.HoverFx));
         chAnim.Checked = c.Anim;
+        chDeskFont.Checked = c.DeskNoteFont;
         cbTheme.SelectedIndex = ThemeIndex(c.ThemeId);
         themeWas = c.ThemeId;
         int fi = c.FontName.Length == 0 ? 0 : cbFont.FindStringExact(c.FontName);
@@ -259,6 +260,7 @@ sealed partial class SettingsForm
         c.GroupMode = cbGroups.SelectedIndex == 1 ? "fold" : "open";
         c.HoverFx = Math.Max(0, cbFx.SelectedIndex);
         c.Anim = chAnim.Checked;
+        c.DeskNoteFont = chDeskFont.Checked;
         c.FontName = cbFont.SelectedIndex > 0 ? (string)cbFont.SelectedItem : "";
         c.FontStyle = styleIds[Math.Max(0, cbFontStyle.SelectedIndex)];
         c.FontSize = (float)nFont.Value;

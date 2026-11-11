@@ -249,6 +249,10 @@ static class ProcAct
             return e.Length > 0 ? e : L.F("Службу перезапущено: {0}.", string.Join(", ", k.SvcNames.ToArray()));
         }
         if (k.Path.Length == 0 || !File.Exists(k.Path)) return L.T("Невідомий шлях до програми - перезапустити не вийде.");
+        if (IsShell(k.Pid)) return RestartShell(k);
+        // перезапуск чіпає лише саму програму та її власні допоміжні процеси (той самий exe); програми,
+        // які вона запустила (напр., з Провідника - усе, що відкрив користувач), лишаються працювати
+        k.Kids.RemoveAll(delegate (ProcRow c) { return !string.Equals(c.Path, k.Path, StringComparison.OrdinalIgnoreCase); });
         string rep = End(k, true);
         if (ProcessExists(k.Pid, k.Created)) return rep;
         // програма могла перезапуститися сама (як Провідник) - тоді другу копію не запускаємо
@@ -276,6 +280,48 @@ static class ProcAct
         }
         catch (Exception ex) { return L.T("Процес завершено, але запустити знову не вдалося: ") + ex.Message; }
         return L.F("«{0}» перезапущено.", k.Name);
+    }
+
+    // ---------- Провідник (оболонка Windows: панель завдань, робочий стіл) ----------
+    static int ShellPid()
+    {
+        IntPtr tray = Win.FindWindow("Shell_TrayWnd", null);
+        uint pid;
+        return tray != IntPtr.Zero && Win.GetWindowThreadProcessId(tray, out pid) != 0 ? (int)pid : 0;
+    }
+
+    public static bool IsShell(int pid) { int s = ShellPid(); return s != 0 && s == pid; }
+
+    // спершу ввічливий вихід (як «Вийти з Провідника»: Windows сама його тоді не перезапускає), потім запуск
+    // знову - зі звичайними правами користувача, навіть якщо NeoBar працює від адміністратора
+    static string RestartShell(KillPlan k)
+    {
+        IntPtr tray = Win.FindWindow("Shell_TrayWnd", null);
+        if (tray != IntPtr.Zero) Win.PostMessage(tray, 0x0400 + 436, IntPtr.Zero, IntPtr.Zero);
+        for (int i = 0; i < 25 && ProcessExists(k.Pid, k.Created); i++) Thread.Sleep(200);
+        string err;
+        if (ProcessExists(k.Pid, k.Created) && !Kill(k.Pid, 3000, out err)) return L.F("Не вдалося завершити Провідник: {0}", err);
+        // після примусового завершення Windows може підняти Провідник сама - чекаємо трохи
+        for (int i = 0; i < 12; i++) { Thread.Sleep(250); if (ShellPid() != 0) return L.T("Провідник перезапущено."); }
+        string exe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
+        try
+        {
+            if (Elevated.IsAdmin) { if (UserLaunch.Run(exe, "").Length == 0) return ShellHelp(); }
+            else
+            {
+                ProcessStartInfo psi = new ProcessStartInfo(exe);
+                psi.UseShellExecute = false;
+                Process.Start(psi).Dispose();
+            }
+        }
+        catch (Exception ex) { Util.ErrorLog(ex); return ShellHelp(); }
+        for (int i = 0; i < 40; i++) { Thread.Sleep(250); if (ShellPid() != 0) return L.T("Провідник перезапущено."); }
+        return L.T("Провідник запущено, але панель завдань ще не з'явилась - зачекайте кілька секунд.");
+    }
+
+    static string ShellHelp()
+    {
+        return "!" + L.T("Провідник завершено, але запустити знову не вдалося. Натисніть Ctrl+Shift+Esc → «Запустити нове завдання» → explorer.exe.");
     }
 
     static bool ProcessExists(int pid, long created)

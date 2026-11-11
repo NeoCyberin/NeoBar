@@ -482,17 +482,21 @@ sealed partial class PerfWindow
         Color kc = KindColor(p.Kind);
         using (SolidBrush b = new SolidBrush(kc)) Util.FillRound(g, b, new Rectangle(d.X, d.Y + Px(10), Px(4), Px(22)), Px(2));
         // дії: завершити, перезапустити, тека, шлях
-        int bw = Px(122), bh = Px(28), gap = Px(6);
+        int bw = Px(108), bh = Px(28), gap = Px(6);
         Rectangle bCopy = new Rectangle(d.Right - pad - bw, d.Y + Px(8), bw, bh);
         Rectangle bDir = new Rectangle(bCopy.X - gap - bw, bCopy.Y, bw, bh);
         Rectangle bRe = new Rectangle(bDir.X - gap - bw, bCopy.Y, bw, bh);
         Rectangle bEnd = new Rectangle(bRe.X - gap - bw, bCopy.Y, bw, bh);
+        Rectangle bAn = new Rectangle(bEnd.X - gap - bw, bCopy.Y, bw, bh);
         bool has = p.Path.Length > 0;
         bool okC = procCopied == "p" + p.Pid && (DateTime.Now - procCopiedAt).TotalMilliseconds < 1600;
         string pth = p.Path;
         int ppid = p.Pid;
         bool can = !actBusy && BlockedCached(p).Length == 0;
         DangerBtn(g, bEnd, L.T("Завершити"), delegate { AskEnd(ppid, false); }, !actBusy);
+        ProcRow pa = p;
+        Btn(g, bAn, L.T("Аналіз"), delegate { AnalyzeProcess(pa); }, 0, !ProcRecorder.Recording);
+        Tip(bAn, ProcRecorder.Recording ? L.T("Уже йде запис іншого процесу - спершу зупиніть його у вкладці «Аналіз»") : L.T("Записувати навантаження цього процесу протягом часу: графік, мін, макс, середнє, журнал"));
         Btn(g, bRe, L.T("Перезапустити"), delegate { AskEnd(ppid, true); }, 0, can && (has || p.Svcs.Count > 0));
         Btn(g, bDir, L.T("Показати теку"), delegate
         {
@@ -504,7 +508,7 @@ sealed partial class PerfWindow
         }, 0, has);
         Tip(bEnd, p.Svcs.Count > 0 ? L.T("Зупинити служби процесу (разом із залежними) і завершити його") : L.T("Завершити разом із пов'язаними процесами - перед цим буде список і підтвердження"));
         Tip(bRe, p.Svcs.Count > 0 ? L.T("Перезапустити служби процесу") : L.T("Завершити й запустити знову з тими самими параметрами"));
-        TxtL(g, p.Name + "  ·  PID " + p.Pid + "  ·  " + KindName(p.Kind), FB, new Rectangle(d.X + pad, d.Y + Px(9), bEnd.X - d.X - pad - Px(8), Px(24)), kc);
+        TxtL(g, p.Name + "  ·  PID " + p.Pid + "  ·  " + KindName(p.Kind), FB, new Rectangle(d.X + pad, d.Y + Px(9), bAn.X - d.X - pad - Px(8), Px(24)), kc);
 
         int y = d.Y + Px(42);
         int lw = Px(92);
@@ -672,6 +676,14 @@ sealed partial class PerfWindow
         KillPlan k = ProcAct.Plan(p);
         string title = restart ? L.T("Перезапуск процесу") : L.T("Завершення процесу");
         if (k.Block.Length > 0) { SbDialog.Show(Bar, this, title, k.Block, L.T("Гаразд")); return; }
+        // Провідник запускає все, що відкриває користувач, - це не «зв'язки», їх не завершуємо
+        if (restart || ProcAct.IsShell(k.Pid)) k.Kids.RemoveAll(delegate (ProcRow c) { return !string.Equals(c.Path, k.Path, StringComparison.OrdinalIgnoreCase); });
+        if (restart && ProcAct.IsShell(k.Pid))
+        {
+            if (SbDialog.Show(Bar, this, title, L.T("Перезапустити Провідник? Панель завдань і робочий стіл зникнуть на кілька секунд; відкриті програми й вікна працюватимуть далі."),
+                L.T("Перезапустити"), L.T("Скасувати")) == 0) RunAct(delegate { return ProcAct.Restart(k); });
+            return;
+        }
         StringBuilder t = new StringBuilder();
         t.Append(restart ? L.F("Перезапустити «{0}» (PID {1})?", k.Name, k.Pid) : L.F("Завершити «{0}» (PID {1})?", k.Name, k.Pid)).Append("\n\n");
         if (k.Svcs.Count > 0)
@@ -681,6 +693,7 @@ sealed partial class PerfWindow
         }
         if (k.Kids.Count > 0 && !(restart && k.Svcs.Count > 0))
             t.Append(L.F("Пов'язані процеси, запущені ним ({0}), буде завершено першими: {1}.", k.Kids.Count, Names(k.Kids, 8))).Append("\n");
+        if (restart && k.Svcs.Count == 0) t.Append(L.T("Інші програми, які він запустив, працюватимуть далі.")).Append("\n");
         if (k.Svcs.Count == 0)
             t.Append(k.HasWin ? L.T("Програмі спершу буде запропоновано закритися самій (до 3 с), далі - примусово. Незбережені дані можуть втратитися.")
                               : L.T("Процес буде завершено примусово. Незбережені дані можуть втратитися.")).Append("\n");

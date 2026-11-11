@@ -16,7 +16,7 @@ static class WallLib
 {
     public const int Image = 0, Slideshow = 1, Live = 2;
     public static readonly string[] ImgExt = { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff", ".webp", ".jxr" };
-    public static readonly string[] VidExt = { ".mp4", ".m4v", ".wmv", ".avi", ".mov", ".mkv", ".gif" };
+    public static readonly string[] VidExt = { ".mp4", ".m4v", ".wmv", ".avi", ".mov", ".mkv", ".webm", ".gif" };      // webm - через розширення Windows «Web Media Extensions» (у Windows 10/11 зазвичай уже є)
     static readonly string[] Sub = { "images", "slideshow", "live" };
 
     public static string Root { get { return Path.Combine(Prof.Root, "wallpapers"); } }
