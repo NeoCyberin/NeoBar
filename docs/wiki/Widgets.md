@@ -25,7 +25,7 @@ Most widgets can be put on the desktop (the screen button in the widget's window
 
 ## Process analysis (System monitor → Analysis)
 
-Pick a process in *Tasks* and press **Analysis**. A window in the middle asks how often to sample (0.5-10 s) and where to save the log, then **Start recording**. While recording you see a live graph; afterwards a player: drag along the graph or press play (×1 - ×300), and the table shows the value at that moment and the minimum, maximum, average and 95th percentile for CPU, memory (working set and private), disk reads/writes, handles, GDI and USER objects. Every sample is written to a CSV log right away (it opens in Excel), and a summary goes next to it as a .txt file. Recording continues when the monitor window is closed and stops by itself when the process exits. *Open log…* plays back an earlier recording.
+Pick a process in *Tasks* and press **Analysis**. A window in the middle asks how often to sample (0.5-10 s) and where to save the log, then **Start recording**. While recording you see a live graph; afterwards a player: drag along the graph or press play (×1 - ×300), and the table shows the value at that moment and the minimum, maximum, average and 95th percentile for CPU, memory (working set and private), disk reads/writes, handles, GDI and USER objects. Every sample is written to a CSV log right away (it opens in Excel), and a summary goes next to it as a .txt file. Recording continues when the monitor window is closed and stops by itself when the process exits. *Open log…* plays back an earlier recording, *Clear* removes the results from the window (the files stay).
 
 ## Location and weather (Settings → Location & weather)
 

@@ -10545,3 +10545,6 @@
 
 < шлях невідомий
 > path unknown
+
+< Прибрати результати з вікна. Файли журналу лишаються в теці.
+> Remove the results from the window. Log files stay in the folder.

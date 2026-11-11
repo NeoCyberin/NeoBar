@@ -33,6 +33,7 @@ static class DropBridge
     [DllImport("user32.dll", SetLastError = true)] static extern IntPtr SendMessageTimeout(IntPtr h, int msg, IntPtr w, ref COPYDATA l, int flags, int timeout, out IntPtr res);
     [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr h, out RECT r);
     [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(POINT p);
+    [DllImport("user32.dll")] static extern IntPtr ChildWindowFromPointEx(IntPtr h, POINT p, uint flags);
     [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT p);
     [DllImport("user32.dll")] static extern int GetSystemMetrics(int i);
     [DllImport("user32.dll")] static extern bool ScreenToClient(IntPtr h, ref POINT p);
@@ -167,11 +168,22 @@ static class DropBridge
         return root != IntPtr.Zero ? root : w;
     }
 
-    // місце для скидання під курсором: саме вікно або будь-який його предок (галерея шпалер - дочірній
-    // елемент вікна налаштувань, а не окреме вікно)
-    static IntPtr ZoneAt(POINT pt)
+    // місце для скидання під курсором: найглибше вікно-приймач (галерея шпалер - дочірній елемент вікна
+    // налаштувань, яке теж приймає файли). Шукаємо від верхнього вікна вниз, а не WindowFromPoint: над
+    // приймачем уже може стояти невидиме вікно помічника, і тоді WindowFromPoint повертає його.
+    static IntPtr ZoneAt(POINT pt) { return ZoneIn(RootAt(pt), pt); }
+
+    static IntPtr ZoneIn(IntPtr root, POINT pt)
     {
-        IntPtr w = WindowFromPoint(pt);
+        IntPtr w = root;
+        for (int i = 0; i < 32 && w != IntPtr.Zero; i++)
+        {
+            POINT c = pt;
+            if (!ScreenToClient(w, ref c)) break;
+            IntPtr ch = ChildWindowFromPointEx(w, c, 0x0001 | 0x0004);     // CWP_SKIPINVISIBLE | CWP_SKIPTRANSPARENT
+            if (ch == IntPtr.Zero || ch == w) break;
+            w = ch;
+        }
         for (int i = 0; i < 32 && w != IntPtr.Zero; i++)
         {
             if (zones.Contains(w)) return w;
@@ -201,8 +213,21 @@ static class DropBridge
             if (!down || !pressOutside) { Hide(); return; }
             if (shownZone != IntPtr.Zero)
             {
+                // курсор усе ще над тим самим вікном: перевіряємо, чи не зайшов він у вкладений приймач (або вийшов
+                // з нього в батьківський) - тоді невидиме вікно помічника переїжджає туди
                 RECT rc;
-                if (Win.IsWindow(shownZone) && Win.IsWindowVisible(shownZone) && GetWindowRect(shownZone, out rc) && pt.X >= rc.L && pt.X < rc.R && pt.Y >= rc.T && pt.Y < rc.B) return;
+                IntPtr top = Win.IsWindow(shownZone) && Win.IsWindowVisible(shownZone) ? Win.GetAncestor(shownZone, 2) : IntPtr.Zero;
+                if (top != IntPtr.Zero && GetWindowRect(top, out rc) && pt.X >= rc.L && pt.X < rc.R && pt.Y >= rc.T && pt.Y < rc.B)
+                {
+                    IntPtr d = ZoneIn(top, pt);
+                    if (d == shownZone) return;
+                    if (d != IntPtr.Zero && Win.IsWindowVisible(d))
+                    {
+                        IntPtr hh = Helper();
+                        if (hh != IntPtr.Zero && Win.PostMessage(hh, MsgShow, d, IntPtr.Zero)) shownZone = d;
+                        return;
+                    }
+                }
                 Hide();
             }
             IntPtr z = ZoneAt(pt);

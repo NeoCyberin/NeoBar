@@ -30,6 +30,8 @@ sealed class KillPlan
 static class ProcAct
 {
     [DllImport("kernel32.dll")] static extern bool TerminateProcess(IntPtr h, uint code);
+    [DllImport("ntdll.dll")] static extern int NtSuspendProcess(IntPtr h);
+    [DllImport("ntdll.dll")] static extern int NtResumeProcess(IntPtr h);
     [DllImport("advapi32.dll", SetLastError = true)] static extern bool GetTokenInformation(IntPtr tok, int cls, out int val, int len, out int ret);
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern IntPtr OpenService(IntPtr scm, string name, uint access);
     [DllImport("advapi32.dll", SetLastError = true)] static extern bool EnumDependentServices(IntPtr svc, uint state, IntPtr buf, int size, out int need, out int count);
@@ -201,18 +203,11 @@ static class ProcAct
 
     static string Net { get { return Path.Combine(Environment.SystemDirectory, "net.exe"); } }
 
-    // завершити за планом: зв'язки (залежні служби, дочірні процеси), служби процесу, потім сам процес. Повертає звіт.
+    // завершити за планом: служби процесу (з залежними), потім сам процес і, якщо треба, його дочірні. Повертає звіт.
     public static string End(KillPlan k, bool withLinks)
     {
         int ok = 0;
         List<string> bad = new List<string>();
-        string err;
-        if (withLinks)
-            foreach (ProcRow c in k.Kids)
-            {
-                if (Kill(c.Pid, 2000, out err)) ok++;
-                else if (err.Length > 0) bad.Add(c.Name + " (" + err + ")");
-            }
         if (k.Svcs.Count > 0)
         {
             // служби - через диспетчер служб: «net stop /y» зупиняє й залежні; права адміністратора за потреби запитає Windows
@@ -223,15 +218,63 @@ static class ProcAct
             ProcMon.RefreshServicesSoon();
             for (int i = 0; i < 30 && ProcessExists(k.Pid, k.Created); i++) Thread.Sleep(200);
         }
-        if (ProcessExists(k.Pid, k.Created))
-        {
-            if (k.HasWin && k.Svcs.Count == 0 && CloseNicely(k.Pid, 3000)) ok++;
-            else if (Kill(k.Pid, 3000, out err)) ok++;
-            else bad.Add(k.Name + (err.Length > 0 ? " (" + err + ")" : ""));
-        }
-        else ok++;
+        // спершу ввічливо, як хрестиком: програма тоді сама закриває свої дочірні процеси й зберігає дані
+        bool alive = ProcessExists(k.Pid, k.Created);
+        if (alive && k.HasWin && k.Svcs.Count == 0 && CloseNicely(k.Pid, 3000)) alive = false;
+        if (!alive) ok++;
+        // решту - примусово й усіх разом: спершу заморозити, тоді завершити (батька першим). Інакше програма, як-от
+        // Steam, помічає, що її дочірній процес зник, і запускає його (чи себе) знову.
+        List<ProcRow> left = new List<ProcRow>();
+        if (alive) left.Add(k.Target ?? new ProcRow { Pid = k.Pid, Name = k.Name, Created = k.Created });
+        if (withLinks)
+            foreach (ProcRow c in k.Kids) if (ProcessExists(c.Pid, c.Created)) left.Add(c);
+        if (left.Count > 0) ok += KillAll(left, bad);
         if (bad.Count > 0) return L.F("Завершено: {0}. Не вдалося: {1}", ok, string.Join(", ", bad.ToArray()));
         return k.Svcs.Count > 0 ? L.F("Служби зупинено, процес «{0}» завершено.", k.Name) : (ok > 1 ? L.F("Завершено «{0}» і пов'язані процеси ({1}).", k.Name, ok - 1) : L.F("«{0}» завершено.", k.Name));
+    }
+
+    // заморозити всіх, потім завершити всіх; повертає, скільки завершено
+    static int KillAll(List<ProcRow> procs, List<string> bad)
+    {
+        int n = procs.Count, ok = 0;
+        IntPtr[] h = new IntPtr[n];
+        bool[] frozen = new bool[n];
+        try
+        {
+            for (int i = 0; i < n; i++)
+            {
+                h[i] = Win.OpenProcess(0x0001 | 0x0800 | 0x00100000, false, (uint)procs[i].Pid);       // TERMINATE | SUSPEND_RESUME | SYNCHRONIZE
+                if (h[i] == IntPtr.Zero) h[i] = Win.OpenProcess(0x0001 | 0x00100000, false, (uint)procs[i].Pid);
+                if (h[i] == IntPtr.Zero)
+                {
+                    bad.Add(procs[i].Name + " (" + (Marshal.GetLastWin32Error() == 5 ? L.T("немає доступу") : L.T("не відкривається")) + ")");
+                    continue;
+                }
+                try { frozen[i] = NtSuspendProcess(h[i]) >= 0; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            }
+            for (int i = 0; i < n; i++)
+            {
+                if (h[i] == IntPtr.Zero) continue;
+                if (TerminateProcess(h[i], 1)) continue;
+                bad.Add(procs[i].Name + " (" + L.T("немає доступу (захищений процес)") + ")");
+                if (frozen[i]) { try { NtResumeProcess(h[i]); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }       // не лишати замороженим
+                Win.CloseHandle(h[i]);
+                h[i] = IntPtr.Zero;
+            }
+            int until = Environment.TickCount + 3000;
+            for (int i = 0; i < n; i++)
+            {
+                if (h[i] == IntPtr.Zero) continue;
+                int wait = Math.Max(0, until - Environment.TickCount);
+                if (Win.WaitForSingleObject(h[i], (uint)wait) == 0) ok++;
+                else bad.Add(procs[i].Name);
+            }
+        }
+        finally
+        {
+            foreach (IntPtr x in h) if (x != IntPtr.Zero) Win.CloseHandle(x);
+        }
+        return ok;
     }
 
     // перезапуск: служби - зупинити й запустити знову; програма - завершити й запустити тією ж командою

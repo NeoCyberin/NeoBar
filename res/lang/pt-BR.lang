@@ -10545,3 +10545,6 @@
 
 < шлях невідомий
 > caminho desconhecido
+
+< Прибрати результати з вікна. Файли журналу лишаються в теці.
+> Remover os resultados da janela. Os arquivos de registro ficam na pasta.

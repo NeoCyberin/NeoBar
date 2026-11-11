@@ -283,6 +283,14 @@ sealed partial class SettingsForm : Form, IGradHost
         string[] dropped = DropFiles.Take(ref m);
         if (dropped != null)
         {
+            // скидання дійшло до вікна, а курсор над галереєю шпалер - файли в галерею
+            if (dropped.Length > 0 && wallGallery != null && wallGallery.Visible && wallGallery.IsHandleCreated &&
+                wallGallery.RectangleToScreen(wallGallery.ClientRectangle).Contains(Cursor.Position))
+            {
+                string[] wf = dropped;
+                BeginInvoke(new Action(delegate { wallGallery.AddFiles(wf); }));
+                return;
+            }
             if (dropped.Length > 0 && lb != null && lb.Visible && lb.IsHandleCreated)
             {
                 Point dp = lb.PointToClient(Cursor.Position);
