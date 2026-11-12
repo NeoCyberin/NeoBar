@@ -156,9 +156,11 @@ static class ProcRecorder
 
     static void Fire() { Action a = Changed; if (a != null) try { a(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
+    public static string LogDir { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "NeoBar", L.T("Аналіз")); } }
+
     public static string DefaultLog(string name)
     {
-        string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "NeoBar", L.T("Аналіз"));
+        string dir = LogDir;
         string n = Path.GetFileNameWithoutExtension(name ?? "process");
         foreach (char c in Path.GetInvalidFileNameChars()) n = n.Replace(c, '_');
         return Path.Combine(dir, n + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture) + ".csv");
@@ -193,6 +195,7 @@ static class ProcRecorder
         ProcProbe.Take(probe, new ProcSample());          // відлік для швидкостей
         timer = new Timer(Tick, null, IntervalMs, IntervalMs);
         SbLog.W(SbLog.Panel, "аналіз процесу: запис " + name + " (" + pid + ") кожні " + IntervalMs + " мс у " + logPath);
+        PruneSoon(Path.GetDirectoryName(logPath), LogDir);
         Fire();
         return "";
     }
@@ -362,6 +365,95 @@ static class ProcRecorder
         IntervalMs = l.Count > 1 ? (int)Math.Round((l[l.Count - 1].Sec - l[0].Sec) * 1000 / (l.Count - 1)) : 1000;
         Fire();
         return "";
+    }
+
+    // ---------- журнали в теці: перелік, видалення, прибирання старих ----------
+    public static string Keep = "d30";          // скільки зберігати: "all"; "d<днів>"; "n<скільки останніх>"
+    public static int LogsVer;                  // змінюється, коли журнали видалено (вікно перечитує перелік)
+
+    // лише журнали NeoBar (за вмістом, не за назвою): перший рядок «sep=», другий - 10 заголовків, останні GDI і USER
+    public static bool IsOurLog(string f)
+    {
+        try
+        {
+            using (StreamReader r = new StreamReader(f, Encoding.UTF8, true))
+            {
+                string a = r.ReadLine(), b = r.ReadLine();
+                if (a == null || b == null || !a.StartsWith("sep=")) return false;
+                string sp = a.Substring(4).Trim();
+                if (sp.Length == 0) return false;
+                return b.EndsWith(sp + "GDI" + sp + "USER", StringComparison.Ordinal) && b.Split(new string[] { sp }, StringSplitOptions.None).Length == 10;
+            }
+        }
+        catch { return false; }
+    }
+
+    // журнали NeoBar у теці - від давніших до новіших
+    public static List<string> Logs(string dir)
+    {
+        List<KeyValuePair<DateTime, string>> l = new List<KeyValuePair<DateTime, string>>();
+        try
+        {
+            if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                foreach (string f in Directory.GetFiles(dir, "*.csv"))
+                    if (IsOurLog(f)) l.Add(new KeyValuePair<DateTime, string>(File.GetLastWriteTimeUtc(f), f));
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        l.Sort(delegate (KeyValuePair<DateTime, string> a, KeyValuePair<DateTime, string> b)
+        {
+            int c = a.Key.CompareTo(b.Key);
+            return c != 0 ? c : string.Compare(a.Value, b.Value, StringComparison.OrdinalIgnoreCase);
+        });
+        List<string> r = new List<string>();
+        foreach (KeyValuePair<DateTime, string> p in l) r.Add(p.Value);
+        return r;
+    }
+
+    public static bool Same(string a, string b) { return !string.IsNullOrEmpty(a) && string.Equals(a, b, StringComparison.OrdinalIgnoreCase); }
+
+    // журнал і його підсумок (.txt поруч): у Кошик або назавжди; показаний у вікні - прибирається
+    public static bool DeleteLog(string csv, bool toBin)
+    {
+        if (Recording && Same(csv, LogPath)) return false;
+        string txt = Path.ChangeExtension(csv, ".txt");
+        bool ok;
+        if (toBin) ok = WallLib.Remove(csv);
+        else { try { File.Delete(csv); ok = true; } catch (Exception ex) { SbLog.Skip(ex); ok = false; } }
+        if (ok && File.Exists(txt))
+        {
+            if (toBin) WallLib.Remove(txt);
+            else { try { File.Delete(txt); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
+        }
+        if (ok) Interlocked.Increment(ref LogsVer);
+        if (ok && Same(csv, LogPath)) Clear();
+        return ok;
+    }
+
+    // прибрати старі журнали за налаштуванням (у фоні; поточний запис і показаний журнал не чіпаються)
+    public static void PruneSoon(params string[] dirs)
+    {
+        string k = Keep ?? "";
+        int n;
+        if (k.Length < 2 || (k[0] != 'd' && k[0] != 'n') || !int.TryParse(k.Substring(1), out n) || n <= 0) return;
+        ThreadPool.QueueUserWorkItem(delegate
+        {
+            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            int gone = 0;
+            foreach (string d in dirs)
+            {
+                if (string.IsNullOrEmpty(d) || !seen.Add(d)) continue;
+                List<string> l = Logs(d);
+                DateTime lim = DateTime.UtcNow.AddDays(-n);
+                for (int i = 0; i < l.Count; i++)
+                {
+                    string f = l[i];
+                    if (Same(f, LogPath)) continue;
+                    bool old = k[0] == 'd' ? File.GetLastWriteTimeUtc(f) < lim : i < l.Count - n;
+                    if (old && DeleteLog(f, false)) gone++;
+                }
+            }
+            if (gone > 0) { SbLog.W(SbLog.Panel, "аналіз процесу: прибрано старих журналів - " + gone); Fire(); }
+        });
     }
 
     static double Num(string s)

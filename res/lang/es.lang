@@ -10554,3 +10554,54 @@
 
 < процесів: {0}
 > procesos: {0}
+
+< Давніший журнал у цій теці
+> Registro más antiguo en esta carpeta
+
+< Новіший журнал у цій теці
+> Registro más reciente en esta carpeta
+
+< Зберігати журнали
+> Conservar registros
+
+< Повернутися до останніх замірів - графік знову рухається разом із записом
+> Volver a las últimas mediciones: el gráfico vuelve a seguir la grabación
+
+< Не вдалося видалити журнал.
+> No se pudo eliminar el registro.
+
+< Тека журналів аналізу
+> Carpeta de registros de análisis
+
+< мін
+> mín
+
+< макс
+> máx
+
+< журнал {0} з {1}
+> registro {0} de {1}
+
+< Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
+> ¿Mover el registro «{0}» y su resumen (.txt) a la Papelera?
+
+< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
+> Registros y resúmenes de la pestaña «Análisis» del monitor del sistema. Los más antiguos se eliminan solos (al iniciar una grabación o abrir la pestaña)
+
+< Видалити журнал
+> Eliminar registro
+
+< {0} днів
+> {0} días
+
+< Аналіз процесів
+> Análisis de procesos
+
+< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
+> Carpeta predeterminada; los registros de otra carpeta se limpian cuando se graba allí uno nuevo
+
+< Видалити цей журнал і його підсумок (у Кошик)
+> Eliminar este registro y su resumen (a la Papelera)
+
+< Останні {0}
+> Últimos {0}

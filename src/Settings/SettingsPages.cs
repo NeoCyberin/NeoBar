@@ -594,6 +594,12 @@ sealed partial class SettingsForm
             Bt(L.T("Очистити"), "g:trash", 110, delegate { try { File.Delete(ErrPath); } catch (Exception skipEx) { SbLog.Skip(skipEx); } k.Invalidate(); RunDiag(); }));
         re.DescFn = delegate { long n = 0; try { if (File.Exists(ErrPath)) n = new FileInfo(ErrPath).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); } return L.T("Записується завжди. Надішліть його разом з описом проблеми  ·  ") + SizeText(n); };
 
+        k = right.Card(L.T("Аналіз процесів"));
+        cbAnKeep = Cb(190, L.T("Усі"), L.F("{0} днів", 7), L.F("{0} днів", 30), L.F("{0} днів", 90), L.F("Останні {0}", 10), L.F("Останні {0}", 50), L.F("Останні {0}", 200));
+        k.Row(L.T("Зберігати журнали"), L.T("Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)"), cbAnKeep);
+        k.Row(L.T("Тека журналів аналізу"), L.T("Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис"),
+            Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenDir(ProcRecorder.LogDir, true); }));
+
         h.Arrange = delegate (Rectangle r)
         {
             int rw = Math.Max(S(380), Math.Min(S(470), r.Width * 44 / 100));

@@ -10554,3 +10554,54 @@
 
 < процесів: {0}
 > procesů: {0}
+
+< Давніший журнал у цій теці
+> Starší záznam v této složce
+
+< Новіший журнал у цій теці
+> Novější záznam v této složce
+
+< Зберігати журнали
+> Uchovávat záznamy
+
+< Повернутися до останніх замірів - графік знову рухається разом із записом
+> Zpět k nejnovějším měřením - graf opět sleduje záznam
+
+< Не вдалося видалити журнал.
+> Záznam se nepodařilo smazat.
+
+< Тека журналів аналізу
+> Složka záznamů analýzy
+
+< мін
+> min
+
+< макс
+> max
+
+< журнал {0} з {1}
+> záznam {0} z {1}
+
+< Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
+> Přesunout záznam „{0}“ a jeho souhrn (.txt) do Koše?
+
+< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
+> Záznamy a souhrny z karty „Analýza“ v monitoru systému. Starší se mažou samy (při spuštění záznamu nebo otevření karty)
+
+< Видалити журнал
+> Smazat záznam
+
+< {0} днів
+> {0} dní
+
+< Аналіз процесів
+> Analýza procesů
+
+< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
+> Výchozí složka; záznamy v jiné složce se uklidí, když se tam zapíše nový záznam
+
+< Видалити цей журнал і його підсумок (у Кошик)
+> Smazat tento záznam a jeho souhrn (do Koše)
+
+< Останні {0}
+> Posledních {0}

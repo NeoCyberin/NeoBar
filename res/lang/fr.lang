@@ -10554,3 +10554,54 @@
 
 < процесів: {0}
 > processus : {0}
+
+< Давніший журнал у цій теці
+> Journal plus ancien dans ce dossier
+
+< Новіший журнал у цій теці
+> Journal plus récent dans ce dossier
+
+< Зберігати журнали
+> Conserver les journaux
+
+< Повернутися до останніх замірів - графік знову рухається разом із записом
+> Revenir aux dernières mesures - le graphique suit à nouveau l'enregistrement
+
+< Не вдалося видалити журнал.
+> Impossible de supprimer le journal.
+
+< Тека журналів аналізу
+> Dossier des journaux d'analyse
+
+< мін
+> min
+
+< макс
+> max
+
+< журнал {0} з {1}
+> journal {0} sur {1}
+
+< Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
+> Déplacer le journal « {0} » et son résumé (.txt) vers la Corbeille ?
+
+< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
+> Journaux et résumés de l'onglet « Analyse » du moniteur système. Les plus anciens sont supprimés automatiquement (au début d'un enregistrement ou à l'ouverture de l'onglet)
+
+< Видалити журнал
+> Supprimer le journal
+
+< {0} днів
+> {0} jours
+
+< Аналіз процесів
+> Analyse des processus
+
+< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
+> Dossier par défaut ; les journaux d'un autre dossier sont nettoyés quand un nouvel enregistrement y est écrit
+
+< Видалити цей журнал і його підсумок (у Кошик)
+> Supprimer ce journal et son résumé (vers la Corbeille)
+
+< Останні {0}
+> {0} derniers
