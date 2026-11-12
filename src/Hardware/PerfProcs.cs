@@ -110,8 +110,13 @@ sealed partial class PerfWindow
         {
             search = MakeInput();
             try { SendMessage(search.Handle, 0x1501, new IntPtr(1), L.T("Пошук: ім'я або PID")); } catch (Exception skipEx) { SbLog.Skip(skipEx); }     // EM_SETCUEBANNER
-            search.TextChanged += delegate { query = search.Text.Trim(); procScroll = 0; svcScroll = 0; RebuildView(); Invalidate(); };
-            search.KeyDown += delegate (object s, KeyEventArgs e) { if (e.KeyCode == Keys.Escape) { e.SuppressKeyPress = true; search.Text = ""; } };
+            search.TextChanged += delegate { SearchChanged(); };
+            search.KeyDown += delegate (object s, KeyEventArgs e)
+            {
+                if (SugKey(e.KeyCode)) { e.Handled = true; e.SuppressKeyPress = true; return; }
+                if (e.KeyCode == Keys.Escape) { e.SuppressKeyPress = true; search.Text = ""; }
+                else if (e.KeyCode == Keys.Down && query.Length >= 3) { BuildSug(true); Invalidate(); e.Handled = true; }
+            };
         }
         Sample();
         if (pview == 1) LoadSvcs();
@@ -119,7 +124,7 @@ sealed partial class PerfWindow
 
     void TickProcs()
     {
-        if ((procTick++ & 1) == 0) Sample();
+        if ((procTick++ & 1) == 0) { Sample(); BuildSug(false); }
         if (pview == 1 && (DateTime.Now - svcAt).TotalSeconds >= 10 && !actBusy) LoadSvcs();
         Invalidate();
     }
@@ -311,6 +316,7 @@ sealed partial class PerfWindow
         Tip(bNew, L.T("Запустити програму, документ, теку чи команду - як «Виконати» або «Нове завдання» в Диспетчері завдань"));
         Rectangle sR = new Rectangle(bNew.X - Px(10) - Px(200), cP.Y, Px(200), Px(28));
         if (search != null) PlaceInput(g, search, sR);
+        sugAnchor = sR;
         Rectangle sumR = new Rectangle(cS.Right + Px(16), cP.Y, sR.X - cS.Right - Px(24), Px(28));
         bool noteOn = actBusy || (actNote.Length > 0 && (DateTime.Now - actAt).TotalSeconds < 10);
         if (noteOn)
@@ -776,7 +782,7 @@ sealed partial class PerfWindow
             List<SvcInfo> l = null;
             try { l = ProcMon.AllServices(); }
             catch (Exception ex) { Util.ErrorLog(ex); }
-            try { BeginInvoke(new Action(delegate { svcLoading = false; if (l != null) svcs = l; Invalidate(); })); }
+            try { BeginInvoke(new Action(delegate { svcLoading = false; if (l != null) { svcs = l; BuildSug(false); if (!sugOpen && query.Length >= 3 && search != null && search.Focused) BuildSug(true); } Invalidate(); })); }
             catch { svcLoading = false; }
         });
     }

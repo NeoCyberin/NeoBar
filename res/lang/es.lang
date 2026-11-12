@@ -10548,3 +10548,9 @@
 
 < Прибрати результати з вікна. Файли журналу лишаються в теці.
 > Quitar los resultados de la ventana. Los archivos de registro se quedan en la carpeta.
+
+< процес
+> proceso
+
+< процесів: {0}
+> procesos: {0}

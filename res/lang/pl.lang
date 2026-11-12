@@ -10548,3 +10548,9 @@
 
 < Прибрати результати з вікна. Файли журналу лишаються в теці.
 > Usuń wyniki z okna. Pliki dziennika zostaną w folderze.
+
+< процес
+> proces
+
+< процесів: {0}
+> procesów: {0}

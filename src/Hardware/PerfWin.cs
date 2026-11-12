@@ -64,6 +64,7 @@ sealed partial class PerfWindow : SbWindow
         if (Tab == 2) EnterProcs();
         if (Tab == TabAnalysis) EnterAnalysis(); else LeaveAnalysis();
         if (search != null) search.Visible = Tab == 2;
+        sugOpen = false;
     }
 
     protected override void OnTick() { if (Tab == 2) TickProcs(); else if (Tab == TabAnalysis) { if (ProcRecorder.Recording) Invalidate(); } else if (Tab == 1 && (HwInfo.Loading || (DateTime.Now - copiedAt).TotalMilliseconds < 1800)) Invalidate(); }
@@ -80,7 +81,7 @@ sealed partial class PerfWindow : SbWindow
 
     protected override void PaintBody(Graphics g, Rectangle r)
     {
-        if (Tab == TabAnalysis) PaintAnalysis(g, r); else if (Tab == 2) PaintProcs(g, r); else if (Tab == 1) PaintSpecs(g, r); else PaintMonitor(g, r);
+        if (Tab == TabAnalysis) PaintAnalysis(g, r); else if (Tab == 2) { PaintProcs(g, r); PaintSug(g); } else if (Tab == 1) PaintSpecs(g, r); else PaintMonitor(g, r);
     }
 
     // ---------- характеристики ----------

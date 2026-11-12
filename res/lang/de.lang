@@ -10548,3 +10548,9 @@
 
 < Прибрати результати з вікна. Файли журналу лишаються в теці.
 > Ergebnisse aus dem Fenster entfernen. Protokolldateien bleiben im Ordner.
+
+< процес
+> Prozess
+
+< процесів: {0}
+> Prozesse: {0}
