@@ -10585,8 +10585,6 @@
 < Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
 > Move the log "{0}" and its summary (.txt) to the Recycle Bin?
 
-< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
-> Logs and summaries from the Analysis tab of the System monitor. Older ones are deleted automatically (when a recording starts or the tab opens)
 
 < Видалити журнал
 > Delete log
@@ -10594,14 +10592,16 @@
 < {0} днів
 > {0} days
 
-< Аналіз процесів
-> Process analysis
 
-< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
-> Default folder; logs in another folder are cleaned up when a new recording is written there
 
 < Видалити цей журнал і його підсумок (у Кошик)
 > Delete this log and its summary (to the Recycle Bin)
 
 < Останні {0}
 > Last {0}
+
+< Усі журнали: пошуку проблем, помилок і аналізу процесів. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу. Давніше видаляється само
+> All logs: troubleshooting, errors and process analysis. "Last N" means the last N NeoBar launches (game launches for the in-game log) and the last N analysis recordings. Older data is deleted automatically
+
+< Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
+> Recordings from the Analysis tab of the System monitor; in another folder old ones are cleaned up when a new recording is written there

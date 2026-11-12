@@ -96,6 +96,24 @@ static class SelfTest
                 Eq("порожній файл - читається .bak", "a=1", SafeFile.ReadLines(f)[0]);
                 Check("тимчасового файлу не лишилось", !File.Exists(f + ".tmp"), "");
             });
+            Run("logkeep", delegate
+            {
+                string f = Path.Combine(dir, "t.log");
+                System.Globalization.CultureInfo ic = System.Globalization.CultureInfo.InvariantCulture;
+                string old = DateTime.Now.AddDays(-40).ToString("yyyy-MM-dd HH:mm:ss.fff", ic), now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff", ic);
+                File.WriteAllLines(f, new string[] { old + "  [a] давнє", "   продовження давнього", now + "  [a] свіже" }, Encoding.UTF8);
+                LogKeep.Trim(f, 'd', 30, null);
+                string[] l = File.ReadAllLines(f, Encoding.UTF8);
+                Check("журнали: за днями лишається свіже", l.Length == 1 && l[0].EndsWith("свіже"), string.Join(" | ", l));
+                string m = "  " + LogKeep.Mark + " NeoBar";
+                File.WriteAllLines(f, new string[] { now + m + " 1", now + "  a", now + m + " 2", now + "  b", now + m + " 3", now + "  c" }, Encoding.UTF8);
+                LogKeep.Trim(f, 'n', 2, null);
+                l = File.ReadAllLines(f, Encoding.UTF8);
+                Check("журнали: останні 2 запуски", l.Length == 4 && l[0].EndsWith(" 2"), string.Join(" | ", l));
+                File.WriteAllLines(f, new string[] { old + "  [a] давнє" }, Encoding.UTF8);
+                LogKeep.Trim(f, 'd', 30, null);
+                Check("журнали: усе давнє - файл видалено", !File.Exists(f), "");
+            });
             Run("search", delegate
             {
                 FindSpec s = FindSpec.Parse("звіт ext:pdf", 0);

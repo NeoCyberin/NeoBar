@@ -368,7 +368,6 @@ static class ProcRecorder
     }
 
     // ---------- журнали в теці: перелік, видалення, прибирання старих ----------
-    public static string Keep = "d30";          // скільки зберігати: "all"; "d<днів>"; "n<скільки останніх>"
     public static int LogsVer;                  // змінюється, коли журнали видалено (вікно перечитує перелік)
 
     // лише журнали NeoBar (за вмістом, не за назвою): перший рядок «sep=», другий - 10 заголовків, останні GDI і USER
@@ -432,9 +431,9 @@ static class ProcRecorder
     // прибрати старі журнали за налаштуванням (у фоні; поточний запис і показаний журнал не чіпаються)
     public static void PruneSoon(params string[] dirs)
     {
-        string k = Keep ?? "";
+        char mode;
         int n;
-        if (k.Length < 2 || (k[0] != 'd' && k[0] != 'n') || !int.TryParse(k.Substring(1), out n) || n <= 0) return;
+        if (!LogKeep.Parse(LogKeep.Spec, out mode, out n)) return;
         ThreadPool.QueueUserWorkItem(delegate
         {
             HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -448,7 +447,7 @@ static class ProcRecorder
                 {
                     string f = l[i];
                     if (Same(f, LogPath)) continue;
-                    bool old = k[0] == 'd' ? File.GetLastWriteTimeUtc(f) < lim : i < l.Count - n;
+                    bool old = mode == 'd' ? File.GetLastWriteTimeUtc(f) < lim : i < l.Count - n;
                     if (old && DeleteLog(f, false)) gone++;
                 }
             }

@@ -10585,8 +10585,6 @@
 < Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
 > Przenieść dziennik „{0}” i jego podsumowanie (.txt) do Kosza?
 
-< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
-> Dzienniki i podsumowania z karty „Analiza” w monitorze systemu. Starsze usuwają się same (gdy zaczyna się zapis lub otwiera karta)
 
 < Видалити журнал
 > Usuń dziennik
@@ -10594,14 +10592,16 @@
 < {0} днів
 > {0} dni
 
-< Аналіз процесів
-> Analiza procesów
 
-< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
-> Folder domyślny; dzienniki z innego folderu są porządkowane, gdy zapisuje się tam nowy zapis
 
 < Видалити цей журнал і його підсумок (у Кошик)
 > Usuń ten dziennik i jego podsumowanie (do Kosza)
 
 < Останні {0}
 > Ostatnie {0}
+
+< Усі журнали: пошуку проблем, помилок і аналізу процесів. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу. Давніше видаляється само
+> Wszystkie dzienniki: diagnostyka, błędy i analiza procesów. „Ostatnie N” to ostatnie N uruchomień NeoBar (dla dziennika gry - uruchomień gry) i ostatnie N zapisów analizy. Starsze usuwa się samo
+
+< Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
+> Zapisy z karty „Analiza” w monitorze systemu; w innym folderze stare są porządkowane, gdy zapisuje się tam nowy zapis

@@ -10585,8 +10585,6 @@
 < Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
 > Přesunout záznam „{0}“ a jeho souhrn (.txt) do Koše?
 
-< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
-> Záznamy a souhrny z karty „Analýza“ v monitoru systému. Starší se mažou samy (při spuštění záznamu nebo otevření karty)
 
 < Видалити журнал
 > Smazat záznam
@@ -10594,14 +10592,16 @@
 < {0} днів
 > {0} dní
 
-< Аналіз процесів
-> Analýza procesů
 
-< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
-> Výchozí složka; záznamy v jiné složce se uklidí, když se tam zapíše nový záznam
 
 < Видалити цей журнал і його підсумок (у Кошик)
 > Smazat tento záznam a jeho souhrn (do Koše)
 
 < Останні {0}
 > Posledních {0}
+
+< Усі журнали: пошуку проблем, помилок і аналізу процесів. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу. Давніше видаляється само
+> Všechny záznamy: hledání problémů, chyby a analýza procesů. „Posledních N“ znamená posledních N spuštění NeoBar (u záznamu hry spuštění hry) a posledních N záznamů analýzy. Starší se maže samo
+
+< Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
+> Záznamy z karty „Analýza“ v monitoru systému; v jiné složce se staré uklidí, když se tam zapíše nový záznam

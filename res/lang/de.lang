@@ -10585,8 +10585,6 @@
 < Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
 > Protokoll „{0}“ und seine Zusammenfassung (.txt) in den Papierkorb verschieben?
 
-< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
-> Protokolle und Zusammenfassungen aus dem Tab „Analyse“ im Systemmonitor. Ältere werden automatisch gelöscht (beim Start einer Aufzeichnung oder beim Öffnen des Tabs)
 
 < Видалити журнал
 > Protokoll löschen
@@ -10594,14 +10592,16 @@
 < {0} днів
 > {0} Tage
 
-< Аналіз процесів
-> Prozessanalyse
 
-< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
-> Standardordner; Protokolle in einem anderen Ordner werden bereinigt, wenn dort eine neue Aufzeichnung gespeichert wird
 
 < Видалити цей журнал і його підсумок (у Кошик)
 > Dieses Protokoll und seine Zusammenfassung löschen (in den Papierkorb)
 
 < Останні {0}
 > Letzte {0}
+
+< Усі журнали: пошуку проблем, помилок і аналізу процесів. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу. Давніше видаляється само
+> Alle Protokolle: Fehlersuche, Fehler und Prozessanalyse. „Letzte N“ bedeutet die letzten N Starts von NeoBar (beim Spielprotokoll: Spielstarts) und die letzten N Analyseaufzeichnungen. Älteres wird automatisch gelöscht
+
+< Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
+> Aufzeichnungen aus dem Tab „Analyse“ im Systemmonitor; in einem anderen Ordner werden alte bereinigt, wenn dort eine neue Aufzeichnung gespeichert wird

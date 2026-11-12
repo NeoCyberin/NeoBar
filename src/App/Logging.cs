@@ -106,6 +106,8 @@ static class SbLog
         Write(GroupOf[cat], Tag[cat], msg);
     }
 
+    static readonly bool[] marked = new bool[GroupNames.Length];
+
     static void Write(int g, string tag, string msg)
     {
         lock (gate)
@@ -121,9 +123,26 @@ static class SbLog
                     if (File.Exists(old)) File.Delete(old);
                     File.Move(p, old);
                 }
-                File.AppendAllText(p, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "  [" + tag + "] " + msg + Environment.NewLine, Encoding.UTF8);
+                string head = "";
+                if (!marked[g]) { marked[g] = true; head = LogKeep.SessionLine() + Environment.NewLine; }     // початок запуску - для «останні N запусків»
+                File.AppendAllText(p, head + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture) + "  [" + tag + "] " + msg + Environment.NewLine, Encoding.UTF8);
             }
             catch { }
+        }
+        LogKeep.Daily();
+    }
+
+    // строк зберігання (LogKeep): журнали груп, їхні попередні частини (.old) і журнал бібліотеки в грі
+    public static void TrimAll(char mode, int n)
+    {
+        lock (gate)
+        {
+            for (int g = 0; g < GroupNames.Length; g++)
+            {
+                try { LogKeep.Trim(GroupFile(g), mode, n, null); } catch (Exception ex) { Util.ErrorLog(ex); }
+                try { LogKeep.Trim(GroupFile(g) + ".old", mode, n, null); } catch (Exception ex) { Util.ErrorLog(ex); }
+            }
+            try { LogKeep.Trim(Path.Combine(Dir, "dll.log"), mode, n, "бібліотеку підключено"); } catch (Exception ex) { Util.ErrorLog(ex); }
         }
     }
 

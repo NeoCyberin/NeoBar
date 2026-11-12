@@ -13,7 +13,7 @@ By default NeoBar does not inject into anti-cheat games; the overlay is then a w
 It is designed to idle: no busy timers, slow work in the background, logs only when you turn them on.
 
 **Where do I find logs?**
-Settings → Diagnostics. A switched-on log writes files up to 2 MB; a switched-off one writes nothing. The error log is always written - send it together with a description of the problem.
+Settings → Diagnostics. A switched-on log writes files up to 2 MB; a switched-off one writes nothing. The error log is always written - send it together with a description of the problem. *Keep logs* sets how long all logs (troubleshooting, errors, process analysis) are kept: all, 7/30/90 days or the last 10/50/200 launches; 30 days by default.
 
 **How do I reset or move my settings?**
 Settings → Data: export/import a profile (`.nbpack`) or reset it; the old copy stays as `neobar.ini.bak`.

@@ -589,15 +589,14 @@ sealed partial class SettingsForm
         k.Row(L.T("Тека журналів"), L.T("Увімкнений журнал пише у файли до 2 МБ, вимкнений нічого не пише й не сповільнює програму"),
             Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenDir(SbLog.Dir, true); }),
             Bt(L.T("Очистити"), "g:trash", 110, delegate { SbLog.Clear(); k.Invalidate(); }));
+        cbLogKeep = Cb(190, L.T("Усі"), L.F("{0} днів", 7), L.F("{0} днів", 30), L.F("{0} днів", 90), L.F("Останні {0}", 10), L.F("Останні {0}", 50), L.F("Останні {0}", 200));
+        k.Row(L.T("Зберігати журнали"), L.T("Усі журнали: пошуку проблем, помилок і аналізу процесів. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу. Давніше видаляється само"), cbLogKeep);
         SRow re = k.Row(L.T("Журнал помилок"), "",
             Bt("Відкрити", "g:open", 110, delegate { OpenErrorLog(); }),
             Bt(L.T("Очистити"), "g:trash", 110, delegate { try { File.Delete(ErrPath); } catch (Exception skipEx) { SbLog.Skip(skipEx); } k.Invalidate(); RunDiag(); }));
         re.DescFn = delegate { long n = 0; try { if (File.Exists(ErrPath)) n = new FileInfo(ErrPath).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); } return L.T("Записується завжди. Надішліть його разом з описом проблеми  ·  ") + SizeText(n); };
 
-        k = right.Card(L.T("Аналіз процесів"));
-        cbAnKeep = Cb(190, L.T("Усі"), L.F("{0} днів", 7), L.F("{0} днів", 30), L.F("{0} днів", 90), L.F("Останні {0}", 10), L.F("Останні {0}", 50), L.F("Останні {0}", 200));
-        k.Row(L.T("Зберігати журнали"), L.T("Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)"), cbAnKeep);
-        k.Row(L.T("Тека журналів аналізу"), L.T("Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис"),
+        k.Row(L.T("Тека журналів аналізу"), L.T("Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис"),
             Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenDir(ProcRecorder.LogDir, true); }));
 
         h.Arrange = delegate (Rectangle r)
@@ -610,7 +609,7 @@ sealed partial class SettingsForm
         return h;
     }
 
-    static string ErrPath { get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "neobar-error.log"); } }
+    static string ErrPath { get { return Util.ErrorPath; } }
 
     static string SizeText(long n)
     {

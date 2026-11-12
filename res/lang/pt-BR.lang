@@ -10585,8 +10585,6 @@
 < Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
 > Mover o registro "{0}" e o resumo (.txt) para a Lixeira?
 
-< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
-> Registros e resumos da guia "Análise" do monitor do sistema. Os mais antigos são excluídos sozinhos (ao iniciar uma gravação ou abrir a guia)
 
 < Видалити журнал
 > Excluir registro
@@ -10594,14 +10592,16 @@
 < {0} днів
 > {0} dias
 
-< Аналіз процесів
-> Análise de processos
 
-< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
-> Pasta padrão; registros de outra pasta são limpos quando uma nova gravação é salva lá
 
 < Видалити цей журнал і його підсумок (у Кошик)
 > Excluir este registro e o resumo (para a Lixeira)
 
 < Останні {0}
 > Últimos {0}
+
+< Усі журнали: пошуку проблем, помилок і аналізу процесів. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу. Давніше видаляється само
+> Todos os registros: diagnóstico, erros e análise de processos. "Últimos N" são as últimas N execuções do NeoBar (do jogo, para o registro do jogo) e as últimas N gravações de análise. O restante é excluído sozinho
+
+< Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
+> Gravações da guia "Análise" do monitor do sistema; em outra pasta as antigas são limpas quando uma nova gravação é salva lá

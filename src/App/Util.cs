@@ -37,16 +37,22 @@ static partial class Util
     }
 
     // журнал помилок програми (neobar-error.log; його показує «Перевірка системи»), не більше 256 КБ
+    public static string ErrorPath { get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "neobar-error.log"); } }
+    static bool errMarked;
+
     public static void ErrorLog(Exception ex)
     {
         try
         {
-            string p = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "neobar-error.log");
+            string p = ErrorPath;
             FileInfo fi = new FileInfo(p);
             if (fi.Exists && fi.Length > 256 * 1024) return;
-            File.AppendAllText(p, DateTime.Now + "  " + ex + Environment.NewLine);
+            string head = "";
+            if (!errMarked) { errMarked = true; head = LogKeep.SessionLine() + Environment.NewLine; }
+            File.AppendAllText(p, head + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) + "  " + ex + Environment.NewLine);
         }
         catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        LogKeep.Daily();
     }
 
     // подвійна буферизація для контролу й усіх вкладених (менше мерехтіння під час анімацій)

@@ -30,7 +30,6 @@ sealed partial class PerfWindow
     bool anHooked;
     List<string> anLogs = new List<string>();       // журнали NeoBar у теці показаного (для гортання)
     string anLogsKey;
-    static bool anPruned;
     Rectangle anPlot;                               // область графіка (для підказки під курсором)
     Point anMouse = new Point(-1, -1);
 
@@ -46,8 +45,6 @@ sealed partial class PerfWindow
     void EnterAnalysis()
     {
         if (!anHooked) { ProcRecorder.Changed += OnRecData; anHooked = true; }
-        ProcRecorder.Keep = Bar.Config.AnKeep;
-        if (!anPruned) { anPruned = true; ProcRecorder.PruneSoon(ProcRecorder.LogDir); }      // старі журнали - раз за запуск
         AnReload();
     }
 
@@ -152,7 +149,6 @@ sealed partial class PerfWindow
 
     void StartRec()
     {
-        ProcRecorder.Keep = Bar.Config.AnKeep;
         string e = ProcRecorder.Start(anPid, anName, anPath, anInterval, anLog);
         if (e.Length > 0) { anMsg = e; anMsgBad = true; Invalidate(); return; }
         anSetup = false;
@@ -543,13 +539,13 @@ sealed partial class PerfWindow
                 ProcRecorder.Name(i),
                 hi0 >= 0 ? ProcRecorder.Fmt(i, anData[hi0].V[i]) : "—",
                 ProcRecorder.Fmt(i, s.Min), ProcRecorder.Fmt(i, s.Max), ProcRecorder.Fmt(i, s.Avg), ProcRecorder.Fmt(i, s.P95),
-                double.IsNaN(s.Max) ? "—" : s.MaxAt.ToString("HH:mm:ss")
+                double.IsNaN(s.Max) || s.Max == s.Min ? "—" : s.MaxAt.ToString("HH:mm:ss")
             };
             x = sr.X;
             for (int c = 0; c < v.Length; c++)
             {
                 Rectangle cr = new Rectangle(x + (c == 0 ? Px(8) : 0), yy, w[c] - Px(6) - (c == 0 ? Px(8) : 0), rh);
-                if (c == 0) TxtL(g, v[c], F, cr, P.Fg); else TxtR(g, v[c], F, cr, c == 3 ? P.Warn : P.Fg);
+                if (c == 0) TxtL(g, v[c], F, cr, P.Fg); else TxtR(g, v[c], F, cr, c == 3 && s.Max > s.Min ? P.Warn : P.Fg);
                 x += w[c];
             }
             int k = i;
