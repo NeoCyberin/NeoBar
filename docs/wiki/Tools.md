@@ -8,7 +8,7 @@ Every tool that changes the system shows what it will change first and, where po
 - **Firewall and Wi-Fi** - switch Windows Firewall on/off (it asks first; turn it off only briefly) and look up the current network. Windows shows a Wi-Fi password only to an administrator.
 - **Security check** - looks at running processes, autostart, services and settings, and marks items as suspicious or worth checking. It tells you what it found; fixing anything is your decision.
 - **Encryption** - encrypt text and files (AES-256, key from the password via PBKDF2, 600,000 iterations), MD5/SHA/CRC32 hashes; you can drag a file into the window.
-- **Tasks** (System monitor) - processes and services in groups, what controls them, search by name or PID; ending with their dependencies (the whole group is frozen first, so programs like Steam cannot relaunch what was just ended), restart (Explorer too - open programs keep running), service start type.
+- **Tasks** (System monitor) - processes and services in groups, what controls them, search by name or PID (after three letters it suggests processes and services; ↑ ↓ and Enter jump to them); ending with their dependencies (the whole group is frozen first, so programs like Steam cannot relaunch what was just ended), restart (Explorer too - open programs keep running), service start type.
 - **Analysis** (System monitor) - records one process's load over time with a full CSV log, graph player and min/max/average; see [[Widgets]].
 
 Back: [[Home]]

@@ -10548,3 +10548,60 @@
 
 < Прибрати результати з вікна. Файли журналу лишаються в теці.
 > Usuń wyniki z okna. Pliki dziennika zostaną w folderze.
+
+< процес
+> proces
+
+< процесів: {0}
+> procesów: {0}
+
+< Давніший журнал у цій теці
+> Starszy dziennik w tym folderze
+
+< Новіший журнал у цій теці
+> Nowszy dziennik w tym folderze
+
+< Зберігати журнали
+> Przechowuj dzienniki
+
+< Повернутися до останніх замірів - графік знову рухається разом із записом
+> Wróć do najnowszych pomiarów - wykres znów podąża za zapisem
+
+< Не вдалося видалити журнал.
+> Nie udało się usunąć dziennika.
+
+< Тека журналів аналізу
+> Folder dzienników analizy
+
+< мін
+> min
+
+< макс
+> maks
+
+< журнал {0} з {1}
+> dziennik {0} z {1}
+
+< Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
+> Przenieść dziennik „{0}” i jego podsumowanie (.txt) do Kosza?
+
+< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
+> Dzienniki i podsumowania z karty „Analiza” w monitorze systemu. Starsze usuwają się same (gdy zaczyna się zapis lub otwiera karta)
+
+< Видалити журнал
+> Usuń dziennik
+
+< {0} днів
+> {0} dni
+
+< Аналіз процесів
+> Analiza procesów
+
+< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
+> Folder domyślny; dzienniki z innego folderu są porządkowane, gdy zapisuje się tam nowy zapis
+
+< Видалити цей журнал і його підсумок (у Кошик)
+> Usuń ten dziennik i jego podsumowanie (do Kosza)
+
+< Останні {0}
+> Ostatnie {0}

@@ -10548,3 +10548,60 @@
 
 < Прибрати результати з вікна. Файли журналу лишаються в теці.
 > Ergebnisse aus dem Fenster entfernen. Protokolldateien bleiben im Ordner.
+
+< процес
+> Prozess
+
+< процесів: {0}
+> Prozesse: {0}
+
+< Давніший журнал у цій теці
+> Älteres Protokoll in diesem Ordner
+
+< Новіший журнал у цій теці
+> Neueres Protokoll in diesem Ordner
+
+< Зберігати журнали
+> Protokolle behalten
+
+< Повернутися до останніх замірів - графік знову рухається разом із записом
+> Zurück zu den neuesten Messungen - das Diagramm folgt wieder der Aufzeichnung
+
+< Не вдалося видалити журнал.
+> Protokoll konnte nicht gelöscht werden.
+
+< Тека журналів аналізу
+> Ordner der Analyseprotokolle
+
+< мін
+> Min
+
+< макс
+> Max
+
+< журнал {0} з {1}
+> Protokoll {0} von {1}
+
+< Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
+> Protokoll „{0}“ und seine Zusammenfassung (.txt) in den Papierkorb verschieben?
+
+< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
+> Protokolle und Zusammenfassungen aus dem Tab „Analyse“ im Systemmonitor. Ältere werden automatisch gelöscht (beim Start einer Aufzeichnung oder beim Öffnen des Tabs)
+
+< Видалити журнал
+> Protokoll löschen
+
+< {0} днів
+> {0} Tage
+
+< Аналіз процесів
+> Prozessanalyse
+
+< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
+> Standardordner; Protokolle in einem anderen Ordner werden bereinigt, wenn dort eine neue Aufzeichnung gespeichert wird
+
+< Видалити цей журнал і його підсумок (у Кошик)
+> Dieses Protokoll und seine Zusammenfassung löschen (in den Papierkorb)
+
+< Останні {0}
+> Letzte {0}

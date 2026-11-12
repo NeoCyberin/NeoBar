@@ -82,6 +82,8 @@ sealed partial class SettingsForm : Form, IGradHost
     SCombo cbTheme, cbFx, cbGroups, cbFont, cbFontStyle, cbLabelPos;
     SNum nIcon, nFont;
     CheckBox chBlur, chAnim, chDeskFont;
+    SCombo cbAnKeep;
+    static readonly string[] anKeepIds = { "all", "d7", "d30", "d90", "n10", "n50", "n200" };
     readonly SSlider[] tbA = new SSlider[4];
     readonly Label[] lA = new Label[4];
     readonly Button[] bCol = new Button[4];

@@ -10548,3 +10548,60 @@
 
 < Прибрати результати з вікна. Файли журналу лишаються в теці.
 > Remove the results from the window. Log files stay in the folder.
+
+< процес
+> process
+
+< процесів: {0}
+> processes: {0}
+
+< Давніший журнал у цій теці
+> Older log in this folder
+
+< Новіший журнал у цій теці
+> Newer log in this folder
+
+< Зберігати журнали
+> Keep logs
+
+< Повернутися до останніх замірів - графік знову рухається разом із записом
+> Jump back to the latest samples - the graph follows the recording again
+
+< Не вдалося видалити журнал.
+> Could not delete the log.
+
+< Тека журналів аналізу
+> Analysis log folder
+
+< мін
+> min
+
+< макс
+> max
+
+< журнал {0} з {1}
+> log {0} of {1}
+
+< Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
+> Move the log "{0}" and its summary (.txt) to the Recycle Bin?
+
+< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи. Давніші видаляються самі (коли починається запис чи відкривається вкладка)
+> Logs and summaries from the Analysis tab of the System monitor. Older ones are deleted automatically (when a recording starts or the tab opens)
+
+< Видалити журнал
+> Delete log
+
+< {0} днів
+> {0} days
+
+< Аналіз процесів
+> Process analysis
+
+< Типова тека; журнали з іншої теки прибираються, коли туди пишеться новий запис
+> Default folder; logs in another folder are cleaned up when a new recording is written there
+
+< Видалити цей журнал і його підсумок (у Кошик)
+> Delete this log and its summary (to the Recycle Bin)
+
+< Останні {0}
+> Last {0}

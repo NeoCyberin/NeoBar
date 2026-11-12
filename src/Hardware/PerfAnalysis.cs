@@ -28,6 +28,11 @@ sealed partial class PerfWindow
     ProcRecorder.Stat[] anStats;
     int anStatsN = -1;
     bool anHooked;
+    List<string> anLogs = new List<string>();       // журнали NeoBar у теці показаного (для гортання)
+    string anLogsKey;
+    static bool anPruned;
+    Rectangle anPlot;                               // область графіка (для підказки під курсором)
+    Point anMouse = new Point(-1, -1);
 
     static readonly int[] AnIntervals = { 500, 1000, 2000, 5000, 10000 };
 
@@ -41,6 +46,8 @@ sealed partial class PerfWindow
     void EnterAnalysis()
     {
         if (!anHooked) { ProcRecorder.Changed += OnRecData; anHooked = true; }
+        ProcRecorder.Keep = Bar.Config.AnKeep;
+        if (!anPruned) { anPruned = true; ProcRecorder.PruneSoon(ProcRecorder.LogDir); }      // старі журнали - раз за запуск
         AnReload();
     }
 
@@ -54,6 +61,74 @@ sealed partial class PerfWindow
     {
         anData = ProcRecorder.Snapshot();
         if (anData.Count != anStatsN) { anStats = ProcRecorder.Stats(anData); anStatsN = anData.Count; }
+        AnLogsRefresh();
+    }
+
+    // перелік журналів у теці - лише коли змінився показаний журнал чи щось видалено (не на кожну перемальовку)
+    void AnLogsRefresh()
+    {
+        string lp = ProcRecorder.LogPath, dir = ProcRecorder.LogDir;
+        try { if (lp.Length > 0) dir = Path.GetDirectoryName(lp); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        string key = dir + "|" + lp + "|" + ProcRecorder.LogsVer + "|" + ProcRecorder.Recording;
+        if (key == anLogsKey) return;
+        anLogsKey = key;
+        anLogs = ProcRecorder.Logs(dir);
+    }
+
+    int AnLogIndex()
+    {
+        for (int i = 0; i < anLogs.Count; i++) if (ProcRecorder.Same(anLogs[i], ProcRecorder.LogPath)) return i;
+        return -1;
+    }
+
+    void OpenLogFile(string file)
+    {
+        StopPlay();
+        string e = ProcRecorder.Load(file);
+        anMsg = e; anMsgBad = e.Length > 0;
+        anHead = 0;
+        AnReload();
+        Invalidate();
+    }
+
+    // гортання журналів у теці: d = -1 давніший, +1 новіший
+    void AnStepLog(int d)
+    {
+        int cur = AnLogIndex();
+        int i = (cur >= 0 ? cur : anLogs.Count) + d;
+        if (i >= 0 && i < anLogs.Count) OpenLogFile(anLogs[i]);
+    }
+
+    void AnDeleteLog()
+    {
+        string lp = ProcRecorder.LogPath;
+        if (ProcRecorder.Recording || lp.Length == 0 || !File.Exists(lp)) return;
+        if (SbDialog.Show(Bar, this, L.T("Видалити журнал"), L.F("Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?", Path.GetFileName(lp)), L.T("Видалити"), L.T("Скасувати")) != 0) return;
+        int cur = AnLogIndex();
+        string near = cur >= 0 && cur + 1 < anLogs.Count ? anLogs[cur + 1] : (cur > 0 ? anLogs[cur - 1] : null);
+        StopPlay();
+        if (!ProcRecorder.DeleteLog(lp, true)) { anMsg = L.T("Не вдалося видалити журнал."); anMsgBad = true; Invalidate(); return; }
+        anMsg = "";
+        anHead = -1;
+        if (near != null) OpenLogFile(near); else AnReload();
+        Invalidate();
+    }
+
+    // підказка під курсором на графіку - перемальовувати, поки миша над ним
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        bool was = anPlot.Contains(anMouse);
+        anMouse = e.Location;
+        base.OnMouseMove(e);
+        if (Tab == TabAnalysis && (was || anPlot.Contains(anMouse))) Invalidate(anPlot.Width > 0 ? Rectangle.Inflate(anPlot, Px(120), Px(40)) : ClientRectangle);
+    }
+
+    protected override void OnMouseLeave(EventArgs e)
+    {
+        bool was = anPlot.Contains(anMouse);
+        anMouse = new Point(-1, -1);
+        base.OnMouseLeave(e);
+        if (was) Invalidate();
     }
 
     void LeaveAnalysis()
@@ -77,6 +152,7 @@ sealed partial class PerfWindow
 
     void StartRec()
     {
+        ProcRecorder.Keep = Bar.Config.AnKeep;
         string e = ProcRecorder.Start(anPid, anName, anPath, anInterval, anLog);
         if (e.Length > 0) { anMsg = e; anMsgBad = true; Invalidate(); return; }
         anSetup = false;
@@ -105,13 +181,9 @@ sealed partial class PerfWindow
         using (OpenFileDialog d = new OpenFileDialog())
         {
             d.Filter = L.T("Журнал CSV (*.csv)|*.csv");
-            try { d.InitialDirectory = Path.GetDirectoryName(ProcRecorder.DefaultLog("x")); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { d.InitialDirectory = anLogsKey != null ? anLogsKey.Substring(0, anLogsKey.IndexOf('|')) : ProcRecorder.LogDir; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             if (d.ShowDialog(this) != DialogResult.OK) return;
-            string e = ProcRecorder.Load(d.FileName);
-            anMsg = e; anMsgBad = e.Length > 0;
-            anHead = 0;
-            AnReload();
-            Invalidate();
+            OpenLogFile(d.FileName);
         }
     }
 
@@ -172,8 +244,15 @@ sealed partial class PerfWindow
         int bw = Px(150), bh = Px(32);
         Rectangle b1 = new Rectangle(top.Right - Px(12) - bw, top.Y + (top.Height - bh) / 2, bw, bh);
         Rectangle b2 = new Rectangle(b1.X - Px(8) - bw, b1.Y, bw, bh);
-        Rectangle b3 = new Rectangle(b2.X - Px(8) - Px(110), b1.Y, Px(110), bh);
-        Rectangle b4 = new Rectangle(b3.X - Px(8) - Px(110), b1.Y, Px(110), bh);
+        // значки: давніший / новіший журнал у теці, тека, видалити, очистити
+        int ib = bh, ig = Px(2);
+        Rectangle iClr = new Rectangle(b2.X - Px(10) - ib, b1.Y, ib, bh);
+        Rectangle iDel = new Rectangle(iClr.X - ig - ib, b1.Y, ib, bh);
+        Rectangle iDir = new Rectangle(iDel.X - ig - ib, b1.Y, ib, bh);
+        Rectangle iNext = new Rectangle(iDir.X - Px(12) - ib, b1.Y, ib, bh);
+        Rectangle iPrev = new Rectangle(iNext.X - ig - ib, b1.Y, ib, bh);
+        Rectangle b4 = iPrev;
+        int curLog = AnLogIndex();
         string title, sub;
         if (anData.Count == 0 && !rec)
         {
@@ -185,7 +264,8 @@ sealed partial class PerfWindow
             title = ProcRecorder.FromFile ? ProcRecorder.ProcName : L.F("{0}  ·  PID {1}", ProcRecorder.ProcName, ProcRecorder.Pid);
             double len = anData.Count > 0 ? anData[anData.Count - 1].Sec : 0;
             sub = (rec ? L.T("Запис") : (ProcRecorder.FromFile ? L.T("З файлу") : L.T("Зупинено"))) + "  ·  " + Dur(len) + "  ·  " +
-                  L.F("замірів: {0}", anData.Count) + (ProcRecorder.Note.Length > 0 && !rec ? "  ·  " + ProcRecorder.Note : "");
+                  L.F("замірів: {0}", anData.Count) + (ProcRecorder.Note.Length > 0 && !rec ? "  ·  " + ProcRecorder.Note : "") +
+                  (curLog >= 0 && anLogs.Count > 1 && !rec ? "  ·  " + L.F("журнал {0} з {1}", curLog + 1, anLogs.Count) : "");
         }
         if (rec)
         {
@@ -202,10 +282,18 @@ sealed partial class PerfWindow
         }, 1, true);
         Btn(g, b2, L.T("Відкрити журнал…"), OpenRec, 0, !rec);
         string lp = ProcRecorder.LogPath;
-        Btn(g, b3, L.T("Тека"), delegate { try { if (File.Exists(lp)) Process.Start("explorer.exe", "/select,\"" + lp + "\""); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }, 0, lp.Length > 0 && File.Exists(lp));
-        Tip(b3, lp);
-        Btn(g, b4, L.T("Очистити"), delegate { StopPlay(); anHead = -1; ProcRecorder.Clear(); AnReload(); Invalidate(); }, 0, !rec && anData.Count > 0);
-        Tip(b4, L.T("Прибрати результати з вікна. Файли журналу лишаються в теці."));
+        bool hasFile = lp.Length > 0 && File.Exists(lp);
+        int pos = curLog >= 0 ? curLog : anLogs.Count;
+        IconBtn(g, iPrev, "left", !rec && pos - 1 >= 0 && pos - 1 < anLogs.Count ? (Action)delegate { AnStepLog(-1); } : null, false);
+        Tip(iPrev, L.T("Давніший журнал у цій теці"));
+        IconBtn(g, iNext, "right", !rec && curLog >= 0 && curLog + 1 < anLogs.Count ? (Action)delegate { AnStepLog(1); } : null, false);
+        Tip(iNext, L.T("Новіший журнал у цій теці"));
+        IconBtn(g, iDir, "folder", hasFile ? (Action)delegate { try { if (File.Exists(lp)) Process.Start("explorer.exe", "/select,\"" + lp + "\""); } catch (Exception skipEx) { SbLog.Skip(skipEx); } } : null, false);
+        Tip(iDir, hasFile ? L.T("Тека") + ": " + lp : L.T("Тека"));
+        IconBtn(g, iDel, "trash", !rec && hasFile ? (Action)AnDeleteLog : null, false);
+        Tip(iDel, L.T("Видалити цей журнал і його підсумок (у Кошик)"));
+        IconBtn(g, iClr, "close", !rec && anData.Count > 0 ? (Action)delegate { StopPlay(); anHead = -1; ProcRecorder.Clear(); AnReload(); Invalidate(); } : null, false);
+        Tip(iClr, L.T("Очистити") + ": " + L.T("Прибрати результати з вікна. Файли журналу лишаються в теці."));
         y = top.Bottom + Px(10);
 
         // показники
@@ -242,6 +330,7 @@ sealed partial class PerfWindow
         Card(g, gr);
         Rectangle pl = new Rectangle(gr.X + Px(64), gr.Y + Px(12), gr.Width - Px(76), gr.Height - Px(34));
         int n = anData.Count;
+        anPlot = n < 2 ? Rectangle.Empty : pl;
         if (n < 2)
         {
             TxtC(g, ProcRecorder.Recording ? L.T("Збираю перші заміри…") : L.T("Тут буде графік навантаження"), F, pl, P.Sub);
@@ -300,6 +389,7 @@ sealed partial class PerfWindow
             float ya = (float)(pl.Bottom - pl.Height * anStats[m].Avg / mx);
             using (Pen dp = new Pen(Util.Blend(P.Card, P.Fg, 0.4f), 1f)) { dp.DashStyle = DashStyle.Dash; g.DrawLine(dp, pl.X, ya, pl.Right, ya); }
         }
+        if (anStats != null && anStats.Length > m) MarkExtremes(g, pl, m, mx, t0, span, anStats[m]);
         // програвач: позиція
         int hi0 = HeadIndex;
         if (hi0 >= 0)
@@ -311,6 +401,7 @@ sealed partial class PerfWindow
         }
         TxtL(g, anData[0].T.ToString("HH:mm:ss"), FS, new Rectangle(pl.X, pl.Bottom + Px(2), Px(80), Px(18)), P.Sub);
         TxtR(g, anData[n - 1].T.ToString("HH:mm:ss"), FS, new Rectangle(pl.Right - Px(80), pl.Bottom + Px(2), Px(80), Px(18)), P.Sub);
+        if (pl.Contains(anMouse) && !anSetup) PaintHover(g, pl, gr, m, mx, t0, span);
         // клік чи перетягування по графіку - перемотка
         DragArea(pl, delegate (Point p)
         {
@@ -322,23 +413,101 @@ sealed partial class PerfWindow
         });
     }
 
+    int SampleAt(double t)
+    {
+        int lo = 0, hi = anData.Count - 1;
+        while (lo < hi) { int mid = (lo + hi) / 2; if (anData[mid].Sec < t) lo = mid + 1; else hi = mid; }
+        if (lo > 0 && Math.Abs(anData[lo - 1].Sec - t) < Math.Abs(anData[lo].Sec - t)) lo--;
+        return lo;
+    }
+
+    // невелика табличка з текстом біля точки (не виходить за межі графіка)
+    void Label(Graphics g, string s, Rectangle bound, float px, float py, bool above, Color edge)
+    {
+        Size sz = TextRenderer.MeasureText(s, FS);
+        int w = sz.Width + Px(10), h = sz.Height + Px(4);
+        int x = (int)px - w / 2, y = above ? (int)py - h - Px(8) : (int)py + Px(8);
+        if (y < bound.Y) y = (int)py + Px(8);
+        if (y + h > bound.Bottom) y = (int)py - h - Px(8);
+        x = Math.Max(bound.X, Math.Min(bound.Right - w, x));
+        Rectangle r = new Rectangle(x, y, w, h);
+        using (SolidBrush b = new SolidBrush(Util.Blend(P.Bg, P.Card, 0.5f))) Util.FillRound(g, b, r, Px(4));
+        using (Pen p = new Pen(edge, 1f)) using (GraphicsPath gp = Util.Round(r, Px(4))) g.DrawPath(p, gp);
+        TxtC(g, s, FS, r, P.Fg);
+    }
+
+    // мінімум і максимум на графіку - лише коли лінія справді змінюється; нульовий мінімум не позначаємо
+    void MarkExtremes(Graphics g, Rectangle pl, int m, double mx, double t0, double span, ProcRecorder.Stat st)
+    {
+        if (double.IsNaN(st.Max) || double.IsNaN(st.Min)) return;
+        double range = st.Max - st.Min;
+        if (range <= Math.Abs(st.Max) * 0.1 || (m == 0 && range < 2)) return;        // майже пряма лінія
+        MarkRuns(g, pl, m, mx, t0, span, st.Max, true);
+        if (st.Min > 0) MarkRuns(g, pl, m, mx, t0, span, st.Min, false);
+    }
+
+    // позначити кожну ділянку, де значення дорівнює крайньому (якщо їх небагато - усі, інакше першу)
+    void MarkRuns(Graphics g, Rectangle pl, int m, double mx, double t0, double span, double v, bool top)
+    {
+        List<int> runs = new List<int>();
+        bool inRun = false;
+        for (int i = 0; i < anData.Count; i++)
+        {
+            bool eq = anData[i].V[m] == v;
+            if (eq && !inRun) { runs.Add(i); if (runs.Count > 5) break; }
+            inRun = eq;
+        }
+        if (runs.Count == 0) return;
+        if (runs.Count > 5) runs.RemoveRange(1, runs.Count - 1);
+        Color c = top ? P.Warn : P.Good;
+        float r0 = Px(5);
+        for (int k = 0; k < runs.Count; k++)
+        {
+            ProcSample s = anData[runs[k]];
+            float x = pl.X + (float)((s.Sec - t0) / span * pl.Width);
+            float y = (float)(pl.Bottom - pl.Height * v / mx);
+            using (SolidBrush b = new SolidBrush(P.Card)) g.FillEllipse(b, x - r0, y - r0, r0 * 2, r0 * 2);
+            using (Pen p = new Pen(c, Math.Max(1.5f, Px(2)))) g.DrawEllipse(p, x - r0, y - r0, r0 * 2, r0 * 2);
+            if (k == 0) Label(g, (top ? L.T("макс") : L.T("мін")) + " " + ProcRecorder.Fmt(m, v), pl, x, y, top, c);
+        }
+    }
+
+    // під курсором: найближчий замір - час і точне значення
+    void PaintHover(Graphics g, Rectangle pl, Rectangle gr, int m, double mx, double t0, double span)
+    {
+        double t = t0 + span * Math.Max(0, Math.Min(1, (anMouse.X - pl.X) / (double)Math.Max(1, pl.Width)));
+        int i = SampleAt(t);
+        ProcSample s = anData[i];
+        float x = pl.X + (float)((s.Sec - t0) / span * pl.Width);
+        float y = (float)(pl.Bottom - pl.Height * s.V[m] / mx);
+        using (Pen dp = new Pen(Util.Blend(P.Card, P.Fg, 0.35f), 1f)) { dp.DashStyle = DashStyle.Dot; g.DrawLine(dp, x, pl.Y, x, pl.Bottom); }
+        float r0 = Px(4);
+        using (SolidBrush b = new SolidBrush(P.Fg)) g.FillEllipse(b, x - r0, y - r0, r0 * 2, r0 * 2);
+        Label(g, s.T.ToString("HH:mm:ss") + "   " + ProcRecorder.Fmt(m, s.V[m]), gr, x, y, true, Util.Blend(P.Card, P.Fg, 0.3f));
+    }
+
+    // швидкість відтворення: повзунок 0..100 → ×1..×600 (логарифмічно: точно на малих, швидко на великих)
+    const double SpeedMax = 600;
+    static int SpeedToPos(float s) { return (int)Math.Round(Math.Log(Math.Max(1, Math.Min(SpeedMax, s))) / Math.Log(SpeedMax) * 100); }
+    static float PosToSpeed(int v) { double s = Math.Pow(SpeedMax, v / 100.0); return (float)(s < 10 ? Math.Round(s) : s < 100 ? Math.Round(s / 5) * 5 : Math.Round(s / 10) * 10); }
+
     void PaintPlayer(Graphics g, Rectangle pr, bool rec)
     {
         int n = anData.Count;
         IconBtn(g, new Rectangle(pr.X, pr.Y + Px(2), Px(36), Px(36)), anPlay ? "pause" : "play", TogglePlay, true);
         int x = pr.X + Px(46);
-        foreach (float sp in new float[] { 1f, 10f, 60f, 300f })
-        {
-            float s0 = sp;
-            string t = "×" + sp.ToString("0");
-            int w = TextRenderer.MeasureText(t, FS).Width + Px(20);
-            Chip(g, new Rectangle(x, pr.Y + Px(6), w, Px(28)), t, Math.Abs(anSpeed - sp) < 0.01f, delegate { anSpeed = s0; Invalidate(); });
-            x += w + Px(6);
-        }
-        Tip(new Rectangle(pr.X + Px(46), pr.Y, x - pr.X - Px(46), pr.Height), L.T("Швидкість відтворення: у скільки разів швидше за реальний час"));
+        TxtL(g, L.T("Швидкість"), FS, new Rectangle(x, pr.Y, Px(76), pr.Height), P.Sub);
+        x += Px(76);
+        Rectangle sl = new Rectangle(x, pr.Y + Px(8), Px(170), Px(24));
+        Slider(g, sl, SpeedToPos(anSpeed), delegate (int v) { anSpeed = PosToSpeed(v); Invalidate(); });
+        TxtL(g, "×" + anSpeed.ToString("0"), FB, new Rectangle(sl.Right + Px(8), pr.Y, Px(56), pr.Height), P.Fg);
+        Tip(new Rectangle(pr.X + Px(46), pr.Y, sl.Right + Px(64) - pr.X - Px(46), pr.Height), L.T("Швидкість відтворення: у скільки разів швидше за реальний час"));
+        x = sl.Right + Px(70);
         if (rec)
         {
-            Chip(g, new Rectangle(x + Px(6), pr.Y + Px(6), Px(90), Px(28)), L.T("Наживо"), anHead < 0, delegate { anHead = -1; StopPlay(); Invalidate(); });
+            Rectangle lv = new Rectangle(x, pr.Y + Px(6), Px(90), Px(28));
+            Chip(g, lv, L.T("Наживо"), anHead < 0, delegate { anHead = -1; StopPlay(); Invalidate(); });
+            Tip(lv, L.T("Повернутися до останніх замірів - графік знову рухається разом із записом"));
             x += Px(102);
         }
         int hi0 = HeadIndex;

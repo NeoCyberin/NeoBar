@@ -107,6 +107,7 @@ sealed class Cfg
     public string GroupMode = "open";  // open | fold
     public int HoverFx = 1;            // 0 нічого, 1 збільшення, 2 підйом, 3 свічення, 4 збільшення+свічення
     public bool Anim = true;
+    public string AnKeep = "d30";      // журнали аналізу процесу: "all" - усі, "d<днів>", "n<скільки останніх>"
     public bool DeskNoteFont = true;   // віджети на робочому столі: великі написи - шрифтом нотаток (теми)
     public bool SecWatch = true;      // «Безпека»: стежити у фоні (значок у треї; не під час гри)
     public bool SecUsed;              // віджет «Безпека» хоч раз був на панелі: тоді стеження й значок у треї працюють і після його прибирання
@@ -339,6 +340,7 @@ static class Store
             case "search": cfg.ShowSearch = B(val); break;
             case "fshide": cfg.FsHide = B(val); break;
             case "desknotefont": cfg.DeskNoteFont = B(val); break;
+            case "ankeep": cfg.AnKeep = val.Trim().ToLowerInvariant(); break;
             case "updcheck": cfg.UpdCheck = B(val); break;
             case "hotkeys": cfg.Hotkeys = B(val); break;
             case "searchsuggest": cfg.SearchSuggest = B(val); break;
@@ -523,6 +525,7 @@ static class Store
         sb.AppendLine("@secused " + Yn(c.SecUsed));
         sb.AppendLine("@fshide " + Yn(c.FsHide));
         sb.AppendLine("@desknotefont " + Yn(c.DeskNoteFont));
+        sb.AppendLine("@ankeep " + c.AnKeep);
         sb.AppendLine("@updcheck " + Yn(c.UpdCheck));
         sb.AppendLine("@hotkeys " + Yn(c.Hotkeys));
         sb.AppendLine("@searchsuggest " + Yn(c.SearchSuggest));
