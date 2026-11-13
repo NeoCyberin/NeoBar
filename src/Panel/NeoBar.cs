@@ -301,6 +301,12 @@ sealed partial class NeoBar : Form
         AfterShown();
         Seasons.Start(this);
         Dice.Changed += DiceRedraw;
+        // строк зберігання журналів - через хвилину після запуску, щоб не заважати старту
+        LogKeep.Spec = cfg.LogKeep;
+        System.Windows.Forms.Timer lt = new System.Windows.Forms.Timer();
+        lt.Interval = 60000;
+        lt.Tick += delegate { lt.Stop(); lt.Dispose(); LogKeep.Spec = cfg.LogKeep; LogKeep.Soon(); };
+        lt.Start();
         // шпалери профілю - трохи згодом: під час автозапуску Провідник може ще не створити робочий стіл
         System.Windows.Forms.Timer wt = new System.Windows.Forms.Timer();
         wt.Interval = 1500;

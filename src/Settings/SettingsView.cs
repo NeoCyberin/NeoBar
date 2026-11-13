@@ -152,8 +152,8 @@ sealed partial class SettingsForm
         cbFx.SelectedIndex = Math.Max(0, Math.Min(4, c.HoverFx));
         chAnim.Checked = c.Anim;
         chDeskFont.Checked = c.DeskNoteFont;
-        int ak = Array.IndexOf(anKeepIds, c.AnKeep);
-        cbAnKeep.SelectedIndex = ak >= 0 ? ak : 2;
+        int ak = Array.IndexOf(logKeepIds, c.LogKeep);
+        cbLogKeep.SelectedIndex = ak >= 0 ? ak : 2;
         cbTheme.SelectedIndex = ThemeIndex(c.ThemeId);
         themeWas = c.ThemeId;
         int fi = c.FontName.Length == 0 ? 0 : cbFont.FindStringExact(c.FontName);
@@ -263,8 +263,10 @@ sealed partial class SettingsForm
         c.HoverFx = Math.Max(0, cbFx.SelectedIndex);
         c.Anim = chAnim.Checked;
         c.DeskNoteFont = chDeskFont.Checked;
-        c.AnKeep = anKeepIds[Math.Max(0, cbAnKeep.SelectedIndex)];
-        ProcRecorder.Keep = c.AnKeep;
+        c.LogKeep = logKeepIds[Math.Max(0, cbLogKeep.SelectedIndex)];
+        bool keepChanged = LogKeep.Spec != c.LogKeep;
+        LogKeep.Spec = c.LogKeep;
+        if (keepChanged) LogKeep.Soon();
         c.FontName = cbFont.SelectedIndex > 0 ? (string)cbFont.SelectedItem : "";
         c.FontStyle = styleIds[Math.Max(0, cbFontStyle.SelectedIndex)];
         c.FontSize = (float)nFont.Value;
