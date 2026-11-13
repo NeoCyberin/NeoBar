@@ -225,6 +225,41 @@ static ID2D1DeviceContext* dc;
 static IWICImagingFactory* wic;
 static bool deviceLost;
 
+// ---------------------------------------------------------------- збій
+// Необроблений виняток (свій чи в системних бібліотеках - Media Foundation, драйвері після скидання відеокарти):
+// записати, де саме, у журнал і стан - і одразу завершитись. Без цього Windows показує вікно «Application Error»,
+// а процес висить, доки його не закриють, і NeoBar не може запустити рушій знову.
+static volatile LONG gCrashed;
+static LONG WINAPI CrashFilter(EXCEPTION_POINTERS* ep)
+{
+    if (InterlockedExchange(&gCrashed, 1)) TerminateProcess(GetCurrentProcess(), 4);
+    void* at = ep && ep->ExceptionRecord ? ep->ExceptionRecord->ExceptionAddress : NULL;
+    DWORD code = ep && ep->ExceptionRecord ? ep->ExceptionRecord->ExceptionCode : 0;
+    HMODULE mod = NULL;
+    wchar_t mn[MAX_PATH] = L"?";
+    if (at && GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCWSTR)at, &mod) && mod)
+        GetModuleFileNameW(mod, mn, MAX_PATH);
+    unsigned long long off = mod ? (unsigned long long)((BYTE*)at - (BYTE*)mod) : (unsigned long long)(ULONG_PTR)at;
+    snprintf(sErr, sizeof sErr, "збій 0x%08lx у %s+0x%llx", (unsigned long)code, U8(PathFindFileNameW(mn)), off);
+    Log("рушій впав: %s (потік %lu) - процес завершено, NeoBar запустить рушій знову", sErr, GetCurrentThreadId());
+    strcpy(sState, "crashed");
+    WriteStatus();
+    TerminateProcess(GetCurrentProcess(), 4);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// відеокарту скинуто (TDR, оновлення драйвера): далі пристрій лише повертає помилки, а Media Foundation може впасти
+static bool DeviceGone()
+{
+    if (!deviceLost && dev && dev->GetDeviceRemovedReason() != S_OK)
+    {
+        deviceLost = true;
+        Log("відеокарта недоступна (0x%08lx)", (unsigned long)dev->GetDeviceRemovedReason());
+    }
+    return deviceLost;
+}
+
+
 static bool InitD3D()
 {
     D3D_FEATURE_LEVEL fl[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0, D3D_FEATURE_LEVEL_9_3 };
@@ -1399,6 +1434,7 @@ static void DrawHost(Host& h)
         RECT full = { 0, 0, (LONG)vidW, (LONG)vidH };
         MFARGB bk0 = { 0, 0, 0, 255 };
         vidOk = SUCCEEDED(me->TransferVideoFrame(vidTex, NULL, &full, &bk0));
+        if (!vidOk && DeviceGone()) return;
     }
     dc->SetTarget(h.target);
     dc->BeginDraw();
@@ -1580,6 +1616,7 @@ static LRESULT CALLBACK IpcProc(HWND h, UINT m, WPARAM w, LPARAM l)
         {
             // власник (NeoBar) закрився - виходимо
             if (gOwner && !IsWindow(gOwner)) { Log("NeoBar закрито - рушій завершується"); PostQuitMessage(0); return 0; }
+            if (DeviceGone()) return 0;
             static int idle;
             bool broken = nH == 0 || !IsWindow(L.parent);
             for (int i = 0; i < nH && !broken; i++) if (!IsWindow(H[i].hwnd)) broken = true;
@@ -1735,7 +1772,7 @@ static int EngineMain(HINSTANCE inst, int argc, wchar_t** argv)
         bool vsync = animating || video;
         if (vsync)
         {
-            if (!vout || FAILED(vout->WaitForVBlank())) Sleep(15);
+            if (!vout || FAILED(vout->WaitForVBlank())) { Sleep(15); DeviceGone(); }
         }
         else
         {
@@ -1785,7 +1822,15 @@ static int EngineMain(HINSTANCE inst, int argc, wchar_t** argv)
         DrawAll(drawAll);
     }
 
-    if (deviceLost) { Log("відеокарту скинуто (драйвер оновився або збій) - рушій перезапуститься"); strcpy(sState, "lost"); WriteStatus(); }
+    if (deviceLost)
+    {
+        // об'єкти відео й Direct3D після скидання відеокарти не звільняємо: Media Foundation у такому стані падає
+        // (саме так з'являлось вікно «NeoBarWall: Application Error»). Процес завершується - Windows прибере все сама.
+        Log("відеокарту скинуто (драйвер оновився або збій) - рушій перезапуститься");
+        strcpy(sState, "lost");
+        WriteStatus();
+        TerminateProcess(GetCurrentProcess(), 3);
+    }
     else { strcpy(sState, "stopped"); WriteStatus(); }
     SetContent(C_NONE);
     DestroyHosts();
@@ -1829,6 +1874,9 @@ extern "C" __declspec(dllexport) void CALLBACK RunW(HWND, HINSTANCE, LPWSTR cmd,
     EngineArgs a = { 0, NULL, 0 };
     a.argv = CommandLineToArgvW(full, &a.argc);
     if (!a.argv) { free(full); return; }
+    // без вікон Windows про помилки: при збої процес має завершитись, а не чекати на кнопку «OK»
+    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
+    SetUnhandledExceptionFilter(CrashFilter);
     // окремий потік: свій COM-апартамент (MTA) і своя черга повідомлень, незалежно від того, що робив rundll32
     HANDLE th = CreateThread(NULL, 0, EngineThread, &a, 0, NULL);
     if (th) { WaitForSingleObject(th, INFINITE); CloseHandle(th); }

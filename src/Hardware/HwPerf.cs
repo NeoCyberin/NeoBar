@@ -117,6 +117,7 @@ sealed class GpuAdapter
     public string Name = "";
     public ulong Dedicated, Shared;
     public bool Software;
+    public bool PerfOk;                 // драйвер хоч раз віддав температуру/потужність (тоді збій - ознака скидання драйвера)
     public double TempMax = double.NaN;
 
     public string LuidKey { get { return "luid_0x" + LuidHigh.ToString("X8") + "_0x" + LuidLow.ToString("X8"); } }
@@ -128,10 +129,30 @@ static class Gpu
     [StructLayout(LayoutKind.Sequential)] struct QAI { public uint Adapter; public int Type; public IntPtr Data; public uint Size; }
     [DllImport("gdi32.dll")] static extern int D3DKMTEnumAdapters2(ref ENUM2 e);
     [DllImport("gdi32.dll")] static extern int D3DKMTQueryAdapterInfo(ref QAI q);
+    [DllImport("gdi32.dll")] static extern int D3DKMTCloseAdapter(ref uint adapter);
 
     static List<GpuAdapter> list;
+    static readonly object gate = new object();
+    static int perfFails;
+    static DateTime resetAt = DateTime.MinValue;
+
+    // після скидання чи оновлення драйвера старі дескриптори адаптерів більше не відповідають - перечитати перелік
+    public static void Reset()
+    {
+        lock (gate)
+        {
+            if (list == null) return;
+            foreach (GpuAdapter a in list) { uint h = a.Handle; if (h != 0) D3DKMTCloseAdapter(ref h); }
+            list = null;
+        }
+    }
 
     public static List<GpuAdapter> Adapters()
+    {
+        lock (gate) return AdaptersLocked();
+    }
+
+    static List<GpuAdapter> AdaptersLocked()
     {
         if (list != null) return list;
         list = new List<GpuAdapter>();
@@ -165,6 +186,7 @@ static class Gpu
                     }
                     if (a.Name.Length == 0) a.Name = L.T("Відеоадаптер");
                     if (!a.Software && a.Name.IndexOf("Basic Render", StringComparison.OrdinalIgnoreCase) < 0) list.Add(a);
+                    else { uint h = a.Handle; D3DKMTCloseAdapter(ref h); }        // непотрібний адаптер - дескриптор одразу закрити
                 }
             }
             finally { Marshal.FreeHGlobal(buf); }
@@ -204,7 +226,20 @@ static class Gpu
     {
         temp = power = double.NaN; fan = -1;
         byte[] d = Query(a.Handle, 62, 64);
-        if (d == null) return false;
+        if (d == null)
+        {
+            // раніше працювало, а тепер ні (5 разів поспіль) - драйвер перезапустився: перечитати адаптери, не частіше ніж раз на 30 с
+            if (a.PerfOk && ++perfFails >= 5 && (DateTime.UtcNow - resetAt).TotalSeconds > 30)
+            {
+                perfFails = 0;
+                resetAt = DateTime.UtcNow;
+                SbLog.W(SbLog.Sensors, "відеоадаптер не відповідає - перечитую перелік (драйвер перезапустився?)");
+                Reset();
+            }
+            return false;
+        }
+        a.PerfOk = true;
+        perfFails = 0;
         uint t = BitConverter.ToUInt32(d, 56), p = BitConverter.ToUInt32(d, 52), f = BitConverter.ToUInt32(d, 48);
         if (t > 0 && t < 2000) temp = t / 10.0;
         if (p > 0 && p <= 2000) power = p / 10.0;
@@ -372,17 +407,76 @@ static class Sensors
                 th.Priority = ThreadPriority.BelowNormal;
                 th.Start();
             }
-            if (warmDone) SampleFull();
+            if (warmDone)
+            {
+                Snap s = Interlocked.Exchange(ref ready, null);
+                if (s != null) Apply(s);
+                Kick();
+                SampleTail();
+            }
         }
         Action u = Updated;
         if (u != null) try { u(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
-    static void SampleFull()
+    // знімок показників з фонового опитування; поля - як у Sensors, «невідомо» за замовчуванням
+    sealed class Snap
     {
+        public float CpuPeak = float.NaN, CpuMhz = float.NaN, CpuTemp = float.NaN, GpuLoad = float.NaN, Vram = float.NaN, GpuTemp = float.NaN,
+                     GpuPower = float.NaN, GpuClock = float.NaN, MemClock = float.NaN, Hotspot = float.NaN, MemTemp = float.NaN,
+                     GpuPowerW = float.NaN, GpuVolt = float.NaN, GpuFanPct = float.NaN, CpuPowerW = float.NaN;
+        public int CpuBusy = -1, CpuThreads, GpuFan = -1;
+        public double VramUsedGb, VramTotalGb;
+        public bool TempIsAcpi;
+        public string GpuName = "", VendorSource = "";
+    }
+
+    static Snap ready;
+    static int fullBusy, fullStart;
+    static bool stuckNoted;
+
+    // запустити наступне фонове опитування; попереднє ще триває - лише перевірити, чи не зависло
+    static void Kick()
+    {
+        if (Interlocked.CompareExchange(ref fullBusy, 1, 0) != 0)
+        {
+            int ms = unchecked(Environment.TickCount - fullStart);
+            if (!stuckNoted && ms > 15000)
+            {
+                stuckNoted = true;
+                Apply(new Snap());                  // не показувати застарілі числа як поточні
+                Util.ErrorNote("датчики не відповідають понад 15 с (завис виклик драйвера відеокарти, PawnIO чи WMI) - панель працює далі, показники повернуться, коли драйвер відповість");
+            }
+            return;
+        }
+        fullStart = Environment.TickCount;
+        ThreadPool.QueueUserWorkItem(delegate
+        {
+            Snap s = null;
+            try { s = Collect(); }
+            catch (Exception ex) { SbLog.Skip(ex); }
+            finally
+            {
+                if (s != null) Interlocked.Exchange(ref ready, s);
+                if (stuckNoted)
+                {
+                    stuckNoted = false;
+                    Util.ErrorNote("датчики знову відповідають (опитування тривало " + unchecked(Environment.TickCount - fullStart) / 1000 + " с)");
+                }
+                Interlocked.Exchange(ref fullBusy, 0);
+            }
+        });
+    }
+
+    // повне опитування (лічильники, драйвери відеокарти, PawnIO, WMI) - у фоновому потоці: виклик драйвера може
+    // зависнути (скидання відеокарти, оновлення драйвера), і тоді не має стояти інтерфейс NeoBar разом із панеллю
+    static Snap Collect()
+    {
+        Snap n = new Snap();
+        n.VramUsedGb = VramUsedGb; n.VramTotalGb = VramTotalGb;       // без нового значення лишаються попередні
         GpuAdapter ga = null;
         try { List<GpuAdapter> al = Gpu.Adapters(); if (al.Count > 0) ga = al[0]; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
-        GpuName = ga != null ? ga.Name : "";
+        n.GpuName = ga != null ? ga.Name : "";
         if (pdh != null)
         {
             pdh.Collect();
@@ -397,89 +491,120 @@ static class Sensors
                 if (kv.Value > peak) peak = kv.Value;
                 if (kv.Value > BusyPct) busy++;
             }
-            CpuPeak = peak < 0 ? float.NaN : (float)Math.Min(100, peak);
-            CpuBusy = peak < 0 ? -1 : busy;
-            CpuThreads = thr;
-            CpuMhz = !double.IsNaN(perf) && baseMhz > 0 ? (float)(baseMhz * perf / 100.0) : float.NaN;
+            n.CpuPeak = peak < 0 ? float.NaN : (float)Math.Min(100, peak);
+            n.CpuBusy = peak < 0 ? -1 : busy;
+            n.CpuThreads = thr;
+            n.CpuMhz = !double.IsNaN(perf) && baseMhz > 0 ? (float)(baseMhz * perf / 100.0) : float.NaN;
 
-            CpuTemp = float.NaN;
+            n.CpuTemp = float.NaN;
             Dictionary<string, double> tz = pdh.Values("tzh");
             double scale = 10.0;
             if (tz.Count == 0) { tz = pdh.Values("tz"); scale = 1.0; }
             foreach (double k in tz.Values)
             {
                 double cdeg = k / scale - 273.15;
-                if (cdeg > 5 && cdeg < 125 && (float.IsNaN(CpuTemp) || cdeg > CpuTemp)) CpuTemp = (float)cdeg;
+                if (cdeg > 5 && cdeg < 125 && (float.IsNaN(n.CpuTemp) || cdeg > n.CpuTemp)) n.CpuTemp = (float)cdeg;
             }
-            TempIsAcpi = !float.IsNaN(CpuTemp);
+            n.TempIsAcpi = !float.IsNaN(n.CpuTemp);
 
-            GpuLoad = float.NaN;
-            Vram = float.NaN;
+            n.GpuLoad = float.NaN;
+            n.Vram = float.NaN;
             if (ga != null)
             {
                 string key = ga.LuidKey.ToLowerInvariant();
                 Dictionary<string, double> eng = new Dictionary<string, double>();
                 foreach (KeyValuePair<string, double> kv in pdh.Values("gpu"))
                 {
-                    string n = kv.Key.ToLowerInvariant();
-                    if (n.IndexOf(key, StringComparison.Ordinal) < 0) continue;
-                    int e = n.IndexOf("_eng_", StringComparison.Ordinal);
-                    string ek = e >= 0 ? n.Substring(e) : n;
+                    string nk = kv.Key.ToLowerInvariant();
+                    if (nk.IndexOf(key, StringComparison.Ordinal) < 0) continue;
+                    int e = nk.IndexOf("_eng_", StringComparison.Ordinal);
+                    string ek = e >= 0 ? nk.Substring(e) : nk;
                     double s;
                     eng.TryGetValue(ek, out s);
                     eng[ek] = s + kv.Value;
                 }
                 double mx = 0;
                 foreach (double v in eng.Values) mx = Math.Max(mx, v);
-                if (eng.Count > 0) GpuLoad = (float)Math.Min(100, mx);
+                if (eng.Count > 0) n.GpuLoad = (float)Math.Min(100, mx);
                 double used = 0;
                 bool any = false;
                 foreach (KeyValuePair<string, double> kv in pdh.Values("vram"))
                     if (kv.Key.ToLowerInvariant().IndexOf(key, StringComparison.Ordinal) >= 0) { used += kv.Value; any = true; }
                 if (any)
                 {
-                    VramUsedGb = used / 1073741824.0;
-                    VramTotalGb = ga.Dedicated / 1073741824.0;
-                    if (ga.Dedicated > 0) Vram = (float)(used * 100.0 / ga.Dedicated);
+                    n.VramUsedGb = used / 1073741824.0;
+                    n.VramTotalGb = ga.Dedicated / 1073741824.0;
+                    if (ga.Dedicated > 0) n.Vram = (float)(used * 100.0 / ga.Dedicated);
                 }
             }
         }
-        GpuTemp = GpuPower = float.NaN;
-        GpuFan = -1;
+        n.GpuTemp = n.GpuPower = float.NaN;
+        n.GpuFan = -1;
         if (ga != null)
         {
             double t, p; int f;
-            if (Gpu.Perf(ga, out t, out p, out f)) { GpuTemp = (float)t; GpuPower = (float)p; GpuFan = f; }
+            if (Gpu.Perf(ga, out t, out p, out f)) { n.GpuTemp = (float)t; n.GpuPower = (float)p; n.GpuFan = f; }
         }
 
         // датчики виробника відеокарти (AMD ADL / NVIDIA NVML)
-        GpuClock = MemClock = Hotspot = MemTemp = GpuPowerW = GpuVolt = GpuFanPct = CpuPowerW = float.NaN;
+        n.GpuClock = n.MemClock = n.Hotspot = n.MemTemp = n.GpuPowerW = n.GpuVolt = n.GpuFanPct = n.CpuPowerW = float.NaN;
         VendorStats vs = null;
         try { vs = VendorGpu.Read(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
-        VendorSource = vs != null ? vs.Source : "";
+        n.VendorSource = vs != null ? vs.Source : "";
         if (vs != null)
         {
-            GpuClock = vs.GfxClock; MemClock = vs.MemClock; Hotspot = vs.Hotspot; MemTemp = vs.MemTemp;
-            GpuPowerW = vs.PowerW; GpuVolt = vs.VoltMv; GpuFanPct = vs.FanPct; CpuPowerW = vs.CpuPowerW;
-            if (!float.IsNaN(vs.Temp)) GpuTemp = vs.Temp;
-            if (!float.IsNaN(vs.FanRpm)) GpuFan = (int)vs.FanRpm;
-            if (float.IsNaN(GpuLoad) && !float.IsNaN(vs.Load)) GpuLoad = vs.Load;
-            if (float.IsNaN(CpuTemp) && !float.IsNaN(vs.CpuTemp)) { CpuTemp = vs.CpuTemp; TempIsAcpi = false; }
+            n.GpuClock = vs.GfxClock; n.MemClock = vs.MemClock; n.Hotspot = vs.Hotspot; n.MemTemp = vs.MemTemp;
+            n.GpuPowerW = vs.PowerW; n.GpuVolt = vs.VoltMv; n.GpuFanPct = vs.FanPct; n.CpuPowerW = vs.CpuPowerW;
+            if (!float.IsNaN(vs.Temp)) n.GpuTemp = vs.Temp;
+            if (!float.IsNaN(vs.FanRpm)) n.GpuFan = (int)vs.FanRpm;
+            if (float.IsNaN(n.GpuLoad) && !float.IsNaN(vs.Load)) n.GpuLoad = vs.Load;
+            if (float.IsNaN(n.CpuTemp) && !float.IsNaN(vs.CpuTemp)) { n.CpuTemp = vs.CpuTemp; n.TempIsAcpi = false; }
         }
-        if (float.IsNaN(CpuTemp) || TempIsAcpi)
+        if (float.IsNaN(n.CpuTemp) || n.TempIsAcpi)
         {
             float pt = float.NaN;
             try { pt = CpuTempPawn.Read(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
-            if (!float.IsNaN(pt)) { CpuTemp = pt; TempIsAcpi = false; }
+            if (!float.IsNaN(pt)) { n.CpuTemp = pt; n.TempIsAcpi = false; }
         }
-        if (float.IsNaN(CpuPowerW) && !float.IsNaN(CpuTempPawn.PowerW)) CpuPowerW = CpuTempPawn.PowerW;
-        if (float.IsNaN(CpuTemp) || TempIsAcpi)
+        if (float.IsNaN(n.CpuPowerW) && !float.IsNaN(CpuTempPawn.PowerW)) n.CpuPowerW = CpuTempPawn.PowerW;
+        if (float.IsNaN(n.CpuTemp) || n.TempIsAcpi)
         {
             float wt = float.NaN;
             try { wt = CpuTempWmi.Read(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
-            if (!float.IsNaN(wt)) { CpuTemp = wt; TempIsAcpi = false; }
+            if (!float.IsNaN(wt)) { n.CpuTemp = wt; n.TempIsAcpi = false; }
         }
+        return n;
+    }
 
+    static void Apply(Snap n)
+    {
+        GpuName = n.GpuName;
+        CpuPeak = n.CpuPeak;
+        CpuBusy = n.CpuBusy;
+        CpuThreads = n.CpuThreads;
+        CpuMhz = n.CpuMhz;
+        CpuTemp = n.CpuTemp;
+        TempIsAcpi = n.TempIsAcpi;
+        GpuLoad = n.GpuLoad;
+        Vram = n.Vram;
+        VramUsedGb = n.VramUsedGb;
+        VramTotalGb = n.VramTotalGb;
+        GpuTemp = n.GpuTemp;
+        GpuPower = n.GpuPower;
+        GpuFan = n.GpuFan;
+        GpuClock = n.GpuClock;
+        MemClock = n.MemClock;
+        Hotspot = n.Hotspot;
+        MemTemp = n.MemTemp;
+        GpuPowerW = n.GpuPowerW;
+        GpuVolt = n.GpuVolt;
+        GpuFanPct = n.GpuFanPct;
+        CpuPowerW = n.CpuPowerW;
+        VendorSource = n.VendorSource;
+    }
+
+    static void SampleTail()
+    {
         // кадри поточної гри
         FpsNow = FrameMs = float.NaN;
         FgName = Games.CurrentName;

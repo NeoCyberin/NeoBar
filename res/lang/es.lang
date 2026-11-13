@@ -10605,3 +10605,57 @@
 
 < Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
 > Grabaciones de la pestaña «Análisis» del monitor del sistema; en otra carpeta las antiguas se limpian cuando se graba allí una nueva
+
+<  Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.
+>  Es anormalmente alto: parece una fuga; reinicia NeoBar y envía el registro de errores.
+
+< бракувало пам'яті: {0} (востаннє {1})
+> memoria insuficiente: {0} (última {1})
+
+< Читаю журнал подій Windows за тиждень…
+> Leyendo el registro de eventos de Windows de la última semana…
+
+< За {0} днів - без зависань відеодрайвера, нестачі пам'яті, раптових вимкнень і збоїв NeoBar.
+> En {0} días: sin bloqueos del controlador gráfico, falta de memoria, apagados repentinos ni fallos de NeoBar.
+
+< раптове вимкнення або перезавантаження: {0} (востаннє {1})
+> apagado o reinicio repentino: {0} (último {1})
+
+< За {0} днів: 
+> En {0} días: 
+
+< Журнал подій Windows не прочитано: 
+> No se pudo leer el registro de eventos de Windows: 
+
+< збої NeoBar: {0} (востаннє {1}: {2})
+> fallos de NeoBar: {0} (último {1}: {2})
+
+< . Рушій шпалер: 
+> . Motor de fondos: 
+
+< Стабільність системи
+> Estabilidad del sistema
+
+<  Зависання відеодрайвера - найчастіше перегрів, розгін або нестабільний драйвер відеокарти; варто оновити або перевстановити драйвер.
+>  Los bloqueos del controlador gráfico suelen deberse a sobrecalentamiento, overclock o un controlador inestable; conviene actualizar o reinstalar el controlador.
+
+< Журнал подій
+> Registro de eventos
+
+<  - зависла
+>  - colgado
+
+<  - найбільше займали: 
+>  - los que más ocupaban: 
+
+< відеодрайвер зависав і перезапускався: {0} (востаннє {1})
+> el controlador gráfico se colgó y se reinició: {0} (último {1})
+
+< пам'ять {0}, дескрипторів {1}, об'єктів GDI {2}, USER {3}
+> memoria {0}, identificadores {1}, objetos GDI {2}, USER {3}
+
+< Ресурси NeoBar
+> Recursos de NeoBar
+
+< NeoBar: 
+> NeoBar: 

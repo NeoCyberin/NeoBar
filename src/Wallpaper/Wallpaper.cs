@@ -255,6 +255,11 @@ static class WallEngine
     }
     public static string StatusFile { get { return Path.Combine(Path.GetTempPath(), "NeoBarWall.status"); } }
 
+    public static int Pid
+    {
+        get { try { return proc != null && !proc.HasExited ? proc.Id : 0; } catch { return 0; } }
+    }
+
     public static bool Alive
     {
         get
@@ -265,6 +270,28 @@ static class WallEngine
     }
 
     static IntPtr Window { get { return Win.FindWindow("NeoBarWallIpc", null); } }
+
+    [DllImport("user32.dll")] static extern bool IsHungAppWindow(IntPtr h);
+
+    // вікно команд рушія не обробляє повідомлень понад 5 с (так Windows визначає «не відповідає»)
+    public static bool Hung
+    {
+        get { IntPtr w = Window; return w != IntPtr.Zero && IsHungAppWindow(w); }
+    }
+
+    // завислий рушій - примусово (повідомлення «quit» він однаково не обробить)
+    public static void Kill()
+    {
+        flush.Stop();
+        queue.Clear();
+        if (proc != null)
+        {
+            try { if (!proc.HasExited) proc.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { proc.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            proc = null;
+        }
+        args = "";
+    }
 
     // запустити (або лишити запущений, якщо налаштування ті самі)
     public static bool Start()
@@ -449,10 +476,11 @@ static class WallEngine
         flush.Stop();
         queue.Clear();
         IntPtr w = Window;
-        if (w != IntPtr.Zero) Post(w, "quit");
+        bool hung = w != IntPtr.Zero && IsHungAppWindow(w);
+        if (w != IntPtr.Zero && !hung) Post(w, "quit");
         if (proc != null)
         {
-            try { if (!proc.WaitForExit(1500)) proc.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { if (hung || !proc.WaitForExit(1500)) proc.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             try { proc.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             proc = null;
         }
@@ -507,6 +535,7 @@ static class WallMgr
     static string msg = "", liveCmd;
     static bool fadeIn;                     // перше зображення після Apply(true) з'являється з анімацією
     static int restarts, failChecks, ackTries;
+    static DateTime deadSince = DateTime.MinValue, hungSince = DateTime.MinValue;
     static DateTime restartWindow = DateTime.MinValue;
     public static string CurrentFile = "";
 
@@ -774,14 +803,35 @@ static class WallMgr
             if (WallCfg.Mode == 1) tick.Stop();
             return;
         }
-        // рушій упав або відеокарту скинуто - перезапустити (не більше 3 разів за 5 хвилин)
+        // рушій завис (не обробляє повідомлення понад 15 с - наприклад, застряг у драйвері) - зупинити, далі перезапуск
+        if (engine && WallEngine.Alive && WallEngine.Hung)
+        {
+            if (hungSince == DateTime.MinValue) hungSince = DateTime.Now;
+            else if ((DateTime.Now - hungSince).TotalSeconds >= 15)
+            {
+                SbLog.W(SbLog.Panel, "шпалери: рушій не відповідає 15 с - зупиняю");
+                WallEngine.Kill();
+                hungSince = DateTime.MinValue;
+            }
+        }
+        else hungSince = DateTime.MinValue;
+        // рушій упав або відеокарту скинуто - перезапустити (не більше 3 разів за 5 хвилин), не одразу:
+        // після скидання відеокарти драйверу треба кілька секунд, інакше рушій стартує на програмному WARP або впаде знову
         if (engine && !WallEngine.Alive)
         {
+            if (deadSince == DateTime.MinValue)
+            {
+                deadSince = DateTime.Now;
+                string st = WallEngine.StatusValue("state");
+                SbLog.W(SbLog.Panel, "шпалери: рушій зупинився" + (st.Length > 0 ? " (стан " + st + (WallEngine.StatusValue("error").Length > 0 ? ", " + WallEngine.StatusValue("error") : "") + ")" : ""));
+            }
+            if ((DateTime.Now - deadSince).TotalSeconds < 6) return;
+            deadSince = DateTime.MinValue;
             if (DateTime.Now > restartWindow) { restartWindow = DateTime.Now.AddMinutes(5); restarts = 0; }
             if (restarts < 3)
             {
                 restarts++;
-                SbLog.W(SbLog.Panel, "шпалери: рушій зупинився - перезапуск " + restarts);
+                SbLog.W(SbLog.Panel, "шпалери: перезапуск рушія " + restarts);
                 if (WallEngine.Start())
                 {
                     if (liveCmd != null) WallEngine.Send(liveCmd.Replace("\t" + (WallCfg.Fx - 1) + "\t" + WallCfg.TransMs, "\t-1\t" + WallCfg.TransMs));

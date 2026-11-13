@@ -59,7 +59,7 @@ static class LogKeep
         char m; int n;
         if (!Parse(Spec, out m, out n)) return;
         SbLog.TrimAll(m, n);
-        Trim(Util.ErrorPath, m, n, null);
+        lock (Util.ErrGate) Trim(Util.ErrorPath, m, n, null);
         ProcRecorder.PruneSoon(ProcRecorder.LogDir);
     }
 

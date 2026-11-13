@@ -200,14 +200,18 @@ static class CpuTempPawn
 
     static float ReadAmdTemp()
     {
-        bool locked = false;
+        bool locked = false, busy = false;
         try
         {
             if (pci == null) pci = new Mutex(false, @"Global\Access_PCI");
             locked = pci.WaitOne(150);
+            busy = !locked;
         }
         catch (AbandonedMutexException) { locked = true; }     // попередній власник закрився, не звільнивши: м'ютекс тепер наш - обов'язково звільнити
         catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        // шину PCI/SMN зараз читає інша програма (HWiNFO, утиліта виробника): без черги її й наші запити перемішаються -
+        // і обидві отримають чуже значення. Цього разу пропускаємо, лишається попереднє
+        if (busy) return last;
         long[] inp = { 0x00059800 }, outp = { 0 };
         IntPtr ret;
         int hr;

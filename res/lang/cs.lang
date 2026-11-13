@@ -10605,3 +10605,57 @@
 
 < Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
 > Záznamy z karty „Analýza“ v monitoru systému; v jiné složce se staré uklidí, když se tam zapíše nový záznam
+
+<  Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.
+>  To je neobvykle mnoho - vypadá to na únik; restartujte NeoBar a pošlete záznam chyb.
+
+< бракувало пам'яті: {0} (востаннє {1})
+> nedostatek paměti: {0} (naposledy {1})
+
+< Читаю журнал подій Windows за тиждень…
+> Čtu protokol událostí Windows za týden…
+
+< За {0} днів - без зависань відеодрайвера, нестачі пам'яті, раптових вимкнень і збоїв NeoBar.
+> Za {0} dní - žádné zamrznutí grafického ovladače, nedostatek paměti, náhlé vypnutí ani pád NeoBar.
+
+< раптове вимкнення або перезавантаження: {0} (востаннє {1})
+> náhlé vypnutí nebo restart: {0} (naposledy {1})
+
+< За {0} днів: 
+> Za {0} dní: 
+
+< Журнал подій Windows не прочитано: 
+> Protokol událostí Windows nelze přečíst: 
+
+< збої NeoBar: {0} (востаннє {1}: {2})
+> pády NeoBar: {0} (naposledy {1}: {2})
+
+< . Рушій шпалер: 
+> . Modul tapet: 
+
+< Стабільність системи
+> Stabilita systému
+
+<  Зависання відеодрайвера - найчастіше перегрів, розгін або нестабільний драйвер відеокарти; варто оновити або перевстановити драйвер.
+>  Zamrznutí grafického ovladače nejčastěji způsobuje přehřátí, přetaktování nebo nestabilní ovladač; ovladač aktualizujte nebo přeinstalujte.
+
+< Журнал подій
+> Protokol událostí
+
+<  - зависла
+>  - zamrzl
+
+<  - найбільше займали: 
+>  - nejvíc zabíraly: 
+
+< відеодрайвер зависав і перезапускався: {0} (востаннє {1})
+> grafický ovladač zamrzl a restartoval se: {0} (naposledy {1})
+
+< пам'ять {0}, дескрипторів {1}, об'єктів GDI {2}, USER {3}
+> paměť {0}, popisovačů {1}, objektů GDI {2}, USER {3}
+
+< Ресурси NeoBar
+> Prostředky NeoBar
+
+< NeoBar: 
+> NeoBar: 

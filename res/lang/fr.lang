@@ -10605,3 +10605,57 @@
 
 < Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
 > Enregistrements de l'onglet « Analyse » du moniteur système ; dans un autre dossier, les anciens sont nettoyés quand un nouvel enregistrement y est écrit
+
+<  Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.
+>  C'est anormalement élevé - cela ressemble à une fuite ; redémarrez NeoBar et envoyez le journal des erreurs.
+
+< бракувало пам'яті: {0} (востаннє {1})
+> mémoire insuffisante : {0} (dernière {1})
+
+< Читаю журнал подій Windows за тиждень…
+> Lecture du journal d'événements Windows de la semaine…
+
+< За {0} днів - без зависань відеодрайвера, нестачі пам'яті, раптових вимкнень і збоїв NeoBar.
+> En {0} jours - aucun blocage du pilote graphique, manque de mémoire, arrêt brutal ni plantage de NeoBar.
+
+< раптове вимкнення або перезавантаження: {0} (востаннє {1})
+> arrêt ou redémarrage brutal : {0} (dernier {1})
+
+< За {0} днів: 
+> En {0} jours : 
+
+< Журнал подій Windows не прочитано: 
+> Journal d'événements Windows illisible : 
+
+< збої NeoBar: {0} (востаннє {1}: {2})
+> plantages de NeoBar : {0} (dernier {1} : {2})
+
+< . Рушій шпалер: 
+> . Moteur de fonds d'écran : 
+
+< Стабільність системи
+> Stabilité du système
+
+<  Зависання відеодрайвера - найчастіше перегрів, розгін або нестабільний драйвер відеокарти; варто оновити або перевстановити драйвер.
+>  Les blocages du pilote graphique viennent le plus souvent d'une surchauffe, d'un overclocking ou d'un pilote instable ; mettez à jour ou réinstallez le pilote.
+
+< Журнал подій
+> Journal d'événements
+
+<  - зависла
+>  - bloqué
+
+<  - найбільше займали: 
+>  - plus gros consommateurs : 
+
+< відеодрайвер зависав і перезапускався: {0} (востаннє {1})
+> le pilote graphique s'est bloqué et a redémarré : {0} (dernier {1})
+
+< пам'ять {0}, дескрипторів {1}, об'єктів GDI {2}, USER {3}
+> mémoire {0}, handles {1}, objets GDI {2}, USER {3}
+
+< Ресурси NeoBar
+> Ressources de NeoBar
+
+< NeoBar: 
+> NeoBar: 

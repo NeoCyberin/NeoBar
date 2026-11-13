@@ -220,6 +220,36 @@ static class SysCheck
             if (ti != null) l.Add(ti);
         }
 
+        // ---------- стабільність: події Windows за тиждень (читаються у фоні) і ресурси NeoBar ----------
+        if (full)
+        {
+            SysEvents.Sum ev = SysEvents.Cached;
+            if (!SysEvents.Fresh) SysEvents.Refresh(refresh);
+            if (ev == null)
+                l.Add(new CheckItem(L.T("Стабільність системи"), 3, L.T("Читаю журнал подій Windows за тиждень…")));
+            else if (ev.Error.Length > 0 && !ev.Any)
+                l.Add(new CheckItem(L.T("Стабільність системи"), 3, L.T("Журнал подій Windows не прочитано: ") + ev.Error));
+            else if (!ev.Any)
+                l.Add(new CheckItem(L.T("Стабільність системи"), 0, L.F("За {0} днів - без зависань відеодрайвера, нестачі пам'яті, раптових вимкнень і збоїв NeoBar.", SysEvents.Days)));
+            else
+            {
+                List<string> p = new List<string>();
+                if (ev.Gpu > 0) p.Add(L.F("відеодрайвер зависав і перезапускався: {0} (востаннє {1})", ev.Gpu, ev.GpuAt.ToString("g")));
+                if (ev.Mem > 0) p.Add(L.F("бракувало пам'яті: {0} (востаннє {1})", ev.Mem, ev.MemAt.ToString("g")) + (ev.MemTop.Length > 0 ? L.T(" - найбільше займали: ") + ev.MemTop : ""));
+                if (ev.Power > 0) p.Add(L.F("раптове вимкнення або перезавантаження: {0} (востаннє {1})", ev.Power, ev.PowerAt.ToString("g")));
+                if (ev.Crash > 0) p.Add(L.F("збої NeoBar: {0} (востаннє {1}: {2})", ev.Crash, ev.CrashAt.ToString("g"), ev.CrashWhat));
+                string tip = ev.Gpu > 0 ? L.T(" Зависання відеодрайвера - найчастіше перегрів, розгін або нестабільний драйвер відеокарти; варто оновити або перевстановити драйвер.") : "";
+                l.Add(new CheckItem(L.T("Стабільність системи"), ev.Gpu + ev.Mem + ev.Power > 0 ? 1 : 3, L.F("За {0} днів: ", SysEvents.Days) + string.Join("; ", p.ToArray()) + "." + tip)
+                    .Add(L.T("Журнал подій"), delegate { Run("eventvwr.msc", "/c:System"); }));
+            }
+            SelfUse.Snap me = SelfUse.Me();
+            int wp = WallEngine.Pid;
+            SelfUse.Snap we = wp > 0 ? SelfUse.OfPid(wp) : null;
+            string res = L.T("NeoBar: ") + me.Text() + (we != null ? L.T(". Рушій шпалер: ") + we.Text() : "") + ".";
+            bool odd = me.Odd || (we != null && we.Odd);
+            l.Add(new CheckItem(L.T("Ресурси NeoBar"), odd ? 1 : 0, res + (odd ? L.T(" Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.") : "")));
+        }
+
         // ---------- журнали ----------
         {
             List<string> on = new List<string>();
@@ -442,7 +472,9 @@ sealed class DiagList : Control
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
     }
 
-    public void SetItems(List<CheckItem> l) { items = l ?? new List<CheckItem>(); scroll = 0; Invalidate(); }
+    // оновлення того самого переліку (повторна перевірка) не скидає прокрутку
+    public void SetItems(List<CheckItem> l) { bool same = l != null && items.Count > 0; items = l ?? new List<CheckItem>(); if (!same) scroll = 0; Invalidate(); }
+    public int Count { get { return items.Count; } }
 
     static Color Info { get { return FormTheme.Dark ? Color.FromArgb(110, 160, 235) : Color.FromArgb(50, 110, 200); } }
 

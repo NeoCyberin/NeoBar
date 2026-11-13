@@ -10605,3 +10605,57 @@
 
 < Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
 > Aufzeichnungen aus dem Tab „Analyse“ im Systemmonitor; in einem anderen Ordner werden alte bereinigt, wenn dort eine neue Aufzeichnung gespeichert wird
+
+<  Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.
+>  Das ist ungewöhnlich viel - sieht nach einem Leck aus; starten Sie NeoBar neu und senden Sie das Fehlerprotokoll.
+
+< бракувало пам'яті: {0} (востаннє {1})
+> Speicher knapp: {0} (zuletzt {1})
+
+< Читаю журнал подій Windows за тиждень…
+> Lese das Windows-Ereignisprotokoll der letzten Woche…
+
+< За {0} днів - без зависань відеодрайвера, нестачі пам'яті, раптових вимкнень і збоїв NeoBar.
+> In {0} Tagen - keine Grafiktreiber-Hänger, kein Speichermangel, keine plötzlichen Abschaltungen und keine NeoBar-Abstürze.
+
+< раптове вимкнення або перезавантаження: {0} (востаннє {1})
+> plötzliches Ausschalten oder Neustart: {0} (zuletzt {1})
+
+< За {0} днів: 
+> In {0} Tagen: 
+
+< Журнал подій Windows не прочитано: 
+> Windows-Ereignisprotokoll nicht gelesen: 
+
+< збої NeoBar: {0} (востаннє {1}: {2})
+> NeoBar-Abstürze: {0} (zuletzt {1}: {2})
+
+< . Рушій шпалер: 
+> . Hintergrund-Engine: 
+
+< Стабільність системи
+> Systemstabilität
+
+<  Зависання відеодрайвера - найчастіше перегрів, розгін або нестабільний драйвер відеокарти; варто оновити або перевстановити драйвер.
+>  Grafiktreiber-Hänger kommen meist von Überhitzung, Übertaktung oder einem instabilen Treiber; aktualisieren oder installieren Sie den Treiber neu.
+
+< Журнал подій
+> Ereignisprotokoll
+
+<  - зависла
+>  - hing
+
+<  - найбільше займали: 
+>  - am meisten belegten: 
+
+< відеодрайвер зависав і перезапускався: {0} (востаннє {1})
+> Grafiktreiber hing und wurde neu gestartet: {0} (zuletzt {1})
+
+< пам'ять {0}, дескрипторів {1}, об'єктів GDI {2}, USER {3}
+> Speicher {0}, Handles {1}, GDI-Objekte {2}, USER {3}
+
+< Ресурси NeoBar
+> NeoBar-Ressourcen
+
+< NeoBar: 
+> NeoBar: 
