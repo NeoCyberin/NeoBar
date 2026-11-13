@@ -27,7 +27,7 @@ static class WallCfg
     public static string Image = "", Video = "";
     public static int Fit;                          // 0 заповнити, 1 вписати, 2 розтягнути, 3 по центру
     public static int Interval = 10;                // хвилин між зображеннями слайд-шоу
-    public static bool Shuffle = true, Mute = true, AllMonitors = true, PauseCovered = true, PauseBattery = true;
+    public static bool Shuffle = true, Mute = true, AllMonitors = true, PauseCovered = true, PauseBattery = true, PauseGame = true;
     public static int Fx = 1;                       // 0 без анімації, 1 згасання, 2 зсув, 3 наближення, 4 шторки, 5 випадково
     public static int TransMs = 1200;
 
@@ -41,7 +41,7 @@ static class WallCfg
 
     public static void Load()
     {
-        Mode = 0; Image = Video = ""; Fit = 0; Interval = 10; Shuffle = true; Mute = true; AllMonitors = true; PauseCovered = true; PauseBattery = true;
+        Mode = 0; Image = Video = ""; Fit = 0; Interval = 10; Shuffle = true; Mute = true; AllMonitors = true; PauseCovered = true; PauseBattery = true; PauseGame = true;
         Fx = 1; TransMs = 1200;
         try
         {
@@ -64,6 +64,7 @@ static class WallCfg
                     case "all": AllMonitors = v == "1"; break;
                     case "pausecovered": PauseCovered = v == "1"; break;
                     case "pausebattery": PauseBattery = v == "1"; break;
+                    case "pausegame": PauseGame = v == "1"; break;
                     case "fx": Fx = Math.Max(0, Math.Min(5, n)); break;
                     case "transms": TransMs = Math.Max(200, Math.Min(5000, n)); break;
                 }
@@ -88,6 +89,7 @@ static class WallCfg
             sb.AppendLine("all=" + (AllMonitors ? 1 : 0));
             sb.AppendLine("pausecovered=" + (PauseCovered ? 1 : 0));
             sb.AppendLine("pausebattery=" + (PauseBattery ? 1 : 0));
+            sb.AppendLine("pausegame=" + (PauseGame ? 1 : 0));
             sb.AppendLine("fx=" + Fx);
             sb.AppendLine("transms=" + TransMs);
             SafeFile.Write(Path_, sb.ToString(), new UTF8Encoding(true));
@@ -255,6 +257,11 @@ static class WallEngine
     }
     public static string StatusFile { get { return Path.Combine(Path.GetTempPath(), "NeoBarWall.status"); } }
 
+    public static int Pid
+    {
+        get { try { return proc != null && !proc.HasExited ? proc.Id : 0; } catch { return 0; } }
+    }
+
     public static bool Alive
     {
         get
@@ -265,6 +272,28 @@ static class WallEngine
     }
 
     static IntPtr Window { get { return Win.FindWindow("NeoBarWallIpc", null); } }
+
+    [DllImport("user32.dll")] static extern bool IsHungAppWindow(IntPtr h);
+
+    // вікно команд рушія не обробляє повідомлень понад 5 с (так Windows визначає «не відповідає»)
+    public static bool Hung
+    {
+        get { IntPtr w = Window; return w != IntPtr.Zero && IsHungAppWindow(w); }
+    }
+
+    // завислий рушій - примусово (повідомлення «quit» він однаково не обробить)
+    public static void Kill()
+    {
+        flush.Stop();
+        queue.Clear();
+        if (proc != null)
+        {
+            try { if (!proc.HasExited) proc.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { proc.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            proc = null;
+        }
+        args = "";
+    }
 
     // запустити (або лишити запущений, якщо налаштування ті самі)
     public static bool Start()
@@ -449,10 +478,11 @@ static class WallEngine
         flush.Stop();
         queue.Clear();
         IntPtr w = Window;
-        if (w != IntPtr.Zero) Post(w, "quit");
+        bool hung = w != IntPtr.Zero && IsHungAppWindow(w);
+        if (w != IntPtr.Zero && !hung) Post(w, "quit");
         if (proc != null)
         {
-            try { if (!proc.WaitForExit(1500)) proc.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try { if (hung || !proc.WaitForExit(1500)) proc.Kill(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             try { proc.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
             proc = null;
         }
@@ -507,6 +537,31 @@ static class WallMgr
     static string msg = "", liveCmd;
     static bool fadeIn;                     // перше зображення після Apply(true) з'являється з анімацією
     static int restarts, failChecks, ackTries;
+    static DateTime deadSince = DateTime.MinValue, hungSince = DateTime.MinValue;
+    static readonly List<DateTime> lostAt = new List<DateTime>();
+    static int gamePid;
+
+    // рушій тричі за годину втратив відеокарту: зображення й слайд-шоу - засобами Windows, живі шпалери - вимкнути
+    // (під рушієм лишаються звичайні шпалери Windows). Повернути - «Застосувати» в налаштуваннях або перезапуск NeoBar.
+    static void GiveUp()
+    {
+        lostAt.Clear();
+        deadSince = DateTime.MinValue;
+        SbLog.W(SbLog.Panel, "шпалери: відеокарту скинуто тричі за годину - рушій більше не запускаю");
+        WallEngine.Stop();
+        engine = false;
+        string why = L.T("Відеодрайвер тричі за годину зависав або скидав рушій шпалер, тому рушій вимкнено, щоб не навантажувати драйвер.");
+        if (WallCfg.Mode == 2) { Next(false); msg = why + L.T(" Слайд-шоу йде засобами Windows, без анімацій."); }
+        else
+        {
+            if (WallCfg.Mode == 1 && CurrentFile.Length > 0) SetSystem(CurrentFile);
+            tick.Stop();
+            liveCmd = null;
+            msg = why + (WallCfg.Mode == 3 ? L.T(" Замість живих шпалер - звичайні шпалери Windows.") : "");
+        }
+        msg += L.T(" Повернути: Налаштування → Шпалери → «Застосувати» або перезапуск NeoBar. Причину шукайте в Налаштування → Діагностика → «Стабільність системи».");
+        try { NeoBar b = ClockData.Bar; if (b != null && !b.IsDisposed) ToastForm.Show(b, L.T("Шпалери"), msg, "gear", false, null); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+    }
     static DateTime restartWindow = DateTime.MinValue;
     public static string CurrentFile = "";
 
@@ -774,14 +829,43 @@ static class WallMgr
             if (WallCfg.Mode == 1) tick.Stop();
             return;
         }
-        // рушій упав або відеокарту скинуто - перезапустити (не більше 3 разів за 5 хвилин)
+        // рушій завис (не обробляє повідомлення понад 15 с - наприклад, застряг у драйвері) - зупинити, далі перезапуск
+        if (engine && WallEngine.Alive && WallEngine.Hung)
+        {
+            if (hungSince == DateTime.MinValue) hungSince = DateTime.Now;
+            else if ((DateTime.Now - hungSince).TotalSeconds >= 15)
+            {
+                SbLog.W(SbLog.Panel, "шпалери: рушій не відповідає 15 с - зупиняю");
+                WallEngine.Kill();
+                hungSince = DateTime.MinValue;
+            }
+        }
+        else hungSince = DateTime.MinValue;
+        // рушій упав або відеокарту скинуто - перезапустити (не більше 3 разів за 5 хвилин), не одразу:
+        // після скидання відеокарти драйверу треба кілька секунд, інакше рушій стартує на програмному WARP або впаде знову
         if (engine && !WallEngine.Alive)
         {
+            if (deadSince == DateTime.MinValue)
+            {
+                deadSince = DateTime.Now;
+                string st = WallEngine.StatusValue("state");
+                SbLog.W(SbLog.Panel, "шпалери: рушій зупинився" + (st.Length > 0 ? " (стан " + st + (WallEngine.StatusValue("error").Length > 0 ? ", " + WallEngine.StatusValue("error") : "") + ")" : ""));
+                // відеокарту скинуто або рушій упав утретє за годину - далі без рушія: кожен його запуск навантажує
+                // нестабільний драйвер ще раз
+                if (st == "lost" || st == "crashed")
+                {
+                    lostAt.Add(DateTime.Now);
+                    lostAt.RemoveAll(delegate (DateTime x) { return (DateTime.Now - x).TotalMinutes > 60; });
+                    if (lostAt.Count >= 3) { GiveUp(); return; }
+                }
+            }
+            if ((DateTime.Now - deadSince).TotalSeconds < 6) return;
+            deadSince = DateTime.MinValue;
             if (DateTime.Now > restartWindow) { restartWindow = DateTime.Now.AddMinutes(5); restarts = 0; }
             if (restarts < 3)
             {
                 restarts++;
-                SbLog.W(SbLog.Panel, "шпалери: рушій зупинився - перезапуск " + restarts);
+                SbLog.W(SbLog.Panel, "шпалери: перезапуск рушія " + restarts);
                 if (WallEngine.Start())
                 {
                     if (liveCmd != null) WallEngine.Send(liveCmd.Replace("\t" + (WallCfg.Fx - 1) + "\t" + WallCfg.TransMs, "\t-1\t" + WallCfg.TransMs));
@@ -799,7 +883,11 @@ static class WallMgr
         if (WallCfg.Mode == 1) return;          // нерухоме зображення: рушій і так нічого не малює, пауза не потрібна
         bool cover = WallCfg.PauseCovered && (NeoBar.Paused || Nat.FullscreenBusy() || Nat.ForegroundCovers(false, IntPtr.Zero));
         bool battery = WallCfg.PauseBattery && WallMgr.HasBattery && SystemInformation.PowerStatus.PowerLineStatus == PowerLineStatus.Offline;
-        bool p = cover || battery;
+        // гра запущена - навіть згорнута, у вікні чи на іншому моніторі (пам'ятаємо її процес, доки він живий)
+        if (Games.CurrentPid > 0) gamePid = Games.CurrentPid;
+        else if (gamePid > 0 && !Games.Alive(gamePid)) gamePid = 0;
+        bool game = WallCfg.PauseGame && gamePid > 0;
+        bool p = cover || battery || game;
         if (p != paused)
         {
             paused = p;

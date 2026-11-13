@@ -536,12 +536,16 @@ static class UserLaunch
         if (shell != IntPtr.Zero && Win.GetWindowThreadProcessId(shell, out pid) != 0 && pid != 0) return pid;
         int session = System.Diagnostics.Process.GetCurrentProcess().SessionId;
         foreach (string n in new string[] { "sihost", "ctfmon", "taskhostw", "RuntimeBroker", "ShellExperienceHost", "StartMenuExperienceHost" })
-            foreach (System.Diagnostics.Process p in System.Diagnostics.Process.GetProcessesByName(n))
+        {
+            System.Diagnostics.Process[] all = System.Diagnostics.Process.GetProcessesByName(n);
+            try
             {
-                try { if (p.SessionId == session && !ProcAct.IsElevated(p.Id)) return (uint)p.Id; }
-                catch (Exception skipEx) { SbLog.Skip(skipEx); }
-                finally { p.Dispose(); }
+                foreach (System.Diagnostics.Process p in all)
+                    try { if (p.SessionId == session && !ProcAct.IsElevated(p.Id)) return (uint)p.Id; }
+                    catch (Exception skipEx) { SbLog.Skip(skipEx); }
             }
+            finally { foreach (System.Diagnostics.Process p in all) p.Dispose(); }
+        }
         return 0;
     }
 

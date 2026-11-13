@@ -10605,3 +10605,75 @@
 
 < Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
 > Zapisy z karty „Analiza” w monitorze systemu; w innym folderze stare są porządkowane, gdy zapisuje się tam nowy zapis
+
+<  Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.
+>  To nienormalnie dużo - wygląda na wyciek; uruchom ponownie NeoBar i wyślij dziennik błędów.
+
+< бракувало пам'яті: {0} (востаннє {1})
+> brak pamięci: {0} (ostatnio {1})
+
+< Читаю журнал подій Windows за тиждень…
+> Czytam dziennik zdarzeń Windows z ostatniego tygodnia…
+
+< За {0} днів - без зависань відеодрайвера, нестачі пам'яті, раптових вимкнень і збоїв NeoBar.
+> Przez {0} dni - bez zawieszeń sterownika grafiki, braków pamięci, nagłych wyłączeń i awarii NeoBar.
+
+< раптове вимкнення або перезавантаження: {0} (востаннє {1})
+> nagłe wyłączenie lub restart: {0} (ostatnio {1})
+
+< За {0} днів: 
+> Przez {0} dni: 
+
+< Журнал подій Windows не прочитано: 
+> Nie odczytano dziennika zdarzeń Windows: 
+
+< збої NeoBar: {0} (востаннє {1}: {2})
+> awarie NeoBar: {0} (ostatnio {1}: {2})
+
+< . Рушій шпалер: 
+> . Silnik tapet: 
+
+< Стабільність системи
+> Stabilność systemu
+
+<  Зависання відеодрайвера - найчастіше перегрів, розгін або нестабільний драйвер відеокарти; варто оновити або перевстановити драйвер.
+>  Zawieszenia sterownika grafiki to najczęściej przegrzanie, podkręcanie lub niestabilny sterownik; warto go zaktualizować lub zainstalować ponownie.
+
+< Журнал подій
+> Dziennik zdarzeń
+
+<  - зависла
+>  - zawieszony
+
+<  - найбільше займали: 
+>  - najwięcej zajmowały: 
+
+< відеодрайвер зависав і перезапускався: {0} (востаннє {1})
+> sterownik grafiki zawiesił się i zrestartował: {0} (ostatnio {1})
+
+< пам'ять {0}, дескрипторів {1}, об'єктів GDI {2}, USER {3}
+> pamięć {0}, dojść {1}, obiektów GDI {2}, USER {3}
+
+< Ресурси NeoBar
+> Zasoby NeoBar
+
+< NeoBar: 
+> NeoBar: 
+
+< Пауза під час гри
+> Pauza podczas gry
+
+< Поки запущена гра з бібліотеки NeoBar - навіть у вікні чи на іншому моніторі. За пів хвилини паузи відеодекодер звільняється повністю
+> Dopóki działa gra z biblioteki NeoBar - nawet w oknie lub na innym monitorze. Po pół minucie pauzy dekoder wideo jest całkowicie zwalniany
+
+<  Повернути: Налаштування → Шпалери → «Застосувати» або перезапуск NeoBar. Причину шукайте в Налаштування → Діагностика → «Стабільність системи».
+>  Aby przywrócić: Ustawienia → Tapety → „Zastosuj” lub uruchom ponownie NeoBar. Przyczyny szukaj w Ustawienia → Diagnostyka → „Stabilność systemu”.
+
+< Відеодрайвер тричі за годину зависав або скидав рушій шпалер, тому рушій вимкнено, щоб не навантажувати драйвер.
+> Sterownik grafiki trzy razy w ciągu godziny zawiesił się lub zresetował silnik tapet, więc silnik wyłączono, by nie obciążać sterownika.
+
+<  Замість живих шпалер - звичайні шпалери Windows.
+>  Zamiast żywej tapety - zwykła tapeta Windows.
+
+<  Слайд-шоу йде засобами Windows, без анімацій.
+>  Pokaz slajdów działa dalej przez Windows, bez animacji.

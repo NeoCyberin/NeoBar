@@ -75,6 +75,7 @@ static LRESULT CALLBACK Proc(HWND h, UINT m, WPARAM w, LPARAM l)
 
 int WINAPI wWinMain(HINSTANCE inst, HINSTANCE, LPWSTR cmd, int)
 {
+    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);     // при збої - просто завершитись, без вікна Windows
     long long r = _wtoi64(cmd);
     target = (HWND)(LONG_PTR)r;
     if (r == 0 || !IsWindow(target)) return 1;

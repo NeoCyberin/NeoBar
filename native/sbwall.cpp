@@ -225,6 +225,41 @@ static ID2D1DeviceContext* dc;
 static IWICImagingFactory* wic;
 static bool deviceLost;
 
+// ---------------------------------------------------------------- збій
+// Необроблений виняток (свій чи в системних бібліотеках - Media Foundation, драйвері після скидання відеокарти):
+// записати, де саме, у журнал і стан - і одразу завершитись. Без цього Windows показує вікно «Application Error»,
+// а процес висить, доки його не закриють, і NeoBar не може запустити рушій знову.
+static volatile LONG gCrashed;
+static LONG WINAPI CrashFilter(EXCEPTION_POINTERS* ep)
+{
+    if (InterlockedExchange(&gCrashed, 1)) TerminateProcess(GetCurrentProcess(), 4);
+    void* at = ep && ep->ExceptionRecord ? ep->ExceptionRecord->ExceptionAddress : NULL;
+    DWORD code = ep && ep->ExceptionRecord ? ep->ExceptionRecord->ExceptionCode : 0;
+    HMODULE mod = NULL;
+    wchar_t mn[MAX_PATH] = L"?";
+    if (at && GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCWSTR)at, &mod) && mod)
+        GetModuleFileNameW(mod, mn, MAX_PATH);
+    unsigned long long off = mod ? (unsigned long long)((BYTE*)at - (BYTE*)mod) : (unsigned long long)(ULONG_PTR)at;
+    snprintf(sErr, sizeof sErr, "збій 0x%08lx у %s+0x%llx", (unsigned long)code, U8(PathFindFileNameW(mn)), off);
+    Log("рушій впав: %s (потік %lu) - процес завершено, NeoBar запустить рушій знову", sErr, GetCurrentThreadId());
+    strcpy(sState, "crashed");
+    WriteStatus();
+    TerminateProcess(GetCurrentProcess(), 4);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// відеокарту скинуто (TDR, оновлення драйвера): далі пристрій лише повертає помилки, а Media Foundation може впасти
+static bool DeviceGone()
+{
+    if (!deviceLost && dev && dev->GetDeviceRemovedReason() != S_OK)
+    {
+        deviceLost = true;
+        Log("відеокарта недоступна (0x%08lx)", (unsigned long)dev->GetDeviceRemovedReason());
+    }
+    return deviceLost;
+}
+
+
 static bool InitD3D()
 {
     D3D_FEATURE_LEVEL fl[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0, D3D_FEATURE_LEVEL_9_3 };
@@ -1086,17 +1121,28 @@ static bool MFInit()
     return true;
 }
 
-static void VideoClose()
+// «Стоянка»: пауза довша за ParkMs (гра, вікно на весь екран) - рушій відео закривається зовсім, відеодекодер
+// драйвера звільняється, а на екрані лишається останній кадр (він у нашій власній текстурі). Після паузи відео
+// відкривається знову з того самого місця.
+static const UINT ParkMs = 30000;
+static bool parked, gMute = true;
+static double parkAt;
+
+// keepFrame - лишити останній кадр (стоянка й повернення з неї)
+static void VideoClose(bool keepFrame = false)
 {
     if (me) { me->Shutdown(); Rel(me); }
-    Rel(vidBmp); Rel(vidTex); vidTexW = vidTexH = 0;
     meReady = false;
+    if (keepFrame && vidBmp && vidTex) return;
+    Rel(vidBmp); Rel(vidTex); vidTexW = vidTexH = 0;
     vidW = vidH = 0;
+    parked = false;
+    parkAt = 0;
 }
 
-static bool VideoOpen(const wchar_t* path, bool mute)
+static bool VideoOpen(const wchar_t* path, bool mute, bool keepFrame = false)
 {
-    VideoClose();
+    VideoClose(keepFrame);
     if (!MFInit()) return false;
     HRESULT hr = S_OK;
     if (!dman)
@@ -1124,6 +1170,7 @@ static bool VideoOpen(const wchar_t* path, bool mute)
     hr = me->SetSource(b);
     SysFreeString(b);
     if (FAILED(hr)) { SetErr("відео: файл не прийнято (0x%08lx)", (unsigned long)hr); VideoClose(); return false; }
+    gMute = mute;
     gVidUrlTried = false;
     Log("відео: відкриваю %s%s", U8(path), mute ? " (без звуку)" : "");
     return true;
@@ -1156,6 +1203,25 @@ static bool EnsureVidTex()
     if (FAILED(hr)) { Log("відео: кадр для Direct2D не створено 0x%08lx", (unsigned long)hr); Rel(vidTex); return false; }
     vidTexW = vidW; vidTexH = vidH;
     return true;
+}
+
+static void Park()
+{
+    if (parked || !me || !meReady || !vidBmp || !vidTex) return;      // без готового кадру лишаємо звичайну паузу
+    double at = me->CurTime();
+    parkAt = at > 0 && at < 1e7 ? at : 0;
+    VideoClose(true);
+    parked = true;
+    Log("відео: пауза понад %u с - декодер звільнено, на екрані останній кадр (%.1f с)", ParkMs / 1000, parkAt);
+}
+
+static void Unpark()
+{
+    if (!parked) return;
+    parked = false;
+    double at = parkAt;
+    if (!VideoOpen(curPath, gMute, true)) { Log("відео: після паузи не відкрилось"); return; }
+    parkAt = at;            // перемотати, щойно відео буде готове
 }
 
 // ---- зображення: декодування у фоновому потоці (великі фото не гальмують робочий стіл)
@@ -1399,7 +1465,10 @@ static void DrawHost(Host& h)
         RECT full = { 0, 0, (LONG)vidW, (LONG)vidH };
         MFARGB bk0 = { 0, 0, 0, 255 };
         vidOk = SUCCEEDED(me->TransferVideoFrame(vidTex, NULL, &full, &bk0));
+        if (!vidOk && DeviceGone()) return;
     }
+    // нового кадру немає (стоянка, відео ще відкривається після неї) - показуємо останній
+    if (!vidOk && content == C_VIDEO && vidBmp && vidW && vidTexW == vidW && vidTexH == vidH) vidOk = true;
     dc->SetTarget(h.target);
     dc->BeginDraw();
     dc->SetTransform(D2D1::Matrix3x2F::Identity());
@@ -1455,6 +1524,11 @@ static void Command(wchar_t* s)
         sPaused = p ? 1 : 0;
         WriteStatus();
         if (me) { if (p) me->Pause(); else me->Play(); }
+        if (content == C_VIDEO)
+        {
+            if (p) SetTimer(gIpc, 3, ParkMs, NULL);
+            else { KillTimer(gIpc, 3); Unpark(); }
+        }
         if (!p) { if (content == C_GIF) gNext = GetTickCount64(); DrawAll(true); }
         Log(p ? "пауза" : "продовження");
         return;
@@ -1486,6 +1560,7 @@ static void Command(wchar_t* s)
         {
             SetContent(C_VIDEO);
             if (VideoOpen(curPath, mute)) { snprintf(sContent, sizeof sContent, "video"); sErr[0] = 0; WriteStatus(); }
+            if (paused) SetTimer(gIpc, 3, ParkMs, NULL);
         }
         DrawAll(true);
         return;
@@ -1544,6 +1619,7 @@ static LRESULT CALLBACK IpcProc(HWND h, UINT m, WPARAM w, LPARAM l)
             {
                 if (cx != vidW || cy != vidH) Log("відео: %lux%lu", cx, cy);
                 vidW = cx; vidH = cy;
+                if (!meReady && parkAt > 0) { me->SetCurrentTime(parkAt); parkAt = 0; }     // повернення зі стоянки - на те саме місце
                 meReady = true;
             }
             if (paused) { me->Pause(); DrawAll(true); }     // на паузі все одно показати перший кадр, а не чорний екран
@@ -1576,10 +1652,17 @@ static LRESULT CALLBACK IpcProc(HWND h, UINT m, WPARAM w, LPARAM l)
         return 0;
     case WM_TIMER:
         if ((w == 1 || w == 2) && gAttaching) return 0;
+        if (w == 3)
+        {
+            KillTimer(h, 3);
+            if (paused && content == C_VIDEO) Park();
+            return 0;
+        }
         if (w == 1)
         {
             // власник (NeoBar) закрився - виходимо
             if (gOwner && !IsWindow(gOwner)) { Log("NeoBar закрито - рушій завершується"); PostQuitMessage(0); return 0; }
+            if (DeviceGone()) return 0;
             static int idle;
             bool broken = nH == 0 || !IsWindow(L.parent);
             for (int i = 0; i < nH && !broken; i++) if (!IsWindow(H[i].hwnd)) broken = true;
@@ -1735,7 +1818,7 @@ static int EngineMain(HINSTANCE inst, int argc, wchar_t** argv)
         bool vsync = animating || video;
         if (vsync)
         {
-            if (!vout || FAILED(vout->WaitForVBlank())) Sleep(15);
+            if (!vout || FAILED(vout->WaitForVBlank())) { Sleep(15); DeviceGone(); }
         }
         else
         {
@@ -1785,7 +1868,15 @@ static int EngineMain(HINSTANCE inst, int argc, wchar_t** argv)
         DrawAll(drawAll);
     }
 
-    if (deviceLost) { Log("відеокарту скинуто (драйвер оновився або збій) - рушій перезапуститься"); strcpy(sState, "lost"); WriteStatus(); }
+    if (deviceLost)
+    {
+        // об'єкти відео й Direct3D після скидання відеокарти не звільняємо: Media Foundation у такому стані падає
+        // (саме так з'являлось вікно «NeoBarWall: Application Error»). Процес завершується - Windows прибере все сама.
+        Log("відеокарту скинуто (драйвер оновився або збій) - рушій перезапуститься");
+        strcpy(sState, "lost");
+        WriteStatus();
+        TerminateProcess(GetCurrentProcess(), 3);
+    }
     else { strcpy(sState, "stopped"); WriteStatus(); }
     SetContent(C_NONE);
     DestroyHosts();
@@ -1829,6 +1920,9 @@ extern "C" __declspec(dllexport) void CALLBACK RunW(HWND, HINSTANCE, LPWSTR cmd,
     EngineArgs a = { 0, NULL, 0 };
     a.argv = CommandLineToArgvW(full, &a.argc);
     if (!a.argv) { free(full); return; }
+    // без вікон Windows про помилки: при збої процес має завершитись, а не чекати на кнопку «OK»
+    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
+    SetUnhandledExceptionFilter(CrashFilter);
     // окремий потік: свій COM-апартамент (MTA) і своя черга повідомлень, незалежно від того, що робив rundll32
     HANDLE th = CreateThread(NULL, 0, EngineThread, &a, 0, NULL);
     if (th) { WaitForSingleObject(th, INFINITE); CloseHandle(th); }

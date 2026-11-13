@@ -381,12 +381,14 @@ static class ProcAct
     static bool Running(string path, DateTime after)
     {
         string name = Path.GetFileNameWithoutExtension(path);
-        foreach (Process p in Process.GetProcessesByName(name))
+        Process[] all = Process.GetProcessesByName(name);
+        try
         {
-            try { if (p.StartTime.ToUniversalTime() >= after.AddSeconds(-1)) return true; }
-            catch (Exception skipEx) { SbLog.Skip(skipEx); }
-            finally { p.Dispose(); }
+            foreach (Process p in all)
+                try { if (p.StartTime.ToUniversalTime() >= after.AddSeconds(-1)) return true; }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
+        finally { foreach (Process p in all) p.Dispose(); }          // і ті, до яких цикл не дійшов
         return false;
     }
 

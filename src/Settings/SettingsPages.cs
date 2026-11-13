@@ -666,17 +666,33 @@ sealed partial class SettingsForm
     }
 
     // перевірки у фоні (WMI може відповідати кілька секунд)
+    bool diagAgain;
+
     void RunDiag()
     {
-        if (diag == null || diagBusy) return;
+        if (diag == null || IsDisposed) return;
+        if (diagBusy) { diagAgain = true; return; }        // дані дозріли під час перевірки - повторити після неї
         diagBusy = true;
+        diagAgain = false;
         diag.Empty = L.T("Перевіряю…");
-        diag.SetItems(null);
+        if (diag.Count == 0) diag.SetItems(null);
+        // повторна перевірка просять із фонових потоків (час, журнал подій) - у потік інтерфейсу
+        Action again = delegate { try { if (IsHandleCreated && !IsDisposed) BeginInvoke(new Action(RunDiag)); } catch (Exception skipEx) { SbLog.Skip(skipEx); } };
         Util.Bg(delegate
         {
             List<CheckItem> l = null;
-            try { l = SysCheck.Collect(owner, this, true, delegate { RunDiag(); }); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
-            try { BeginInvoke(new Action(delegate { diagBusy = false; if (!IsDisposed) diag.SetItems(l); })); } catch { diagBusy = false; }
+            try { l = SysCheck.Collect(owner, this, true, again); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            try
+            {
+                BeginInvoke(new Action(delegate
+                {
+                    diagBusy = false;
+                    if (IsDisposed) return;
+                    diag.SetItems(l);
+                    if (diagAgain) RunDiag();
+                }));
+            }
+            catch { diagBusy = false; }
         });
     }
 

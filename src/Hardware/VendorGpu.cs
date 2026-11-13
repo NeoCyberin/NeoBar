@@ -29,6 +29,7 @@ static class VendorGpu
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlInfo(IntPtr ctx, IntPtr info, int size);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlActive(IntPtr ctx, int index, out int status);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlPmLog(IntPtr ctx, int index, IntPtr output);
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlDestroy(IntPtr ctx);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern IntPtr LoadLibraryEx(string name, IntPtr file, uint flags);
 
@@ -45,6 +46,7 @@ static class VendorGpu
     static IntPtr adlCtx;
     static AdlAlloc adlAllocKeep;
     static AdlPmLog adlPm;
+    static AdlDestroy adlDestroy;
     static int adlIndex = -1;
     static readonly List<int> adlAll = new List<int>();      // усі AMD-адаптери (ГП і вбудоване ядро) - датчики ЦП можуть бути на будь-якому
     static IntPtr pmBuf;
@@ -70,6 +72,7 @@ static class VendorGpu
             AdlInfo info = Fn<AdlInfo>(lib, "ADL2_Adapter_AdapterInfo_Get");
             AdlActive active = Fn<AdlActive>(lib, "ADL2_Adapter_Active_Get");
             adlPm = Fn<AdlPmLog>(lib, "ADL2_New_QueryPMLogData_Get");
+            adlDestroy = Fn<AdlDestroy>(lib, "ADL2_Main_Control_Destroy");
             if (create == null || num == null || info == null || adlPm == null) { Status = L.T("AMD: драйвер без потрібних функцій ADL"); return; }
             adlAllocKeep = Alloc;
             if (create(adlAllocKeep, 1, out adlCtx) != 0 || adlCtx == IntPtr.Zero) { Status = L.T("AMD: ADL не ініціалізувався"); return; }
@@ -77,7 +80,7 @@ static class VendorGpu
             if (num(adlCtx, out n) != 0 || n <= 0 || n > 256) return;
             const int infoSize = 1572;                          // розмір AdapterInfo (Windows)
             IntPtr arr = Marshal.AllocHGlobal(infoSize * n);
-            pmBuf = Marshal.AllocHGlobal(4 + 256 * 8);
+            if (pmBuf == IntPtr.Zero) pmBuf = Marshal.AllocHGlobal(4 + 256 * 8);
             try
             {
                 for (int i = 0; i < n * infoSize; i++) Marshal.WriteByte(arr, i, 0);
@@ -190,6 +193,8 @@ static class VendorGpu
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate int NvUtil(IntPtr dev, out ulong v);
 
     static IntPtr nvDev;
+    static NvInit nvShutdown;
+    static bool nvIdle;                 // датчики NVIDIA навмисно не опитано (ноутбук у простої) - це не збій
     static NvU32Arg nvTemp, nvClock;
     static NvU32 nvPower, nvFan;
     static NvUtil nvUtil;
@@ -235,6 +240,7 @@ static class VendorGpu
             if (lib == IntPtr.Zero) return;
             NvInit init = Fn<NvInit>(lib, "nvmlInit_v2");
             NvHandle handle = Fn<NvHandle>(lib, "nvmlDeviceGetHandleByIndex_v2");
+            nvShutdown = Fn<NvInit>(lib, "nvmlShutdown");
             nvTemp = Fn<NvU32Arg>(lib, "nvmlDeviceGetTemperature");
             nvClock = Fn<NvU32Arg>(lib, "nvmlDeviceGetClockInfo");
             nvPower = Fn<NvU32>(lib, "nvmlDeviceGetPowerUsage");
@@ -252,7 +258,8 @@ static class VendorGpu
         if (nvDev == IntPtr.Zero) return false;
         // ноутбук (NVIDIA Optimus): запит до сплячої дискретної карти будить її, і вона марно їсть батарею.
         // Тож у простої (немає гри, карта не навантажена) датчики NVIDIA не опитуємо - вони потрібні під час гри.
-        if (Battery.Present() && Games.CurrentPid <= 0 && !(Sensors.GpuLoad >= 1)) return false;
+        nvIdle = Battery.Present() && Games.CurrentPid <= 0 && !(Sensors.GpuLoad >= 1);
+        if (nvIdle) return false;
         try
         {
             uint v;
@@ -318,7 +325,7 @@ static class VendorGpu
             uint n = 0;
             if (en(api, ref n, IntPtr.Zero) != 0 || n == 0 || n > 16) { IntelStatus = L.T("Intel: відеоадаптерів Intel не знайдено"); return; }
             IntPtr hs = Marshal.AllocHGlobal(IntPtr.Size * (int)n);
-            teleBuf = Marshal.AllocHGlobal(TeleSize + 64);
+            if (teleBuf == IntPtr.Zero) teleBuf = Marshal.AllocHGlobal(TeleSize + 64);
             try
             {
                 if (en(api, ref n, hs) != 0) return;
@@ -415,6 +422,26 @@ static class VendorGpu
     // Показники відеокарти від драйвера виробника; null - драйвер їх не віддає
     public static VendorStats Read()
     {
+        VendorStats s = ReadAny();
+        // драйвер раніше віддавав датчики, а тепер ні (перезапустився після зависання чи оновився) - старий контекст
+        // бібліотеки вже недійсний: через кілька невдач поспіль підключитись заново (не частіше ніж раз на 30 с)
+        if (s != null) { everOk = true; failRun = 0; }
+        else if (everOk && !nvIdle && ++failRun >= 5 && (DateTime.UtcNow - reinitAt).TotalSeconds > 30)
+        {
+            failRun = 0;
+            reinitAt = DateTime.UtcNow;
+            if (SbLog.On(SbLog.Sensors)) SbLog.W(SbLog.Sensors, "датчики драйвера відеокарти не відповідають - підключаюсь заново");
+            Reinit();
+        }
+        return s;
+    }
+
+    static bool everOk;
+    static int failRun;
+    static DateTime reinitAt = DateTime.MinValue;
+
+    static VendorStats ReadAny()
+    {
         VendorStats s = new VendorStats();
         // NVIDIA першою: бібліотека NVML є лише з драйвером NVIDIA (інакше вбудоване ядро AMD перебило б дискретну карту);
         // Intel - останнім: на ноутбуці з дискретною картою вбудоване ядро Intel не має її перебивати
@@ -423,6 +450,22 @@ static class VendorGpu
         s = new VendorStats();
         if (ReadIntel(s)) return s;
         return null;
+    }
+
+    // забути контексти бібліотек драйверів - наступне опитування підключиться заново (бібліотеки лишаються завантаженими)
+    static void Reinit()
+    {
+        try { if (adlCtx != IntPtr.Zero && adlDestroy != null) adlDestroy(adlCtx); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        adlCtx = IntPtr.Zero;
+        adlIndex = -1;
+        adlAll.Clear();
+        adlTried = false;
+        try { if (nvDev != IntPtr.Zero && nvShutdown != null) nvShutdown(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        nvDev = IntPtr.Zero;
+        nvTried = false;
+        igDev = IntPtr.Zero;
+        igLastT = igLastE = igLastA = double.NaN;
+        igTried = false;
     }
 }
 

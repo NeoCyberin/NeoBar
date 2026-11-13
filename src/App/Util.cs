@@ -40,16 +40,26 @@ static partial class Util
     public static string ErrorPath { get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "neobar-error.log"); } }
     static bool errMarked;
 
-    public static void ErrorLog(Exception ex)
+    public static void ErrorLog(Exception ex) { ErrorWrite(ex.ToString()); }
+
+    // подія без винятку (зависання, підозра на витік) - у той самий журнал помилок
+    public static void ErrorNote(string text) { ErrorWrite("[увага] " + text); }
+
+    public static readonly object ErrGate = new object();
+
+    static void ErrorWrite(string text)
     {
         try
         {
-            string p = ErrorPath;
-            FileInfo fi = new FileInfo(p);
-            if (fi.Exists && fi.Length > 256 * 1024) return;
-            string head = "";
-            if (!errMarked) { errMarked = true; head = LogKeep.SessionLine() + Environment.NewLine; }
-            File.AppendAllText(p, head + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) + "  " + ex + Environment.NewLine);
+            lock (ErrGate)
+            {
+                string p = ErrorPath;
+                FileInfo fi = new FileInfo(p);
+                if (fi.Exists && fi.Length > 256 * 1024) return;
+                string head = "";
+                if (!errMarked) { errMarked = true; head = LogKeep.SessionLine() + Environment.NewLine; }
+                File.AppendAllText(p, head + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) + "  " + text + Environment.NewLine);
+            }
         }
         catch (Exception skipEx) { SbLog.Skip(skipEx); }
         LogKeep.Daily();

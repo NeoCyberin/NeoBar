@@ -10605,3 +10605,75 @@
 
 < Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
 > Recordings from the Analysis tab of the System monitor; in another folder old ones are cleaned up when a new recording is written there
+
+<  Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.
+>  That is abnormally high - looks like a leak; restart NeoBar and send the error log.
+
+< бракувало пам'яті: {0} (востаннє {1})
+> out of memory: {0} (last {1})
+
+< Читаю журнал подій Windows за тиждень…
+> Reading the Windows event log for the past week…
+
+< За {0} днів - без зависань відеодрайвера, нестачі пам'яті, раптових вимкнень і збоїв NeoBar.
+> In {0} days - no graphics driver hangs, memory shortages, sudden shutdowns or NeoBar crashes.
+
+< раптове вимкнення або перезавантаження: {0} (востаннє {1})
+> sudden shutdown or restart: {0} (last {1})
+
+< За {0} днів: 
+> In {0} days: 
+
+< Журнал подій Windows не прочитано: 
+> Could not read the Windows event log: 
+
+< збої NeoBar: {0} (востаннє {1}: {2})
+> NeoBar crashes: {0} (last {1}: {2})
+
+< . Рушій шпалер: 
+> . Wallpaper engine: 
+
+< Стабільність системи
+> System stability
+
+<  Зависання відеодрайвера - найчастіше перегрів, розгін або нестабільний драйвер відеокарти; варто оновити або перевстановити драйвер.
+>  Graphics driver hangs are most often caused by overheating, overclocking or an unstable graphics driver; consider updating or reinstalling the driver.
+
+< Журнал подій
+> Event log
+
+<  - зависла
+>  - hung
+
+<  - найбільше займали: 
+>  - largest users: 
+
+< відеодрайвер зависав і перезапускався: {0} (востаннє {1})
+> graphics driver hung and restarted: {0} (last {1})
+
+< пам'ять {0}, дескрипторів {1}, об'єктів GDI {2}, USER {3}
+> memory {0}, handles {1}, GDI objects {2}, USER {3}
+
+< Ресурси NeoBar
+> NeoBar resources
+
+< NeoBar: 
+> NeoBar: 
+
+< Пауза під час гри
+> Pause while gaming
+
+< Поки запущена гра з бібліотеки NeoBar - навіть у вікні чи на іншому моніторі. За пів хвилини паузи відеодекодер звільняється повністю
+> While a game from the NeoBar library is running - even windowed or on another monitor. After half a minute of pause the video decoder is released completely
+
+<  Повернути: Налаштування → Шпалери → «Застосувати» або перезапуск NeoBar. Причину шукайте в Налаштування → Діагностика → «Стабільність системи».
+>  To bring it back: Settings → Wallpapers → Apply, or restart NeoBar. Look for the cause in Settings → Diagnostics → System stability.
+
+< Відеодрайвер тричі за годину зависав або скидав рушій шпалер, тому рушій вимкнено, щоб не навантажувати драйвер.
+> The graphics driver hung or reset the wallpaper engine three times within an hour, so the engine was switched off to stop stressing the driver.
+
+<  Замість живих шпалер - звичайні шпалери Windows.
+>  The regular Windows wallpaper is shown instead of the live one.
+
+<  Слайд-шоу йде засобами Windows, без анімацій.
+>  The slideshow continues using Windows itself, without animations.

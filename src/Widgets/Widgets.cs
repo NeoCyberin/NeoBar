@@ -167,7 +167,20 @@ static class Widgets
         });
     }
 
+    static int netBusy;
+
+    // перелік мережевих адаптерів - у фоні: під час збою драйвера адаптера чи VPN виклик може стояти секундами
     static void ReadNet()
+    {
+        if (Interlocked.CompareExchange(ref netBusy, 1, 0) != 0) return;
+        Util.Bg(delegate
+        {
+            try { ReadNetNow(); }
+            finally { Interlocked.Exchange(ref netBusy, 0); }
+        });
+    }
+
+    static void ReadNetNow()
     {
         long rx = 0, tx = 0;
         try
