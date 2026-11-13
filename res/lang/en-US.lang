@@ -10659,3 +10659,21 @@
 
 < NeoBar: 
 > NeoBar: 
+
+< Пауза під час гри
+> Pause while gaming
+
+< Поки запущена гра з бібліотеки NeoBar - навіть у вікні чи на іншому моніторі. За пів хвилини паузи відеодекодер звільняється повністю
+> While a game from the NeoBar library is running - even windowed or on another monitor. After half a minute of pause the video decoder is released completely
+
+<  Повернути: Налаштування → Шпалери → «Застосувати» або перезапуск NeoBar. Причину шукайте в Налаштування → Діагностика → «Стабільність системи».
+>  To bring it back: Settings → Wallpapers → Apply, or restart NeoBar. Look for the cause in Settings → Diagnostics → System stability.
+
+< Відеодрайвер тричі за годину зависав або скидав рушій шпалер, тому рушій вимкнено, щоб не навантажувати драйвер.
+> The graphics driver hung or reset the wallpaper engine three times within an hour, so the engine was switched off to stop stressing the driver.
+
+<  Замість живих шпалер - звичайні шпалери Windows.
+>  The regular Windows wallpaper is shown instead of the live one.
+
+<  Слайд-шоу йде засобами Windows, без анімацій.
+>  The slideshow continues using Windows itself, without animations.

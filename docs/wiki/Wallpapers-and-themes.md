@@ -8,7 +8,8 @@ Set per profile. NeoBar wallpapers are shown **on top of** the Windows wallpaper
 - **Slideshow** - images from a gallery (files are copied into NeoBar; you can add a whole folder or drag files in - this works when NeoBar runs as administrator too). Change every 1 minute to once a day, random or by name, transitions (fade, slide, zoom, blinds, random or none).
 - **Live wallpaper** - a video (MP4, MKV, MOV, AVI, WMV, WebM) or GIF, looped, optional sound; drag files into the gallery or add them with the button. WebM needs the Windows *Web Media Extensions* (usually already installed).
 - Fit: fill, fit, stretch or centre. Show on all monitors or only the primary one.
-- **Pause** when the desktop is covered (a game, fullscreen program or maximised window) and, optionally, on battery.
+- **Pause** when the desktop is covered (a game, fullscreen program or maximised window), while a game is running (even windowed or on another monitor) and, optionally, on battery. When a pause lasts over half a minute the video is closed completely and the video decoder is released - the last frame stays on screen and playback continues from the same spot afterwards.
+- **Unstable driver guard**: if the graphics driver resets the engine three times within an hour, NeoBar stops launching it (Windows itself shows the slideshow or image; live wallpaper is replaced by the regular one) and tells you. *Apply* or restarting NeoBar brings it back.
 
 ## Themes (Settings → Appearance)
 

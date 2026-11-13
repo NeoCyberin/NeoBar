@@ -10659,3 +10659,21 @@
 
 < NeoBar: 
 > NeoBar: 
+
+< Пауза під час гри
+> Pauza při hře
+
+< Поки запущена гра з бібліотеки NeoBar - навіть у вікні чи на іншому моніторі. За пів хвилини паузи відеодекодер звільняється повністю
+> Dokud běží hra z knihovny NeoBar - i v okně nebo na jiném monitoru. Po půl minutě pauzy se videodekodér zcela uvolní
+
+<  Повернути: Налаштування → Шпалери → «Застосувати» або перезапуск NeoBar. Причину шукайте в Налаштування → Діагностика → «Стабільність системи».
+>  Obnovení: Nastavení → Tapety → „Použít“ nebo restart NeoBar. Příčinu hledejte v Nastavení → Diagnostika → „Stabilita systému“.
+
+< Відеодрайвер тричі за годину зависав або скидав рушій шпалер, тому рушій вимкнено, щоб не навантажувати драйвер.
+> Grafický ovladač třikrát za hodinu zamrzl nebo resetoval modul tapet, proto byl modul vypnut, aby ovladač dál nezatěžoval.
+
+<  Замість живих шпалер - звичайні шпалери Windows.
+>  Místo živé tapety je běžná tapeta Windows.
+
+<  Слайд-шоу йде засобами Windows, без анімацій.
+>  Prezentace pokračuje prostředky Windows, bez animací.

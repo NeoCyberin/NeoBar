@@ -10,7 +10,7 @@ using System.Windows.Forms;
 sealed partial class SettingsForm
 {
     SCombo cbWMode, cbWFit, cbWInt, cbWTrans;
-    CheckBox chWShuffle, chWSound, chWAll, chWCover, chWBat;
+    CheckBox chWShuffle, chWSound, chWAll, chWCover, chWBat, chWGame;
     SSlider tkWDur;
     Label lWDur, lWStatus, lWGal;
     SCard wallGal, wallSrc, wallEco;
@@ -88,6 +88,8 @@ sealed partial class SettingsForm
         e.Row(L.T("На всіх моніторах"), L.T("Інакше - лише на основному"), chWAll);
         chWCover = Tg();
         e.Row(L.T("Пауза, коли робочий стіл закрито"), L.T("Гра, повноекранна програма чи розгорнуте вікно"), chWCover).When = delegate { return WMode >= 2; };
+        chWGame = Tg();
+        e.Row(L.T("Пауза під час гри"), L.T("Поки запущена гра з бібліотеки NeoBar - навіть у вікні чи на іншому моніторі. За пів хвилини паузи відеодекодер звільняється повністю"), chWGame).When = delegate { return WMode >= 2; };
         chWBat = Tg();
         bool bat = WallMgr.HasBattery;
         e.Row(L.T("Пауза від батареї"), bat ? L.T("Ноутбук без зарядки - живі шпалери й переходи зупиняються") : L.T("Недоступно: у цьому комп'ютері немає батареї"), chWBat).When = delegate { return WMode >= 2; };
@@ -166,6 +168,7 @@ sealed partial class SettingsForm
         chWSound.Checked = !WallCfg.Mute;
         chWAll.Checked = WallCfg.AllMonitors;
         chWCover.Checked = WallCfg.PauseCovered;
+        chWGame.Checked = WallCfg.PauseGame;
         chWBat.Checked = WallMgr.HasBattery && WallCfg.PauseBattery;
         lWStatus.Text = WallMgr.Status;
         loading = old;
@@ -181,7 +184,7 @@ sealed partial class SettingsForm
         sb.Append(WMode).Append('|').Append(wImage).Append('|').Append(wVideo).Append('|')
           .Append(cbWFit.SelectedIndex).Append('|').Append(cbWInt.SelectedIndex).Append('|').Append(chWShuffle.Checked).Append('|')
           .Append(WFx).Append('|').Append(tkWDur.Value).Append('|').Append(chWSound.Checked).Append('|').Append(chWAll.Checked).Append('|')
-          .Append(chWCover.Checked).Append('|').Append(chWBat.Checked);
+          .Append(chWCover.Checked).Append('|').Append(chWBat.Checked).Append('|').Append(chWGame.Checked);
         if (WMode == 2)
         {
             // склад галереї слайд-шоу: додали чи видалили зображення - слайд-шоу треба перечитати
@@ -211,6 +214,7 @@ sealed partial class SettingsForm
         WallCfg.Mute = !chWSound.Checked;
         WallCfg.AllMonitors = chWAll.Checked;
         WallCfg.PauseCovered = chWCover.Checked;
+        WallCfg.PauseGame = chWGame.Checked;
         if (WallMgr.HasBattery) WallCfg.PauseBattery = chWBat.Checked;       // без батареї збережене значення не чіпаємо
         WallCfg.Save();
         string sig = WallSignature();

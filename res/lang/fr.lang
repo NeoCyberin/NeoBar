@@ -10659,3 +10659,21 @@
 
 < NeoBar: 
 > NeoBar: 
+
+< Пауза під час гри
+> Pause pendant le jeu
+
+< Поки запущена гра з бібліотеки NeoBar - навіть у вікні чи на іншому моніторі. За пів хвилини паузи відеодекодер звільняється повністю
+> Tant qu'un jeu de la bibliothèque NeoBar est lancé - même fenêtré ou sur un autre écran. Après une demi-minute de pause, le décodeur vidéo est entièrement libéré
+
+<  Повернути: Налаштування → Шпалери → «Застосувати» або перезапуск NeoBar. Причину шукайте в Налаштування → Діагностика → «Стабільність системи».
+>  Pour le rétablir : Paramètres → Fonds d'écran → « Appliquer » ou redémarrez NeoBar. Cherchez la cause dans Paramètres → Diagnostic → « Stabilité du système ».
+
+< Відеодрайвер тричі за годину зависав або скидав рушій шпалер, тому рушій вимкнено, щоб не навантажувати драйвер.
+> Le pilote graphique s'est bloqué ou a réinitialisé le moteur de fonds d'écran trois fois en une heure ; le moteur a été désactivé pour ménager le pilote.
+
+<  Замість живих шпалер - звичайні шпалери Windows.
+>  Le fond d'écran Windows habituel remplace le fond animé.
+
+<  Слайд-шоу йде засобами Windows, без анімацій.
+>  Le diaporama continue via Windows, sans animations.

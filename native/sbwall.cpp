@@ -1121,17 +1121,28 @@ static bool MFInit()
     return true;
 }
 
-static void VideoClose()
+// «Стоянка»: пауза довша за ParkMs (гра, вікно на весь екран) - рушій відео закривається зовсім, відеодекодер
+// драйвера звільняється, а на екрані лишається останній кадр (він у нашій власній текстурі). Після паузи відео
+// відкривається знову з того самого місця.
+static const UINT ParkMs = 30000;
+static bool parked, gMute = true;
+static double parkAt;
+
+// keepFrame - лишити останній кадр (стоянка й повернення з неї)
+static void VideoClose(bool keepFrame = false)
 {
     if (me) { me->Shutdown(); Rel(me); }
-    Rel(vidBmp); Rel(vidTex); vidTexW = vidTexH = 0;
     meReady = false;
+    if (keepFrame && vidBmp && vidTex) return;
+    Rel(vidBmp); Rel(vidTex); vidTexW = vidTexH = 0;
     vidW = vidH = 0;
+    parked = false;
+    parkAt = 0;
 }
 
-static bool VideoOpen(const wchar_t* path, bool mute)
+static bool VideoOpen(const wchar_t* path, bool mute, bool keepFrame = false)
 {
-    VideoClose();
+    VideoClose(keepFrame);
     if (!MFInit()) return false;
     HRESULT hr = S_OK;
     if (!dman)
@@ -1159,6 +1170,7 @@ static bool VideoOpen(const wchar_t* path, bool mute)
     hr = me->SetSource(b);
     SysFreeString(b);
     if (FAILED(hr)) { SetErr("відео: файл не прийнято (0x%08lx)", (unsigned long)hr); VideoClose(); return false; }
+    gMute = mute;
     gVidUrlTried = false;
     Log("відео: відкриваю %s%s", U8(path), mute ? " (без звуку)" : "");
     return true;
@@ -1191,6 +1203,25 @@ static bool EnsureVidTex()
     if (FAILED(hr)) { Log("відео: кадр для Direct2D не створено 0x%08lx", (unsigned long)hr); Rel(vidTex); return false; }
     vidTexW = vidW; vidTexH = vidH;
     return true;
+}
+
+static void Park()
+{
+    if (parked || !me || !meReady || !vidBmp || !vidTex) return;      // без готового кадру лишаємо звичайну паузу
+    double at = me->CurTime();
+    parkAt = at > 0 && at < 1e7 ? at : 0;
+    VideoClose(true);
+    parked = true;
+    Log("відео: пауза понад %u с - декодер звільнено, на екрані останній кадр (%.1f с)", ParkMs / 1000, parkAt);
+}
+
+static void Unpark()
+{
+    if (!parked) return;
+    parked = false;
+    double at = parkAt;
+    if (!VideoOpen(curPath, gMute, true)) { Log("відео: після паузи не відкрилось"); return; }
+    parkAt = at;            // перемотати, щойно відео буде готове
 }
 
 // ---- зображення: декодування у фоновому потоці (великі фото не гальмують робочий стіл)
@@ -1436,6 +1467,8 @@ static void DrawHost(Host& h)
         vidOk = SUCCEEDED(me->TransferVideoFrame(vidTex, NULL, &full, &bk0));
         if (!vidOk && DeviceGone()) return;
     }
+    // нового кадру немає (стоянка, відео ще відкривається після неї) - показуємо останній
+    if (!vidOk && content == C_VIDEO && vidBmp && vidW && vidTexW == vidW && vidTexH == vidH) vidOk = true;
     dc->SetTarget(h.target);
     dc->BeginDraw();
     dc->SetTransform(D2D1::Matrix3x2F::Identity());
@@ -1491,6 +1524,11 @@ static void Command(wchar_t* s)
         sPaused = p ? 1 : 0;
         WriteStatus();
         if (me) { if (p) me->Pause(); else me->Play(); }
+        if (content == C_VIDEO)
+        {
+            if (p) SetTimer(gIpc, 3, ParkMs, NULL);
+            else { KillTimer(gIpc, 3); Unpark(); }
+        }
         if (!p) { if (content == C_GIF) gNext = GetTickCount64(); DrawAll(true); }
         Log(p ? "пауза" : "продовження");
         return;
@@ -1522,6 +1560,7 @@ static void Command(wchar_t* s)
         {
             SetContent(C_VIDEO);
             if (VideoOpen(curPath, mute)) { snprintf(sContent, sizeof sContent, "video"); sErr[0] = 0; WriteStatus(); }
+            if (paused) SetTimer(gIpc, 3, ParkMs, NULL);
         }
         DrawAll(true);
         return;
@@ -1580,6 +1619,7 @@ static LRESULT CALLBACK IpcProc(HWND h, UINT m, WPARAM w, LPARAM l)
             {
                 if (cx != vidW || cy != vidH) Log("відео: %lux%lu", cx, cy);
                 vidW = cx; vidH = cy;
+                if (!meReady && parkAt > 0) { me->SetCurrentTime(parkAt); parkAt = 0; }     // повернення зі стоянки - на те саме місце
                 meReady = true;
             }
             if (paused) { me->Pause(); DrawAll(true); }     // на паузі все одно показати перший кадр, а не чорний екран
@@ -1612,6 +1652,12 @@ static LRESULT CALLBACK IpcProc(HWND h, UINT m, WPARAM w, LPARAM l)
         return 0;
     case WM_TIMER:
         if ((w == 1 || w == 2) && gAttaching) return 0;
+        if (w == 3)
+        {
+            KillTimer(h, 3);
+            if (paused && content == C_VIDEO) Park();
+            return 0;
+        }
         if (w == 1)
         {
             // власник (NeoBar) закрився - виходимо
