@@ -294,13 +294,22 @@ sealed partial class PerfWindow
 
         // показники
         int cx = r.X;
-        for (int i = 0; i < ProcRecorder.Count; i++)
+        for (int oi = 0; oi < ProcRecorder.Order.Length; oi++)
         {
+            int i = ProcRecorder.Order[oi];
+            if (oi == ProcRecorder.TechFrom)
+            {
+                // технічні показники (для пошуку витоків) - окремо, за рискою
+                using (Pen dp = new Pen(Util.Blend(P.Card, P.Fg, 0.2f), 1f)) g.DrawLine(dp, cx + Px(3), y + Px(6), cx + Px(3), y + Px(22));
+                cx += Px(11);
+            }
             string t = ProcRecorder.Short(i);
-            int w = TextRenderer.MeasureText(t, FS).Width + Px(22);
+            int w = TextRenderer.MeasureText(t, FS).Width + Px(20);
             int k = i;
-            Chip(g, new Rectangle(cx, y, w, Px(28)), t, anMetric == i, delegate { anMetric = k; Invalidate(); });
-            cx += w + Px(6);
+            Rectangle cr = new Rectangle(cx, y, w, Px(28));
+            Chip(g, cr, t, anMetric == i, delegate { anMetric = k; Invalidate(); });
+            Tip(cr, ProcRecorder.Name(i) + ". " + ProcRecorder.Hint(i));
+            cx += w + Px(5);
         }
         y += Px(38);
 
@@ -335,7 +344,7 @@ sealed partial class PerfWindow
         int m = anMetric;
         double mx = 0;
         foreach (ProcSample s in anData) if (s.V[m] > mx) mx = s.V[m];
-        if (m == 0) mx = Math.Max(mx, 5);
+        if (m == 0 || m == 8) mx = Math.Max(mx, 5);
         if (mx <= 0) mx = 1;
         mx *= 1.1;
         using (Pen gl = new Pen(Util.Blend(P.Card, P.Fg, 0.1f), 1f))
@@ -397,6 +406,7 @@ sealed partial class PerfWindow
         }
         TxtL(g, anData[0].T.ToString("HH:mm:ss"), FS, new Rectangle(pl.X, pl.Bottom + Px(2), Px(80), Px(18)), P.Sub);
         TxtR(g, anData[n - 1].T.ToString("HH:mm:ss"), FS, new Rectangle(pl.Right - Px(80), pl.Bottom + Px(2), Px(80), Px(18)), P.Sub);
+        PaintMode(g, gr, pl);
         if (pl.Contains(anMouse) && !anSetup) PaintHover(g, pl, gr, m, mx, t0, span);
         // клік чи перетягування по графіку - перемотка
         DragArea(pl, delegate (Point p)
@@ -407,6 +417,33 @@ sealed partial class PerfWindow
             anHead = lo;
             StopPlay();
         });
+    }
+
+    // що саме зараз на графіку: запис наживо (червона рамка й позначка), перегляд давнішого місця під час запису
+    // (жовта - клік повертає наживо), завершений запис або збережений журнал
+    void PaintMode(Graphics g, Rectangle gr, Rectangle pl)
+    {
+        bool rec = ProcRecorder.Recording, live = rec && anHead < 0;
+        string t;
+        Color c;
+        if (live) { t = L.T("НАЖИВО"); c = P.Bad; }
+        else if (rec) { t = L.T("Перегляд запису - не наживо"); c = P.Warn; }
+        else if (ProcRecorder.FromFile) { t = L.T("Збережений журнал"); c = P.Sub; }
+        else { t = L.T("Запис завершено"); c = P.Sub; }
+        if (rec)
+            using (Pen p = new Pen(c, Math.Max(1.5f, Px(2)))) using (GraphicsPath gp = Util.Round(gr, P.Rad)) g.DrawPath(p, gp);
+        int tw = TextRenderer.MeasureText(t, FS).Width;
+        Rectangle b = new Rectangle(pl.X + Px(8), pl.Y + Px(4), tw + Px(30), Px(22));
+        using (SolidBrush bb = new SolidBrush(Util.Blend(P.Bg, c, rec ? 0.25f : 0.12f))) Util.FillRound(g, bb, b, Px(11));
+        // крапка блимає, поки йде запис наживо
+        Color dot = live && DateTime.Now.Second % 2 == 1 ? Util.Blend(P.Card, c, 0.45f) : c;
+        using (SolidBrush db = new SolidBrush(dot)) g.FillEllipse(db, b.X + Px(8), b.Y + Px(7), Px(8), Px(8));
+        TxtL(g, t, FS, new Rectangle(b.X + Px(22), b.Y, tw + Px(8), b.Height), rec ? P.Fg : P.Sub);
+        if (rec && !live)
+        {
+            Hot(b, delegate { anHead = -1; StopPlay(); Invalidate(); });
+            Tip(b, L.T("Повернутися до останніх замірів - графік знову рухається разом із записом"));
+        }
     }
 
     int SampleAt(double t)
@@ -437,7 +474,7 @@ sealed partial class PerfWindow
     {
         if (double.IsNaN(st.Max) || double.IsNaN(st.Min)) return;
         double range = st.Max - st.Min;
-        if (range <= Math.Abs(st.Max) * 0.1 || (m == 0 && range < 2)) return;        // майже пряма лінія
+        if (range <= Math.Abs(st.Max) * 0.1 || ((m == 0 || m == 8) && range < 2)) return;        // майже пряма лінія
         MarkRuns(g, pl, m, mx, t0, span, st.Max, true);
         if (st.Min > 0) MarkRuns(g, pl, m, mx, t0, span, st.Min, false);
     }
@@ -527,12 +564,14 @@ sealed partial class PerfWindow
         }
         Tip(new Rectangle(sr.X + w[0] + w[1] + w[2] + w[3] + w[4], sr.Y, w[5], rh), L.T("95-й процентиль: 95 % замірів були не більші за це значення (короткі піки не враховано)"));
         int hi0 = HeadIndex;
-        for (int i = 0; i < ProcRecorder.Count; i++)
+        for (int oi = 0; oi < ProcRecorder.Order.Length; oi++)
         {
-            int yy = sr.Y + rh + Px(2) + i * rh;
+            int i = ProcRecorder.Order[oi];
+            int yy = sr.Y + rh + Px(2) + oi * rh;
             Rectangle row = new Rectangle(sr.X, yy, sr.Width, rh);
+            Tip(new Rectangle(row.X, row.Y, w[0], rh), ProcRecorder.Hint(i));
             if (i == anMetric) using (SolidBrush b = new SolidBrush(Util.Blend(P.Card, P.Acc, 0.25f))) Util.FillRound(g, b, row, Px(4));
-            else if (i % 2 == 0) using (SolidBrush b = new SolidBrush(P.Card)) Util.FillRound(g, b, row, Px(4));
+            else if (oi % 2 == 0) using (SolidBrush b = new SolidBrush(P.Card)) Util.FillRound(g, b, row, Px(4));
             ProcRecorder.Stat s = anStats != null && anStats.Length > i ? anStats[i] : new ProcRecorder.Stat();
             string[] v =
             {

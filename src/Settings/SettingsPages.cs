@@ -244,7 +244,7 @@ sealed partial class SettingsForm
                     if (Prof.Restart()) owner.Quit();
             });
         };
-        k.Row(L.T("Мова інтерфейсу"), L.T("Перекладів, яких бракує у вибраній мові, показуються англійською"), bLang);
+        k.Row(L.T("Мова інтерфейсу"), L.T("Тексти, яких бракує у вибраному перекладі, показуються англійською"), bLang);
         k.Row(L.T("Свій переклад"), L.T("Шаблон - файл з усіма текстами й англійськими підказками. Перекладіть його, збережіть у теці lang як код_мови.lang (наприклад nl.lang) - після перезапуску мова з'явиться в списку."),
             Bt(L.T("Створити шаблон"), "g:file", 190, delegate
             {
@@ -295,10 +295,8 @@ sealed partial class SettingsForm
         k.Row(L.T("Ефект при наведенні"), "", cbFx);
         chAnim = Tg();
         k.Row(L.T("Плавні анімації"), L.T("Висування панелі, поява й зникання"), chAnim);
-        chDeskFont = Tg();
-        k.Row(L.T("Шрифт нотаток у віджетах на столі"), L.T("Великі написи (час, температура, назви) - шрифтом теми, як у нотатках"), chDeskFont);
 
-        k = p.Card(L.T("Шрифт підписів"));
+        k = p.Card(L.T("Шрифти"));
         cbFont = Cb(260);
         cbFont.Items.Add(L.T("(за темою)"));
         try
@@ -307,12 +305,14 @@ sealed partial class SettingsForm
                 foreach (FontFamily ff in ifc.Families) cbFont.Items.Add(ff.Name);
         }
         catch (Exception skipEx) { SbLog.Skip(skipEx); }
-        k.Row(L.T("Шрифт"), "", cbFont);
+        k.Row(L.T("Шрифт підписів"), L.T("Назви елементів і груп на панелі"), cbFont);
         cbFontStyle = Cb(180, L.T("Звичайний"), L.T("Жирний"), L.T("Курсив"), L.T("Жирний курсив"));
         k.Row(L.T("Стиль"), "", cbFontStyle);
         nFont = Nm(96, 6, 20);
         nFont.DecimalPlaces = 1; nFont.Increment = 0.5m;
         k.Row(L.T("Розмір"), L.T("У пунктах, від 6 до 20"), nFont);
+        chDeskFont = Tg();
+        k.Row(L.T("Шрифт нотаток у віджетах на столі"), L.T("Великі написи (час, температура, назви) - шрифтом теми, як у нотатках"), chDeskFont);
         return p;
     }
 
@@ -577,6 +577,7 @@ sealed partial class SettingsForm
         k.Row(L.T("Швидке налаштування"), L.T("Край екрана, режим, тема, віджети й пошук - в одному вікні (як під час першого запуску)"), Bt(L.T("Відкрити"), "g:view", 130, delegate { OpenQuick(); }));
 
         k = right.Card(L.T("Журнали для пошуку проблем"));
+        SCard kl = k;
         for (int i = 0; i < 3; i++)
         {
             int gi = i;
@@ -584,20 +585,27 @@ sealed partial class SettingsForm
             logChk[i].Checked = SbLog.GroupOn(i);
             logChk[i].CheckedChanged += delegate { SbLog.SetGroup(gi, logChk[gi].Checked); };
             SRow lr = k.Row(SbLog.GroupTitles[i], "", logChk[i]);
-            lr.DescFn = delegate { return SbLog.GroupDescs[gi] + "  ·  " + SizeText(SbLog.GroupSize(gi)); };
+            lr.DescFn = delegate { return SbLog.GroupDescs[gi] + ". " + L.F("Зараз: {0}", SizeText(SbLog.GroupSize(gi))); };
         }
         k.Row(L.T("Тека журналів"), L.T("Увімкнений журнал пише у файли до 2 МБ, вимкнений нічого не пише й не сповільнює програму"),
             Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenDir(SbLog.Dir, true); }),
-            Bt(L.T("Очистити"), "g:trash", 110, delegate { SbLog.Clear(); k.Invalidate(); }));
-        cbLogKeep = Cb(190, L.T("Усі"), L.F("{0} днів", 7), L.F("{0} днів", 30), L.F("{0} днів", 90), L.F("Останні {0}", 10), L.F("Останні {0}", 50), L.F("Останні {0}", 200));
-        k.Row(L.T("Зберігати журнали"), L.T("Усі журнали: пошуку проблем, помилок і аналізу процесів. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу. Давніше видаляється само"), cbLogKeep);
+            Bt(L.T("Очистити"), "g:trash", 110, delegate { SbLog.Clear(); kl.Invalidate(); }));
+        // решта журналів: помилок (пишеться завжди) і записи аналізу процесів
+        k = right.Card(L.T("Журнал помилок і записи аналізу"));
+        SCard k2 = k;
         SRow re = k.Row(L.T("Журнал помилок"), "",
-            Bt("Відкрити", "g:open", 110, delegate { OpenErrorLog(); }),
-            Bt(L.T("Очистити"), "g:trash", 110, delegate { try { File.Delete(ErrPath); } catch (Exception skipEx) { SbLog.Skip(skipEx); } k.Invalidate(); RunDiag(); }));
-        re.DescFn = delegate { long n = 0; try { if (File.Exists(ErrPath)) n = new FileInfo(ErrPath).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); } return L.T("Записується завжди. Надішліть його разом з описом проблеми  ·  ") + SizeText(n); };
+            Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenErrorLog(); }),
+            Bt(L.T("Очистити"), "g:trash", 110, delegate { try { File.Delete(ErrPath); } catch (Exception skipEx) { SbLog.Skip(skipEx); } k2.Invalidate(); RunDiag(); }));
+        re.DescFn = delegate { long n = 0; try { if (File.Exists(ErrPath)) n = new FileInfo(ErrPath).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); } return L.T("Записується завжди: збої, зависання панелі й системи. Надішліть його разом з описом проблеми.") + " " + L.F("Зараз: {0}", SizeText(n)); };
+        SRow ra = k.Row(L.T("Записи аналізу процесів"), "",
+            Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenDir(ProcRecorder.LogDir, true); }),
+            Bt(L.T("Очистити"), "g:trash", 110, delegate { ClearAnalysis(); k2.Invalidate(); }));
+        ra.DescFn = delegate { return L.T("Журнали й підсумки з вкладки «Аналіз» у Моніторі системи (типова тека).") + " " + L.F("Зараз: {0}", AnalysisText()); };
 
-        k.Row(L.T("Тека журналів аналізу"), L.T("Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис"),
-            Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenDir(ProcRecorder.LogDir, true); }));
+        // спільне правило для всього, що вище
+        k = right.Card(L.T("Зберігання журналів"));
+        cbLogKeep = Cb(190, L.T("Усі"), L.F("{0} днів", 7), L.F("{0} днів", 30), L.F("{0} днів", 90), L.F("Останні {0}", 10), L.F("Останні {0}", 50), L.F("Останні {0}", 200));
+        k.Row(L.T("Зберігати журнали"), L.T("Діє на всі журнали вище; давніше видаляється само. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу"), cbLogKeep);
 
         h.Arrange = delegate (Rectangle r)
         {
@@ -610,6 +618,35 @@ sealed partial class SettingsForm
     }
 
     static string ErrPath { get { return Util.ErrorPath; } }
+
+    // записи аналізу в типовій теці: скільки й якого розміру (лише журнали NeoBar - їх упізнає вміст)
+    static int anCount = -1;
+    static long anBytes;
+    static DateTime anAt;
+
+    static string AnalysisText()
+    {
+        if (anCount < 0 || (DateTime.Now - anAt).TotalSeconds > 5)
+        {
+            anAt = DateTime.Now;
+            anCount = 0; anBytes = 0;
+            foreach (string f in ProcRecorder.Logs(ProcRecorder.LogDir))
+            {
+                anCount++;
+                try { anBytes += new FileInfo(f).Length; string tx = Path.ChangeExtension(f, ".txt"); if (File.Exists(tx)) anBytes += new FileInfo(tx).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            }
+        }
+        return anCount == 0 ? L.T("порожньо") : L.F("записів: {0}", anCount) + ", " + SizeText(anBytes);
+    }
+
+    void ClearAnalysis()
+    {
+        List<string> l = ProcRecorder.Logs(ProcRecorder.LogDir);
+        if (l.Count == 0) return;
+        if (SbDialog.Show(owner, this, L.T("Записи аналізу процесів"), L.F("Видалити всі записи аналізу ({0}) з типової теки? Поточний запис не зачіпається.", l.Count), L.T("Видалити"), L.T("Скасувати")) != 0) return;
+        foreach (string f in l) ProcRecorder.DeleteLog(f, false);
+        anCount = -1;
+    }
 
     static string SizeText(long n)
     {

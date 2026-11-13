@@ -631,8 +631,6 @@
 < Віджети й датчики
 > Widgety a senzory
 
-< Запуск, профіль, режим закріплення, елементи, шрифти нотаток
-> Spouštění, profil, režim ukotvení, položky, písma poznámek
 
 < Оверлей, ліміт FPS, обгортки старих API, підрахунок кадрів; бібліотека в грі - з наступного запуску гри
 > Překryv, limit FPS, obálky starých API, počítání snímků; knihovna ve hře - od příštího spuštění hry
@@ -7534,8 +7532,6 @@
 < Мова інтерфейсу
 > Jazyk rozhraní
 
-< Перекладів, яких бракує у вибраній мові, показуються англійською
-> Texty chybějící ve zvoleném jazyce se zobrazí anglicky
 
 < Свій переклад
 > Vlastní překlad
@@ -7777,8 +7773,6 @@
 < Увімкнений журнал пише у файли до 2 МБ, вимкнений нічого не пише й не сповільнює програму
 > Zapnutý protokol zapisuje soubory do 2 MB, vypnutý nezapisuje nic a program nezpomaluje
 
-< Записується завжди. Надішліть його разом з описом проблеми  ·  
-> Zapisuje se vždy. Pošlete ho spolu s popisem problému  ·  
 
 < порожньо
 > prázdný
@@ -8020,8 +8014,6 @@
 < Пауза, коли робочий стіл закрито
 > Pozastavit, když je plocha zakrytá
 
-< Гра, повноекранна програма чи розгорнуте вікно
-> Hra, program na celou obrazovku nebo maximalizované okno
 
 < Пауза від батареї
 > Pozastavit na baterii
@@ -10408,8 +10400,6 @@
 < Заміряти кожні
 > Měřit každých
 
-< Запис на диск
-> Zápis na disk
 
 < Запис триває, навіть якщо закрити вікно монітора; зупиняється сам, коли процес завершиться.
 > Záznam pokračuje, i když zavřete okno monitoru; sám se zastaví, když proces skončí.
@@ -10459,8 +10449,6 @@
 < Об'єкти USER
 > Objekty USER
 
-< Пам'ять (робочий набір)
-> Paměť (pracovní sada)
 
 < Перезапустити Провідник? Панель завдань і робочий стіл зникнуть на кілька секунд; відкриті програми й вікна працюватимуть далі.
 > Restartovat Průzkumníka? Hlavní panel a plocha na pár sekund zmizí; otevřené programy a okna poběží dál.
@@ -10471,11 +10459,7 @@
 < Почати запис
 > Spustit záznam
 
-< Приватна пам'ять
-> Soukromá paměť
 
-< Приватна пам'ять, МБ
-> Soukromá paměť, MB
 
 < Провідник завершено, але запустити знову не вдалося. Натисніть Ctrl+Shift+Esc → «Запустити нове завдання» → explorer.exe.
 > Průzkumník byl ukončen, ale znovu ho spustit nešlo. Stiskněte Ctrl+Shift+Esc → Spustit novou úlohu → explorer.exe.
@@ -10495,8 +10479,6 @@
 < Пік о
 > Špička v
 
-< Робочий набір, МБ
-> Pracovní sada, MB
 
 < Секунд від початку
 > Sekund od začátku
@@ -10525,8 +10507,6 @@
 < ЦП, %
 > CPU, %
 
-< Читання з диска
-> Čtení z disku
 
 < Читання, КБ/с
 > Čtení, KB/s
@@ -10570,8 +10550,6 @@
 < Не вдалося видалити журнал.
 > Záznam se nepodařilo smazat.
 
-< Тека журналів аналізу
-> Složka záznamů analýzy
 
 < мін
 > min
@@ -10600,11 +10578,7 @@
 < Останні {0}
 > Posledních {0}
 
-< Усі журнали: пошуку проблем, помилок і аналізу процесів. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу. Давніше видаляється само
-> Všechny záznamy: hledání problémů, chyby a analýza procesů. „Posledních N“ znamená posledních N spuštění NeoBar (u záznamu hry spuštění hry) a posledních N záznamů analýzy. Starší se maže samo
 
-< Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
-> Záznamy z karty „Analýza“ v monitoru systému; v jiné složce se staré uklidí, když se tam zapíše nový záznam
 
 <  Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.
 >  To je neobvykle mnoho - vypadá to na únik; restartujte NeoBar a pošlete záznam chyb.
@@ -10663,8 +10637,6 @@
 < Пауза під час гри
 > Pauza při hře
 
-< Поки запущена гра з бібліотеки NeoBar - навіть у вікні чи на іншому моніторі. За пів хвилини паузи відеодекодер звільняється повністю
-> Dokud běží hra z knihovny NeoBar - i v okně nebo na jiném monitoru. Po půl minutě pauzy se videodekodér zcela uvolní
 
 <  Повернути: Налаштування → Шпалери → «Застосувати» або перезапуск NeoBar. Причину шукайте в Налаштування → Діагностика → «Стабільність системи».
 >  Obnovení: Nastavení → Tapety → „Použít“ nebo restart NeoBar. Příčinu hledejte v Nastavení → Diagnostika → „Stabilita systému“.
@@ -10677,3 +10649,119 @@
 
 <  Слайд-шоу йде засобами Windows, без анімацій.
 >  Prezentace pokračuje prostředky Windows, bez animací.
+
+< Наскільки процес навантажує відеокарту: найзайнятіша її частина (3D, декодування відео тощо), як у Диспетчері завдань
+> Jak moc proces zatěžuje grafickou kartu: její nejvytíženější část (3D, dekódování videa atd.), jako ve Správci úloh
+
+< Діє на всі журнали вище; давніше видаляється само. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу
+> Platí pro všechny záznamy výše; starší se maže samo. „Posledních N“ je posledních N spuštění NeoBar (u záznamu hry spuštění hry) a posledních N záznamů analýzy
+
+< Виділена
+> Vyhrazená
+
+< Запис завершено
+> Záznam dokončen
+
+
+< Скільки даних за секунду процес читає: файли на дисках, мережа, пристрої
+> Kolik dat za sekundu proces čte: soubory na discích, síť, zařízení
+
+< Скільки даних за секунду процес записує: файли на дисках, мережа, пристрої
+> Kolik dat za sekundu proces zapisuje: soubory na discích, síť, zařízení
+
+< Повноекранна програма чи розгорнуте вікно. Якщо пауза довша за пів хвилини, відео звільняє відеокарту, а на екрані лишається останній кадр
+> Celoobrazovkový program nebo maximalizované okno. Trvá-li pauza déle než půl minuty, video uvolní grafickou kartu a na obrazovce zůstane poslední snímek
+
+< Зберігання журналів
+> Uchovávání záznamů
+
+< Запис даних
+> Zápis dat
+
+< Читання даних
+> Čtení dat
+
+< НАЖИВО
+> ŽIVĚ
+
+< Об'єкти малювання: шрифти, пера, зображення. Windows дозволяє до 10 000 на процес - далі програма перестає малюватись
+> Kreslicí objekty: písma, pera, obrázky. Windows povoluje až 10 000 na proces - pak se program přestane vykreslovat
+
+< Виділена пам'ять, МБ
+> Vyhrazená paměť, MB
+
+< Назви елементів і груп на панелі
+> Názvy položek a skupin na panelu
+
+< Відеокарта
+> Grafická karta
+
+< Перегляд запису - не наживо
+> Prohlížení záznamu - ne živě
+
+< Збережений журнал
+> Uložený záznam
+
+< Виділена пам'ять
+> Vyhrazená paměť
+
+< Скільки пам'яті процес замовив лише для себе - разом із тим, що Windows винесла у файл підкачки. Якщо весь час росте й не спадає - у програмі витік пам'яті
+> Kolik paměti si proces vyhradil jen pro sebe - včetně toho, co Windows přesunul do stránkovacího souboru. Pokud stále roste a neklesá, program má únik paměti
+
+< Відеопам'ять, МБ
+> Videopaměť, MB
+
+< Вікна, меню, курсори. Windows дозволяє до 10 000 на процес
+> Okna, nabídky, kurzory. Windows povoluje až 10 000 na proces
+
+
+< Оперативна пам'ять, МБ
+> Operační paměť, MB
+
+< Поки запущена гра з бібліотеки NeoBar - навіть згорнута, у вікні чи на іншому моніторі
+> Dokud běží hra z knihovny NeoBar - i minimalizovaná, v okně nebo na jiném monitoru
+
+< Записи аналізу процесів
+> Záznamy analýzy procesů
+
+< Шрифти
+> Písma
+
+< Відкриті файли, ключі реєстру, потоки й інші об'єкти Windows. Якщо весь час росте - програма їх не закриває (витік)
+> Otevřené soubory, klíče registru, vlákna a další objekty Windows. Pokud stále roste, program je nezavírá (únik)
+
+< Скільки пам'яті відеокарти займає процес (текстури, кадри відео)
+> Kolik paměti grafické karty proces zabírá (textury, snímky videa)
+
+< Скільки оперативної пам'яті процес займає просто зараз. Windows може забрати частину, коли пам'яті бракує, тож число коливається
+> Kolik operační paměti proces právě zabírá. Windows může část odebrat, když paměť dochází, proto číslo kolísá
+
+< Яку частку всього процесора (усіх ядер) займає процес
+> Jaký podíl celého procesoru (všech jader) proces využívá
+
+< Відеокарта, %
+> Grafická karta, %
+
+< Журнал помилок і записи аналізу
+> Záznam chyb a záznamy analýzy
+
+< Видалити всі записи аналізу ({0}) з типової теки? Поточний запис не зачіпається.
+> Smazat všechny záznamy analýzy ({0}) z výchozí složky? Probíhající záznam zůstane.
+
+< Запуск, профіль, закріплення, елементи, шпалери, перетягування файлів
+> Spuštění, profil, ukotvení, položky, tapety, přetahování souborů
+
+< Записується завжди: збої, зависання панелі й системи. Надішліть його разом з описом проблеми.
+> Zapisuje se vždy: pády, zamrznutí panelu a systému. Pošlete jej s popisem problému.
+
+< Тексти, яких бракує у вибраному перекладі, показуються англійською
+> Texty, které ve zvoleném překladu chybí, se zobrazují anglicky
+
+< Зараз: {0}
+> Nyní: {0}
+
+< записів: {0}
+> záznamů: {0}
+
+< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи (типова тека).
+> Záznamy a souhrny z karty „Analýza“ v monitoru systému (výchozí složka).

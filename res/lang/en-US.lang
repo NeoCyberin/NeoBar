@@ -631,8 +631,6 @@
 < Віджети й датчики
 > Widgets & sensors
 
-< Запуск, профіль, режим закріплення, елементи, шрифти нотаток
-> Startup, profile, docking mode, items, note fonts
 
 < Оверлей, ліміт FPS, обгортки старих API, підрахунок кадрів; бібліотека в грі - з наступного запуску гри
 > Overlay, FPS limit, old API wrappers, frame counting; the in-game library - from the next game launch
@@ -7534,8 +7532,6 @@
 < Мова інтерфейсу
 > Interface language
 
-< Перекладів, яких бракує у вибраній мові, показуються англійською
-> Texts missing in the chosen language are shown in English
 
 < Свій переклад
 > Own translation
@@ -7777,8 +7773,6 @@
 < Увімкнений журнал пише у файли до 2 МБ, вимкнений нічого не пише й не сповільнює програму
 > An enabled log writes files up to 2 MB, a disabled one writes nothing and does not slow the program down
 
-< Записується завжди. Надішліть його разом з описом проблеми  ·  
-> Always written. Send it together with a description of the problem  ·  
 
 < порожньо
 > empty
@@ -8020,8 +8014,6 @@
 < Пауза, коли робочий стіл закрито
 > Pause when the desktop is covered
 
-< Гра, повноекранна програма чи розгорнуте вікно
-> A game, fullscreen program or maximized window
 
 < Пауза від батареї
 > Pause on battery
@@ -10408,8 +10400,6 @@
 < Заміряти кожні
 > Sample every
 
-< Запис на диск
-> Disk writes
 
 < Запис триває, навіть якщо закрити вікно монітора; зупиняється сам, коли процес завершиться.
 > Recording continues even if you close the monitor window; it stops by itself when the process exits.
@@ -10459,8 +10449,6 @@
 < Об'єкти USER
 > USER objects
 
-< Пам'ять (робочий набір)
-> Memory (working set)
 
 < Перезапустити Провідник? Панель завдань і робочий стіл зникнуть на кілька секунд; відкриті програми й вікна працюватимуть далі.
 > Restart Explorer? The taskbar and desktop will disappear for a few seconds; open programs and windows keep running.
@@ -10471,11 +10459,7 @@
 < Почати запис
 > Start recording
 
-< Приватна пам'ять
-> Private memory
 
-< Приватна пам'ять, МБ
-> Private memory, MB
 
 < Провідник завершено, але запустити знову не вдалося. Натисніть Ctrl+Shift+Esc → «Запустити нове завдання» → explorer.exe.
 > Explorer was ended but could not be started again. Press Ctrl+Shift+Esc → Run new task → explorer.exe.
@@ -10495,8 +10479,6 @@
 < Пік о
 > Peak at
 
-< Робочий набір, МБ
-> Working set, MB
 
 < Секунд від початку
 > Seconds from start
@@ -10525,8 +10507,6 @@
 < ЦП, %
 > CPU, %
 
-< Читання з диска
-> Disk reads
 
 < Читання, КБ/с
 > Reads, KB/s
@@ -10570,8 +10550,6 @@
 < Не вдалося видалити журнал.
 > Could not delete the log.
 
-< Тека журналів аналізу
-> Analysis log folder
 
 < мін
 > min
@@ -10600,11 +10578,7 @@
 < Останні {0}
 > Last {0}
 
-< Усі журнали: пошуку проблем, помилок і аналізу процесів. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу. Давніше видаляється само
-> All logs: troubleshooting, errors and process analysis. "Last N" means the last N NeoBar launches (game launches for the in-game log) and the last N analysis recordings. Older data is deleted automatically
 
-< Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
-> Recordings from the Analysis tab of the System monitor; in another folder old ones are cleaned up when a new recording is written there
 
 <  Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.
 >  That is abnormally high - looks like a leak; restart NeoBar and send the error log.
@@ -10663,8 +10637,6 @@
 < Пауза під час гри
 > Pause while gaming
 
-< Поки запущена гра з бібліотеки NeoBar - навіть у вікні чи на іншому моніторі. За пів хвилини паузи відеодекодер звільняється повністю
-> While a game from the NeoBar library is running - even windowed or on another monitor. After half a minute of pause the video decoder is released completely
 
 <  Повернути: Налаштування → Шпалери → «Застосувати» або перезапуск NeoBar. Причину шукайте в Налаштування → Діагностика → «Стабільність системи».
 >  To bring it back: Settings → Wallpapers → Apply, or restart NeoBar. Look for the cause in Settings → Diagnostics → System stability.
@@ -10677,3 +10649,119 @@
 
 <  Слайд-шоу йде засобами Windows, без анімацій.
 >  The slideshow continues using Windows itself, without animations.
+
+< Наскільки процес навантажує відеокарту: найзайнятіша її частина (3D, декодування відео тощо), як у Диспетчері завдань
+> How much the process loads the graphics card: its busiest part (3D, video decoding, etc.), as in Task Manager
+
+< Діє на всі журнали вище; давніше видаляється само. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу
+> Applies to all logs above; older data is deleted automatically. "Last N" means the last N NeoBar launches (game launches for the in-game log) and the last N analysis recordings
+
+< Виділена
+> Committed
+
+< Запис завершено
+> Recording finished
+
+
+< Скільки даних за секунду процес читає: файли на дисках, мережа, пристрої
+> How much data per second the process reads: files on disks, network, devices
+
+< Скільки даних за секунду процес записує: файли на дисках, мережа, пристрої
+> How much data per second the process writes: files on disks, network, devices
+
+< Повноекранна програма чи розгорнуте вікно. Якщо пауза довша за пів хвилини, відео звільняє відеокарту, а на екрані лишається останній кадр
+> A fullscreen program or maximised window. When the pause lasts over half a minute, the video releases the graphics card and the last frame stays on screen
+
+< Зберігання журналів
+> Log retention
+
+< Запис даних
+> Data written
+
+< Читання даних
+> Data read
+
+< НАЖИВО
+> LIVE
+
+< Об'єкти малювання: шрифти, пера, зображення. Windows дозволяє до 10 000 на процес - далі програма перестає малюватись
+> Drawing objects: fonts, pens, images. Windows allows up to 10,000 per process - beyond that the program stops drawing
+
+< Виділена пам'ять, МБ
+> Committed memory, MB
+
+< Назви елементів і груп на панелі
+> Names of items and groups on the panel
+
+< Відеокарта
+> Graphics card
+
+< Перегляд запису - не наживо
+> Viewing the recording - not live
+
+< Збережений журнал
+> Saved log
+
+< Виділена пам'ять
+> Committed memory
+
+< Скільки пам'яті процес замовив лише для себе - разом із тим, що Windows винесла у файл підкачки. Якщо весь час росте й не спадає - у програмі витік пам'яті
+> How much memory the process has reserved just for itself - including what Windows moved to the page file. If it keeps growing and never drops, the program has a memory leak
+
+< Відеопам'ять, МБ
+> Video memory, MB
+
+< Вікна, меню, курсори. Windows дозволяє до 10 000 на процес
+> Windows, menus, cursors. Windows allows up to 10,000 per process
+
+
+< Оперативна пам'ять, МБ
+> RAM, MB
+
+< Поки запущена гра з бібліотеки NeoBar - навіть згорнута, у вікні чи на іншому моніторі
+> While a game from the NeoBar library is running - even minimised, windowed or on another monitor
+
+< Записи аналізу процесів
+> Process analysis recordings
+
+< Шрифти
+> Fonts
+
+< Відкриті файли, ключі реєстру, потоки й інші об'єкти Windows. Якщо весь час росте - програма їх не закриває (витік)
+> Open files, registry keys, threads and other Windows objects. If it keeps growing, the program is not closing them (a leak)
+
+< Скільки пам'яті відеокарти займає процес (текстури, кадри відео)
+> How much graphics card memory the process uses (textures, video frames)
+
+< Скільки оперативної пам'яті процес займає просто зараз. Windows може забрати частину, коли пам'яті бракує, тож число коливається
+> How much RAM the process occupies right now. Windows may take some back when memory is short, so the number fluctuates
+
+< Яку частку всього процесора (усіх ядер) займає процес
+> What share of the whole processor (all cores) the process uses
+
+< Відеокарта, %
+> Graphics card, %
+
+< Журнал помилок і записи аналізу
+> Error log and analysis recordings
+
+< Видалити всі записи аналізу ({0}) з типової теки? Поточний запис не зачіпається.
+> Delete all analysis recordings ({0}) from the default folder? The current recording is not affected.
+
+< Запуск, профіль, закріплення, елементи, шпалери, перетягування файлів
+> Startup, profile, docking, items, wallpapers, file drag and drop
+
+< Записується завжди: збої, зависання панелі й системи. Надішліть його разом з описом проблеми.
+> Always written: crashes, panel and system freezes. Send it together with a description of the problem.
+
+< Тексти, яких бракує у вибраному перекладі, показуються англійською
+> Texts missing from the chosen translation are shown in English
+
+< Зараз: {0}
+> Now: {0}
+
+< записів: {0}
+> recordings: {0}
+
+< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи (типова тека).
+> Logs and summaries from the Analysis tab of the System monitor (default folder).
