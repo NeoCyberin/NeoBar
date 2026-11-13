@@ -6,7 +6,7 @@ Widgets sit at the top of the panel; click one to open its window. Order them wi
 |---|---|
 | **Time & date** | Clock, calendar, public holidays (from date.nager.at) and world days, your own dates, alarms, timers, stopwatch, desktop clocks (digital, analog, calendar). Clock accuracy can be checked against a time server. |
 | **Weather** | Current weather, hourly and weekly forecast, weather themes, European/American units. |
-| **System monitor** | CPU, GPU, RAM, with graphs; specs; *Tasks* - processes and services; *Analysis* - one process's load over time. Temperatures can be shown in the tray. |
+| **System monitor** | CPU, GPU, RAM, with graphs; specs; *Tasks* - processes and services; *Analysis* - load of a process (or a group with its children) over time; *History* - temperatures and load over the day. Temperatures can be shown in the tray. |
 | **Network** | Download/upload speed, ping, adapters, Wi-Fi, firewall switch. |
 | **Storage** | Drives with free space; health (SMART) and maintenance; formatting; file recovery. |
 | **Battery** | Charge and power state (shown only on devices with a battery). |
@@ -43,6 +43,16 @@ Metrics (each has a tooltip explaining it in plain words):
 Every sample is written to a CSV log right away (it opens in Excel), and a summary goes next to it as a .txt file. Recording continues when the monitor window is closed and stops by itself when the process exits. *Open log…* plays back an earlier recording; the ‹ › arrows step through logs in the same folder, the bin deletes the shown log with its summary (to the Windows Recycle Bin), and the cross removes the results from the window (the files stay).
 
 Hover the graph to see the exact value and time. Minimum and maximum are marked when the line really changes (a zero minimum is not marked). Old logs are deleted automatically by the common setting **Settings → Diagnostics → Log retention**; the same page has *Open* and *Clear* for all analysis recordings.
+
+**Process groups.** The *Together with child processes* switch in the new-recording window sums the process and everything it started (browser tabs, launcher and game); new children are added automatically, and recording continues while any process of the group is alive. Critical alerts during recording are marked on the graph with a red line (hover to see what happened) and go into the .txt summary.
+
+## System watch (Settings → Panel)
+
+Every 5 seconds NeoBar watches the sensors (cheap - the same shared polling the widgets use):
+
+- **Critical alerts** - CPU or GPU overheating (limits are configurable, 95 and 90 °C by default), video memory above the limit (95% by default), RAM above 95% (listing the largest users), one process using too much memory (half of all by default). The condition must last ~15 s, and the same alert comes at most once per 10 min. Each goes into the **alert log** (`logs\alerts.log`), the history, and as a mark into a running process analysis.
+- **Daily history** - every minute the highest temperature and average load of CPU, GPU, memory and video memory; kept in `history.csv` next to the program. Shown in **System monitor → History** together with events: NeoBar alerts and Windows log findings (graphics driver hangs, memory shortages, sudden shutdowns). The system check uses it to explain failures: whether the GPU was hot when the driver hung, whether the load was at its limit before a sudden shutdown.
+- **After-game report** - for games longer than 2 minutes: FPS (average, 1% low, lowest - when the overlay is on for that game), temperatures and load, alerts during the game. Arrives as a notification; the full report goes to `Documents\NeoBar\Games`.
 
 ## Location and weather (Settings → Location & weather)
 

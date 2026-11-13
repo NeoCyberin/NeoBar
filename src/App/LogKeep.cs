@@ -60,6 +60,7 @@ static class LogKeep
         if (!Parse(Spec, out m, out n)) return;
         SbLog.TrimAll(m, n);
         lock (Util.ErrGate) Trim(Util.ErrorPath, m, n, null);
+        Watch.TrimLog(m, n);
         ProcRecorder.PruneSoon(ProcRecorder.LogDir);
     }
 

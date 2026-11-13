@@ -48,13 +48,16 @@ static class ProcProbe
     }
 
     // відкрити процес на весь час запису: дескриптор не дає PID перейти до іншого процесу
-    public static State Open(int pid)
+    public static State Open(int pid) { return Open(pid, true); }
+
+    // gpu - власні лічильники відеокарти (для групи процесів вони спільні, див. ProbeGroup)
+    public static State Open(int pid, bool gpu)
     {
         IntPtr h = Win.OpenProcess(0x1000 | 0x00100000, false, (uint)pid);      // QUERY_LIMITED_INFORMATION | SYNCHRONIZE
         if (h == IntPtr.Zero) return null;
         State s = new State();
         s.H = h;
-        try
+        if (gpu) try
         {
             // спершу лише екземпляри цього процесу (pid_N_*); не прийнялось - усі, а потрібні відберемо за назвою
             PdhQuery q = new PdhQuery();
@@ -102,28 +105,137 @@ static class ProcProbe
             // відеопам'ять - сума виділеної на всіх адаптерах
             // рушії одного типу на одній відеокарті (наприклад, кілька 3D) складаються, з типів береться найзайнятіший
             s.Gpu.Collect();
-            double top = 0, mem = 0;
-            Dictionary<string, double> byType = new Dictionary<string, double>();
-            foreach (KeyValuePair<string, double> kv in s.Gpu.Values("eng"))
-            {
-                if (!kv.Key.StartsWith(s.GpuPrefix, StringComparison.OrdinalIgnoreCase)) continue;
-                int li = kv.Key.IndexOf("_luid_", StringComparison.OrdinalIgnoreCase), ti = kv.Key.IndexOf("_engtype_", StringComparison.OrdinalIgnoreCase);
-                int pi = kv.Key.IndexOf("_phys_", StringComparison.OrdinalIgnoreCase);
-                string type = (li >= 0 && pi > li ? kv.Key.Substring(li, pi - li) : "") + (ti >= 0 ? kv.Key.Substring(ti) : kv.Key);
-                double cur;
-                byType.TryGetValue(type, out cur);
-                byType[type] = cur + kv.Value;
-            }
-            foreach (double v in byType.Values) if (v > top) top = v;
-            foreach (KeyValuePair<string, double> kv in s.Gpu.Values("mem"))
-                if (kv.Key.StartsWith(s.GpuPrefix, StringComparison.OrdinalIgnoreCase)) mem += kv.Value;
-            o.V[8] = Math.Max(0, Math.Min(100, top));
-            o.V[9] = Math.Max(0, mem);
+            string pre = s.GpuPrefix;
+            GpuOf(s.Gpu, delegate (string inst) { return inst.StartsWith(pre, StringComparison.OrdinalIgnoreCase); }, out o.V[8], out o.V[9]);
         }
         s.Cpu = cpu; s.Rd = rd; s.Wr = wr; s.At = now;
         bool first = s.First;
         s.First = false;
         return !first;
+    }
+
+    // навантаження відеокарти й відеопам'ять для екземплярів лічильників, які вибирає mine (за назвою «pid_N_…»)
+    public static void GpuOf(PdhQuery q, Func<string, bool> mine, out double load, out double mem)
+    {
+        double top = 0, sum = 0;
+        Dictionary<string, double> byType = new Dictionary<string, double>();
+        foreach (KeyValuePair<string, double> kv in q.Values("eng"))
+        {
+            if (!mine(kv.Key)) continue;
+            int li = kv.Key.IndexOf("_luid_", StringComparison.OrdinalIgnoreCase), ti = kv.Key.IndexOf("_engtype_", StringComparison.OrdinalIgnoreCase);
+            int pi = kv.Key.IndexOf("_phys_", StringComparison.OrdinalIgnoreCase);
+            string type = (li >= 0 && pi > li ? kv.Key.Substring(li, pi - li) : "") + (ti >= 0 ? kv.Key.Substring(ti) : kv.Key);
+            double cur;
+            byType.TryGetValue(type, out cur);
+            byType[type] = cur + kv.Value;
+        }
+        foreach (double v in byType.Values) if (v > top) top = v;
+        foreach (KeyValuePair<string, double> kv in q.Values("mem")) if (mine(kv.Key)) sum += kv.Value;
+        load = Math.Max(0, Math.Min(100, top));
+        mem = Math.Max(0, sum);
+    }
+
+    // PID з назви екземпляра лічильника відеокарти «pid_1234_luid_…»; -1 - не вдалось
+    public static int PidOf(string inst)
+    {
+        if (!inst.StartsWith("pid_", StringComparison.OrdinalIgnoreCase)) return -1;
+        int e = inst.IndexOf('_', 4);
+        int pid;
+        return e > 4 && int.TryParse(inst.Substring(4, e - 4), out pid) ? pid : -1;
+    }
+}
+
+// ======================================================================
+//  Замір групи: процес і (за бажанням) усі його дочірні - браузер з вкладками, гра з лаунчером тощо.
+//  Склад групи оновлюється кожні 5 с (нові дочірні додаються, завершені прибираються); показники - сума
+//  (ЦП - не більше 100 %, відеокарта - найзайнятіший рушій усієї групи). Група жива, поки живий хоч один процес.
+// ======================================================================
+sealed class ProbeGroup
+{
+    readonly int root;
+    readonly bool tree;
+    readonly Dictionary<int, ProcProbe.State> members = new Dictionary<int, ProcProbe.State>();
+    PdhQuery gpu;
+    int scannedAt;
+
+    public int Count { get { return members.Count; } }
+
+    ProbeGroup(int root, bool tree) { this.root = root; this.tree = tree; }
+
+    public static ProbeGroup Open(int pid, bool tree)
+    {
+        ProcProbe.State s = ProcProbe.Open(pid, !tree);
+        if (s == null) return null;
+        ProbeGroup g = new ProbeGroup(pid, tree);
+        g.members[pid] = s;
+        if (tree)
+        {
+            try
+            {
+                PdhQuery q = new PdhQuery();
+                bool a = q.Ok && q.Add("eng", "\\GPU Engine(*)\\Utilization Percentage");
+                bool b = q.Ok && q.Add("mem", "\\GPU Process Memory(*)\\Dedicated Usage");
+                if (a || b) { q.Collect(); g.gpu = q; } else q.Dispose();
+            }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            g.Rescan();
+        }
+        return g;
+    }
+
+    // додати нових дочірніх (через відкриті дескриптори PID не перейде до чужого процесу)
+    void Rescan()
+    {
+        scannedAt = Environment.TickCount;
+        foreach (KeyValuePair<int, SysProc> kv in SysProcs.Tree(SysProcs.Snapshot(), root))
+        {
+            if (members.ContainsKey(kv.Key)) continue;
+            ProcProbe.State s = ProcProbe.Open(kv.Key, false);
+            if (s != null) { ProcProbe.Take(s, new ProcSample()); members[kv.Key] = s; }
+        }
+    }
+
+    public bool Alive
+    {
+        get
+        {
+            foreach (ProcProbe.State s in members.Values) if (ProcProbe.Alive(s)) return true;
+            return false;
+        }
+    }
+
+    public bool Take(ProcSample o)
+    {
+        if (tree && unchecked(Environment.TickCount - scannedAt) >= 5000) Rescan();
+        // завершені - прибрати (корінь лишається: за ним шукаються нові дочірні)
+        List<int> gone = new List<int>();
+        foreach (KeyValuePair<int, ProcProbe.State> kv in members) if (kv.Key != root && !ProcProbe.Alive(kv.Value)) gone.Add(kv.Key);
+        foreach (int p in gone) { ProcProbe.Close(members[p]); members.Remove(p); }
+        bool any = false;
+        ProcSample one = new ProcSample();
+        foreach (ProcProbe.State s in members.Values)
+        {
+            if (!ProcProbe.Alive(s)) continue;
+            Array.Clear(one.V, 0, one.V.Length);
+            if (ProcProbe.Take(s, one)) any = true;
+            for (int i = 0; i < 8; i++) o.V[i] += one.V[i];
+            if (!tree) { o.V[8] = one.V[8]; o.V[9] = one.V[9]; }
+        }
+        o.V[0] = Math.Min(100, o.V[0]);
+        if (tree && gpu != null)
+        {
+            gpu.Collect();
+            Dictionary<int, ProcProbe.State> m = members;
+            ProcProbe.GpuOf(gpu, delegate (string inst) { return m.ContainsKey(ProcProbe.PidOf(inst)); }, out o.V[8], out o.V[9]);
+        }
+        return any;
+    }
+
+    public void Close()
+    {
+        foreach (ProcProbe.State s in members.Values) ProcProbe.Close(s);
+        members.Clear();
+        if (gpu != null) { gpu.Dispose(); gpu = null; }
     }
 }
 
@@ -200,7 +312,7 @@ static class ProcRecorder
 
     static readonly object gate = new object();
     static readonly List<ProcSample> samples = new List<ProcSample>();
-    static ProcProbe.State probe;
+    static ProbeGroup probe;
     static Timer timer;
     static StreamWriter log;
     static DateTime started;
@@ -235,10 +347,30 @@ static class ProcRecorder
     static string Sep { get { string s = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator; return s == "," ? ";" : ","; } }
 
     // "" - запис почався, інакше - причина
-    public static string Start(int pid, string name, string path, int intervalMs, string logPath)
+    // позначки на графіку: критичні сповіщення (перегрів, нестача пам'яті), що сталися під час запису
+    public sealed class Mark { public DateTime T; public double Sec; public string Text = ""; }
+    static readonly List<Mark> events = new List<Mark>();
+
+    public static void AddMark(string text)
+    {
+        if (!Recording) return;
+        Mark k = new Mark();
+        k.T = DateTime.Now; k.Sec = (DateTime.UtcNow - started).TotalSeconds; k.Text = text;
+        lock (gate) events.Add(k);
+        Fire();
+    }
+
+    public static List<Mark> Marks() { lock (gate) return new List<Mark>(events); }
+
+    public static bool Group { get; private set; }          // разом із дочірніми процесами
+    public static int Members { get { ProbeGroup p = probe; return p != null ? p.Count : 0; } }
+
+    public static string Start(int pid, string name, string path, int intervalMs, string logPath) { return Start(pid, name, path, intervalMs, logPath, false); }
+
+    public static string Start(int pid, string name, string path, int intervalMs, string logPath, bool group)
     {
         Stop(null);
-        ProcProbe.State s = ProcProbe.Open(pid);
+        ProbeGroup s = ProbeGroup.Open(pid, group);
         if (s == null) return L.T("Процес не відкривається: він уже завершився або захищений.");
         try
         {
@@ -250,17 +382,19 @@ static class ProcRecorder
                 L.T("Читання, КБ/с"), L.T("Запис, КБ/с"), L.T("Дескриптори"), "GDI", "USER", L.T("Відеокарта, %"), L.T("Відеопам'ять, МБ") }));
             log.Flush();
         }
-        catch (Exception ex) { ProcProbe.Close(s); log = null; return L.F("Не вдалося створити журнал: {0}", ex.Message); }
+        catch (Exception ex) { s.Close(); log = null; return L.F("Не вдалося створити журнал: {0}", ex.Message); }
         lock (gate) samples.Clear();
         probe = s;
         Pid = pid; ProcName = name ?? ""; ProcPath = path ?? ""; LogPath = logPath; Note = "";
         IntervalMs = Math.Max(200, intervalMs);
         FromFile = false;
+        Group = group;
+        lock (gate) events.Clear();
         started = DateTime.UtcNow;
         Recording = true;
-        ProcProbe.Take(probe, new ProcSample());          // відлік для швидкостей
+        probe.Take(new ProcSample());                   // відлік для швидкостей
         timer = new Timer(Tick, null, IntervalMs, IntervalMs);
-        SbLog.W(SbLog.Panel, "аналіз процесу: запис " + name + " (" + pid + ") кожні " + IntervalMs + " мс у " + logPath);
+        SbLog.W(SbLog.Panel, "аналіз процесу: запис " + name + " (" + pid + (group ? ", з дочірніми: " + s.Count : "") + ") кожні " + IntervalMs + " мс у " + logPath);
         PruneSoon(Path.GetDirectoryName(logPath), LogDir);
         Fire();
         return "";
@@ -274,9 +408,9 @@ static class ProcRecorder
         try
         {
             if (!Recording || probe == null) return;
-            if (!ProcProbe.Alive(probe)) { Stop(L.T("Процес завершився.")); return; }
+            if (!probe.Alive) { Stop(Group ? L.T("Усі процеси групи завершились.") : L.T("Процес завершився.")); return; }
             ProcSample s = new ProcSample();
-            if (!ProcProbe.Take(probe, s)) return;
+            if (!probe.Take(s)) return;
             s.T = DateTime.Now;
             s.Sec = (DateTime.UtcNow - started).TotalSeconds;
             int n;
@@ -322,7 +456,7 @@ static class ProcRecorder
         if (t != null) t.Dispose();
         bool was = Recording;
         Recording = false;
-        ProcProbe.Close(probe);
+        if (probe != null) probe.Close();
         probe = null;
         StreamWriter w = log;
         log = null;
@@ -339,8 +473,9 @@ static class ProcRecorder
     public static void Clear()
     {
         if (Recording) return;
-        lock (gate) { samples.Clear(); samples.TrimExcess(); }
+        lock (gate) { samples.Clear(); samples.TrimExcess(); events.Clear(); }
         FromFile = false;
+        Group = false;
         Pid = 0; ProcName = ""; ProcPath = ""; LogPath = ""; Note = "";
         Fire();
     }
@@ -385,11 +520,19 @@ static class ProcRecorder
             if (ProcPath.Length > 0) b.AppendLine(ProcPath);
             if (l.Count > 0)
                 b.AppendLine(L.F("Запис: {0} - {1}, замірів: {2}, інтервал: {3} мс", l[0].T.ToString("yyyy-MM-dd HH:mm:ss"), l[l.Count - 1].T.ToString("HH:mm:ss"), l.Count, IntervalMs));
+            if (Group) b.AppendLine(L.T("Разом із дочірніми процесами (сума показників)"));
             if (Note.Length > 0) b.AppendLine(Note);
             b.AppendLine();
             foreach (int i in Order)
                 b.AppendLine(Name(i) + ": " + L.F("мін {0}, макс {1} (о {2}), середнє {3}, 95 % часу - не більше {4}",
                     Fmt(i, st[i].Min), Fmt(i, st[i].Max), st[i].MaxAt.ToString("HH:mm:ss"), Fmt(i, st[i].Avg), Fmt(i, st[i].P95)));
+            List<Mark> ev = Marks();
+            if (ev.Count > 0)
+            {
+                b.AppendLine();
+                b.AppendLine(L.T("Події під час запису:"));
+                foreach (Mark k in ev) b.AppendLine(k.T.ToString("HH:mm:ss") + "  " + k.Text);
+            }
             File.WriteAllText(Path.ChangeExtension(LogPath, ".txt"), b.ToString(), new UTF8Encoding(true));
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
@@ -432,8 +575,39 @@ static class ProcRecorder
         ProcName = Path.GetFileNameWithoutExtension(file);
         ProcPath = ""; Pid = 0; Note = "";
         IntervalMs = l.Count > 1 ? (int)Math.Round((l[l.Count - 1].Sec - l[0].Sec) * 1000 / (l.Count - 1)) : 1000;
+        LoadSummary(file, l);
         Fire();
         return "";
+    }
+
+    // з підсумку (.txt поруч) - чи це група процесів і позначки подій
+    static void LoadSummary(string csv, List<ProcSample> l)
+    {
+        Group = false;
+        List<Mark> ev = new List<Mark>();
+        try
+        {
+            string txt = Path.ChangeExtension(csv, ".txt");
+            if (File.Exists(txt))
+            {
+                bool inEv = false;
+                foreach (string line in File.ReadAllLines(txt, Encoding.UTF8))
+                {
+                    if (line == L.T("Разом із дочірніми процесами (сума показників)")) Group = true;
+                    if (line == L.T("Події під час запису:")) { inEv = true; continue; }
+                    TimeSpan ts;
+                    if (!inEv || line.Length < 10 || !TimeSpan.TryParseExact(line.Substring(0, 8), "hh\\:mm\\:ss", CultureInfo.InvariantCulture, out ts)) continue;
+                    Mark k = new Mark();
+                    k.T = l[0].T.Date + ts;
+                    if (k.T < l[0].T.AddSeconds(-1)) k.T = k.T.AddDays(1);          // запис через північ
+                    k.Sec = l[0].Sec + (k.T - l[0].T).TotalSeconds;
+                    k.Text = line.Substring(8).Trim();
+                    ev.Add(k);
+                }
+            }
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        lock (gate) { events.Clear(); events.AddRange(ev); }
     }
 
     // ---------- журнали в теці: перелік, видалення, прибирання старих ----------

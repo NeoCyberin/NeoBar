@@ -23,7 +23,7 @@ sealed partial class PerfWindow
     DateTime anLast;
     int anPid, anInterval = 1000;
     string anName = "", anPath = "", anLog = "", anMsg = "";
-    bool anMsgBad;
+    bool anMsgBad, anGroup;
     List<ProcSample> anData = new List<ProcSample>();
     ProcRecorder.Stat[] anStats;
     int anStatsN = -1;
@@ -115,9 +115,12 @@ sealed partial class PerfWindow
     protected override void OnMouseMove(MouseEventArgs e)
     {
         bool was = anPlot.Contains(anMouse);
+        Point old = anMouse;
         anMouse = e.Location;
         base.OnMouseMove(e);
         if (Tab == TabAnalysis && (was || anPlot.Contains(anMouse))) Invalidate(anPlot.Width > 0 ? Rectangle.Inflate(anPlot, Px(120), Px(40)) : ClientRectangle);
+        if (Tab == TabHistory)
+            foreach (Rectangle hp in hsPlots) if (hp.Contains(anMouse) || hp.Contains(old)) { Invalidate(); break; }
     }
 
     protected override void OnMouseLeave(EventArgs e)
@@ -149,7 +152,7 @@ sealed partial class PerfWindow
 
     void StartRec()
     {
-        string e = ProcRecorder.Start(anPid, anName, anPath, anInterval, anLog);
+        string e = ProcRecorder.Start(anPid, anName, anPath, anInterval, anLog, anGroup);
         if (e.Length > 0) { anMsg = e; anMsgBad = true; Invalidate(); return; }
         anSetup = false;
         anHead = -1;
@@ -258,6 +261,7 @@ sealed partial class PerfWindow
         else
         {
             title = ProcRecorder.FromFile ? ProcRecorder.ProcName : L.F("{0}  ·  PID {1}", ProcRecorder.ProcName, ProcRecorder.Pid);
+            if (ProcRecorder.Group) title += "  ·  " + (rec ? L.F("з дочірніми ({0})", ProcRecorder.Members) : L.T("з дочірніми"));
             double len = anData.Count > 0 ? anData[anData.Count - 1].Sec : 0;
             sub = (rec ? L.T("Запис") : (ProcRecorder.FromFile ? L.T("З файлу") : L.T("Зупинено"))) + "  ·  " + Dur(len) + "  ·  " +
                   L.F("замірів: {0}", anData.Count) + (ProcRecorder.Note.Length > 0 && !rec ? "  ·  " + ProcRecorder.Note : "") +
@@ -395,6 +399,7 @@ sealed partial class PerfWindow
             using (Pen dp = new Pen(Util.Blend(P.Card, P.Fg, 0.4f), 1f)) { dp.DashStyle = DashStyle.Dash; g.DrawLine(dp, pl.X, ya, pl.Right, ya); }
         }
         if (anStats != null && anStats.Length > m) MarkExtremes(g, pl, m, mx, t0, span, anStats[m]);
+        PaintMarks(g, pl, t0, span);
         // програвач: позиція
         int hi0 = HeadIndex;
         if (hi0 >= 0)
@@ -458,6 +463,20 @@ sealed partial class PerfWindow
         int mw = TextRenderer.MeasureText(m, FS).Width;
         TxtL(g, m, FS, new Rectangle(dd.Right + Px(8), pr.Y, mw + Px(4), pr.Height), P.Sub);
         return dd.Right + Px(8) + mw + Px(12);
+    }
+
+    // критичні події під час запису (перегрів, нестача пам'яті) - червоні риски з підказкою
+    void PaintMarks(Graphics g, Rectangle pl, double t0, double span)
+    {
+        foreach (ProcRecorder.Mark k in ProcRecorder.Marks())
+        {
+            if (k.Sec < t0 || k.Sec > t0 + span) continue;
+            float x = pl.X + (float)((k.Sec - t0) / span * pl.Width);
+            using (Pen p = new Pen(Color.FromArgb(200, P.Bad), Math.Max(1f, Px(1.5f)))) { p.DashStyle = DashStyle.Dash; g.DrawLine(p, x, pl.Y, x, pl.Bottom); }
+            PointF[] tri = { new PointF(x - Px(6), pl.Y), new PointF(x + Px(6), pl.Y), new PointF(x, pl.Y + Px(8)) };
+            using (SolidBrush b = new SolidBrush(P.Bad)) g.FillPolygon(b, tri);
+            Tip(new Rectangle((int)x - Px(8), pl.Y, Px(16), Px(14)), k.T.ToString("HH:mm:ss") + "  " + k.Text);
+        }
     }
 
     int SampleAt(double t)
@@ -605,7 +624,7 @@ sealed partial class PerfWindow
     {
         using (SolidBrush dim = new SolidBrush(Color.FromArgb(150, P.Bg))) g.FillRectangle(dim, r);
         Hot(r, delegate { });                       // під вікном нічого не натискається
-        int w = Px(500), h = Px(316);
+        int w = Px(500), h = Px(356);
         Rectangle c = new Rectangle(r.X + (r.Width - w) / 2, r.Y + (r.Height - h) / 2, w, h);
         Card(g, c, Util.Blend(P.Bg, P.Card, 0.6f));
         using (Pen ep = new Pen(Util.Blend(P.Card, P.Acc, 0.6f), Math.Max(1f, Px(1))))
@@ -627,6 +646,10 @@ sealed partial class PerfWindow
             Chip(g, new Rectangle(x, y, cw, Px(28)), t, anInterval == iv, delegate { anInterval = v0; Invalidate(); });
             x += cw + Px(6);
         }
+        y += Px(38);
+        Rectangle gr0 = new Rectangle(c.X + pad, y, c.Width - pad * 2, Px(28));
+        Switch(g, gr0, L.T("Разом із дочірніми процесами"), anGroup, delegate { anGroup = !anGroup; Invalidate(); });
+        Tip(gr0, L.T("Сума показників процесу й усіх, які він запустив (вкладки браузера, лаунчер і гра). Нові дочірні додаються самі"));
         y += Px(40);
         TxtL(g, L.T("Журнал (усі заміри, CSV) і підсумок (.txt) поруч:"), F, new Rectangle(c.X + pad, y, c.Width - pad * 2, Px(22)), P.Fg);
         y += Px(24);

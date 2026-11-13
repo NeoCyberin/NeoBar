@@ -10767,3 +10767,219 @@
 
 < перегляд запису
 > Ansicht der Aufzeichnung
+
+< Сума показників процесу й усіх, які він запустив (вкладки браузера, лаунчер і гра). Нові дочірні додаються самі
+> Summe des Prozesses und aller von ihm gestarteten (Browser-Tabs, Launcher und Spiel). Neue Unterprozesse kommen automatisch hinzu
+
+< Температури й навантаження за добу
+> Temperaturen und Last über den Tag
+
+< Процесор: навантаження в середньому {0}, температура в середньому {1}, найвища {2}
+> CPU: Last im Mittel {0}, Temperatur im Mittel {1}, höchste {2}
+
+< Зайнято {0} % пам'яті. Найбільше займають: {1}.
+> {0} % des Speichers belegt. Am meisten belegen: {1}.
+
+< Події під час запису:
+> Ereignisse während der Aufzeichnung:
+
+< Щохвилини температури й навантаження. Видно в Моніторі системи → «Історія»; перевірка системи пояснює нею збої
+> Temperaturen und Last jede Minute. Zu sehen unter Systemmonitor → „Verlauf“; die Systemprüfung erklärt damit Ausfälle
+
+<  Відеокарта тоді була дуже гаряча - найімовірніше, перегрів: перевірте вентилятори й пил, знизьте розгін.
+>  Die Grafikkarte war damals sehr heiß - wahrscheinlich Überhitzung: Lüfter und Staub prüfen, Übertaktung senken.
+
+< Температура відеокарти {0} °C (межа {1} °C).
+> Grafikkartentemperatur {0} °C (Grenze {1} °C).
+
+< Сповіщень ще не було.
+> Noch keine Warnungen.
+
+< Щохвилини, від {0}. Найвища температура й середнє навантаження за хвилину; розриви - NeoBar не працював.
+> Jede Minute, seit {0}. Höchste Temperatur und mittlere Last pro Minute; Lücken - NeoBar lief nicht.
+
+< відеопам'ять {0} %
+> Videospeicher {0} %
+
+< Температура процесора {0} °C (межа {1} °C).
+> CPU-Temperatur {0} °C (Grenze {1} °C).
+
+< Температури
+> Temperaturen
+
+< відеокарта
+> Grafikkarte
+
+< Події під час гри:
+> Ereignisse während des Spiels:
+
+< Навантаження
+> Last
+
+< Усього: {0}. Останні: 
+> Insgesamt: {0}. Zuletzt: 
+
+< Відеокарта перегрівається
+> Grafikkarte überhitzt
+
+< °C; для більшості процесорів критично - 95-100
+> °C; kritisch für die meisten CPUs: 95-100
+
+< пам'ять {0} %
+> Speicher {0} %
+
+< % зайнятої пам'яті відеокарти
+> % belegter Grafikkartenspeicher
+
+< Межа температури процесора
+> CPU-Temperaturgrenze
+
+< Відеопам'ять майже вичерпана
+> Videospeicher fast voll
+
+< FPS, температури, навантаження й події за гру - сповіщенням і файлом у «Документи → NeoBar → Ігри» (для ігор понад 2 хв)
+> FPS, Temperaturen, Last und Ereignisse des Spiels - als Benachrichtigung und Datei in Dokumente → NeoBar → Spiele (für Spiele über 2 Min.)
+
+< Межа пам'яті одного процесу
+> Speichergrenze für einen Prozess
+
+< FPS: не рахувався (увімкніть оверлей для цієї гри)
+> FPS: nicht gezählt (Overlay für dieses Spiel einschalten)
+
+< Windows:
+> Windows:
+
+< Windows: відеодрайвер завис і перезапустився
+> Windows: Grafiktreiber hing und wurde neu gestartet
+
+< Звіт після гри: {0}
+> Bericht nach dem Spiel: {0}
+
+< Разом із дочірніми процесами (сума показників)
+> Zusammen mit Unterprozessen (Summe der Werte)
+
+< Windows: раптове вимкнення або перезавантаження
+> Windows: plötzliches Ausschalten oder Neustart
+
+< , навантаження {0} %
+> , Last {0} %
+
+< {0} (PID {1}) займає {2} оперативної пам'яті (межа {3}). Можливо, у програмі витік пам'яті.
+> {0} (PID {1}) belegt {2} Arbeitsspeicher (Grenze {3}). Möglicherweise hat das Programm ein Speicherleck.
+
+< Нагляд за системою
+> Systemüberwachung
+
+< Windows: бракувало пам'яті
+> Windows: Speicher knapp
+
+< ГБ оперативної пам'яті; 0 - половина всієї пам'яті
+> GB Arbeitsspeicher; 0 - die Hälfte des gesamten Speichers
+
+< Історія за добу
+> Tagesverlauf
+
+< Звіт після гри
+> Bericht nach dem Spiel
+
+< Сповіщень під час гри: {0}.
+> Warnungen während des Spiels: {0}.
+
+<  Температура відеокарти тоді була в нормі - причина, найімовірніше, у драйвері чи розгоні, а не в перегріві.
+>  Die Grafikkartentemperatur war damals normal - Ursache ist eher der Treiber oder die Übertaktung, nicht Überhitzung.
+
+< з дочірніми ({0})
+> mit Unterprozessen ({0})
+
+< Клік - повний звіт.
+> Klick - vollständiger Bericht.
+
+<  Перед раптовим вимкненням навантаження було на межі - можливо, блоку живлення бракує потужності.
+>  Vor dem plötzlichen Ausschalten war die Last am Limit - vielleicht ist das Netzteil zu schwach.
+
+< Перегрів, вичерпана пам'ять чи відеопам'ять, процес, що з'їв забагато пам'яті. Умова має триматися ~15 с; кожне сповіщення записується в журнал і позначається в записі аналізу процесу
+> Überhitzung, erschöpfter Speicher oder Videospeicher, ein Prozess mit zu viel Speicher. Die Bedingung muss ~15 s anhalten; jede Warnung wird protokolliert und in der Prozessanalyse markiert
+
+< Журнал сповіщень
+> Warnprotokoll
+
+< Пам'ять: найбільше {0}; відеопам'ять: найбільше {1}
+> Speicher: höchstens {0}; Videospeicher: höchstens {1}
+
+< Процесор перегрівається
+> CPU überhitzt
+
+<  Увімкніть «Історію за добу» (Налаштування → Панель), щоб наступного разу було видно температури в ту хвилину.
+>  Schalten Sie den „Tagesverlauf“ ein (Einstellungen → Leiste), um beim nächsten Mal die Temperaturen in dieser Minute zu sehen.
+
+< перед цим 
+> davor 
+
+< Усі критичні сповіщення з часом
+> Alle kritischen Warnungen mit Uhrzeit
+
+< Разом із дочірніми процесами
+> Zusammen mit Unterprozessen
+
+< Процес займає забагато пам'яті
+> Ein Prozess belegt zu viel Speicher
+
+< Межа відеопам'яті
+> Videospeichergrenze
+
+< {0} - {1}, тривалість {2}
+> {0} - {1}, Dauer {2}
+
+< з дочірніми
+> mit Unterprozessen
+
+<  Відеопам'ять тоді була майже вся зайнята - гра чи програма вимагала більше, ніж є; знизьте якість текстур.
+>  Der Videospeicher war damals fast voll - Spiel oder Programm brauchten mehr als vorhanden; Texturqualität senken.
+
+< Відеокарта: навантаження в середньому {0}, температура в середньому {1}, найвища {2}
+> GPU: Last im Mittel {0}, Temperatur im Mittel {1}, höchste {2}
+
+< Усі процеси групи завершились.
+> Alle Prozesse der Gruppe wurden beendet.
+
+< °C; для більшості відеокарт критично - 85-95
+> °C; kritisch für die meisten Grafikkarten: 85-95
+
+<  Перед раптовим вимкненням було дуже гаряче - комп'ютер міг вимкнутись від перегріву.
+>  Vor dem plötzlichen Ausschalten war es sehr heiß - der Computer hat sich womöglich wegen Überhitzung abgeschaltet.
+
+< о {0}: 
+> um {0}: 
+
+< Гра: {0}.
+> Spiel: {0}.
+
+< Зайнято {0} % відеопам'яті ({1} з {2} ГБ). Гра чи програма може почати гальмувати або впасти.
+> {0} % des Videospeichers belegt ({1} von {2} GB). Spiel oder Programm können ruckeln oder abstürzen.
+
+< Історію вимкнено: Налаштування → Панель → «Нагляд за системою».
+> Verlauf ist aus: Einstellungen → Leiste → „Systemüberwachung“.
+
+< Критичні сповіщення за добу
+> Kritische Warnungen des Tages
+
+< Межа температури відеокарти
+> Grafikkarten-Temperaturgrenze
+
+< Збираю дані: перша точка з'явиться за хвилину. Історія зберігається, поки NeoBar працює.
+> Daten werden gesammelt: der erste Punkt erscheint in einer Minute. Der Verlauf wird aufgezeichnet, solange NeoBar läuft.
+
+< Оперативна пам'ять майже вичерпана
+> Arbeitsspeicher fast voll
+
+< FPS: середній {0}, 1 % low {1}, найнижчий {2} (о {3})
+> FPS: Mittel {0}, 1 % Low {1}, niedrigster {2} (um {3})
+
+< Критичні сповіщення
+> Kritische Warnungen
+
+< процесор
+> CPU
+
+< Найвища температура: процесор {0}, відеокарта {1}.
+> Höchste Temperatur: CPU {0}, GPU {1}.

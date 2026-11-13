@@ -33,8 +33,8 @@ sealed partial class PerfWindow : SbWindow
 
     public PerfWindow(NeoBar bar, int tab) : base(bar, L.T("Монітор системи"), 880, 740)
     { Glyph = "\uE9D9";
-        Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики"), L.T("Завдання"), L.T("Аналіз") };
-        Tab = Math.Max(0, Math.Min(3, tab));
+        Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики"), L.T("Завдання"), L.T("Аналіз"), L.T("Історія") };
+        Tab = Math.Max(0, Math.Min(4, tab));
         Sensors.Use("perfwin", 2);
         Sensors.Updated += OnData;
         OnTab();
@@ -42,7 +42,7 @@ sealed partial class PerfWindow : SbWindow
 
     void OnData() { if (!IsDisposed) Invalidate(); }
 
-    public void SetTab(int t) { Tab = Math.Max(0, Math.Min(3, t)); OnTab(); Invalidate(); }
+    public void SetTab(int t) { Tab = Math.Max(0, Math.Min(4, t)); OnTab(); Invalidate(); }
 
     protected override void HeadButtons(Graphics g, ref int right)
     {
@@ -67,7 +67,7 @@ sealed partial class PerfWindow : SbWindow
         sugOpen = false;
     }
 
-    protected override void OnTick() { if (Tab == 2) TickProcs(); else if (Tab == TabAnalysis) { if (ProcRecorder.Recording) Invalidate(); } else if (Tab == 1 && (HwInfo.Loading || (DateTime.Now - copiedAt).TotalMilliseconds < 1800)) Invalidate(); }
+    protected override void OnTick() { if (Tab == 2) TickProcs(); else if (Tab == TabAnalysis) { if (ProcRecorder.Recording) Invalidate(); } else if (Tab == TabHistory && DateTime.Now.Second < 2) Invalidate(); else if (Tab == 1 && (HwInfo.Loading || (DateTime.Now - copiedAt).TotalMilliseconds < 1800)) Invalidate(); }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
@@ -81,7 +81,7 @@ sealed partial class PerfWindow : SbWindow
 
     protected override void PaintBody(Graphics g, Rectangle r)
     {
-        if (Tab == TabAnalysis) PaintAnalysis(g, r); else if (Tab == 2) { PaintProcs(g, r); PaintSug(g); } else if (Tab == 1) PaintSpecs(g, r); else PaintMonitor(g, r);
+        if (Tab == TabHistory) PaintHistory(g, r); else if (Tab == TabAnalysis) PaintAnalysis(g, r); else if (Tab == 2) { PaintProcs(g, r); PaintSug(g); } else if (Tab == 1) PaintSpecs(g, r); else PaintMonitor(g, r);
     }
 
     // ---------- характеристики ----------

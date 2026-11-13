@@ -304,8 +304,10 @@ static class Sensors
     static void ApplyInterval()
     {
         if (timer == null) return;
-        int ms = 1000;
-        foreach (KeyValuePair<string, int> kv in intervals) if (users.ContainsKey(kv.Key)) ms = Math.Min(ms, kv.Value);
+        // хто не просив частоти - раз на секунду; якщо всі просили (наприклад, лише фоновий нагляд - раз на 5 с) - найчастіша з них
+        int ms = int.MaxValue;
+        foreach (string u in users.Keys) { int v; ms = Math.Min(ms, intervals.TryGetValue(u, out v) ? v : 1000); }
+        if (ms == int.MaxValue) ms = 1000;
         if (timer.Interval != ms) timer.Interval = ms;
     }
 

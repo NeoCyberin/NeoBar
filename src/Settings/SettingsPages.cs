@@ -216,6 +216,29 @@ sealed partial class SettingsForm
             k.Row(tn[i], td[i], chTray[i], bTrayCol[i]);
         }
 
+        k = p.Card(L.T("Нагляд за системою"));
+        chWAlerts = Tg();
+        SCard kw = k;
+        chWAlerts.CheckedChanged += delegate { kw.Queue(); };         // межі видно лише з увімкненими сповіщеннями
+        k.Row(L.T("Критичні сповіщення"), L.T("Перегрів, вичерпана пам'ять чи відеопам'ять, процес, що з'їв забагато пам'яті. Умова має триматися ~15 с; кожне сповіщення записується в журнал і позначається в записі аналізу процесу"), chWAlerts);
+        nWCpuT = Nm(90, 60, 110);
+        k.Row(L.T("Межа температури процесора"), L.T("°C; для більшості процесорів критично - 95-100"), nWCpuT).When = delegate { return chWAlerts.Checked; };
+        nWGpuT = Nm(90, 60, 110);
+        k.Row(L.T("Межа температури відеокарти"), L.T("°C; для більшості відеокарт критично - 85-95"), nWGpuT).When = delegate { return chWAlerts.Checked; };
+        nWVram = Nm(90, 70, 100);
+        k.Row(L.T("Межа відеопам'яті"), L.T("% зайнятої пам'яті відеокарти"), nWVram).When = delegate { return chWAlerts.Checked; };
+        nWProcGb = Nm(90, 0, 512);
+        k.Row(L.T("Межа пам'яті одного процесу"), L.T("ГБ оперативної пам'яті; 0 - половина всієї пам'яті"), nWProcGb).When = delegate { return chWAlerts.Checked; };
+        k.Row(L.T("Журнал сповіщень"), L.T("Усі критичні сповіщення з часом"), Bt(L.T("Відкрити"), "g:open", 110, delegate
+        {
+            if (!File.Exists(Watch.AlertLog)) { SbDialog.Show(owner, this, L.T("Журнал сповіщень"), L.T("Сповіщень ще не було."), L.T("Гаразд")); return; }
+            try { using (Process.Start("notepad.exe", "\"" + Watch.AlertLog + "\"")) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        })).When = delegate { return chWAlerts.Checked; };
+        chWHistory = Tg();
+        k.Row(L.T("Історія за добу"), L.T("Щохвилини температури й навантаження. Видно в Моніторі системи → «Історія»; перевірка системи пояснює нею збої"), chWHistory);
+        chWReport = Tg();
+        k.Row(L.T("Звіт після гри"), L.T("FPS, температури, навантаження й події за гру - сповіщенням і файлом у «Документи → NeoBar → Ігри» (для ігор понад 2 хв)"), chWReport);
+
         k = p.Card(L.T("Запуск"));
         chAuto = Tg();
         k.Row(L.T("Автозапуск разом з Windows"), L.T("NeoBar заходить в останній профіль (якщо в нього є PIN - спитає його)"), chAuto);

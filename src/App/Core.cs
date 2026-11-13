@@ -108,7 +108,10 @@ sealed class Cfg
     public int HoverFx = 1;            // 0 нічого, 1 збільшення, 2 підйом, 3 свічення, 4 збільшення+свічення
     public bool Anim = true;
     public string LogKeep = "d30";      // скільки зберігати журнали (усі): "all", "d<днів>", "n<останніх запусків/записів>"
-    public bool DeskNoteFont = true;   // віджети на робочому столі: великі написи - шрифтом нотаток (теми)
+    public bool DeskNoteFont = true;
+    // фоновий нагляд (Watch): критичні сповіщення та їхні межі, історія за добу, звіт після гри
+    public bool WAlerts = true, WHistory = true, WGameReport = true;
+    public int WCpuT = 95, WGpuT = 90, WProcGb, WVramPct = 95;   // віджети на робочому столі: великі написи - шрифтом нотаток (теми)
     public bool SecWatch = true;      // «Безпека»: стежити у фоні (значок у треї; не під час гри)
     public bool SecUsed;              // віджет «Безпека» хоч раз був на панелі: тоді стеження й значок у треї працюють і після його прибирання
     // віджети
@@ -341,6 +344,13 @@ static class Store
             case "fshide": cfg.FsHide = B(val); break;
             case "desknotefont": cfg.DeskNoteFont = B(val); break;
             case "logkeep": cfg.LogKeep = val.Trim().ToLowerInvariant(); break;
+            case "walerts": cfg.WAlerts = B(val); break;
+            case "whistory": cfg.WHistory = B(val); break;
+            case "wgamereport": cfg.WGameReport = B(val); break;
+            case "wcput": if (int.TryParse(val, out n)) cfg.WCpuT = Math.Max(60, Math.Min(110, n)); break;
+            case "wgput": if (int.TryParse(val, out n)) cfg.WGpuT = Math.Max(60, Math.Min(110, n)); break;
+            case "wprocgb": if (int.TryParse(val, out n)) cfg.WProcGb = Math.Max(0, Math.Min(512, n)); break;
+            case "wvrampct": if (int.TryParse(val, out n)) cfg.WVramPct = Math.Max(70, Math.Min(100, n)); break;
             case "updcheck": cfg.UpdCheck = B(val); break;
             case "hotkeys": cfg.Hotkeys = B(val); break;
             case "searchsuggest": cfg.SearchSuggest = B(val); break;
@@ -526,6 +536,13 @@ static class Store
         sb.AppendLine("@fshide " + Yn(c.FsHide));
         sb.AppendLine("@desknotefont " + Yn(c.DeskNoteFont));
         sb.AppendLine("@logkeep " + c.LogKeep);
+        sb.AppendLine("@walerts " + Yn(c.WAlerts));
+        sb.AppendLine("@whistory " + Yn(c.WHistory));
+        sb.AppendLine("@wgamereport " + Yn(c.WGameReport));
+        sb.AppendLine("@wcput " + c.WCpuT);
+        sb.AppendLine("@wgput " + c.WGpuT);
+        sb.AppendLine("@wprocgb " + c.WProcGb);
+        sb.AppendLine("@wvrampct " + c.WVramPct);
         sb.AppendLine("@updcheck " + Yn(c.UpdCheck));
         sb.AppendLine("@hotkeys " + Yn(c.Hotkeys));
         sb.AppendLine("@searchsuggest " + Yn(c.SearchSuggest));

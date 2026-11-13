@@ -12,7 +12,7 @@ A side panel for Windows 10/11: launch programs and games, widgets, desktop note
 - **Widgets** - clock, calendar, alarms and timers, weather, system monitor, network and ping, drives, battery, notes, color picker, dice, QR codes; most can also live on the desktop.
 - **Games** - overlay with FPS, frame times and sensors, frame limiter, borderless fullscreen; anti-cheat games are left alone unless you allow it.
 - **Wallpapers** - images, slideshows with transitions, live (video / GIF) wallpapers.
-- **Tools** - junk cleanup, process and service manager, process load analysis with a log, file recovery, disk health (SMART) and formatting, firewall and Wi-Fi, security check, file encryption.
+- **Tools** - junk cleanup, process and service manager, process or process-group load analysis with a log, system watch (critical overheating and memory alerts, daily temperature history, after-game report), file recovery, disk health (SMART) and formatting, firewall and Wi-Fi, security check, file encryption.
 - **Themes** - 9 themes, a custom one, festive themes; interface in 9 languages (Ukrainian, English, German, French, Spanish, Italian, Czech, Polish, Brazilian Portuguese) and your own translations.
 
 ## Screenshots

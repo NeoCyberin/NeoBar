@@ -22,6 +22,25 @@ sealed class CheckItem
 
 static class SysCheck
 {
+    // висновок з історії за добу: чи було гаряче / на межі в момент зависання відеодрайвера чи раптового вимкнення
+    static string Explain(SysEvents.Sum ev, string gx, string px)
+    {
+        string r = "";
+        HistPoint g = ev.Gpu > 0 && gx.Length > 0 ? Watch.PointAt(ev.GpuAt) : null;
+        if (g != null)
+        {
+            if (g.GpuT >= Watch.GpuT - 5) r += L.T(" Відеокарта тоді була дуже гаряча - найімовірніше, перегрів: перевірте вентилятори й пил, знизьте розгін.");
+            else if (g.Vram >= 95) r += L.T(" Відеопам'ять тоді була майже вся зайнята - гра чи програма вимагала більше, ніж є; знизьте якість текстур.");
+            else if (!float.IsNaN(g.GpuT)) r += L.T(" Температура відеокарти тоді була в нормі - причина, найімовірніше, у драйвері чи розгоні, а не в перегріві.");
+        }
+        HistPoint p = ev.Power > 0 && px.Length > 0 ? Watch.PointAt(ev.PowerAt.AddMinutes(-1)) : null;
+        if (p != null && (p.CpuT >= Watch.CpuT - 5 || p.GpuT >= Watch.GpuT - 5))
+            r += L.T(" Перед раптовим вимкненням було дуже гаряче - комп'ютер міг вимкнутись від перегріву.");
+        else if (p != null && (p.Cpu >= 90 || p.Gpu >= 95))
+            r += L.T(" Перед раптовим вимкненням навантаження було на межі - можливо, блоку живлення бракує потужності.");
+        return r;
+    }
+
     // швидкі перевірки (без WMI й мережі) знайшли справжню проблему (а не лише «до відома» чи «увага»)?
     public static bool HasProblems(NeoBar bar)
     {
@@ -234,13 +253,26 @@ static class SysCheck
             else
             {
                 List<string> p = new List<string>();
-                if (ev.Gpu > 0) p.Add(L.F("відеодрайвер зависав і перезапускався: {0} (востаннє {1})", ev.Gpu, ev.GpuAt.ToString("g")));
-                if (ev.Mem > 0) p.Add(L.F("бракувало пам'яті: {0} (востаннє {1})", ev.Mem, ev.MemAt.ToString("g")) + (ev.MemTop.Length > 0 ? L.T(" - найбільше займали: ") + ev.MemTop : ""));
-                if (ev.Power > 0) p.Add(L.F("раптове вимкнення або перезавантаження: {0} (востаннє {1})", ev.Power, ev.PowerAt.ToString("g")));
+                // пояснення з історії за добу: що було з температурами й навантаженням у ту хвилину
+                string gx = ev.Gpu > 0 ? Watch.At(ev.GpuAt) : "", mx = ev.Mem > 0 ? Watch.At(ev.MemAt) : "", px = ev.Power > 0 ? Watch.At(ev.PowerAt.AddMinutes(-1)) : "";
+                if (ev.Gpu > 0) p.Add(L.F("відеодрайвер зависав і перезапускався: {0} (востаннє {1})", ev.Gpu, ev.GpuAt.ToString("g")) + (gx.Length > 0 ? " - " + gx : ""));
+                if (ev.Mem > 0) p.Add(L.F("бракувало пам'яті: {0} (востаннє {1})", ev.Mem, ev.MemAt.ToString("g")) + (ev.MemTop.Length > 0 ? L.T(" - найбільше займали: ") + ev.MemTop : "") + (mx.Length > 0 ? " - " + mx : ""));
+                if (ev.Power > 0) p.Add(L.F("раптове вимкнення або перезавантаження: {0} (востаннє {1})", ev.Power, ev.PowerAt.ToString("g")) + (px.Length > 0 ? " - " + L.T("перед цим ") + px : ""));
                 if (ev.Crash > 0) p.Add(L.F("збої NeoBar: {0} (востаннє {1}: {2})", ev.Crash, ev.CrashAt.ToString("g"), ev.CrashWhat));
                 string tip = ev.Gpu > 0 ? L.T(" Зависання відеодрайвера - найчастіше перегрів, розгін або нестабільний драйвер відеокарти; варто оновити або перевстановити драйвер.") : "";
+                tip += Explain(ev, gx, px);
+                if (!Watch.History && (ev.Gpu > 0 || ev.Power > 0)) tip += L.T(" Увімкніть «Історію за добу» (Налаштування → Панель), щоб наступного разу було видно температури в ту хвилину.");
                 l.Add(new CheckItem(L.T("Стабільність системи"), ev.Gpu + ev.Mem + ev.Power > 0 ? 1 : 3, L.F("За {0} днів: ", SysEvents.Days) + string.Join("; ", p.ToArray()) + "." + tip)
-                    .Add(L.T("Журнал подій"), delegate { Run("eventvwr.msc", "/c:System"); }));
+                    .Add(L.T("Журнал подій"), delegate { Run("eventvwr.msc", "/c:System"); })
+                    .Add(L.T("Історія"), delegate { NeoBar nb = ClockData.Bar; if (nb != null) nb.OpenPerf(4); }));
+            }
+            List<HistEvent> al = Watch.Events();
+            if (al.Count > 0)
+            {
+                List<string> last = new List<string>();
+                for (int i = al.Count - 1; i >= 0 && last.Count < 3; i--) last.Add(al[i].T.ToString("HH:mm") + " - " + al[i].Text);
+                l.Add(new CheckItem(L.T("Критичні сповіщення за добу"), 1, L.F("Усього: {0}. Останні: ", al.Count) + string.Join("; ", last.ToArray()))
+                    .Add(L.T("Історія"), delegate { NeoBar nb = ClockData.Bar; if (nb != null) nb.OpenPerf(4); }));
             }
             SelfUse.Snap me = SelfUse.Me();
             int wp = WallEngine.Pid;
