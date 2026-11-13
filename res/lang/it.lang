@@ -631,8 +631,6 @@
 < Віджети й датчики
 > Widget e sensori
 
-< Запуск, профіль, режим закріплення, елементи, шрифти нотаток
-> Avvio, profilo, modalità di aggancio, elementi, caratteri delle note
 
 < Оверлей, ліміт FPS, обгортки старих API, підрахунок кадрів; бібліотека в грі - з наступного запуску гри
 > Overlay, limite FPS, wrapper per vecchie API, conteggio fotogrammi; la libreria nel gioco - dal prossimo avvio del gioco
@@ -7534,8 +7532,6 @@
 < Мова інтерфейсу
 > Lingua dell'interfaccia
 
-< Перекладів, яких бракує у вибраній мові, показуються англійською
-> I testi mancanti nella lingua scelta vengono mostrati in inglese
 
 < Свій переклад
 > Traduzione personale
@@ -7777,8 +7773,6 @@
 < Увімкнений журнал пише у файли до 2 МБ, вимкнений нічого не пише й не сповільнює програму
 > Un log attivo scrive file fino a 2 MB, uno disattivato non scrive nulla e non rallenta il programma
 
-< Записується завжди. Надішліть його разом з описом проблеми  ·  
-> Sempre scritto. Invialo insieme alla descrizione del problema  ·  
 
 < порожньо
 > vuoto
@@ -8020,8 +8014,6 @@
 < Пауза, коли робочий стіл закрито
 > Pausa quando il desktop è coperto
 
-< Гра, повноекранна програма чи розгорнуте вікно
-> Un gioco, un programma a schermo intero o una finestra ingrandita
 
 < Пауза від батареї
 > Pausa con la batteria
@@ -10408,8 +10400,6 @@
 < Заміряти кожні
 > Misura ogni
 
-< Запис на диск
-> Scrittura su disco
 
 < Запис триває, навіть якщо закрити вікно монітора; зупиняється сам, коли процес завершиться.
 > La registrazione continua anche se chiudi la finestra del monitor; si ferma da sola quando il processo termina.
@@ -10459,8 +10449,6 @@
 < Об'єкти USER
 > Oggetti USER
 
-< Пам'ять (робочий набір)
-> Memoria (working set)
 
 < Перезапустити Провідник? Панель завдань і робочий стіл зникнуть на кілька секунд; відкриті програми й вікна працюватимуть далі.
 > Riavviare Esplora risorse? La barra delle applicazioni e il desktop spariranno per qualche secondo; i programmi e le finestre aperti continueranno a funzionare.
@@ -10471,11 +10459,7 @@
 < Почати запис
 > Avvia registrazione
 
-< Приватна пам'ять
-> Memoria privata
 
-< Приватна пам'ять, МБ
-> Memoria privata, MB
 
 < Провідник завершено, але запустити знову не вдалося. Натисніть Ctrl+Shift+Esc → «Запустити нове завдання» → explorer.exe.
 > Esplora risorse è stato chiuso ma non è stato possibile riavviarlo. Premi Ctrl+Maiusc+Esc → Esegui nuova attività → explorer.exe.
@@ -10495,8 +10479,6 @@
 < Пік о
 > Picco alle
 
-< Робочий набір, МБ
-> Working set, MB
 
 < Секунд від початку
 > Secondi dall'inizio
@@ -10525,8 +10507,6 @@
 < ЦП, %
 > CPU, %
 
-< Читання з диска
-> Lettura da disco
 
 < Читання, КБ/с
 > Lettura, KB/s
@@ -10570,8 +10550,6 @@
 < Не вдалося видалити журнал.
 > Impossibile eliminare il registro.
 
-< Тека журналів аналізу
-> Cartella dei registri di analisi
 
 < мін
 > min
@@ -10600,11 +10578,7 @@
 < Останні {0}
 > Ultimi {0}
 
-< Усі журнали: пошуку проблем, помилок і аналізу процесів. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу. Давніше видаляється само
-> Tutti i registri: diagnostica, errori e analisi dei processi. «Ultimi N» indica gli ultimi N avvii di NeoBar (avvii del gioco per il registro del gioco) e le ultime N registrazioni di analisi. Il resto viene eliminato da solo
 
-< Записи з вкладки «Аналіз» у Моніторі системи; з іншої теки давні прибираються, коли туди пишеться новий запис
-> Registrazioni della scheda «Analisi» del monitor di sistema; in un'altra cartella le vecchie vengono pulite quando vi si scrive una nuova registrazione
 
 <  Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.
 >  È anormalmente alto: sembra una perdita; riavvia NeoBar e invia il registro degli errori.
@@ -10663,8 +10637,6 @@
 < Пауза під час гри
 > Pausa durante il gioco
 
-< Поки запущена гра з бібліотеки NeoBar - навіть у вікні чи на іншому моніторі. За пів хвилини паузи відеодекодер звільняється повністю
-> Finché è in esecuzione un gioco della libreria di NeoBar, anche in finestra o su un altro monitor. Dopo mezzo minuto di pausa il decoder video viene rilasciato del tutto
 
 <  Повернути: Налаштування → Шпалери → «Застосувати» або перезапуск NeoBar. Причину шукайте в Налаштування → Діагностика → «Стабільність системи».
 >  Per ripristinarlo: Impostazioni → Sfondi → «Applica» o riavvia NeoBar. Cerca la causa in Impostazioni → Diagnostica → «Stabilità del sistema».
@@ -10677,3 +10649,119 @@
 
 <  Слайд-шоу йде засобами Windows, без анімацій.
 >  La presentazione continua tramite Windows, senza animazioni.
+
+< Наскільки процес навантажує відеокарту: найзайнятіша її частина (3D, декодування відео тощо), як у Диспетчері завдань
+> Quanto il processo carica la scheda video: la sua parte più occupata (3D, decodifica video, ecc.), come in Gestione attività
+
+< Діє на всі журнали вище; давніше видаляється само. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу
+> Vale per tutti i registri qui sopra; il resto viene eliminato da solo. «Ultimi N»: gli ultimi N avvii di NeoBar (del gioco per il registro del gioco) e le ultime N registrazioni di analisi
+
+< Виділена
+> Allocata
+
+< Запис завершено
+> Registrazione terminata
+
+
+< Скільки даних за секунду процес читає: файли на дисках, мережа, пристрої
+> Quanti dati al secondo legge il processo: file su disco, rete, dispositivi
+
+< Скільки даних за секунду процес записує: файли на дисках, мережа, пристрої
+> Quanti dati al secondo scrive il processo: file su disco, rete, dispositivi
+
+< Повноекранна програма чи розгорнуте вікно. Якщо пауза довша за пів хвилини, відео звільняє відеокарту, а на екрані лишається останній кадр
+> Programma a schermo intero o finestra ingrandita. Se la pausa supera mezzo minuto, il video libera la scheda video e resta l'ultimo fotogramma
+
+< Зберігання журналів
+> Conservazione dei registri
+
+< Запис даних
+> Scrittura dati
+
+< Читання даних
+> Lettura dati
+
+< НАЖИВО
+> DAL VIVO
+
+< Об'єкти малювання: шрифти, пера, зображення. Windows дозволяє до 10 000 на процес - далі програма перестає малюватись
+> Oggetti di disegno: caratteri, penne, immagini. Windows ne consente fino a 10.000 per processo, poi il programma smette di disegnarsi
+
+< Виділена пам'ять, МБ
+> Memoria allocata, MB
+
+< Назви елементів і груп на панелі
+> Nomi di elementi e gruppi del pannello
+
+< Відеокарта
+> Scheda video
+
+< Перегляд запису - не наживо
+> Riproduzione della registrazione: non dal vivo
+
+< Збережений журнал
+> Registro salvato
+
+< Виділена пам'ять
+> Memoria allocata
+
+< Скільки пам'яті процес замовив лише для себе - разом із тим, що Windows винесла у файл підкачки. Якщо весь час росте й не спадає - у програмі витік пам'яті
+> Quanta memoria il processo ha riservato solo per sé, compreso ciò che Windows ha spostato nel file di paging. Se cresce sempre senza calare, il programma ha una perdita di memoria
+
+< Відеопам'ять, МБ
+> Memoria video, MB
+
+< Вікна, меню, курсори. Windows дозволяє до 10 000 на процес
+> Finestre, menu, cursori. Windows ne consente fino a 10.000 per processo
+
+
+< Оперативна пам'ять, МБ
+> Memoria RAM, MB
+
+< Поки запущена гра з бібліотеки NeoBar - навіть згорнута, у вікні чи на іншому моніторі
+> Finché è in esecuzione un gioco della libreria di NeoBar, anche ridotto a icona, in finestra o su un altro monitor
+
+< Записи аналізу процесів
+> Registrazioni dell'analisi dei processi
+
+< Шрифти
+> Caratteri
+
+< Відкриті файли, ключі реєстру, потоки й інші об'єкти Windows. Якщо весь час росте - програма їх не закриває (витік)
+> File aperti, chiavi di registro, thread e altri oggetti di Windows. Se cresce sempre, il programma non li chiude (perdita)
+
+< Скільки пам'яті відеокарти займає процес (текстури, кадри відео)
+> Quanta memoria della scheda video usa il processo (texture, fotogrammi video)
+
+< Скільки оперативної пам'яті процес займає просто зараз. Windows може забрати частину, коли пам'яті бракує, тож число коливається
+> Quanta RAM occupa il processo in questo momento. Windows può riprenderne una parte quando la memoria scarseggia, quindi il numero oscilla
+
+< Яку частку всього процесора (усіх ядер) займає процес
+> Quale quota dell'intero processore (tutti i core) usa il processo
+
+< Відеокарта, %
+> Scheda video, %
+
+< Журнал помилок і записи аналізу
+> Registro errori e registrazioni di analisi
+
+< Видалити всі записи аналізу ({0}) з типової теки? Поточний запис не зачіпається.
+> Eliminare tutte le registrazioni di analisi ({0}) dalla cartella predefinita? La registrazione in corso non viene toccata.
+
+< Запуск, профіль, закріплення, елементи, шпалери, перетягування файлів
+> Avvio, profilo, ancoraggio, elementi, sfondi, trascinamento di file
+
+< Записується завжди: збої, зависання панелі й системи. Надішліть його разом з описом проблеми.
+> Scritto sempre: arresti, blocchi del pannello e del sistema. Invialo insieme a una descrizione del problema.
+
+< Тексти, яких бракує у вибраному перекладі, показуються англійською
+> I testi mancanti nella traduzione scelta sono mostrati in inglese
+
+< Зараз: {0}
+> Ora: {0}
+
+< записів: {0}
+> registrazioni: {0}
+
+< Журнали й підсумки з вкладки «Аналіз» у Моніторі системи (типова тека).
+> Registri e riepiloghi della scheda «Analisi» del monitor di sistema (cartella predefinita).

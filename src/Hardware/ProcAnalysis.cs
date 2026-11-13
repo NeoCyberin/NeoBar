@@ -39,6 +39,8 @@ static class ProcProbe
 
     public sealed class State
     {
+        public PdhQuery Gpu;            // лічильники відеокарти цього процесу (Windows 10 1709+); немає - показники 0
+        public string GpuPrefix = "";
         public IntPtr H;
         public long Cpu, Rd, Wr;
         public DateTime At;
@@ -52,10 +54,24 @@ static class ProcProbe
         if (h == IntPtr.Zero) return null;
         State s = new State();
         s.H = h;
+        try
+        {
+            // спершу лише екземпляри цього процесу (pid_N_*); не прийнялось - усі, а потрібні відберемо за назвою
+            PdhQuery q = new PdhQuery();
+            bool a = q.Ok && (q.Add("eng", "\\GPU Engine(pid_" + pid + "_*)\\Utilization Percentage") || q.Add("eng", "\\GPU Engine(*)\\Utilization Percentage"));
+            bool b = q.Ok && (q.Add("mem", "\\GPU Process Memory(pid_" + pid + "_*)\\Dedicated Usage") || q.Add("mem", "\\GPU Process Memory(*)\\Dedicated Usage"));
+            if (a || b) { q.Collect(); s.Gpu = q; s.GpuPrefix = "pid_" + pid + "_"; } else q.Dispose();
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return s;
     }
 
-    public static void Close(State s) { if (s != null && s.H != IntPtr.Zero) { Win.CloseHandle(s.H); s.H = IntPtr.Zero; } }
+    public static void Close(State s)
+    {
+        if (s == null) return;
+        if (s.Gpu != null) { s.Gpu.Dispose(); s.Gpu = null; }
+        if (s.H != IntPtr.Zero) { Win.CloseHandle(s.H); s.H = IntPtr.Zero; }
+    }
 
     public static bool Alive(State s) { return s != null && s.H != IntPtr.Zero && Win.WaitForSingleObject(s.H, 0) != 0; }
 
@@ -80,6 +96,30 @@ static class ProcProbe
         o.V[5] = GetProcessHandleCount(s.H, out hc) ? hc : 0;
         o.V[6] = GetGuiResources(s.H, 0);
         o.V[7] = GetGuiResources(s.H, 1);
+        if (s.Gpu != null)
+        {
+            // відеокарта: найзавантаженіший рушій процесу (3D, відеодекодер, копіювання…) - як у Диспетчері завдань;
+            // відеопам'ять - сума виділеної на всіх адаптерах
+            // рушії одного типу на одній відеокарті (наприклад, кілька 3D) складаються, з типів береться найзайнятіший
+            s.Gpu.Collect();
+            double top = 0, mem = 0;
+            Dictionary<string, double> byType = new Dictionary<string, double>();
+            foreach (KeyValuePair<string, double> kv in s.Gpu.Values("eng"))
+            {
+                if (!kv.Key.StartsWith(s.GpuPrefix, StringComparison.OrdinalIgnoreCase)) continue;
+                int li = kv.Key.IndexOf("_luid_", StringComparison.OrdinalIgnoreCase), ti = kv.Key.IndexOf("_engtype_", StringComparison.OrdinalIgnoreCase);
+                int pi = kv.Key.IndexOf("_phys_", StringComparison.OrdinalIgnoreCase);
+                string type = (li >= 0 && pi > li ? kv.Key.Substring(li, pi - li) : "") + (ti >= 0 ? kv.Key.Substring(ti) : kv.Key);
+                double cur;
+                byType.TryGetValue(type, out cur);
+                byType[type] = cur + kv.Value;
+            }
+            foreach (double v in byType.Values) if (v > top) top = v;
+            foreach (KeyValuePair<string, double> kv in s.Gpu.Values("mem"))
+                if (kv.Key.StartsWith(s.GpuPrefix, StringComparison.OrdinalIgnoreCase)) mem += kv.Value;
+            o.V[8] = Math.Max(0, Math.Min(100, top));
+            o.V[9] = Math.Max(0, mem);
+        }
         s.Cpu = cpu; s.Rd = rd; s.Wr = wr; s.At = now;
         bool first = s.First;
         s.First = false;
@@ -89,17 +129,24 @@ static class ProcProbe
 
 static class ProcRecorder
 {
-    // показники: 0 ЦП %, 1 робочий набір, 2 приватна пам'ять (байти), 3 читання, 4 запис (байт/с), 5 дескриптори, 6 GDI, 7 USER
-    public const int Count = 8;
+    // показники (номер = місце у файлі журналу): 0 ЦП %, 1 оперативна пам'ять, 2 виділена пам'ять (байти), 3 читання,
+    // 4 запис (байт/с), 5 дескриптори, 6 GDI, 7 USER, 8 відеокарта %, 9 відеопам'ять (байти)
+    public const int Count = 10;
+    // порядок показу: процесор, відеокарта і її пам'ять, оперативна пам'ять (зайнята й виділена), диск/мережа, об'єкти Windows
+    public static readonly int[] Order = { 0, 8, 9, 1, 2, 3, 4, 5, 6, 7 };
+    public const int TechFrom = 7;          // з цього місця в Order - технічні показники (дескриптори, GDI, USER)
+
     public static string Name(int i)
     {
         switch (i)
         {
-            case 0: return L.T("ЦП");
-            case 1: return L.T("Пам'ять (робочий набір)");
-            case 2: return L.T("Приватна пам'ять");
-            case 3: return L.T("Читання з диска");
-            case 4: return L.T("Запис на диск");
+            case 0: return L.T("Процесор");
+            case 8: return L.T("Відеокарта");
+            case 1: return L.T("Оперативна пам'ять");
+            case 2: return L.T("Виділена пам'ять");
+            case 9: return L.T("Відеопам'ять");
+            case 3: return L.T("Читання даних");
+            case 4: return L.T("Запис даних");
             case 5: return L.T("Дескриптори");
             case 6: return L.T("Об'єкти GDI");
             default: return L.T("Об'єкти USER");
@@ -110,13 +157,32 @@ static class ProcRecorder
         switch (i)
         {
             case 0: return L.T("ЦП");
-            case 1: return L.T("Пам'ять");
-            case 2: return L.T("Приватна");
+            case 8: return L.T("ГП");
+            case 1: return L.T("ОЗП");
+            case 2: return L.T("Виділена");
+            case 9: return L.T("Відеопам'ять");
             case 3: return L.T("Читання");
             case 4: return L.T("Запис");
             case 5: return L.T("Дескриптори");
             case 6: return "GDI";
             default: return "USER";
+        }
+    }
+    // що означає показник - простими словами
+    public static string Hint(int i)
+    {
+        switch (i)
+        {
+            case 0: return L.T("Яку частку всього процесора (усіх ядер) займає процес");
+            case 8: return L.T("Наскільки процес навантажує відеокарту: найзайнятіша її частина (3D, декодування відео тощо), як у Диспетчері завдань");
+            case 1: return L.T("Скільки оперативної пам'яті процес займає просто зараз. Windows може забрати частину, коли пам'яті бракує, тож число коливається");
+            case 2: return L.T("Скільки пам'яті процес замовив лише для себе - разом із тим, що Windows винесла у файл підкачки. Якщо весь час росте й не спадає - у програмі витік пам'яті");
+            case 9: return L.T("Скільки пам'яті відеокарти займає процес (текстури, кадри відео)");
+            case 3: return L.T("Скільки даних за секунду процес читає: файли на дисках, мережа, пристрої");
+            case 4: return L.T("Скільки даних за секунду процес записує: файли на дисках, мережа, пристрої");
+            case 5: return L.T("Відкриті файли, ключі реєстру, потоки й інші об'єкти Windows. Якщо весь час росте - програма їх не закриває (витік)");
+            case 6: return L.T("Об'єкти малювання: шрифти, пера, зображення. Windows дозволяє до 10 000 на процес - далі програма перестає малюватись");
+            default: return L.T("Вікна, меню, курсори. Windows дозволяє до 10 000 на процес");
         }
     }
 
@@ -125,8 +191,8 @@ static class ProcRecorder
         if (double.IsNaN(v)) return "—";
         switch (i)
         {
-            case 0: return v.ToString(v < 10 ? "0.0" : "0", CultureInfo.CurrentCulture) + " %";
-            case 1: case 2: return Cleaner.Size((long)v);
+            case 0: case 8: return v.ToString(v < 10 ? "0.0" : "0", CultureInfo.CurrentCulture) + " %";
+            case 1: case 2: case 9: return Cleaner.Size((long)v);
             case 3: case 4: return Cleaner.Size((long)v) + L.T("/с");
             default: return ((long)Math.Round(v)).ToString("N0", CultureInfo.CurrentCulture);
         }
@@ -180,8 +246,8 @@ static class ProcRecorder
             log = new StreamWriter(new FileStream(logPath, FileMode.Create, FileAccess.Write, FileShare.Read), new UTF8Encoding(true));
             string sp = Sep;
             log.WriteLine("sep=" + sp);
-            log.WriteLine(string.Join(sp, new string[] { L.T("Час"), L.T("Секунд від початку"), L.T("ЦП, %"), L.T("Робочий набір, МБ"), L.T("Приватна пам'ять, МБ"),
-                L.T("Читання, КБ/с"), L.T("Запис, КБ/с"), L.T("Дескриптори"), "GDI", "USER" }));
+            log.WriteLine(string.Join(sp, new string[] { L.T("Час"), L.T("Секунд від початку"), L.T("ЦП, %"), L.T("Оперативна пам'ять, МБ"), L.T("Виділена пам'ять, МБ"),
+                L.T("Читання, КБ/с"), L.T("Запис, КБ/с"), L.T("Дескриптори"), "GDI", "USER", L.T("Відеокарта, %"), L.T("Відеопам'ять, МБ") }));
             log.Flush();
         }
         catch (Exception ex) { ProcProbe.Close(s); log = null; return L.F("Не вдалося створити журнал: {0}", ex.Message); }
@@ -239,7 +305,9 @@ static class ProcRecorder
         b.Append((s.V[4] / 1024.0).ToString("0.##", c)).Append(sp);
         b.Append(((long)s.V[5]).ToString(c)).Append(sp);
         b.Append(((long)s.V[6]).ToString(c)).Append(sp);
-        b.Append(((long)s.V[7]).ToString(c));
+        b.Append(((long)s.V[7]).ToString(c)).Append(sp);
+        b.Append(s.V[8].ToString("0.##", c)).Append(sp);
+        b.Append((s.V[9] / 1048576.0).ToString("0.##", c));
         lock (gate)
         {
             try { w.WriteLine(b.ToString()); w.Flush(); }
@@ -319,7 +387,7 @@ static class ProcRecorder
                 b.AppendLine(L.F("Запис: {0} - {1}, замірів: {2}, інтервал: {3} мс", l[0].T.ToString("yyyy-MM-dd HH:mm:ss"), l[l.Count - 1].T.ToString("HH:mm:ss"), l.Count, IntervalMs));
             if (Note.Length > 0) b.AppendLine(Note);
             b.AppendLine();
-            for (int i = 0; i < Count; i++)
+            foreach (int i in Order)
                 b.AppendLine(Name(i) + ": " + L.F("мін {0}, макс {1} (о {2}), середнє {3}, 95 % часу - не більше {4}",
                     Fmt(i, st[i].Min), Fmt(i, st[i].Max), st[i].MaxAt.ToString("HH:mm:ss"), Fmt(i, st[i].Avg), Fmt(i, st[i].P95)));
             File.WriteAllText(Path.ChangeExtension(LogPath, ".txt"), b.ToString(), new UTF8Encoding(true));
@@ -352,6 +420,7 @@ static class ProcRecorder
                 s.V[3] = Num(p[5]) * 1024.0;
                 s.V[4] = Num(p[6]) * 1024.0;
                 s.V[5] = Num(p[7]); s.V[6] = Num(p[8]); s.V[7] = Num(p[9]);
+                if (p.Length >= 12) { s.V[8] = Num(p[10]); s.V[9] = Num(p[11]) * 1048576.0; }
                 l.Add(s);
             }
         }
@@ -370,7 +439,7 @@ static class ProcRecorder
     // ---------- журнали в теці: перелік, видалення, прибирання старих ----------
     public static int LogsVer;                  // змінюється, коли журнали видалено (вікно перечитує перелік)
 
-    // лише журнали NeoBar (за вмістом, не за назвою): перший рядок «sep=», другий - 10 заголовків, останні GDI і USER
+    // лише журнали NeoBar (за вмістом, не за назвою): перший рядок «sep=», другий - заголовки, дев'ятий і десятий - GDI і USER
     public static bool IsOurLog(string f)
     {
         try
@@ -381,7 +450,8 @@ static class ProcRecorder
                 if (a == null || b == null || !a.StartsWith("sep=")) return false;
                 string sp = a.Substring(4).Trim();
                 if (sp.Length == 0) return false;
-                return b.EndsWith(sp + "GDI" + sp + "USER", StringComparison.Ordinal) && b.Split(new string[] { sp }, StringSplitOptions.None).Length == 10;
+                string[] h = b.Split(new string[] { sp }, StringSplitOptions.None);
+                return h.Length >= 10 && h[8] == "GDI" && h[9] == "USER";
             }
         }
         catch { return false; }

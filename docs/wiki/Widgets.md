@@ -25,9 +25,24 @@ Most widgets can be put on the desktop (the screen button in the widget's window
 
 ## Process analysis (System monitor → Analysis)
 
-Pick a process in *Tasks* and press **Analysis**. A window in the middle asks how often to sample (0.5-10 s) and where to save the log, then **Start recording**. While recording you see a live graph; afterwards a player: drag along the graph or press play (speed is a slider, ×1 - ×600), and the table shows the value at that moment and the minimum, maximum, average and 95th percentile for CPU, memory (working set and private), disk reads/writes, handles, GDI and USER objects. Every sample is written to a CSV log right away (it opens in Excel), and a summary goes next to it as a .txt file. Recording continues when the monitor window is closed and stops by itself when the process exits. *Open log…* plays back an earlier recording; the ‹ › arrows step through logs in the same folder, the bin deletes the shown log with its summary (to the Windows Recycle Bin), and the cross removes the results from the window (the files stay).
+Pick a process in *Tasks* and press **Analysis**. A window in the middle asks how often to sample (0.5-10 s) and where to save the log, then **Start recording**. While recording you see a live graph; afterwards a player: drag along the graph or press play (speed is a slider, ×1 - ×600), and the table shows the value at that moment and the minimum, maximum, average and 95th percentile for every metric. A badge on the graph tells you what you are looking at: **LIVE** (red outline) - recording is running and the graph moves; **Viewing the recording - not live** (yellow, click to go back live) - you scrubbed back while recording; *Recording finished* or *Saved log*.
 
-Hover the graph to see the exact value and time. Minimum and maximum are marked when the line really changes (a zero minimum is not marked). Old logs are deleted automatically by the common setting **Settings → Diagnostics → Keep logs**.
+Metrics (each has a tooltip explaining it in plain words):
+
+| Metric | Meaning |
+|---|---|
+| **CPU** | share of the whole processor (all cores) used by the process |
+| **GPU** | graphics card load from this process, as in Task Manager |
+| **Video memory** | graphics card memory used by the process |
+| **RAM** | memory the process occupies right now |
+| **Committed** | memory the process reserved just for itself (including the page file); steady growth means a memory leak |
+| **Read / Write** | data per second the process reads and writes (disks, network, devices) |
+| **Handles** | open files, registry keys, threads; steady growth means a leak |
+| **GDI / USER** | drawing objects and windows; Windows allows up to 10,000 per process |
+
+Every sample is written to a CSV log right away (it opens in Excel), and a summary goes next to it as a .txt file. Recording continues when the monitor window is closed and stops by itself when the process exits. *Open log…* plays back an earlier recording; the ‹ › arrows step through logs in the same folder, the bin deletes the shown log with its summary (to the Windows Recycle Bin), and the cross removes the results from the window (the files stay).
+
+Hover the graph to see the exact value and time. Minimum and maximum are marked when the line really changes (a zero minimum is not marked). Old logs are deleted automatically by the common setting **Settings → Diagnostics → Log retention**; the same page has *Open* and *Clear* for all analysis recordings.
 
 ## Location and weather (Settings → Location & weather)
 
