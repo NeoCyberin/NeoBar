@@ -10681,8 +10681,6 @@
 < Читання даних
 > Lettura dati
 
-< НАЖИВО
-> DAL VIVO
 
 < Об'єкти малювання: шрифти, пера, зображення. Windows дозволяє до 10 000 на процес - далі програма перестає малюватись
 > Oggetti di disegno: caratteri, penne, immagini. Windows ne consente fino a 10.000 per processo, poi il programma smette di disegnarsi
@@ -10696,8 +10694,6 @@
 < Відеокарта
 > Scheda video
 
-< Перегляд запису - не наживо
-> Riproduzione della registrazione: non dal vivo
 
 < Збережений журнал
 > Registro salvato
@@ -10765,3 +10761,9 @@
 
 < Журнали й підсумки з вкладки «Аналіз» у Моніторі системи (типова тека).
 > Registri e riepiloghi della scheda «Analisi» del monitor di sistema (cartella predefinita).
+
+< Іде запис - графік рухається разом із ним
+> Registrazione in corso: il grafico la segue
+
+< перегляд запису
+> visualizzazione della registrazione

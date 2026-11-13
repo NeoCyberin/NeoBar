@@ -10681,8 +10681,6 @@
 < Читання даних
 > Čtení dat
 
-< НАЖИВО
-> ŽIVĚ
 
 < Об'єкти малювання: шрифти, пера, зображення. Windows дозволяє до 10 000 на процес - далі програма перестає малюватись
 > Kreslicí objekty: písma, pera, obrázky. Windows povoluje až 10 000 na proces - pak se program přestane vykreslovat
@@ -10696,8 +10694,6 @@
 < Відеокарта
 > Grafická karta
 
-< Перегляд запису - не наживо
-> Prohlížení záznamu - ne živě
 
 < Збережений журнал
 > Uložený záznam
@@ -10765,3 +10761,9 @@
 
 < Журнали й підсумки з вкладки «Аналіз» у Моніторі системи (типова тека).
 > Záznamy a souhrny z karty „Analýza“ v monitoru systému (výchozí složka).
+
+< Іде запис - графік рухається разом із ним
+> Probíhá záznam - graf se pohybuje s ním
+
+< перегляд запису
+> prohlížení záznamu

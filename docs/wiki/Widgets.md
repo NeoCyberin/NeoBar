@@ -25,7 +25,7 @@ Most widgets can be put on the desktop (the screen button in the widget's window
 
 ## Process analysis (System monitor → Analysis)
 
-Pick a process in *Tasks* and press **Analysis**. A window in the middle asks how often to sample (0.5-10 s) and where to save the log, then **Start recording**. While recording you see a live graph; afterwards a player: drag along the graph or press play (speed is a slider, ×1 - ×600), and the table shows the value at that moment and the minimum, maximum, average and 95th percentile for every metric. A badge on the graph tells you what you are looking at: **LIVE** (red outline) - recording is running and the graph moves; **Viewing the recording - not live** (yellow, click to go back live) - you scrubbed back while recording; *Recording finished* or *Saved log*.
+Pick a process in *Tasks* and press **Analysis**. A window in the middle asks how often to sample (0.5-10 s) and where to save the log, then **Start recording**. While recording you see a live graph; afterwards a player: drag along the graph or press play (speed is a slider, ×1 - ×600), and the table shows the value at that moment and the minimum, maximum, average and 95th percentile for every metric. The player row tells you what you are looking at: a red **Live** button with a blinking dot - recording is running and the graph moves; a plain button with a red ring and "viewing the recording" - you scrubbed back (click to go back live); when not recording - *Recording finished* or *Saved log*.
 
 Metrics (each has a tooltip explaining it in plain words):
 

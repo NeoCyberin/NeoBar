@@ -406,7 +406,6 @@ sealed partial class PerfWindow
         }
         TxtL(g, anData[0].T.ToString("HH:mm:ss"), FS, new Rectangle(pl.X, pl.Bottom + Px(2), Px(80), Px(18)), P.Sub);
         TxtR(g, anData[n - 1].T.ToString("HH:mm:ss"), FS, new Rectangle(pl.Right - Px(80), pl.Bottom + Px(2), Px(80), Px(18)), P.Sub);
-        PaintMode(g, gr, pl);
         if (pl.Contains(anMouse) && !anSetup) PaintHover(g, pl, gr, m, mx, t0, span);
         // клік чи перетягування по графіку - перемотка
         DragArea(pl, delegate (Point p)
@@ -419,31 +418,46 @@ sealed partial class PerfWindow
         });
     }
 
-    // що саме зараз на графіку: запис наживо (червона рамка й позначка), перегляд давнішого місця під час запису
-    // (жовта - клік повертає наживо), завершений запис або збережений журнал
-    void PaintMode(Graphics g, Rectangle gr, Rectangle pl)
+    // стан у рядку програвача: кнопка «Наживо» з кружечком (червоний фон і блимання - запис іде й графік рухається;
+    // звичайна - ви переглядаєте давніше місце, клік повертає наживо), поруч - напис, що саме переглядаєте
+    int PaintMode(Graphics g, int x, Rectangle pr, bool rec)
     {
-        bool rec = ProcRecorder.Recording, live = rec && anHead < 0;
-        string t;
-        Color c;
-        if (live) { t = L.T("НАЖИВО"); c = P.Bad; }
-        else if (rec) { t = L.T("Перегляд запису - не наживо"); c = P.Warn; }
-        else if (ProcRecorder.FromFile) { t = L.T("Збережений журнал"); c = P.Sub; }
-        else { t = L.T("Запис завершено"); c = P.Sub; }
+        bool live = rec && anHead < 0;
+        int dot = Px(9);
         if (rec)
-            using (Pen p = new Pen(c, Math.Max(1.5f, Px(2)))) using (GraphicsPath gp = Util.Round(gr, P.Rad)) g.DrawPath(p, gp);
-        int tw = TextRenderer.MeasureText(t, FS).Width;
-        Rectangle b = new Rectangle(pl.X + Px(8), pl.Y + Px(4), tw + Px(30), Px(22));
-        using (SolidBrush bb = new SolidBrush(Util.Blend(P.Bg, c, rec ? 0.25f : 0.12f))) Util.FillRound(g, bb, b, Px(11));
-        // крапка блимає, поки йде запис наживо
-        Color dot = live && DateTime.Now.Second % 2 == 1 ? Util.Blend(P.Card, c, 0.45f) : c;
-        using (SolidBrush db = new SolidBrush(dot)) g.FillEllipse(db, b.X + Px(8), b.Y + Px(7), Px(8), Px(8));
-        TxtL(g, t, FS, new Rectangle(b.X + Px(22), b.Y, tw + Px(8), b.Height), rec ? P.Fg : P.Sub);
-        if (rec && !live)
         {
-            Hot(b, delegate { anHead = -1; StopPlay(); Invalidate(); });
-            Tip(b, L.T("Повернутися до останніх замірів - графік знову рухається разом із записом"));
+            string t = L.T("Наживо");
+            Rectangle b = new Rectangle(x, pr.Y + Px(6), TextRenderer.MeasureText(t, FB).Width + Px(40), Px(28));
+            bool over = Over(b);
+            Color bg = live ? Util.Blend(P.Card, P.Bad, over ? 0.85f : 0.75f) : (over ? Util.Blend(P.Card, P.Fg, 0.12f) : Util.Blend(P.Card, P.Fg, 0.06f));
+            using (SolidBrush bb = new SolidBrush(bg)) Util.FillRound(g, bb, b, b.Height / 2);
+            if (!live) using (Pen bp = new Pen(Util.Blend(P.Card, P.Bad, 0.6f), 1f)) using (GraphicsPath gp = Util.Round(b, b.Height / 2)) g.DrawPath(bp, gp);
+            Rectangle d = new Rectangle(b.X + Px(12), b.Y + (b.Height - dot) / 2, dot, dot);
+            if (live)
+            {
+                // крапка блимає, поки йде запис наживо
+                Color dc = DateTime.Now.Second % 2 == 1 ? Util.Blend(P.Bad, P.Fg, 0.15f) : P.Fg;
+                using (SolidBrush db = new SolidBrush(dc)) g.FillEllipse(db, d);
+            }
+            else using (Pen dp = new Pen(P.Bad, Math.Max(1.5f, Px(2)))) g.DrawEllipse(dp, d);
+            TxtL(g, t, FB, new Rectangle(d.Right + Px(8), b.Y, b.Right - d.Right - Px(8), b.Height), P.Fg);
+            if (!live) Hot(b, delegate { anHead = -1; StopPlay(); Invalidate(); });
+            Tip(b, live ? L.T("Іде запис - графік рухається разом із ним") : L.T("Повернутися до останніх замірів - графік знову рухається разом із записом"));
+            x = b.Right + Px(10);
+            if (!live)
+            {
+                string s = L.T("перегляд запису");
+                TxtL(g, s, FS, new Rectangle(x, pr.Y, TextRenderer.MeasureText(s, FS).Width + Px(4), pr.Height), P.Warn);
+                x += TextRenderer.MeasureText(s, FS).Width + Px(12);
+            }
+            return x;
         }
+        string m = ProcRecorder.FromFile ? L.T("Збережений журнал") : L.T("Запис завершено");
+        Rectangle dd = new Rectangle(x, pr.Y + (pr.Height - dot) / 2, dot, dot);
+        using (SolidBrush db = new SolidBrush(Util.Blend(P.Card, P.Sub, 0.7f))) g.FillEllipse(db, dd);
+        int mw = TextRenderer.MeasureText(m, FS).Width;
+        TxtL(g, m, FS, new Rectangle(dd.Right + Px(8), pr.Y, mw + Px(4), pr.Height), P.Sub);
+        return dd.Right + Px(8) + mw + Px(12);
     }
 
     int SampleAt(double t)
@@ -536,13 +550,7 @@ sealed partial class PerfWindow
         TxtL(g, "×" + anSpeed.ToString("0"), FB, new Rectangle(sl.Right + Px(8), pr.Y, Px(56), pr.Height), P.Fg);
         Tip(new Rectangle(pr.X + Px(46), pr.Y, sl.Right + Px(64) - pr.X - Px(46), pr.Height), L.T("Швидкість відтворення: у скільки разів швидше за реальний час"));
         x = sl.Right + Px(70);
-        if (rec)
-        {
-            Rectangle lv = new Rectangle(x, pr.Y + Px(6), Px(90), Px(28));
-            Chip(g, lv, L.T("Наживо"), anHead < 0, delegate { anHead = -1; StopPlay(); Invalidate(); });
-            Tip(lv, L.T("Повернутися до останніх замірів - графік знову рухається разом із записом"));
-            x += Px(102);
-        }
+        if (n > 0) x = PaintMode(g, x, pr, rec);
         int hi0 = HeadIndex;
         string pos = hi0 >= 0 ? Dur(anData[hi0].Sec) + " / " + Dur(anData[n - 1].Sec) + "   ·   " + anData[hi0].T.ToString("HH:mm:ss") : "—";
         TxtR(g, pos, F, new Rectangle(x, pr.Y, pr.Right - x, pr.Height), P.Fg);
