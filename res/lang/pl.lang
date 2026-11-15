@@ -3890,8 +3890,6 @@
 < route print - таблиця маршрутів
 > route print - tablica routingu
 
-< Запитує адресу (поле вище; для IP береться google.com) у DNS ваших адаптерів і в публічних серверах: видно, хто відповідає й як швидко
-> Odpytuje adres (pole powyżej; dla IP używany jest google.com) w DNS Twoich kart i w serwerach publicznych: pokazuje, kto odpowiada i jak szybko
 
 < Які порти слухає цей ПК і яка програма: що доступне з мережі, а що лише локально
 > Na których portach nasłuchuje ten komputer i jaki program: co jest osiągalne z sieci, a co tylko lokalnie
@@ -4025,26 +4023,14 @@
 < Пристрої, які не відповідають на пінг і ARP, тут не видно; «без пінга» - пристрій є в ARP, але пінг блокує.
 > Urządzenia, które nie odpowiadają ani na ping, ani na ARP, nie są tu widoczne; «brak pingu» - urządzenie jest w ARP, ale blokuje ping.
 
-< Перевірка DNS: 
-> Sprawdzanie DNS: 
 
-<  (у полі IP чи порожньо - беру типовий домен)
->  (pole zawiera IP lub jest puste - używana jest typowa domena)
 
-< Система (з кешем Windows): 
-> System (z pamięcią podręczną Windows): 
 
 < лише IPv6
 > tylko IPv6
 
-< Система (з кешем Windows): адресу не знайдено
-> System (z pamięcią podręczną Windows): nie znaleziono adresu
 
-< DNS адаптера «
-> DNS karty «
 
-<  мс → 
->  ms → 
 
 < У активних адаптерів немає DNS-серверів (або вони не ввімкнені).
 > Aktywne karty nie mają serwerów DNS (lub nie są włączone).
@@ -11331,3 +11317,93 @@
 
 < Читаю перелік пристроїв…
 > Czytam listę urządzeń…
+
+< адаптер «
+> adapter „
+
+< Сервер працює, у середньому 
+> Serwer działa, średnio 
+
+< Ви вже ним користуєтесь.
+> Już go używasz.
+
+< У полі IP DNS-сервера (наприклад, 1.1.1.1) - перевіряє, чи він працює і чи швидший за ваш поточний.\nУ полі ім'я сайту - як його бачать ваші DNS і публічні сервери.\nПоле порожнє - чи працюють ваші DNS-сервери.
+> IP serwera DNS w polu (np. 1.1.1.1) - sprawdza, czy działa i czy jest szybszy od obecnego.\nNazwa strony w polu - jak widzą ją twoje DNS i serwery publiczne.\nPuste pole - czy twoje serwery DNS działają.
+
+< Ваш поточний DNS ({0}, {1}) не повільніший - змінювати не обов'язково.
+> Twój obecny DNS ({0}, {1}) nie jest wolniejszy - zmiana niepotrzebna.
+
+< Публічні DNS-сервери - підставити в поле:
+> Publiczne serwery DNS - wstaw do pola:
+
+< У черзі
+> W kolejce
+
+< Ваші поточні DNS не відповідають - можна перейти на цей сервер на вкладці «Адаптери».
+> Twoje obecne DNS nie odpowiadają - możesz przejść na ten serwer na karcie „Adaptery”.
+
+< Ваші DNS-сервери:
+> Twoje serwery DNS:
+
+< не вдалося завантажити
+> nie udało się pobrać
+
+< Чи відповідає сервер (запити трьох відомих сайтів):
+> Czy serwer odpowiada (trzy znane strony):
+
+< : не відповідає
+> : nie odpowiada
+
+< Адреса з поля
+> Adres z pola
+
+< Windows не знаходить цю адресу
+> Windows nie znajduje tego adresu
+
+< Публічні DNS-сервери - для порівняння:
+> Publiczne serwery DNS - do porównania:
+
+< Встановлення: {0} з {1} · {2}%
+> Instalacja: {0} z {1} · {2}%
+
+< Через які вузли йде трафік до адреси і де з'являється затримка
+> Przez które węzły idzie ruch do adresu i gdzie pojawia się opóźnienie
+
+< Перевірка DNS для імені 
+> Sprawdzanie DNS dla nazwy 
+
+< DNS та IP
+> DNS i IP
+
+< Він швидший за ваш поточний ({0}, {1}) - перейти можна на вкладці «Адаптери».
+> Jest szybszy od obecnego ({0}, {1}) - zmienić można na karcie „Adaptery”.
+
+< Ваші поточні DNS-сервери - для порівняння:
+> Twoje obecne serwery DNS - do porównania:
+
+< Повторити
+> Ponów
+
+< Перевірка DNS-сервера 
+> Sprawdzanie serwera DNS 
+
+< Windows знаходить адресу: 
+> Windows znajduje adres: 
+
+< Встановлення
+> Instalacja
+
+< Сервер не відповідає: за цією адресою немає DNS-сервера, або порт 53 заблоковано.
+> Serwer nie odpowiada: pod tym adresem nie ma serwera DNS albo port 53 jest zablokowany.
+
+< : це він і є
+> : to właśnie on
+
+< Перевірка DNS: чи працюють ваші DNS-сервери (на прикладі 
+> Sprawdzanie DNS: czy twoje serwery DNS działają (na przykładzie 
+
+< Помилка
+> Błąd
+
+< Цей ПК і локальна мережа
+> Ten komputer i sieć lokalna

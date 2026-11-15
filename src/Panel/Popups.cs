@@ -336,19 +336,63 @@ sealed class FlyoutForm : Form
     }
 }
 
-// Список без мерехтіння: подвійна буферизація, без стирання фону
+// Список без мерехтіння: подвійна буферизація, без стирання фону.
+// Системної (світлої) смуги прокрутки немає - тонка смуга в кольорах теми малюється праворуч; коліщатко й перетягування - свої.
 sealed class FastList : ListBox
 {
+    public Color BarColor = Color.Gray, BarHot = Color.Orange;
+    public float Zoom = 1f;
+    int lastTop = -1, dragOff = -1;
+    bool barHot;
+
     public FastList()
     {
         SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
         DoubleBuffered = true;
     }
 
+    protected override CreateParams CreateParams
+    {
+        get { CreateParams cp = base.CreateParams; cp.Style &= ~0x00200000; return cp; }       // без WS_VSCROLL
+    }
+
+    int Dp(int v) { return (int)Math.Round(v * Zoom); }
+    int View { get { return Math.Max(1, ClientSize.Height / Math.Max(1, ItemHeight)); } }
+    bool HasBar { get { return Items.Count > View; } }
+    int BarSpace { get { return HasBar ? Dp(14) : 0; } }
+
+    // рядок без смуги праворуч - і для малювання, і для влучань мишею
+    public new Rectangle GetItemRectangle(int i)
+    {
+        Rectangle r = base.GetItemRectangle(i);
+        r.Width -= BarSpace;
+        return r;
+    }
+
+    Rectangle Track() { return new Rectangle(ClientSize.Width - Dp(9), Dp(3), Dp(5), ClientSize.Height - Dp(6)); }
+
+    Rectangle Thumb()
+    {
+        Rectangle tr = Track();
+        int n = Items.Count, v = View, max = Math.Max(1, n - v);
+        int th = Math.Min(tr.Height, Math.Max(Dp(26), (int)((long)tr.Height * v / Math.Max(1, n))));
+        int ty = tr.Y + (int)((long)(tr.Height - th) * Math.Min(max, TopIndex) / max);
+        return new Rectangle(tr.X, ty, tr.Width, th);
+    }
+
+    void ScrollTo(int top)
+    {
+        top = Math.Max(0, Math.Min(Math.Max(0, Items.Count - View), top));
+        if (top != TopIndex) TopIndex = top;
+        Invalidate();
+    }
+
     protected override void OnPaintBackground(PaintEventArgs e) { }
 
     protected override void OnPaint(PaintEventArgs e)
     {
+        // список зсунувся системною прокруткою (клавіші, виділення) - перемальовуємо весь, щоб смуга не «поїхала» разом із рядками
+        if (TopIndex != lastTop) { lastTop = TopIndex; if (e.ClipRectangle != ClientRectangle) BeginInvoke((Action)Invalidate); }
         using (SolidBrush b = new SolidBrush(BackColor)) e.Graphics.FillRectangle(b, e.ClipRectangle);
         for (int i = TopIndex; i < Items.Count; i++)
         {
@@ -359,12 +403,66 @@ sealed class FastList : ListBox
             if (SelectedIndices.Contains(i)) st |= DrawItemState.Selected;
             OnDrawItem(new DrawItemEventArgs(e.Graphics, Font, r, i, st, ForeColor, BackColor));
         }
+        if (!HasBar) return;
+        System.Drawing.Drawing2D.SmoothingMode sm = e.Graphics.SmoothingMode;
+        e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        Rectangle tr = Track(), th = Thumb();
+        using (SolidBrush b = new SolidBrush(Color.FromArgb(36, BarColor))) Util.FillRound(e.Graphics, b, tr, tr.Width / 2);
+        using (SolidBrush b = new SolidBrush(barHot || dragOff >= 0 ? BarHot : Color.FromArgb(120, BarColor))) Util.FillRound(e.Graphics, b, th, th.Width / 2);
+        e.Graphics.SmoothingMode = sm;
     }
+
+    bool OnBar(Point p) { return HasBar && p.X >= ClientSize.Width - BarSpace; }
+
+    static Point Pt(IntPtr lp) { int v = unchecked((int)(long)lp); return new Point((short)(v & 0xFFFF), (short)((v >> 16) & 0xFFFF)); }
 
     protected override void WndProc(ref Message m)
     {
-        if (m.Msg == 0x14) { m.Result = (IntPtr)1; return; }   // WM_ERASEBKGND
+        switch (m.Msg)
+        {
+            case 0x14: m.Result = (IntPtr)1; return;                                      // WM_ERASEBKGND
+            case 0x20A:                                                                    // WM_MOUSEWHEEL
+                {
+                    int d = (short)((unchecked((int)(long)m.WParam) >> 16) & 0xFFFF);
+                    ScrollTo(TopIndex - Math.Sign(d) * Math.Max(1, Math.Abs(d) / 120) * 3);
+                    m.Result = IntPtr.Zero;
+                    return;
+                }
+            case 0x201: case 0x203:                                                        // WM_LBUTTONDOWN / DBLCLK
+                {
+                    Point p = Pt(m.LParam);
+                    if (!OnBar(p)) break;
+                    Rectangle th = Thumb();
+                    if (th.Contains(new Point(th.X, p.Y))) dragOff = p.Y - th.Y;
+                    else { dragOff = th.Height / 2; DragTo(p.Y); }
+                    Capture = true;
+                    Invalidate();
+                    return;
+                }
+            case 0x200:                                                                    // WM_MOUSEMOVE
+                {
+                    Point p = Pt(m.LParam);
+                    if (dragOff >= 0) { DragTo(p.Y); return; }
+                    bool h = OnBar(p);
+                    if (h != barHot) { barHot = h; Invalidate(); }
+                    if (h) return;
+                    break;
+                }
+            case 0x202:                                                                    // WM_LBUTTONUP
+                if (dragOff >= 0) { dragOff = -1; Capture = false; Invalidate(); return; }
+                break;
+            case 0x2A3:                                                                    // WM_MOUSELEAVE
+                if (barHot) { barHot = false; Invalidate(); }
+                break;
+        }
         base.WndProc(ref m);
+    }
+
+    void DragTo(int y)
+    {
+        Rectangle tr = Track(), th = Thumb();
+        int span = Math.Max(1, tr.Height - th.Height), max = Math.Max(0, Items.Count - View);
+        ScrollTo((int)Math.Round((double)(y - dragOff - tr.Y) * max / span));
     }
 }
 

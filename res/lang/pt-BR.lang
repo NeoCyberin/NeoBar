@@ -3890,8 +3890,6 @@
 < route print - таблиця маршрутів
 > route print - tabela de rotas
 
-< Запитує адресу (поле вище; для IP береться google.com) у DNS ваших адаптерів і в публічних серверах: видно, хто відповідає й як швидко
-> Consulta o endereço (campo acima; para um IP é usado google.com) no DNS dos seus adaptadores e em servidores públicos: mostra quem responde e com que rapidez
 
 < Які порти слухає цей ПК і яка програма: що доступне з мережі, а що лише локально
 > Em quais portas este PC escuta e qual programa: o que é acessível pela rede e o que é só local
@@ -4025,26 +4023,14 @@
 < Пристрої, які не відповідають на пінг і ARP, тут не видно; «без пінга» - пристрій є в ARP, але пінг блокує.
 > Dispositivos que não respondem nem ao ping nem ao ARP não aparecem aqui; «sem ping» - o dispositivo está no ARP, mas bloqueia o ping.
 
-< Перевірка DNS: 
-> Verificação de DNS: 
 
-<  (у полі IP чи порожньо - беру типовий домен)
->  (o campo tem um IP ou está vazio - usa-se um domínio típico)
 
-< Система (з кешем Windows): 
-> Sistema (com cache do Windows): 
 
 < лише IPv6
 > apenas IPv6
 
-< Система (з кешем Windows): адресу не знайдено
-> Sistema (com cache do Windows): endereço não encontrado
 
-< DNS адаптера «
-> DNS do adaptador «
 
-<  мс → 
->  ms → 
 
 < У активних адаптерів немає DNS-серверів (або вони не ввімкнені).
 > Os adaptadores ativos não têm servidores DNS (ou eles não estão habilitados).
@@ -11331,3 +11317,93 @@
 
 < Читаю перелік пристроїв…
 > Lendo a lista de dispositivos…
+
+< адаптер «
+> adaptador "
+
+< Сервер працює, у середньому 
+> O servidor funciona, em média 
+
+< Ви вже ним користуєтесь.
+> Você já o usa.
+
+< У полі IP DNS-сервера (наприклад, 1.1.1.1) - перевіряє, чи він працює і чи швидший за ваш поточний.\nУ полі ім'я сайту - як його бачать ваші DNS і публічні сервери.\nПоле порожнє - чи працюють ваші DNS-сервери.
+> IP de um servidor DNS no campo (ex. 1.1.1.1) - verifica se funciona e se é mais rápido que o atual.\nNome de site no campo - como seus DNS e os servidores públicos o veem.\nCampo vazio - se seus servidores DNS funcionam.
+
+< Ваш поточний DNS ({0}, {1}) не повільніший - змінювати не обов'язково.
+> Seu DNS atual ({0}, {1}) não é mais lento - não precisa trocar.
+
+< Публічні DNS-сервери - підставити в поле:
+> Servidores DNS públicos - inserir no campo:
+
+< У черзі
+> Na fila
+
+< Ваші поточні DNS не відповідають - можна перейти на цей сервер на вкладці «Адаптери».
+> Seus DNS atuais não respondem - dá para mudar para este servidor na guia "Adaptadores".
+
+< Ваші DNS-сервери:
+> Seus servidores DNS:
+
+< не вдалося завантажити
+> falha no download
+
+< Чи відповідає сервер (запити трьох відомих сайтів):
+> O servidor responde? (três sites conhecidos):
+
+< : не відповідає
+> : não responde
+
+< Адреса з поля
+> Endereço do campo
+
+< Windows не знаходить цю адресу
+> O Windows não encontra este endereço
+
+< Публічні DNS-сервери - для порівняння:
+> Servidores DNS públicos - para comparar:
+
+< Встановлення: {0} з {1} · {2}%
+> Instalando: {0} de {1} · {2}%
+
+< Через які вузли йде трафік до адреси і де з'являється затримка
+> Por quais nós passa o tráfego até o endereço e onde surge o atraso
+
+< Перевірка DNS для імені 
+> Verificação DNS do nome 
+
+< DNS та IP
+> DNS e IP
+
+< Він швидший за ваш поточний ({0}, {1}) - перейти можна на вкладці «Адаптери».
+> É mais rápido que o atual ({0}, {1}) - dá para trocar na guia "Adaptadores".
+
+< Ваші поточні DNS-сервери - для порівняння:
+> Seus servidores DNS atuais - para comparar:
+
+< Повторити
+> Tentar de novo
+
+< Перевірка DNS-сервера 
+> Verificando o servidor DNS 
+
+< Windows знаходить адресу: 
+> O Windows encontra o endereço: 
+
+< Встановлення
+> Instalando
+
+< Сервер не відповідає: за цією адресою немає DNS-сервера, або порт 53 заблоковано.
+> O servidor não responde: não há servidor DNS neste endereço, ou a porta 53 está bloqueada.
+
+< : це він і є
+> : é ele mesmo
+
+< Перевірка DNS: чи працюють ваші DNS-сервери (на прикладі 
+> Verificação DNS: seus servidores DNS funcionam? (com 
+
+< Помилка
+> Erro
+
+< Цей ПК і локальна мережа
+> Este PC e rede local

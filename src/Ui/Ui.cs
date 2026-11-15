@@ -596,63 +596,22 @@ class SbWindow : Form
         Size ts = TextRenderer.MeasureText(Caption, FH);
         TextRenderer.DrawText(g, Caption, FH, new Rectangle(tx, 0, Math.Min(ts.Width + Px(4), right - tx), HeadH),
             P.Fg, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
-        int afterTitle = tx + ts.Width + Px(14);
         int top = HeadH;
         if (Tabs.Length > 0)
         {
-            int tw = 0;
-            int[] ws = new int[Tabs.Length];
-            int tpad = Px(22);
-            int avail = right - Px(4) - (tx + ts.Width + Px(14)) - Px(6);
-            // вкладки поруч із назвою: якщо не вміщуються, спершу стискаємо відступи, потім шрифт
-            Font tF = F, tFB = FB, own1 = null;
-            bool fit = false;
-            foreach (int tp in new int[] { 22, 16, 11, 7 })
-            {
-                tpad = Px(tp);
-                int sum = 0;
-                for (int i = 0; i < Tabs.Length; i++) sum += TabW(Tabs[i], tFB) + tpad;
-                if (sum <= avail) { fit = true; break; }
-            }
-            int gapR = Px(4), gapT = Px(6);
-            if (!fit)
-            {
-                // зовсім тісно: дрібніший шрифт без напівжирного, менші відступи
-                own1 = new Font(F.FontFamily, Math.Max(7f, F.SizeInPoints - 1.5f), FontStyle.Regular);
-                tF = own1; tFB = own1; tpad = Px(3);
-                afterTitle = tx + ts.Width + Px(8); gapR = Px(2); gapT = Px(2);
-            }
-            for (int i = 0; i < Tabs.Length; i++) { ws[i] = TabW(Tabs[i], tFB) + tpad; tw += ws[i]; }
-            if (!fit && afterTitle + tw + gapT > right - gapR)
-            {
-                // і дрібний шрифт не рятує - лишаємо звичайний, вкладки підуть окремим рядком
-                own1.Dispose(); own1 = null; tF = F; tFB = FB; tpad = Px(7);
-                afterTitle = tx + ts.Width + Px(14); gapR = Px(4); gapT = Px(6);
-                tw = 0;
-                for (int i = 0; i < Tabs.Length; i++) { ws[i] = TabW(Tabs[i], tFB) + tpad; tw += ws[i]; }
-            }
+            // вкладки однакові в усіх вікнах: окремий рядок під шапкою на всю ширину, рівні за шириною, один шрифт
+            // (не стрибають, коли в шапці з'являються чи зникають кнопки)
+            Font tF = F, tFB = FB;
             bool tall = false;
             foreach (string tn in Tabs) if (tn.IndexOf('\n') >= 0) tall = true;
-            // дворядкова вкладка потребує двох рядків тексту (у рукописних шрифтах вони вищі, ніж у звичайних)
-            int need2 = tall ? tFB.Height * 2 + Px(2) : 0;
-            int th = tall ? Math.Max(Px(38), need2 + Px(4)) : Px(30);
-            // не вміщаються біля назви (або дві стрічки не влізають у шапку) - окремий рядок під шапкою
-            bool row2 = afterTitle + tw + gapT > right - gapR || (tall && need2 > HeadH - Px(12));
-            int x0, ty;
-            if (row2)
-            {
-                using (Pen lp0 = new Pen(P.Line, 1f)) g.DrawLine(lp0, Px(10), HeadH, Width - Px(10), HeadH);
-                x0 = Math.Max(pad, (Width - tw) / 2);
-                ty = HeadH + Px(8);
-                top = ty + th + Px(8);
-            }
-            else
-            {
-                x0 = Math.Max(afterTitle, (Width - tw) / 2);
-                if (x0 + tw > right - gapR) x0 = Math.Max(afterTitle, right - gapR - tw);
-                th = Math.Min(th, HeadH - Px(12));
-                ty = (HeadH - th) / 2;
-            }
+            int th = tall ? Math.Max(Px(38), tFB.Height * 2 + Px(6)) : Math.Max(Px(32), tFB.Height + Px(12));
+            using (Pen lp0 = new Pen(P.Line, 1f)) g.DrawLine(lp0, Px(10), HeadH, Width - Px(10), HeadH);
+            int cw = Math.Max(1, (Width - pad * 2 - Px(6)) / Tabs.Length);
+            int tw = cw * Tabs.Length;
+            int x0 = (Width - tw) / 2, ty = HeadH + Px(8);
+            top = ty + th + Px(8);
+            int[] ws = new int[Tabs.Length];
+            for (int i = 0; i < Tabs.Length; i++) ws[i] = cw;
             Rectangle track = new Rectangle(x0 - Px(3), ty - Px(3), tw + Px(6), th + Px(6));
             using (SolidBrush b = new SolidBrush(P.Card)) Util.FillRound(g, b, track, Math.Min(P.Rad + Px(3), track.Height / 2));
             int x = x0;
@@ -663,13 +622,13 @@ class SbWindow : Form
                 if (sel || h)
                     using (SolidBrush b = new SolidBrush(sel ? Util.Blend(P.Bg, P.Acc, 0.38f) : Util.Blend(P.Card, P.Fg, 0.08f)))
                         Util.FillRound(g, b, r, Math.Min(P.Rad, r.Height / 2));
-                TextRenderer.DrawText(g, Tabs[i], sel ? tFB : tF, r, sel ? P.Fg : P.Sub,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | (Tabs[i].IndexOf('\n') >= 0 ? 0 : TextFormatFlags.SingleLine));
+                TextRenderer.DrawText(g, Tabs[i], sel ? tFB : tF, Rectangle.Inflate(r, -Px(6), 0), sel ? P.Fg : P.Sub,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis | (Tabs[i].IndexOf('\n') >= 0 ? 0 : TextFormatFlags.SingleLine));
+                if (TabW(Tabs[i], tFB) > r.Width - Px(12)) Tip(r, Tabs[i].Replace('\n', ' '));      // довга назва (переклад) - повністю в підказці
                 int k = i;
                 Hot(r, delegate { if (Tab != k) { Tab = k; OnTab(); Invalidate(); } });
                 x += ws[i];
             }
-            if (own1 != null) own1.Dispose();
         }
         using (Pen lp = new Pen(P.Line, 1f)) g.DrawLine(lp, Px(10), top, Width - Px(10), top);
 

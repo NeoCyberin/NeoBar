@@ -12,32 +12,71 @@ using System.Windows.Forms;
 // ======================================================================
 sealed partial class NetWindow
 {
+    // дії згруповано за змістом: що робимо з адресою з поля, DNS, сам ПК і локальна мережа
     int DiagTools(Graphics g, Rectangle r, int y)
     {
-        int ch = Px(30);
+        int ch = Px(32), gap = Px(6);
         bool ok = !running;
-        // перший ряд - чотири кнопки, другий - три
-        int w4 = (r.Width - Px(6) * 3) / 4;
-        Rectangle[] a = new Rectangle[4];
-        for (int i = 0; i < 4; i++) a[i] = new Rectangle(r.X + i * (w4 + Px(6)), y, w4, ch);
-        Btn(g, a[0], L.T("Перевірка DNS"), StartDns, 0, ok);
-        Btn(g, a[1], L.T("Порти ПК"), StartLocalPorts, 0, ok);
+        y = Group(g, r, y, L.T("Адреса з поля"));
+        Rectangle[] a = Row(r, y, 3, ch, gap);
+        Btn(g, a[0], running ? L.T("Зупинити") : L.T("Пінг (10 пакетів)"), delegate { if (running) Stop(); else StartPing(); }, 1, true);
+        Btn(g, a[1], L.T("Трасування"), delegate { StartTrace(); }, 0, ok);
         Btn(g, a[2], L.T("Порти хоста"), StartHostPorts, 0, ok);
-        Btn(g, a[3], L.T("Маршрути"), delegate { StartTool(L.T("route print - таблиця маршрутів"), "route.exe", "print"); }, 0, ok);
-        Tip(a[0], L.T("Запитує адресу (поле вище; для IP береться google.com) у DNS ваших адаптерів і в публічних серверах: видно, хто відповідає й як швидко"));
-        Tip(a[1], L.T("Які порти слухає цей ПК і яка програма: що доступне з мережі, а що лише локально"));
+        Tip(a[1], L.T("Через які вузли йде трафік до адреси і де з'являється затримка"));
         Tip(a[2], L.T("Перевіряє популярні порти на адресі з поля (або один порт, якщо дописати :порт, наприклад 192.168.0.1:3389). Перевіряйте лише свої пристрої"));
-        Tip(a[3], L.T("Показує, куди система надсилає трафік"));
-        y += ch + Px(6);
-        int w3 = (r.Width - Px(6) * 2) / 3;
-        Rectangle b0 = new Rectangle(r.X, y, w3, ch), b1 = new Rectangle(r.X + w3 + Px(6), y, w3, ch), b2 = new Rectangle(r.X + (w3 + Px(6)) * 2, y, w3, ch);
-        Btn(g, b0, L.T("ARP-таблиця"), delegate { StartTool(L.T("arp -a - пристрої, з якими щойно спілкувався ПК"), "arp.exe", "-a"); }, 0, ok);
-        Btn(g, b1, L.T("Очистити DNS-кеш"), delegate { StartIp("flushdns"); }, 0, ok);
-        Btn(g, b2, L.T("Оновити IP…"), delegate { StartIp("renew"); }, 0, ok);
-        Tip(b0, L.T("Показує IP і MAC-адреси сусідніх пристроїв у локальній мережі"));
-        Tip(b1, L.T("ipconfig /flushdns: забуває збережені відповіді DNS (потрібен дозвіл адміністратора)"));
-        Tip(b2, L.T("ipconfig /release і /renew: нова IP-адреса від роутера; зв'язок на кілька секунд обірветься (потрібен дозвіл адміністратора)"));
-        return y + ch + Px(10);
+        y += ch + Px(10);
+
+        y = Group(g, r, y, L.T("DNS та IP"));
+        a = Row(r, y, 3, ch, gap);
+        Btn(g, a[0], L.T("Перевірка DNS"), StartDns, 0, ok);
+        Btn(g, a[1], L.T("Очистити DNS-кеш"), delegate { StartIp("flushdns"); }, 0, ok);
+        Btn(g, a[2], L.T("Оновити IP…"), delegate { StartIp("renew"); }, 0, ok);
+        Tip(a[0], L.T("У полі IP DNS-сервера (наприклад, 1.1.1.1) - перевіряє, чи він працює і чи швидший за ваш поточний.\nУ полі ім'я сайту - як його бачать ваші DNS і публічні сервери.\nПоле порожнє - чи працюють ваші DNS-сервери."));
+        Tip(a[1], L.T("ipconfig /flushdns: забуває збережені відповіді DNS (потрібен дозвіл адміністратора)"));
+        Tip(a[2], L.T("ipconfig /release і /renew: нова IP-адреса від роутера; зв'язок на кілька секунд обірветься (потрібен дозвіл адміністратора)"));
+        y += ch + Px(10);
+
+        y = Group(g, r, y, L.T("Цей ПК і локальна мережа"));
+        a = Row(r, y, 4, ch, gap);
+        Btn(g, a[0], L.T("Скан підмережі"), StartSweep, 0, ok);
+        Btn(g, a[1], L.T("Порти ПК"), StartLocalPorts, 0, ok);
+        Btn(g, a[2], L.T("Маршрути"), delegate { StartTool(L.T("route print - таблиця маршрутів"), "route.exe", "print"); }, 0, ok);
+        Btn(g, a[3], L.T("ARP-таблиця"), delegate { StartTool(L.T("arp -a - пристрої, з якими щойно спілкувався ПК"), "arp.exe", "-a"); }, 0, ok);
+        Tip(a[0], L.T("Пінгує всі адреси вашої локальної мережі й показує, які пристрої живі: ім'я, MAC, шлюз"));
+        Tip(a[1], L.T("Які порти слухає цей ПК і яка програма: що доступне з мережі, а що лише локально"));
+        Tip(a[2], L.T("Показує, куди система надсилає трафік"));
+        Tip(a[3], L.T("Показує IP і MAC-адреси сусідніх пристроїв у локальній мережі"));
+        return y + ch + Px(12);
+    }
+
+    int Group(Graphics g, Rectangle r, int y, string title)
+    {
+        TxtL(g, title, FS, new Rectangle(r.X, y, r.Width, Px(18)), P.Sub);
+        return y + Px(20);
+    }
+
+    static Rectangle[] Row(Rectangle r, int y, int n, int h, int gap)
+    {
+        Rectangle[] a = new Rectangle[n];
+        int w = (r.Width - gap * (n - 1)) / n;
+        for (int i = 0; i < n; i++) a[i] = new Rectangle(r.X + i * (w + gap), y, i == n - 1 ? r.Right - (r.X + i * (w + gap)) : w, h);
+        return a;
+    }
+
+    // «пігулка»: лише контур, вибрана - контур і текст кольору акценту
+    void Pill(Graphics g, Rectangle r, string text, bool sel, Action click)
+    {
+        bool h = Over(r);
+        System.Drawing.Drawing2D.SmoothingMode sm = g.SmoothingMode;
+        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        if (h) using (SolidBrush b = new SolidBrush(Util.Blend(P.Bg, P.Fg, 0.06f))) Util.FillRound(g, b, r, r.Height / 2);
+        using (Pen p = new Pen(sel ? P.Acc : Util.Blend(P.Bg, P.Fg, 0.22f), sel ? 1.6f : 1f))
+        using (System.Drawing.Drawing2D.GraphicsPath gp = Util.Round(new Rectangle(r.X, r.Y, r.Width - 1, r.Height - 1), r.Height / 2))
+            g.DrawPath(p, gp);
+        g.SmoothingMode = sm;
+        TextRenderer.DrawText(g, text, FS, Rectangle.Inflate(r, -Px(4), 0), sel ? P.Acc : P.Sub,
+            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
+        Hot(r, click);
     }
 
     static string Kind(string s)
@@ -264,13 +303,115 @@ sealed partial class NetWindow
     }
 
     // ---------- перевірка DNS ----------
+    // що в полі, те й перевіряємо: IP - це DNS-сервер (чи працює й чи швидший за ваш), ім'я - як його бачать різні DNS,
+    // порожньо - чи працюють DNS-сервери ваших адаптерів
+    static readonly string[] DnsProbe = { "google.com", "wikipedia.org", "microsoft.com" };
+
+    static string PresetName(string ip)
+    {
+        foreach (string[] p in PingMon.Presets) if (p[0] == ip) return p[1];
+        return "";
+    }
+
+    // DNS-сервери активних адаптерів: {адреса, підпис}
+    static List<string[]> MyDns()
+    {
+        List<string[]> l = new List<string[]>();
+        HashSet<string> seen = new HashSet<string>();
+        foreach (AdapterInfo a in NetCfg.Load())
+        {
+            if (!a.Up) continue;
+            foreach (string d in a.Dns) if (seen.Add(d) && l.Count < 4) l.Add(new[] { d, L.T("адаптер «") + a.Name + L.Q("»") });
+        }
+        return l;
+    }
+
+    // середній час відповіді сервера на кілька імен; NaN - не відповів жодного разу
+    static double DnsAvg(IPAddress ip, int id, Func<bool> stop, Action<string, double, string> each)
+    {
+        double sum = 0; int n = 0;
+        foreach (string d in DnsProbe)
+        {
+            if (stop()) break;
+            List<string> addrs = new List<string>();
+            double ms; string txt;
+            bool ok = NetTools.Query(ip, d, 2000, addrs, out ms, out txt);
+            if (ok) { sum += ms; n++; }
+            if (each != null) each(d, ok ? ms : double.NaN, txt);
+        }
+        return n > 0 ? sum / n : double.NaN;
+    }
+
+    static string Ms(double ms) { return Math.Max(1, (int)Math.Round(ms)) + L.T(" мс"); }
+
     void StartDns()
     {
         string h = tbHost.Text.Trim();
-        IPAddress tmp;
-        bool def = h.Length == 0 || IPAddress.TryParse(h, out tmp);
-        if (def) h = "google.com";
-        Begin(L.T("Перевірка DNS: ") + h + (def ? L.T(" (у полі IP чи порожньо - беру типовий домен)") : ""));
+        IPAddress ip;
+        if (h.Length > 0 && IPAddress.TryParse(h, out ip)) DnsServer(ip);
+        else DnsName(h);
+    }
+
+    void DnsServer(IPAddress ip)
+    {
+        string nm = PresetName(ip.ToString());
+        string who = ip + (nm.Length > 0 ? " (" + nm + ")" : "");
+        Begin(L.T("Перевірка DNS-сервера ") + who);
+        int id = runId;
+        Func<bool> stop = delegate { return id != runId; };
+        Util.Bg(delegate
+        {
+            Add(id, L.T("Чи відповідає сервер (запити трьох відомих сайтів):"), "head");
+            double avg = DnsAvg(ip, id, stop, delegate (string d, double ms, string txt)
+            {
+                if (double.IsNaN(ms)) Add(id, "  " + d + ": " + txt, "bad");
+                else Add(id, "  " + d + ": " + Ms(ms), ms < 80 ? "ok" : "");
+            });
+            if (stop()) return;
+            if (double.IsNaN(avg))
+            {
+                Add(id, L.T("Сервер не відповідає: за цією адресою немає DNS-сервера, або порт 53 заблоковано."), "bad");
+                Finish(id);
+                return;
+            }
+            // ваші поточні DNS - для порівняння тими самими запитами
+            List<string[]> mine = MyDns();
+            double myBest = double.NaN; string myName = "";
+            bool same = false;
+            if (mine.Count > 0) Add(id, L.T("Ваші поточні DNS-сервери - для порівняння:"), "head");
+            foreach (string[] s in mine)
+            {
+                if (stop()) return;
+                IPAddress mip;
+                if (!IPAddress.TryParse(s[0], out mip)) continue;
+                if (mip.Equals(ip)) { same = true; Add(id, "  " + s[0] + " · " + s[1] + L.T(": це він і є"), ""); continue; }
+                double a2 = DnsAvg(mip, id, stop, null);
+                if (double.IsNaN(a2)) Add(id, "  " + s[0] + " · " + s[1] + L.T(": не відповідає"), "bad");
+                else
+                {
+                    Add(id, "  " + s[0] + " · " + s[1] + ": " + Ms(a2), a2 < 80 ? "ok" : "");
+                    if (double.IsNaN(myBest) || a2 < myBest) { myBest = a2; myName = s[0]; }
+                }
+            }
+            if (stop()) return;
+            string res = L.T("Сервер працює, у середньому ") + Ms(avg) + ". ";
+            if (same) Add(id, res + L.T("Ви вже ним користуєтесь."), "ok");
+            else if (mine.Count == 0 || double.IsNaN(myBest))
+                Add(id, res + L.T("Ваші поточні DNS не відповідають - можна перейти на цей сервер на вкладці «Адаптери»."), "ok");
+            else if (avg + 10 < myBest * 0.8)
+                Add(id, res + string.Format(L.T("Він швидший за ваш поточний ({0}, {1}) - перейти можна на вкладці «Адаптери»."), myName, Ms(myBest)), "ok");
+            else
+                Add(id, res + string.Format(L.T("Ваш поточний DNS ({0}, {1}) не повільніший - змінювати не обов'язково."), myName, Ms(myBest)), "ok");
+            Finish(id);
+        });
+    }
+
+    void DnsName(string h)
+    {
+        bool mineOnly = h.Length == 0;
+        if (mineOnly) h = DnsProbe[0];
+        Begin(mineOnly ? L.T("Перевірка DNS: чи працюють ваші DNS-сервери (на прикладі ") + h + ")"
+                       : L.T("Перевірка DNS для імені ") + h);
         int id = runId;
         Util.Bg(delegate
         {
@@ -282,39 +423,35 @@ sealed partial class NetWindow
                 sw.Stop();
                 List<string> v4 = new List<string>();
                 foreach (IPAddress a in all) if (a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) v4.Add(a.ToString());
-                Add(id, L.T("Система (з кешем Windows): ") + (v4.Count > 0 ? string.Join(", ", v4.ToArray()) : L.T("лише IPv6")) + " · " + Math.Max(1, (int)sw.ElapsedMilliseconds) + L.T(" мс"), "ok");
+                if (v4.Count > 4) v4.RemoveRange(4, v4.Count - 4);
+                Add(id, L.T("Windows знаходить адресу: ") + (v4.Count > 0 ? string.Join(", ", v4.ToArray()) : L.T("лише IPv6")) + " · " + Ms(sw.ElapsedMilliseconds), "ok");
             }
-            catch (Exception) { Add(id, L.T("Система (з кешем Windows): адресу не знайдено"), "bad"); }
+            catch (Exception) { Add(id, L.T("Windows не знаходить цю адресу"), "bad"); }
 
-            // 2) сервери: DNS активних адаптерів, потім публічні
+            // 2) кожен сервер окремо: ваші, потім публічні
             List<string[]> srv = new List<string[]>();      // {адреса, підпис, "cfg"/"pub"}
             HashSet<string> seen = new HashSet<string>();
-            foreach (AdapterInfo a in NetCfg.Load())
-            {
-                if (!a.Up) continue;
-                foreach (string d in a.Dns) if (seen.Add(d) && srv.Count < 6) srv.Add(new[] { d, L.T("DNS адаптера «") + a.Name + L.Q("»"), "cfg" });
-            }
+            foreach (string[] s in MyDns()) { seen.Add(s[0]); srv.Add(new[] { s[0], s[1], "cfg" }); }
             string[][] pub = { new[] { "8.8.8.8", "Google" }, new[] { "1.1.1.1", "Cloudflare" }, new[] { "9.9.9.9", "Quad9" } };
             foreach (string[] p in pub) if (seen.Add(p[0])) srv.Add(new[] { p[0], p[1], "pub" });
             int cfgOk = 0, cfgAll = 0, pubOk = 0;
             string best = ""; double bestMs = double.MaxValue;
+            bool headPub = false;
+            if (srv.Count > 0 && srv[0][2] == "cfg") Add(id, L.T("Ваші DNS-сервери:"), "head");
             foreach (string[] s in srv)
             {
                 if (id != runId) return;
                 IPAddress ip;
                 if (!IPAddress.TryParse(s[0], out ip)) continue;
+                bool cfg = s[2] == "cfg";
+                if (!cfg && !headPub) { headPub = true; Add(id, L.T("Публічні DNS-сервери - для порівняння:"), "head"); }
                 List<string> addrs = new List<string>();
                 double ms; string txt;
                 bool ok = NetTools.Query(ip, h, 2000, addrs, out ms, out txt);
-                bool cfg = s[2] == "cfg";
                 if (cfg) cfgAll++;
-                if (ok) { if (cfg) cfgOk++; else pubOk++; if (ms < bestMs) { bestMs = ms; best = s[0] + " (" + s[1] + ")"; } }
-                string head = s[0] + "  " + s[1] + ": ";
-                if (ok)
-                {
-                    if (addrs.Count > 3) addrs.RemoveRange(3, addrs.Count - 3);
-                    Add(id, head + Math.Max(1, (int)Math.Round(ms)) + L.T(" мс → ") + string.Join(", ", addrs.ToArray()), ms < 80 ? "ok" : "");
-                }
+                if (ok) { if (cfg) cfgOk++; else pubOk++; if (ms < bestMs) { bestMs = ms; best = s[0] + " · " + s[1]; } }
+                string head = "  " + s[0] + " · " + s[1] + ": ";
+                if (ok) Add(id, head + Ms(ms), ms < 80 ? "ok" : "");
                 else Add(id, head + txt, "bad");
             }
             if (id != runId) return;
@@ -325,7 +462,7 @@ sealed partial class NetWindow
             else if (cfgOk == 0) { sum = L.T("Жоден DNS не відповідає: немає інтернету або порт 53 заблоковано."); kind = "bad"; }
             else { sum = L.T("Частина DNS-серверів ваших адаптерів не відповідає."); kind = "bad"; }
             Add(id, sum, kind);
-            if (best.Length > 0) Add(id, L.T("Найшвидший: ") + best + ", " + Math.Max(1, (int)Math.Round(bestMs)) + L.T(" мс"), "");
+            if (best.Length > 0) Add(id, L.T("Найшвидший: ") + best + ", " + Ms(bestMs), "");
             Finish(id);
         });
     }

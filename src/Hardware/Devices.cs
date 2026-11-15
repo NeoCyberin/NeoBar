@@ -373,7 +373,14 @@ static class Devices
     }
 
     // ---------- оновлення з Windows Update ----------
-    public sealed class Update { public string Title = "", Provider = "", Class = "", Date = "", HwId = ""; public object Raw; }
+    public sealed class Update
+    {
+        public string Title = "", Provider = "", Class = "", Date = "", HwId = "", Msg = "";
+        public object Raw;
+        public long Size;
+        public volatile int State, Pct;            // UWait / UDown / UInst / UOk / UFail; відсоток поточного етапу
+    }
+    public const int UWait = 0, UDown = 1, UInst = 2, UOk = 3, UFail = 4;
 
     // пошук драйверів, які Windows Update пропонує й ще не встановлено (довго: до хвилини)
     public static List<Update> FindUpdates(out string error)
@@ -396,6 +403,7 @@ static class Devices
                 try { x.Class = (string)u.DriverClass; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 try { x.HwId = (string)u.DriverHardwareID; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 try { x.Date = ((DateTime)u.DriverVerDate).ToString("d"); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                try { x.Size = Convert.ToInt64(u.MaxDownloadSize); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 l.Add(x);
             }
         }
@@ -403,10 +411,13 @@ static class Devices
         return l;
     }
 
-    // "" - встановлено; "!" - встановлено, потрібне перезавантаження; інакше помилка
-    public static string Install(List<Update> ups)
+    // "" - встановлено; "!" - встановлено, потрібне перезавантаження; інакше помилка.
+    // Стан кожного драйвера - у його State/Pct/Msg; progress(загальний відсоток) - з фонового потоку.
+    // Спершу асинхронно (BeginDownload/BeginInstall - так видно відсотки), якщо Windows не прийме - звичайним викликом.
+    public static string Install(List<Update> ups, Action<int> progress)
     {
         if (!Elevated.IsAdmin) return L.T("Встановлення драйверів потребує прав адміністратора: запустіть NeoBar від імені адміністратора");
+        foreach (Update u in ups) { u.State = UWait; u.Pct = 0; u.Msg = ""; }
         try
         {
             dynamic s = Activator.CreateInstance(Type.GetTypeFromProgID("Microsoft.Update.Session"));
@@ -417,19 +428,130 @@ static class Devices
                 try { if (!(bool)r.EulaAccepted) r.AcceptEula(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 coll.Add(r);
             }
+            WuCallback cb = new WuCallback();
+
+            // 1) завантаження: 0-50% загального
             dynamic dl = s.CreateUpdateDownloader();
             dl.Updates = coll;
-            dl.Download();
+            dynamic dres = null, job = null;
+            try { job = dl.BeginDownload(cb, cb, null); } catch (Exception skipEx) { SbLog.Skip(skipEx); job = null; }
+            if (job != null)
+            {
+                while (true)
+                {
+                    bool done = false;
+                    try { done = (bool)job.IsCompleted; } catch (Exception skipEx) { SbLog.Skip(skipEx); done = true; }
+                    try
+                    {
+                        dynamic pr = job.GetProgress();
+                        Track(ups, (int)pr.CurrentUpdateIndex, (int)pr.CurrentUpdatePercentComplete, UDown);
+                        if (progress != null) progress((int)pr.PercentComplete / 2);
+                    }
+                    catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                    if (done) break;
+                    System.Threading.Thread.Sleep(300);
+                }
+                dres = dl.EndDownload(job);
+            }
+            else
+            {
+                foreach (Update u in ups) u.State = UDown;
+                if (progress != null) progress(0);
+                dres = dl.Download();
+            }
+            for (int i = 0; i < ups.Count; i++)
+            {
+                int rc = 4;
+                try { rc = (int)dres.GetUpdateResult(i).ResultCode; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                if (rc == 2 || rc == 3) { ups[i].State = UWait; ups[i].Pct = 0; }
+                else { ups[i].State = UFail; ups[i].Msg = L.T("не вдалося завантажити"); }
+            }
+            if (progress != null) progress(50);
+
+            // 2) встановлення: 50-100%
             dynamic inst = s.CreateUpdateInstaller();
             inst.Updates = coll;
-            dynamic res = inst.Install();
+            dynamic res = null; job = null;
+            try { job = inst.BeginInstall(cb, cb, null); } catch (Exception skipEx) { SbLog.Skip(skipEx); job = null; }
+            if (job != null)
+            {
+                while (true)
+                {
+                    bool done = false;
+                    try { done = (bool)job.IsCompleted; } catch (Exception skipEx) { SbLog.Skip(skipEx); done = true; }
+                    try
+                    {
+                        dynamic pr = job.GetProgress();
+                        Track(ups, (int)pr.CurrentUpdateIndex, (int)pr.CurrentUpdatePercentComplete, UInst);
+                        if (progress != null) progress(50 + (int)pr.PercentComplete / 2);
+                    }
+                    catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                    if (done) break;
+                    System.Threading.Thread.Sleep(300);
+                }
+                res = inst.EndInstall(job);
+            }
+            else
+            {
+                foreach (Update u in ups) if (u.State != UFail) u.State = UInst;
+                res = inst.Install();
+            }
             int code = (int)res.ResultCode;          // 2 - успішно, 3 - з помилками, 4 - не вдалося
-            bool reboot = (bool)res.RebootRequired;
-            SbLog.W(SbLog.Panel, "пристрої: встановлення драйверів з Windows Update - " + code + (reboot ? ", треба перезавантажити" : ""));
-            if (code == 2) return reboot ? "!" : "";
-            if (code == 3) return L.T("Частину драйверів не вдалося встановити") + (reboot ? " (" + L.T("потрібне перезавантаження") + ")" : "");
+            bool reboot = false;
+            try { reboot = (bool)res.RebootRequired; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            int bad = 0;
+            for (int i = 0; i < ups.Count; i++)
+            {
+                Update u = ups[i];
+                if (u.State == UFail) { bad++; continue; }
+                int rc = 4, hr = 0;
+                try { dynamic ur = res.GetUpdateResult(i); rc = (int)ur.ResultCode; hr = (int)ur.HResult; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+                u.Pct = 100;
+                if (rc == 2 || rc == 3) u.State = UOk;
+                else { u.State = UFail; u.Msg = hr != 0 ? "0x" + hr.ToString("X8") : L.F("код {0}", rc); bad++; }
+            }
+            if (progress != null) progress(100);
+            SbLog.W(SbLog.Panel, "пристрої: встановлення драйверів з Windows Update - " + code + ", невдалих " + bad + (reboot ? ", треба перезавантажити" : ""));
+            if (bad == 0) return reboot ? "!" : "";
+            if (bad < ups.Count) return L.T("Частину драйверів не вдалося встановити") + (reboot ? " (" + L.T("потрібне перезавантаження") + ")" : "");
             return L.F("Windows Update повернув код {0}", code);
         }
-        catch (Exception ex) { return ex.Message; }
+        catch (Exception ex)
+        {
+            foreach (Update u in ups) if (u.State != UOk) { u.State = UFail; if (u.Msg.Length == 0) u.Msg = ex.Message; }
+            return ex.Message;
+        }
     }
+
+    // хто вже пройшов етап, хто зараз, хто чекає
+    static void Track(List<Update> ups, int cur, int pct, int phase)
+    {
+        for (int i = 0; i < ups.Count; i++)
+        {
+            Update u = ups[i];
+            if (u.State == UFail || u.State == UOk) continue;
+            if (i < cur) { u.State = phase; u.Pct = 100; }
+            else if (i == cur) { u.State = phase; u.Pct = Math.Max(0, Math.Min(100, pct)); }
+        }
+    }
+}
+
+// Зворотні виклики Windows Update для BeginDownload/BeginInstall: самі нічого не роблять (стан опитуємо через GetProgress),
+// але Windows вимагає об'єкти саме з цими інтерфейсами
+[ComImport, Guid("8C3F1CDD-6173-4591-AEBD-A56A53CA77C1"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IWuDownloadProgressCb { void Invoke(IntPtr job, IntPtr args); }
+[ComImport, Guid("77254866-9F5B-4C8E-B9E2-C77A8530D64B"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IWuDownloadDoneCb { void Invoke(IntPtr job, IntPtr args); }
+[ComImport, Guid("E01402D5-F8DA-43BA-A012-38894BD048F1"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IWuInstallProgressCb { void Invoke(IntPtr job, IntPtr args); }
+[ComImport, Guid("45F4F6F3-D602-4F98-9A8A-3EFA152AD2D3"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+interface IWuInstallDoneCb { void Invoke(IntPtr job, IntPtr args); }
+
+[ComVisible(true), ClassInterface(ClassInterfaceType.None)]
+sealed class WuCallback : IWuDownloadProgressCb, IWuDownloadDoneCb, IWuInstallProgressCb, IWuInstallDoneCb
+{
+    void IWuDownloadProgressCb.Invoke(IntPtr job, IntPtr args) { }
+    void IWuDownloadDoneCb.Invoke(IntPtr job, IntPtr args) { }
+    void IWuInstallProgressCb.Invoke(IntPtr job, IntPtr args) { }
+    void IWuInstallDoneCb.Invoke(IntPtr job, IntPtr args) { }
 }

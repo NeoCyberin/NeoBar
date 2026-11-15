@@ -117,6 +117,7 @@ sealed class SearchForm : Form
         lb.IntegralHeight = false;
         lb.BorderStyle = BorderStyle.None;
         lb.BackColor = bg;
+        lb.BarColor = txt; lb.BarHot = Util.Opaque(t.Accent); lb.Zoom = sc;
         lb.ForeColor = txt;
         lb.DrawItem += DrawRow;
         lb.MouseUp += OnListMouse;
