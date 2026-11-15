@@ -11461,3 +11461,9 @@
 
 < Немає зв'язку із сервером Windows Update
 > Pas de connexion au serveur Windows Update
+
+< драйвер не віддає цей датчик
+> le pilote ne fournit pas ce capteur
+
+< читаю датчик…
+> lecture du capteur…

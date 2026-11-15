@@ -154,7 +154,8 @@ static class VendorGpu
             if (adlPm(adlCtx, adlIndex, pmBuf) != 0) return false;
             float v;
             // індекси ADL_PMLOG_*: 1 частота ГП, 2 пам'яті, 8 температура (край), 9 пам'ять, 14 вентилятор об/хв, 15 вентилятор %,
-            // 19 завантаження ГП, 20 завантаження пам'яті, 21 напруга ГП, 23 потужність, 27 hotspot, 32 темп. ЦП, 33 потужн. ЦП, 34 частота ЦП
+            // 19 завантаження ГП, 20 завантаження пам'яті, 21 напруга ГП, 23 потужність, 27 hotspot, 32 темп. ЦП, 33 потужн. ЦП, 34 частота ЦП,
+            // 50/51 hotspot кристала графіки (GCD) і кеш-пам'яті (MCD) - так його віддають чиплетні RX 7000 замість 27
             if (Sensor(1, out v)) s.GfxClock = v;
             if (Sensor(2, out v)) s.MemClock = v;
             if (Sensor(8, out v)) s.Temp = v;
@@ -165,7 +166,13 @@ static class VendorGpu
             if (Sensor(20, out v)) s.MemLoad = v;
             if (Sensor(21, out v)) s.VoltMv = v;
             if (Sensor(23, out v)) s.PowerW = v;
-            if (Sensor(27, out v)) s.Hotspot = v;
+            if (Sensor(27, out v) && v > 0) s.Hotspot = v;
+            else
+            {
+                float gcd, mcd;
+                bool g1 = Sensor(50, out gcd) && gcd > 0, m1 = Sensor(51, out mcd) && mcd > 0;
+                if (g1 || m1) s.Hotspot = Math.Max(g1 ? gcd : 0, m1 ? mcd : 0);       // найгарячіша точка
+            }
             if (Sensor(32, out v) && v > 0) s.CpuTemp = v;
             if (Sensor(33, out v) && v > 0) s.CpuPowerW = v;
             if (Sensor(34, out v) && v > 0) s.CpuClock = v;

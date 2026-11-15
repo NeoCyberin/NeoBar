@@ -274,6 +274,8 @@ static class Sensors
     static PdhQuery pdh;
     static bool pdhInit;
     static volatile bool warmDone;      // перший (дорогий) запуск лічильників, відеокарти й датчиків виробника - у фоні
+    static volatile bool applied;
+    public static bool Ready { get { return applied; } }     // повний знімок датчиків уже застосовано хоча б раз
     static double baseMhz;
     public static event Action Updated;
 
@@ -580,6 +582,7 @@ static class Sensors
 
     static void Apply(Snap n)
     {
+        applied = true;
         GpuName = n.GpuName;
         CpuPeak = n.CpuPeak;
         CpuBusy = n.CpuBusy;

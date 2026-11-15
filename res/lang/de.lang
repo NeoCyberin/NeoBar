@@ -11461,3 +11461,9 @@
 
 < Немає зв'язку із сервером Windows Update
 > Keine Verbindung zum Windows-Update-Server
+
+< драйвер не віддає цей датчик
+> der Treiber liefert diesen Sensor nicht
+
+< читаю датчик…
+> Sensor wird gelesen…
