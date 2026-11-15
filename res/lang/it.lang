@@ -10983,3 +10983,351 @@
 
 < Найвища температура: процесор {0}, відеокарта {1}.
 > Temperatura massima: processore {0}, scheda video {1}.
+
+< Драйвер не встановлено
+> Driver non installato
+
+< ID обладнання: 
+> ID hardware: 
+
+< Проблема, код {0}
+> Problema, codice {0}
+
+< Видалити пристрій
+> Rimuovi dispositivo
+
+< Пристрої, яких зараз немає, лише засмічують список
+> I dispositivi assenti ingombrano solo l'elenco
+
+< Підключені пристрої без службових (програмні, томи, системні шини, концентратори USB)
+> Dispositivi collegati senza quelli di servizio (software, volumi, bus di sistema, hub USB)
+
+< Частину драйверів не вдалося встановити
+> Alcuni driver non sono stati installati
+
+< Windows зупинила пристрій: він повідомив про збій
+> Windows ha arrestato il dispositivo: ha segnalato un errore
+
+< Основні
+> Principali
+
+< Пристрої й драйвери: згрупований список без повторів, проблемні пристрої, вимкнення й видалення, сховище драйверів, оновлення з Windows Update
+> Dispositivi e driver: elenco raggruppato senza duplicati, dispositivi con problemi, disattivazione e rimozione, archivio driver, aggiornamenti da Windows Update
+
+< Виробник: 
+> Produttore: 
+
+< Видалити драйвер {0} ({1}) для «{2}»: прибрати його з усіх пристроїв, що ним користуються, і зі сховища драйверів? Windows підбере інший драйвер, якщо він є.
+> Eliminare il driver {0} ({1}) per «{2}»: rimuoverlo da tutti i dispositivi che lo usano e dall'archivio driver? Windows sceglierà un altro driver, se c'è.
+
+< Завантажити й встановити драйверів: {0}? Windows Update зробить це сам; може знадобитись перезавантаження.
+> Scaricare e installare {0} driver? Lo farà Windows Update; potrebbe servire un riavvio.
+
+< Готово. Щоб зміни набули чинності, перезавантажте комп'ютер.
+> Fatto. Riavvia il computer per rendere effettive le modifiche.
+
+< Читаю сховище драйверів…
+> Lettura dell'archivio driver…
+
+< Пошкоджено записи в реєстрі - перевстановіть драйвер
+> Voci del registro danneggiate: reinstalla il driver
+
+< Від'єднано: колись був підключений, зараз його немає
+> Scollegato: era collegato, ora non c'è
+
+< Вбудовані у Windows драйвери не видаляються
+> I driver integrati in Windows non vengono eliminati
+
+< Драйвер пошкоджено або його бракує
+> Driver danneggiato o mancante
+
+< Що робити: пошукайте драйвер у вкладці «Оновлення» або на сайті виробника за ID обладнання.
+> Cosa fare: cerca un driver nella scheda «Aggiornamenti» o sul sito del produttore tramite l'ID hardware.
+
+< Windows не змогла завантажити драйвер
+> Windows non è riuscito a caricare il driver
+
+< Видалити пакет {0} ({1}, {2}) зі сховища драйверів? Пристрої зараз ним не користуються.
+> Eliminare il pacchetto {0} ({1}, {2}) dall'archivio driver? Nessun dispositivo lo usa ora.
+
+< Знайдено: {0}
+> Trovati: {0}
+
+< Для змін потрібні права адміністратора - Windows запитає дозвіл.
+> Le modifiche richiedono diritti di amministratore: Windows chiederà il permesso.
+
+< Не знайдено pnputil.exe
+> pnputil.exe non trovato
+
+< Готово.
+> Fatto.
+
+< Пошук пристрою
+> Cerca dispositivo
+
+< Встановити всі ({0})
+> Installa tutti ({0})
+
+< (однакових: {0})
+> (identici: {0})
+
+< потрібне перезавантаження
+> riavvio necessario
+
+< не вдалося видалити {0} з {1}
+> impossibile eliminare {0} di {1}
+
+< Усі пристрої працюють - проблем не знайдено.
+> Tutti i dispositivi funzionano: nessun problema.
+
+< Драйвер: 
+> Driver: 
+
+< Нічого не знайдено.
+> Nessun risultato.
+
+< Windows Update повернув код {0}
+> Windows Update ha restituito il codice {0}
+
+< Встановити драйвери
+> Installa driver
+
+< Видалити застарілі
+> Elimina obsoleti
+
+< Підпис драйвера не перевірено
+> Firma del driver non verificata
+
+< Пристрої
+> Dispositivi
+
+< Сховище драйверів
+> Archivio driver
+
+< Усі пристрої працюють, драйвери встановлено.
+> Tutti i dispositivi funzionano, driver installati.
+
+< Потребують уваги
+> Richiedono attenzione
+
+< Пристрої: потребують уваги - {0}
+> Dispositivi: richiedono attenzione - {0}
+
+< Пошук змін обладнання…
+> Ricerca modifiche hardware…
+
+< Видаляю застарілі драйвери…
+> Eliminazione dei driver obsoleti…
+
+< Windows Update шукає драйвери - це може тривати до хвилини.
+> Windows Update cerca driver: può richiedere fino a un minuto.
+
+< Прибрати {0} від'єднаних пристроїв (старі флешки, монітори, адаптери)? Пристрої, критичні для Windows, не зачіпаються. Якщо котрийсь підключити знову, Windows додасть його сама.
+> Rimuovere {0} dispositivi scollegati (vecchie chiavette, monitor, adattatori)? Quelli critici per Windows non vengono toccati. Se ne ricolleghi uno, Windows lo aggiunge di nuovo.
+
+< не вдалося прибрати {0} з {1}
+> impossibile rimuovere {0} di {1}
+
+< Невідомий пристрій
+> Dispositivo sconosciuto
+
+< ID обладнання скопійовано.
+> ID hardware copiato.
+
+< Завантажую й встановлюю…
+> Download e installazione…
+
+< \n\nЯкщо це ваша єдина клавіатура чи миша, увімкнути її назад буде важко.
+> \n\nSe è la tua unica tastiera o mouse, riattivarlo sarà difficile.
+
+< Копіювати ID
+> Copia ID
+
+< Вимкнути «{0}»{1}? Увімкнути назад можна тут же, у фільтрі «Вимкнені».
+> Disattivare «{0}»{1}? Puoi riattivarlo qui, nel filtro «Disattivati».
+
+< pnputil не відповідає
+> pnputil non risponde
+
+< Від'єднані
+> Scollegati
+
+< Вимкнути пристрій
+> Disattiva dispositivo
+
+< Не налаштовано: драйвер не встановлено
+> Non configurato: nessun driver installato
+
+< Видалити «{0}»{1} з системи? Драйвер лишиться в сховищі: після «Шукати зміни обладнання» або перезавантаження Windows знайде пристрій і встановить його знову. Так лікують «зависле» обладнання.
+> Rimuovere «{0}»{1} dal sistema? Il driver resta nell'archivio: dopo «Rileva modifiche hardware» o un riavvio Windows troverà il dispositivo e lo reinstallerà. Così si sistema l'hardware bloccato.
+
+< Драйвер завантажено, але пристрою не знайдено
+> Driver caricato, ma dispositivo non trovato
+
+< код {0}
+> codice {0}
+
+< , рахую розмір…
+> , calcolo della dimensione…
+
+< Підготовлено до безпечного від'єднання
+> Pronto per la rimozione sicura
+
+< Усі пристрої, зокрема службові й від'єднані
+> Tutti i dispositivi, compresi quelli di servizio e scollegati
+
+< Видалити {0} застарілих пакетів драйверів ({1})? Для кожного є новіша версія, і жоден підключений пристрій ними не користується.
+> Eliminare {0} pacchetti di driver obsoleti ({1})? Ognuno ha una versione più recente e nessun dispositivo collegato li usa.
+
+< Пристрій відсутній або працює неправильно
+> Dispositivo assente o non funzionante
+
+< Потребують уваги: {0}. 
+> Richiedono attenzione: {0}. 
+
+< Вимкнені
+> Disattivati
+
+< Однакових пристроїв: {0} (дії - для всіх)
+> Dispositivi identici: {0} (le azioni valgono per tutti)
+
+< Ним користуються підключені пристрої - видаліть його з вкладки «Пристрої» («Видалити драйвер»)
+> Lo usano dispositivi collegati: eliminalo dalla scheda «Dispositivi» («Elimina driver»)
+
+< Вимикаю…
+> Disattivazione…
+
+< використовується ({0})
+> in uso ({0})
+
+< Не вдається запустити: драйвер несумісний чи пошкоджений, або пристрій несправний
+> Impossibile avviare: driver incompatibile o danneggiato, oppure dispositivo guasto
+
+< Драйвер повернув помилку під час запуску
+> Il driver ha restituito un errore all'avvio
+
+< Встановлення драйверів потребує прав адміністратора: запустіть NeoBar від імені адміністратора
+> L'installazione dei driver richiede diritti di amministratore: avvia NeoBar come amministratore
+
+< Прибрати всі від'єднані
+> Rimuovi tutti gli scollegati
+
+< Прибрати від'єднаний «{0}»{1}? Якщо підключити його знову, Windows додасть його сама.
+> Rimuovere «{0}»{1} scollegato? Se lo ricolleghi, Windows lo aggiunge di nuovo.
+
+< Критичний для запуску Windows - вимкнення й видалення недоступні
+> Critico per l'avvio di Windows: disattivazione e rimozione non disponibili
+
+< Прибрати від'єднані
+> Rimuovi scollegati
+
+< Драйвер треба перевстановити
+> Il driver va reinstallato
+
+< Колись підключені, зараз їх немає: старі флешки, монітори, адаптери VPN. Їх можна прибрати - при підключенні Windows додасть знову
+> Collegati in passato, ora assenti: vecchie chiavette, monitor, adattatori VPN. Si possono rimuovere: Windows li aggiunge al collegamento
+
+< Інші пристрої
+> Altri dispositivi
+
+< Драйвер не потрібен або вбудований
+> Nessun driver necessario o integrato
+
+< Видалити драйвер
+> Elimina driver
+
+< Служба: 
+> Servizio: 
+
+< Пристрої й драйвери
+> Dispositivi e driver
+
+< Пристрої, які вимкнено вручну
+> Dispositivi disattivati manualmente
+
+< Драйвер заблоковано: він відомий проблемами
+> Driver bloccato: ha problemi noti
+
+< Встановити
+> Installa
+
+< Зміни робить вбудований засіб Windows (pnputil). Критичні для запуску Windows пристрої не вимикаються й не видаляються.
+> Le modifiche le fa lo strumento integrato di Windows (pnputil). I dispositivi critici per l'avvio non vengono mai disattivati né rimossi.
+
+< Тут порожньо.
+> Qui non c'è nulla.
+
+< Цей засіб потребує Windows 10 версії 2004 або новішої
+> Questo strumento richiede Windows 10 versione 2004 o successiva
+
+< \n\nЕкран на мить згасне, далі Windows покаже зображення без драйвера відеокарти (низька роздільність, без ігор).
+> \n\nLo schermo si spegnerà per un attimo, poi Windows mostrerà l'immagine senza driver grafico (bassa risoluzione, niente giochi).
+
+< лише від'єднаними
+> solo da scollegati
+
+< Прибираю від'єднані пристрої…
+> Rimozione dei dispositivi scollegati…
+
+< Видаляю драйвер…
+> Eliminazione del driver…
+
+< Драйвери, які Microsoft пропонує через Windows Update для вашого обладнання. Для відеокарт новіші драйвери зазвичай на сайті виробника (AMD, NVIDIA, Intel).
+> Driver che Microsoft offre tramite Windows Update per il tuo hardware. Per le schede video i driver più recenti sono di solito sul sito del produttore (AMD, NVIDIA, Intel).
+
+< Драйвер: не встановлено
+> Driver: non installato
+
+< Вмикаю…
+> Attivazione…
+
+< Стан: 
+> Stato: 
+
+< \nКлік - список пристроїв, драйвери й оновлення
+> \nClic - elenco dispositivi, driver e aggiornamenti
+
+< Працює
+> Funziona
+
+< ; застарілих: {0}
+> ; obsoleti: {0}
+
+< Старі версії драйверів, які лишились після оновлень і якими не користується жоден підключений пристрій
+> Vecchie versioni di driver rimaste dopo gli aggiornamenti, non usate da nessun dispositivo collegato
+
+< Зараз не підключено
+> Non collegato ora
+
+< \n\nЯкщо через цей адаптер ви в інтернеті, з'єднання зникне.
+> \n\nSe sei online tramite questo adattatore, la connessione cadrà.
+
+< Пристрої з помилкою: немає драйвера, не запускається, Windows зупинила
+> Dispositivi con errore: senza driver, non si avviano, arrestati da Windows
+
+< Що робити: перепідключіть пристрій, оновіть або перевстановіть драйвер («Видалити пристрій», потім «Шукати зміни обладнання»).
+> Cosa fare: ricollega il dispositivo, aggiorna o reinstalla il driver («Rimuovi dispositivo», poi «Rileva modifiche hardware»).
+
+< \n\nДля відеокарти Windows перейде на базовий драйвер (низька роздільність) до встановлення нового.
+> \n\nPer la scheda video Windows passerà al driver di base (bassa risoluzione) finché non ne installi uno nuovo.
+
+< застарілий
+> obsoleto
+
+< Шукати зміни обладнання (як у Диспетчері пристроїв) і перечитати список
+> Rileva modifiche hardware (come in Gestione dispositivi) e ricarica l'elenco
+
+< Сторонніх пакетів драйверів: {0}
+> Pacchetti driver di terze parti: {0}
+
+< Шукати оновлення
+> Cerca aggiornamenti
+
+< Нових драйверів у Windows Update немає.
+> Nessun nuovo driver in Windows Update.
+
+< Видаляю…
+> Eliminazione…
+
+< Читаю перелік пристроїв…
+> Lettura dell'elenco dei dispositivi…

@@ -266,6 +266,17 @@ static class SysCheck
                     .Add(L.T("Журнал подій"), delegate { Run("eventvwr.msc", "/c:System"); })
                     .Add(L.T("Історія"), delegate { NeoBar nb = ClockData.Bar; if (nb != null) nb.OpenPerf(4); }));
             }
+            // пристрої з помилкою (немає драйвера, не запускаються, Windows зупинила)
+            try
+            {
+                List<string> badDev = new List<string>();
+                foreach (DevItem d in Devices.List()) if (d.Bad && !badDev.Contains(d.Name)) badDev.Add(d.Name + " - " + Devices.ProblemText(d).ToLowerInvariant());
+                DeviceWindow.LastProblems = badDev.Count;
+                if (badDev.Count == 0) l.Add(new CheckItem(L.T("Пристрої"), 0, L.T("Усі пристрої працюють, драйвери встановлено.")));
+                else l.Add(new CheckItem(L.T("Пристрої"), 1, L.F("Потребують уваги: {0}. ", badDev.Count) + string.Join("; ", badDev.GetRange(0, Math.Min(3, badDev.Count)).ToArray()) + (badDev.Count > 3 ? "…" : ""))
+                    .Add(L.T("Пристрої"), delegate { NeoBar nb = ClockData.Bar; if (nb != null) nb.OpenDevices(); }));
+            }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
             List<HistEvent> al = Watch.Events();
             if (al.Count > 0)
             {

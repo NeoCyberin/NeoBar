@@ -161,10 +161,13 @@ sealed partial class NeoBar
             case "recover": ToggleWin("recover", delegate { OpenWin("recover", en, delegate { return new RecoverPickWindow(this); }, false); }); return;
             case "security": ToggleWin("security", delegate { OpenWin("security", en, delegate { return new SecWindow(this); }, false); }); return;
             case "crypt": ToggleWin("crypt", delegate { OpenWin("crypt", en, delegate { return new CryptWindow(this); }, false); }); return;
+            case "devices": ToggleWin("devices", delegate { OpenWin("devices", en, delegate { return new DeviceWindow(this); }, false); }); return;
         }
     }
 
     public void OpenSecurity() { OpenWin("security", FirstWidget("security"), delegate { return new SecWindow(this); }, false); }
+
+    public void OpenDevices() { OpenWin("devices", FirstWidget("devices"), delegate { return new DeviceWindow(this); }, false); }
 
     public void OpenClean() { OpenWin("clean", FirstWidget("clean"), delegate { return new CleanWindow(this); }, false); }
 

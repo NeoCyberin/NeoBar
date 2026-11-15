@@ -10983,3 +10983,351 @@
 
 < Найвища температура: процесор {0}, відеокарта {1}.
 > Nejvyšší teplota: procesor {0}, grafická karta {1}.
+
+< Драйвер не встановлено
+> Ovladač není nainstalován
+
+< ID обладнання: 
+> ID hardwaru: 
+
+< Проблема, код {0}
+> Problém, kód {0}
+
+< Видалити пристрій
+> Odebrat zařízení
+
+< Пристрої, яких зараз немає, лише засмічують список
+> Zařízení, která tu nejsou, jen zaplňují seznam
+
+< Підключені пристрої без службових (програмні, томи, системні шини, концентратори USB)
+> Připojená zařízení bez servisních (softwarová, svazky, systémové sběrnice, rozbočovače USB)
+
+< Частину драйверів не вдалося встановити
+> Část ovladačů se nepodařilo nainstalovat
+
+< Windows зупинила пристрій: він повідомив про збій
+> Windows zařízení zastavil: ohlásilo poruchu
+
+< Основні
+> Hlavní
+
+< Пристрої й драйвери: згрупований список без повторів, проблемні пристрої, вимкнення й видалення, сховище драйверів, оновлення з Windows Update
+> Zařízení a ovladače: seskupený seznam bez duplicit, problémová zařízení, vypnutí a odebrání, úložiště ovladačů, aktualizace z Windows Update
+
+< Виробник: 
+> Výrobce: 
+
+< Видалити драйвер {0} ({1}) для «{2}»: прибрати його з усіх пристроїв, що ним користуються, і зі сховища драйверів? Windows підбере інший драйвер, якщо він є.
+> Smazat ovladač {0} ({1}) pro „{2}“: odebrat ho ze všech zařízení, která ho používají, a z úložiště ovladačů? Windows vybere jiný ovladač, pokud existuje.
+
+< Завантажити й встановити драйверів: {0}? Windows Update зробить це сам; може знадобитись перезавантаження.
+> Stáhnout a nainstalovat ovladače ({0})? Windows Update to udělá sám; může být potřeba restart.
+
+< Готово. Щоб зміни набули чинності, перезавантажте комп'ютер.
+> Hotovo. Aby se změny projevily, restartujte počítač.
+
+< Читаю сховище драйверів…
+> Čtu úložiště ovladačů…
+
+< Пошкоджено записи в реєстрі - перевстановіть драйвер
+> Záznamy v registru jsou poškozené - přeinstalujte ovladač
+
+< Від'єднано: колись був підключений, зараз його немає
+> Odpojeno: kdysi bylo připojené, teď tu není
+
+< Вбудовані у Windows драйвери не видаляються
+> Ovladače vestavěné ve Windows se nemažou
+
+< Драйвер пошкоджено або його бракує
+> Ovladač je poškozený nebo chybí
+
+< Що робити: пошукайте драйвер у вкладці «Оновлення» або на сайті виробника за ID обладнання.
+> Co dělat: hledejte ovladač na kartě „Aktualizace“ nebo na webu výrobce podle ID hardwaru.
+
+< Windows не змогла завантажити драйвер
+> Windows nedokázal načíst ovladač
+
+< Видалити пакет {0} ({1}, {2}) зі сховища драйверів? Пристрої зараз ним не користуються.
+> Smazat balíček {0} ({1}, {2}) z úložiště ovladačů? Žádné zařízení ho teď nepoužívá.
+
+< Знайдено: {0}
+> Nalezeno: {0}
+
+< Для змін потрібні права адміністратора - Windows запитає дозвіл.
+> Změny potřebují práva správce - Windows požádá o svolení.
+
+< Не знайдено pnputil.exe
+> pnputil.exe nenalezen
+
+< Готово.
+> Hotovo.
+
+< Пошук пристрою
+> Hledat zařízení
+
+< Встановити всі ({0})
+> Nainstalovat vše ({0})
+
+< (однакових: {0})
+> (stejných: {0})
+
+< потрібне перезавантаження
+> je potřeba restart
+
+< не вдалося видалити {0} з {1}
+> nepodařilo se smazat {0} z {1}
+
+< Усі пристрої працюють - проблем не знайдено.
+> Všechna zařízení fungují - žádné problémy.
+
+< Драйвер: 
+> Ovladač: 
+
+< Нічого не знайдено.
+> Nic nenalezeno.
+
+< Windows Update повернув код {0}
+> Windows Update vrátil kód {0}
+
+< Встановити драйвери
+> Nainstalovat ovladače
+
+< Видалити застарілі
+> Smazat zastaralé
+
+< Підпис драйвера не перевірено
+> Podpis ovladače neověřen
+
+< Пристрої
+> Zařízení
+
+< Сховище драйверів
+> Úložiště ovladačů
+
+< Усі пристрої працюють, драйвери встановлено.
+> Všechna zařízení fungují, ovladače jsou nainstalované.
+
+< Потребують уваги
+> Vyžadují pozornost
+
+< Пристрої: потребують уваги - {0}
+> Zařízení: vyžadují pozornost - {0}
+
+< Пошук змін обладнання…
+> Hledám změny hardwaru…
+
+< Видаляю застарілі драйвери…
+> Mažu zastaralé ovladače…
+
+< Windows Update шукає драйвери - це може тривати до хвилини.
+> Windows Update hledá ovladače - může to trvat až minutu.
+
+< Прибрати {0} від'єднаних пристроїв (старі флешки, монітори, адаптери)? Пристрої, критичні для Windows, не зачіпаються. Якщо котрийсь підключити знову, Windows додасть його сама.
+> Odebrat {0} odpojených zařízení (staré flashky, monitory, adaptéry)? Zařízení kritická pro Windows se nedotknou. Po opětovném připojení je Windows přidá sám.
+
+< не вдалося прибрати {0} з {1}
+> nepodařilo se odebrat {0} z {1}
+
+< Невідомий пристрій
+> Neznámé zařízení
+
+< ID обладнання скопійовано.
+> ID hardwaru zkopírováno.
+
+< Завантажую й встановлюю…
+> Stahuji a instaluji…
+
+< \n\nЯкщо це ваша єдина клавіатура чи миша, увімкнути її назад буде важко.
+> \n\nPokud je to vaše jediná klávesnice či myš, bude těžké ji zase zapnout.
+
+< Копіювати ID
+> Kopírovat ID
+
+< Вимкнути «{0}»{1}? Увімкнути назад можна тут же, у фільтрі «Вимкнені».
+> Vypnout „{0}“{1}? Zapnout ho lze tady, ve filtru „Vypnutá“.
+
+< pnputil не відповідає
+> pnputil neodpovídá
+
+< Від'єднані
+> Odpojená
+
+< Вимкнути пристрій
+> Vypnout zařízení
+
+< Не налаштовано: драйвер не встановлено
+> Nenakonfigurováno: ovladač není nainstalován
+
+< Видалити «{0}»{1} з системи? Драйвер лишиться в сховищі: після «Шукати зміни обладнання» або перезавантаження Windows знайде пристрій і встановить його знову. Так лікують «зависле» обладнання.
+> Odebrat „{0}“{1} ze systému? Ovladač zůstane v úložišti: po „Vyhledat změny hardwaru“ nebo restartu ho Windows najde a nainstaluje znovu. Tak se léčí „zaseknutý“ hardware.
+
+< Драйвер завантажено, але пристрою не знайдено
+> Ovladač načten, ale zařízení nenalezeno
+
+< код {0}
+> kód {0}
+
+< , рахую розмір…
+> , počítám velikost…
+
+< Підготовлено до безпечного від'єднання
+> Připraveno k bezpečnému odebrání
+
+< Усі пристрої, зокрема службові й від'єднані
+> Všechna zařízení včetně servisních a odpojených
+
+< Видалити {0} застарілих пакетів драйверів ({1})? Для кожного є новіша версія, і жоден підключений пристрій ними не користується.
+> Smazat {0} zastaralých balíčků ovladačů ({1})? Ke každému existuje novější verze a žádné připojené zařízení je nepoužívá.
+
+< Пристрій відсутній або працює неправильно
+> Zařízení chybí nebo nefunguje správně
+
+< Потребують уваги: {0}. 
+> Vyžadují pozornost: {0}. 
+
+< Вимкнені
+> Vypnutá
+
+< Однакових пристроїв: {0} (дії - для всіх)
+> Stejných zařízení: {0} (akce platí pro všechna)
+
+< Ним користуються підключені пристрої - видаліть його з вкладки «Пристрої» («Видалити драйвер»)
+> Používají ho připojená zařízení - smažte ho z karty „Zařízení“ („Smazat ovladač“)
+
+< Вимикаю…
+> Vypínám…
+
+< використовується ({0})
+> používá se ({0})
+
+< Не вдається запустити: драйвер несумісний чи пошкоджений, або пристрій несправний
+> Nelze spustit: ovladač je nekompatibilní či poškozený, nebo je zařízení vadné
+
+< Драйвер повернув помилку під час запуску
+> Ovladač při spuštění vrátil chybu
+
+< Встановлення драйверів потребує прав адміністратора: запустіть NeoBar від імені адміністратора
+> Instalace ovladačů vyžaduje práva správce: spusťte NeoBar jako správce
+
+< Прибрати всі від'єднані
+> Odebrat všechna odpojená
+
+< Прибрати від'єднаний «{0}»{1}? Якщо підключити його знову, Windows додасть його сама.
+> Odebrat odpojené „{0}“{1}? Po opětovném připojení ho Windows přidá sám.
+
+< Критичний для запуску Windows - вимкнення й видалення недоступні
+> Kritické pro start Windows - vypnutí a odebrání nejsou dostupné
+
+< Прибрати від'єднані
+> Odebrat odpojená
+
+< Драйвер треба перевстановити
+> Ovladač je třeba přeinstalovat
+
+< Колись підключені, зараз їх немає: старі флешки, монітори, адаптери VPN. Їх можна прибрати - при підключенні Windows додасть знову
+> Kdysi připojená, teď chybí: staré flashky, monitory, adaptéry VPN. Lze je odebrat - po připojení je Windows přidá znovu
+
+< Інші пристрої
+> Ostatní zařízení
+
+< Драйвер не потрібен або вбудований
+> Ovladač není potřeba nebo je vestavěný
+
+< Видалити драйвер
+> Smazat ovladač
+
+< Служба: 
+> Služba: 
+
+< Пристрої й драйвери
+> Zařízení a ovladače
+
+< Пристрої, які вимкнено вручну
+> Ručně vypnutá zařízení
+
+< Драйвер заблоковано: він відомий проблемами
+> Ovladač zablokován: má známé problémy
+
+< Встановити
+> Nainstalovat
+
+< Зміни робить вбудований засіб Windows (pnputil). Критичні для запуску Windows пристрої не вимикаються й не видаляються.
+> Změny provádí vestavěný nástroj Windows (pnputil). Zařízení kritická pro start se nikdy nevypínají ani neodebírají.
+
+< Тут порожньо.
+> Tady nic není.
+
+< Цей засіб потребує Windows 10 версії 2004 або новішої
+> Tento nástroj vyžaduje Windows 10 verze 2004 nebo novější
+
+< \n\nЕкран на мить згасне, далі Windows покаже зображення без драйвера відеокарти (низька роздільність, без ігор).
+> \n\nObrazovka na chvíli zhasne, pak Windows zobrazí obraz bez grafického ovladače (nízké rozlišení, bez her).
+
+< лише від'єднаними
+> jen odpojenými
+
+< Прибираю від'єднані пристрої…
+> Odebírám odpojená zařízení…
+
+< Видаляю драйвер…
+> Mažu ovladač…
+
+< Драйвери, які Microsoft пропонує через Windows Update для вашого обладнання. Для відеокарт новіші драйвери зазвичай на сайті виробника (AMD, NVIDIA, Intel).
+> Ovladače, které Microsoft nabízí přes Windows Update pro váš hardware. Pro grafické karty bývají novější ovladače na webu výrobce (AMD, NVIDIA, Intel).
+
+< Драйвер: не встановлено
+> Ovladač: není nainstalován
+
+< Вмикаю…
+> Zapínám…
+
+< Стан: 
+> Stav: 
+
+< \nКлік - список пристроїв, драйвери й оновлення
+> \nKlik - seznam zařízení, ovladače a aktualizace
+
+< Працює
+> Funguje
+
+< ; застарілих: {0}
+> ; zastaralých: {0}
+
+< Старі версії драйверів, які лишились після оновлень і якими не користується жоден підключений пристрій
+> Staré verze ovladačů zbylé po aktualizacích, které nepoužívá žádné připojené zařízení
+
+< Зараз не підключено
+> Teď nepřipojeno
+
+< \n\nЯкщо через цей адаптер ви в інтернеті, з'єднання зникне.
+> \n\nPokud jste přes tento adaptér online, připojení zmizí.
+
+< Пристрої з помилкою: немає драйвера, не запускається, Windows зупинила
+> Zařízení s chybou: bez ovladače, nespouští se, zastavil je Windows
+
+< Що робити: перепідключіть пристрій, оновіть або перевстановіть драйвер («Видалити пристрій», потім «Шукати зміни обладнання»).
+> Co dělat: znovu připojte zařízení, aktualizujte nebo přeinstalujte ovladač („Odebrat zařízení“, pak „Vyhledat změny hardwaru“).
+
+< \n\nДля відеокарти Windows перейде на базовий драйвер (низька роздільність) до встановлення нового.
+> \n\nU grafické karty přejde Windows na základní ovladač (nízké rozlišení), dokud nenainstalujete nový.
+
+< застарілий
+> zastaralý
+
+< Шукати зміни обладнання (як у Диспетчері пристроїв) і перечитати список
+> Vyhledat změny hardwaru (jako ve Správci zařízení) a načíst seznam znovu
+
+< Сторонніх пакетів драйверів: {0}
+> Balíčků ovladačů třetích stran: {0}
+
+< Шукати оновлення
+> Hledat aktualizace
+
+< Нових драйверів у Windows Update немає.
+> Ve Windows Update nejsou nové ovladače.
+
+< Видаляю…
+> Mažu…
+
+< Читаю перелік пристроїв…
+> Čtu seznam zařízení…
