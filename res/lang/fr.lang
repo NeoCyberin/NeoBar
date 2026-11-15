@@ -11467,3 +11467,6 @@
 
 < читаю датчик…
 > lecture du capteur…
+
+< драйвер AMD не віддає цей датчик для {0}
+> le pilote AMD ne fournit pas ce capteur pour {0}

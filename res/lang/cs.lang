@@ -11467,3 +11467,6 @@
 
 < читаю датчик…
 > čtu senzor…
+
+< драйвер AMD не віддає цей датчик для {0}
+> ovladač AMD tento senzor pro {0} neposkytuje

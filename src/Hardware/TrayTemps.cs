@@ -210,7 +210,7 @@ static class TrayTemps
         bool none = float.IsNaN(v);
         string t = none ? "–" : Math.Round(v).ToString();
         int col = s.Col.ToArgb();
-        string tip = s.Name + ": " + (none ? (Sensors.Ready ? L.T("драйвер не віддає цей датчик") : L.T("читаю датчик…")) : t + " °C");
+        string tip = s.Name + ": " + (none ? (Sensors.Ready ? (i == 0 ? L.T("драйвер не віддає цей датчик") : VendorGpu.Why()) : L.T("читаю датчик…")) : t + " °C");
         if (s.Added && s.Shown == t && s.ColArgb == col && s.Tip == tip) return;
         try
         {
