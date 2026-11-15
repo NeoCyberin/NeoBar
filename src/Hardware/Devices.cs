@@ -407,7 +407,7 @@ static class Devices
                 l.Add(x);
             }
         }
-        catch (Exception ex) { error = ex.Message; }
+        catch (Exception ex) { error = WuText(ex); SbLog.W(SbLog.Panel, "пристрої: пошук у Windows Update - " + ex.Message); }
         return l;
     }
 
@@ -508,7 +508,7 @@ static class Devices
                 try { dynamic ur = res.GetUpdateResult(i); rc = (int)ur.ResultCode; hr = (int)ur.HResult; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
                 u.Pct = 100;
                 if (rc == 2 || rc == 3) u.State = UOk;
-                else { u.State = UFail; u.Msg = hr != 0 ? "0x" + hr.ToString("X8") : L.F("код {0}", rc); bad++; }
+                else { u.State = UFail; u.Msg = hr != 0 ? WuShort(hr) : L.F("код {0}", rc); bad++; }
             }
             if (progress != null) progress(100);
             SbLog.W(SbLog.Panel, "пристрої: встановлення драйверів з Windows Update - " + code + ", невдалих " + bad + (reboot ? ", треба перезавантажити" : ""));
@@ -518,9 +518,61 @@ static class Devices
         }
         catch (Exception ex)
         {
-            foreach (Update u in ups) if (u.State != UOk) { u.State = UFail; if (u.Msg.Length == 0) u.Msg = ex.Message; }
-            return ex.Message;
+            int hr = Marshal.GetHRForException(ex);
+            foreach (Update u in ups) if (u.State != UOk) { u.State = UFail; if (u.Msg.Length == 0) u.Msg = WuShort(hr); }
+            SbLog.W(SbLog.Panel, "пристрої: встановлення з Windows Update - " + ex.Message);
+            return WuText(ex);
         }
+    }
+
+    // Зрозумілий опис помилок Windows Update: {що сталося, що робити}; null - невідомий код
+    static string[] WuExplain(int hr)
+    {
+        switch ((uint)hr)
+        {
+            case 0x80240438: case 0x80244022: case 0x8024401C: case 0x80072EE2: case 0x80072EFD: case 0x80072EFE: case 0x80072EE7: case 0x8024402C: case 0x8024402F:
+                return new[] { L.T("Немає зв'язку із сервером Windows Update"),
+                    L.T("Перевірте інтернет. Якщо інтернет є - доступ до серверів Microsoft блокує брандмауер, VPN, проксі, файл hosts або програма, що вимикає оновлення й телеметрію. Спробуйте пізніше або вимкніть таке блокування.") };
+            case 0x80072F8F:
+                return new[] { L.T("Не вдалося встановити захищене з'єднання з Windows Update"),
+                    L.T("Найчастіше на комп'ютері неправильні дата чи час - перевірте їх і повторіть.") };
+            case 0x8024002E: case 0x8024500C:
+                return new[] { L.T("Windows Update вимкнено політикою"),
+                    L.T("Оновлення заблоковано груповою політикою чи реєстром (так роблять програми для вимкнення оновлень). Поверніть доступ до Windows Update і повторіть.") };
+            case 0x80070422: case 0x8024001E:
+                return new[] { L.T("Служба Windows Update вимкнена"),
+                    L.T("Увімкніть службу «Windows Update» (wuauserv): Монітор системи → Завдання → Служби, тип запуску «Вручну».") };
+            case 0x80240016:
+                return new[] { L.T("Windows Update зараз зайнятий іншим встановленням"),
+                    L.T("Дочекайтеся, поки воно закінчиться, або перезавантажте комп'ютер і повторіть.") };
+            case 0x80070005:
+                return new[] { L.T("Немає доступу"), L.T("Запустіть NeoBar від імені адміністратора.") };
+            case 0x80240022:
+                return new[] { L.T("Жодне оновлення не встановилося"), L.T("Перезавантажте комп'ютер і повторіть.") };
+            case 0x8024000B:
+                return new[] { L.T("Операцію скасовано"), "" };
+            case 0x80070070: case 0x80240037:
+                return new[] { L.T("Бракує місця на диску"), L.T("Звільніть місце на системному диску (віджет «Очищення») і повторіть.") };
+        }
+        return null;
+    }
+
+    static string Hex(int hr) { return "0x" + hr.ToString("X8"); }
+
+    // для одного драйвера в списку: коротко
+    static string WuShort(int hr)
+    {
+        string[] e = WuExplain(hr);
+        return e != null ? e[0] : Hex(hr);
+    }
+
+    // для повідомлення у вікні: «заголовок \n порада \n код»
+    public static string WuText(Exception ex)
+    {
+        int hr = Marshal.GetHRForException(ex);
+        string[] e = WuExplain(hr);
+        if (e == null) return ex.Message + "\n\n" + L.T("Код помилки: ") + Hex(hr);
+        return e[0] + "\n" + e[1] + "\n" + L.T("Код помилки: ") + Hex(hr);
     }
 
     // хто вже пройшов етап, хто зараз, хто чекає

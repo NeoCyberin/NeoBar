@@ -11407,3 +11407,57 @@
 
 < Цей ПК і локальна мережа
 > Ce PC et réseau local
+
+< Перезавантажте комп'ютер і повторіть.
+> Redémarrez l'ordinateur et réessayez.
+
+< Жодне оновлення не встановилося
+> Aucune mise à jour n'a été installée
+
+< Найчастіше на комп'ютері неправильні дата чи час - перевірте їх і повторіть.
+> Le plus souvent, la date ou l'heure de l'ordinateur est fausse - vérifiez-les et réessayez.
+
+< Немає доступу
+> Accès refusé
+
+< Звільніть місце на системному диску (віджет «Очищення») і повторіть.
+> Libérez de l'espace sur le disque système (widget « Nettoyage ») et réessayez.
+
+< Оновлення заблоковано груповою політикою чи реєстром (так роблять програми для вимкнення оновлень). Поверніть доступ до Windows Update і повторіть.
+> Les mises à jour sont bloquées par une stratégie de groupe ou le registre (les outils qui désactivent les mises à jour font cela). Rétablissez l'accès à Windows Update et réessayez.
+
+< Бракує місця на диску
+> Espace disque insuffisant
+
+< Увімкніть службу «Windows Update» (wuauserv): Монітор системи → Завдання → Служби, тип запуску «Вручну».
+> Activez le service « Windows Update » (wuauserv) : Moniteur système → Tâches → Services, type de démarrage « Manuel ».
+
+< Windows Update вимкнено політикою
+> Windows Update est désactivé par une stratégie
+
+< Windows Update зараз зайнятий іншим встановленням
+> Windows Update est occupé par une autre installation
+
+< Запустіть NeoBar від імені адміністратора.
+> Lancez NeoBar en tant qu'administrateur.
+
+< Операцію скасовано
+> Opération annulée
+
+< Не вдалося встановити захищене з'єднання з Windows Update
+> Impossible d'établir une connexion sécurisée avec Windows Update
+
+< Код помилки: 
+> Code d'erreur : 
+
+< Дочекайтеся, поки воно закінчиться, або перезавантажте комп'ютер і повторіть.
+> Attendez qu'elle se termine ou redémarrez l'ordinateur et réessayez.
+
+< Служба Windows Update вимкнена
+> Le service Windows Update est désactivé
+
+< Перевірте інтернет. Якщо інтернет є - доступ до серверів Microsoft блокує брандмауер, VPN, проксі, файл hosts або програма, що вимикає оновлення й телеметрію. Спробуйте пізніше або вимкніть таке блокування.
+> Vérifiez Internet. S'il fonctionne, l'accès aux serveurs Microsoft est bloqué par un pare-feu, un VPN, un proxy, le fichier hosts ou un outil qui désactive les mises à jour et la télémétrie. Réessayez plus tard ou désactivez ce blocage.
+
+< Немає зв'язку із сервером Windows Update
+> Pas de connexion au serveur Windows Update
