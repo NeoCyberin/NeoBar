@@ -22,6 +22,8 @@ sealed partial class DeviceWindow : ToolWindow
     List<Devices.Update> ups;
     bool loading, pkgLoading, updBusy, acting;
     string updErr = "";
+    volatile int updPct = -1;               // загальний відсоток встановлення; -1 - не встановлюємо
+    DateTime updDrawn = DateTime.MinValue;
     int filter = FMain;
     readonly int[] scroll = new int[3];
     string open = "";                       // розгорнутий рядок (ключ групи)
@@ -71,13 +73,21 @@ sealed partial class DeviceWindow : ToolWindow
         {
             List<DrvPackage> l = null;
             try { l = Devices.Store(d0); } catch (Exception ex) { Util.ErrorLog(ex); }
+            // розміри, які вже пораховано, переносимо з попереднього списку - не рахуємо заново й не блимаємо «рахую розмір»
+            List<DrvPackage> old = pkgs;
+            if (l != null && old != null)
+            {
+                Dictionary<string, long> known = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+                foreach (DrvPackage p in old) if (p.Size >= 0) known[p.Inf + "|" + p.StoreDir] = p.Size;
+                foreach (DrvPackage p in l) { long sz; if (known.TryGetValue(p.Inf + "|" + p.StoreDir, out sz)) p.Size = sz; }
+            }
             Ui(delegate { pkgs = l ?? new List<DrvPackage>(); pkgLoading = false; Invalidate(); });
             // розміри пакетів - окремо (великі драйвери відеокарт - тисячі файлів)
             if (l != null)
                 foreach (DrvPackage p in l)
                 {
                     if (IsDisposed) return;
-                    p.Size = p.StoreDir.Length > 0 ? Devices.DirSize(p.StoreDir) : 0;
+                    if (p.Size < 0) p.Size = p.StoreDir.Length > 0 ? Devices.DirSize(p.StoreDir) : 0;
                 }
             Ui(Invalidate);
         });
@@ -333,8 +343,7 @@ sealed partial class DeviceWindow : ToolWindow
                 if (e == null || e.Length == 0) Say(L.T("Готово."), false);
                 else if (e == "!") Say(L.T("Готово. Щоб зміни набули чинності, перезавантажте комп'ютер."), false);
                 else Say(L.T("Не вдалося: ") + e, true);
-                Reload();
-                if (Tab == TabStore) { pkgs = null; LoadStore(); }
+                Reload();                           // тихо: старий список видно, доки не готовий новий (сховище - слідом)
             });
         });
     }
@@ -468,32 +477,82 @@ sealed partial class DeviceWindow : ToolWindow
     }
 
     // ---------- оновлення ----------
+    int Pending() { int n = 0; if (ups != null) foreach (Devices.Update u in ups) if (u.State != Devices.UOk) n++; return n; }
+
     void PaintUpdates(Graphics g, Rectangle r)
     {
+        bool inst = updPct >= 0;
         TxtW(g, L.T("Драйвери, які Microsoft пропонує через Windows Update для вашого обладнання. Для відеокарт новіші драйвери зазвичай на сайті виробника (AMD, NVIDIA, Intel)."), FS, new Rectangle(r.X, r.Y, r.Width - Px(220), Px(40)), P.Sub);
         Rectangle bb = new Rectangle(r.Right - Px(210), r.Y + Px(4), Px(210), Px(32));
-        Btn(g, bb, updBusy ? L.T("Шукаю…") : L.T("Шукати оновлення"), updBusy || acting ? null : (Action)FindUpdates, 1, !updBusy && !acting);
+        bool canFind = !updBusy && !acting && !inst;
+        Btn(g, bb, updBusy ? L.T("Шукаю…") : L.T("Шукати оновлення"), canFind ? (Action)FindUpdates : null, ups == null ? 1 : 0, canFind);
         int y = r.Y + Px(52);
-        if (updBusy) { TxtC(g, L.T("Windows Update шукає драйвери - це може тривати до хвилини."), F, new Rectangle(r.X, y + Px(20), r.Width, Px(24)), P.Sub); return; }
+        if (updBusy && ups == null) { TxtC(g, L.T("Windows Update шукає драйвери - це може тривати до хвилини."), F, new Rectangle(r.X, y + Px(20), r.Width, Px(24)), P.Sub); return; }
         if (updErr.Length > 0) { TxtW(g, L.T("Не вдалося: ") + updErr, F, new Rectangle(r.X, y, r.Width, Px(48)), P.Bad); return; }
         if (ups == null) return;
         if (ups.Count == 0) { TxtC(g, L.T("Нових драйверів у Windows Update немає."), F, new Rectangle(r.X, y + Px(20), r.Width, Px(24)), P.Good); return; }
+        int pend = Pending();
         Rectangle ia = new Rectangle(r.Right - Px(210), y, Px(210), Px(32));
-        Btn(g, ia, L.F("Встановити всі ({0})", ups.Count), acting ? null : (Action)delegate { InstallUpd(new List<Devices.Update>(ups)); }, 1, !acting);
-        TxtL(g, L.F("Знайдено: {0}", ups.Count), FB, new Rectangle(r.X, y, ia.X - r.X, Px(32)), P.Fg);
+        if (inst)
+        {
+            // загальний поступ
+            int doneN = 0;
+            foreach (Devices.Update u in queued) if (u.State == Devices.UOk || u.State == Devices.UFail) doneN++;
+            TxtL(g, L.F("Встановлення: {0} з {1} · {2}%", Math.Min(ups.Count, doneN), installing, updPct), FB, new Rectangle(r.X, y, r.Width, Px(22)), P.Fg);
+            ProgressBar(g, new Rectangle(r.X, y + Px(24), r.Width, Px(6)), updPct / 100f, P.Acc);
+        }
+        else
+        {
+            if (pend > 0) Btn(g, ia, L.F("Встановити всі ({0})", pend), acting ? null : (Action)delegate
+            {
+                List<Devices.Update> l = new List<Devices.Update>();
+                foreach (Devices.Update u in ups) if (u.State != Devices.UOk) l.Add(u);
+                InstallUpd(l);
+            }, 1, !acting);
+            TxtL(g, L.F("Знайдено: {0}", ups.Count), FB, new Rectangle(r.X, y, ia.X - r.X, Px(32)), P.Fg);
+        }
         y += Px(42);
+        Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y);
+        int rowH = Px(60), total = ups.Count * rowH;
+        int sc = scroll[TabUpd] = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), scroll[TabUpd]));
+        GraphicsState st = g.Save();
+        g.SetClip(list);
+        int yy = list.Y - sc;
         foreach (Devices.Update u in ups)
         {
-            if (y + Px(52) > r.Bottom) break;
-            Rectangle rr = new Rectangle(r.X, y, r.Width - Px(12), Px(52));
+            if (yy + rowH < list.Y) { yy += rowH; continue; }
+            if (yy > list.Bottom) break;
+            Rectangle rr = new Rectangle(list.X, yy, list.Width - Px(12), rowH - Px(6));
             Card(g, rr);
-            Rectangle ib = new Rectangle(rr.Right - Px(120), rr.Y + Px(10), Px(110), Px(32));
+            Rectangle ib = new Rectangle(rr.Right - Px(150), rr.Y + Px(11), Px(140), Px(32));
             Devices.Update uu = u;
-            Btn(g, ib, L.T("Встановити"), acting ? null : (Action)delegate { InstallUpd(new List<Devices.Update> { uu }); }, 0, !acting);
-            TxtL(g, u.Title, FB, new Rectangle(rr.X + Px(12), rr.Y + Px(5), ib.X - rr.X - Px(20), Px(22)), P.Fg);
-            TxtL(g, Join(u.Provider, u.Class, u.Date, u.HwId), FS, new Rectangle(rr.X + Px(12), rr.Y + Px(28), ib.X - rr.X - Px(20), Px(18)), P.Sub);
-            y += Px(56);
+            string state = ""; Color sc2 = P.Sub; bool bar = false;
+            switch (u.State)
+            {
+                case Devices.UOk: state = "✓ " + L.T("Встановлено"); sc2 = P.Good; break;
+                case Devices.UFail: state = "✗ " + L.T("Помилка") + (u.Msg.Length > 0 ? ": " + u.Msg : ""); sc2 = P.Bad; break;
+                case Devices.UDown: state = L.T("Завантаження") + " " + u.Pct + "%"; sc2 = P.Fg; bar = true; break;
+                case Devices.UInst: state = L.T("Встановлення") + " " + u.Pct + "%"; sc2 = P.Fg; bar = true; break;
+                default: state = inst && queued.Contains(u) ? L.T("У черзі") : ""; break;
+            }
+            if (state.Length > 0)
+            {
+                TxtR(g, state, FS, new Rectangle(ib.X - Px(60), rr.Y + (bar ? Px(8) : Px(3)), ib.Width + Px(60), Px(18)), sc2);
+                if (u.State == Devices.UFail && u.Msg.Length > 0) Tip(new Rectangle(ib.X - Px(60), rr.Y, ib.Width + Px(60), rr.Height), u.Msg);
+            }
+            if (bar) ProgressBar(g, new Rectangle(ib.X, rr.Y + Px(30), ib.Width, Px(5)), u.Pct / 100f, P.Acc);
+            else if (!inst && u.State != Devices.UOk)
+                Btn(g, state.Length > 0 ? new Rectangle(ib.X, rr.Y + Px(22), ib.Width, Px(28)) : new Rectangle(ib.X, rr.Y + (rr.Height - Px(30)) / 2, ib.Width, Px(30)),
+                    u.State == Devices.UFail ? L.T("Повторити") : L.T("Встановити"), acting ? null : (Action)delegate { InstallUpd(new List<Devices.Update> { uu }); }, 0, !acting);
+            int tw = ib.X - rr.X - Px(70);
+            TxtL(g, u.Title, FB, new Rectangle(rr.X + Px(12), rr.Y + Px(6), tw, Px(22)), P.Fg);
+            TxtL(g, Join(u.Provider, u.Class, u.Date, u.Size > 0 ? SizeText(u.Size) : "", u.HwId), FS, new Rectangle(rr.X + Px(12), rr.Y + Px(30), tw, Px(18)), P.Sub);
+            Tip(new Rectangle(rr.X, rr.Y, tw, rr.Height), u.Title);
+            yy += rowH;
         }
+        g.Restore(st);
+        Wheel(list, delegate (int d) { scroll[TabUpd] -= d > 0 ? Px(120) : -Px(120); Invalidate(); });
+        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(4)), total, list.Height, sc, delegate (int v) { scroll[TabUpd] = v; Invalidate(); });
     }
 
     void FindUpdates()
@@ -504,21 +563,54 @@ sealed partial class DeviceWindow : ToolWindow
         {
             string err;
             List<Devices.Update> l = Devices.FindUpdates(out err);
-            Ui(delegate { updBusy = false; updErr = err; ups = err.Length > 0 ? null : l; Invalidate(); });
+            Ui(delegate { updBusy = false; updErr = err; ups = err.Length > 0 ? null : l; scroll[TabUpd] = 0; Invalidate(); });
         });
         t.IsBackground = true;
         t.SetApartmentState(ApartmentState.MTA);
         t.Start();
     }
 
+    // встановлення: список не перечитується - кожен драйвер показує свій стан і поступ, а встановлені лишаються позначеними
+    readonly HashSet<Devices.Update> queued = new HashSet<Devices.Update>();
+    int installing;
+
     void InstallUpd(List<Devices.Update> l)
     {
+        if (acting || updPct >= 0 || l.Count == 0) return;
         if (Ask(L.T("Встановити драйвери"), L.F("Завантажити й встановити драйверів: {0}? Windows Update зробить це сам; може знадобитись перезавантаження.", l.Count), L.T("Встановити"), L.T("Скасувати")) != 0) return;
-        Act(L.T("Завантажую й встановлюю…"), delegate
+        acting = true;
+        queued.Clear();
+        foreach (Devices.Update u in l) queued.Add(u);
+        installing = l.Count;
+        updPct = 0;
+        Say(L.T("Завантажую й встановлюю…"), false);
+        Thread t = new Thread(delegate ()
         {
-            string e = Devices.Install(l);
-            if (e.Length == 0 || e == "!") Ui(delegate { ups = null; FindUpdates(); });
-            return e;
+            string e;
+            try
+            {
+                e = Devices.Install(l, delegate (int pct)
+                {
+                    updPct = Math.Max(0, Math.Min(100, pct));
+                    // не частіше ніж раз на 250 мс - вікно не перемальовується зайвий раз
+                    if ((DateTime.UtcNow - updDrawn).TotalMilliseconds >= 250) { updDrawn = DateTime.UtcNow; Ui(Invalidate); }
+                });
+            }
+            catch (Exception ex) { e = ex.Message; }
+            Ui(delegate
+            {
+                acting = false;
+                updPct = -1;
+                queued.Clear();
+                if (e == null || e.Length == 0) Say(L.T("Готово."), false);
+                else if (e == "!") Say(L.T("Готово. Щоб зміни набули чинності, перезавантажте комп'ютер."), false);
+                else Say(L.T("Не вдалося: ") + e, true);
+                Reload();                           // список пристроїв - тихо у фоні
+                Invalidate();
+            });
         });
+        t.IsBackground = true;
+        t.SetApartmentState(ApartmentState.MTA);
+        t.Start();
     }
 }

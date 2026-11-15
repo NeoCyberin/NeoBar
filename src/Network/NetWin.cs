@@ -181,7 +181,7 @@ sealed partial class NetWindow : ToolWindow
 
     readonly Action fadeTick;
 
-    public NetWindow(NeoBar bar, Entry e) : base(bar, L.T("Мережа"), 520, 640)
+    public NetWindow(NeoBar bar, Entry e) : base(bar, L.T("Мережа"), 580, 680)
     { Glyph = "\uE968";
         entry = e;
         fadeTick = delegate { if (!IsDisposed && IsHandleCreated) Invalidate(); };
@@ -307,21 +307,20 @@ sealed partial class NetWindow : ToolWindow
             string h = tbHost.Text.Trim();
             if (h.Length > 0) Bar.SetNetOpt(entry, h + ";" + PingMon.Interval);
         }, 0, hnow.Length > 0 && hnow != PingMon.Host);
-        y += Px(40);
-        int cw = (r.Width - Px(6) * 2) / 3, ch = Px(28);
-        for (int i = 0; i < PingMon.Presets.Length; i++)
+        y += Px(38);
+        // швидкий вибір адреси - лише підставляє її в поле (тонкі «пігулки», щоб не плутати з кнопками дій нижче)
+        TxtL(g, L.T("Публічні DNS-сервери - підставити в поле:"), FS, new Rectangle(r.X, y, r.Width, Px(18)), P.Sub);
+        y += Px(20);
+        int n = PingMon.Presets.Length, pg = Px(6);
+        int pw = (r.Width - pg * (n - 1)) / n, ph = Px(26);
+        for (int i = 0; i < n; i++)
         {
             string h = PingMon.Presets[i][0];
-            Chip(g, new Rectangle(r.X + (i % 3) * (cw + Px(6)), y + (i / 3) * (ch + Px(6)), cw, ch), PingMon.Presets[i][1], tbHost.Text.Trim() == h, delegate { tbHost.Text = h; });
+            Rectangle pr = new Rectangle(r.X + i * (pw + pg), y, pw, ph);
+            Pill(g, pr, PingMon.Presets[i][1], hnow == h, delegate { tbHost.Text = h; });
+            Tip(pr, h);
         }
-        y += ((PingMon.Presets.Length + 2) / 3) * (ch + Px(6)) + Px(4);
-        int bw = (r.Width - Px(16)) / 3;
-        Btn(g, new Rectangle(r.X, y, bw, Px(34)), running ? L.T("Зупинити") : L.T("Пінг (10 пакетів)"), delegate { if (running) Stop(); else StartPing(); }, 1, true);
-        Btn(g, new Rectangle(r.X + bw + Px(8), y, bw, Px(34)), L.T("Трасування"), delegate { StartTrace(); }, 0, !running);
-        Rectangle sw = new Rectangle(r.X + (bw + Px(8)) * 2, y, bw, Px(34));
-        Btn(g, sw, L.T("Скан підмережі"), StartSweep, 0, !running);
-        Tip(sw, L.T("Пінгує всі адреси вашої локальної мережі й показує, які пристрої живі: ім'я, MAC, шлюз"));
-        y += Px(44);
+        y += ph + Px(12);
         y = DiagTools(g, r, y);
 
         Rectangle oc = new Rectangle(r.X, y, r.Width, r.Bottom - y);

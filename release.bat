@@ -11,7 +11,7 @@ call build.bat "%STAGE%" nopause || goto fail
 
 set "SIGNED=0"
 if exist sign-config.bat (
-  call sign.bat "%STAGE%\NeoBar.exe" "%STAGE%\NeoBarFps32.dll" "%STAGE%\NeoBarFps64.dll" "%STAGE%\NeoBarWall32.dll" "%STAGE%\NeoBarWall64.dll" || goto fail
+  call sign.bat "%STAGE%\NeoBar.exe" "%STAGE%\NeoBarFps32.dll" "%STAGE%\NeoBarFps64.dll" "%STAGE%\NeoBarWall32.dll" "%STAGE%\NeoBarWall64.dll" "%STAGE%\NeoBarDrop.exe" || goto fail
   set "SIGNED=1"
 ) else (
   echo.

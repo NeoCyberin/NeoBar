@@ -3890,8 +3890,6 @@
 < route print - таблиця маршрутів
 > route print - tabella di routing
 
-< Запитує адресу (поле вище; для IP береться google.com) у DNS ваших адаптерів і в публічних серверах: видно, хто відповідає й як швидко
-> Interroga l'indirizzo (campo sopra; per un IP si usa google.com) nel DNS delle tue schede e nei server pubblici: mostra chi risponde e quanto velocemente
 
 < Які порти слухає цей ПК і яка програма: що доступне з мережі, а що лише локально
 > Su quali porte è in ascolto questo PC e con quale programma: cosa è raggiungibile dalla rete e cosa solo in locale
@@ -4025,26 +4023,14 @@
 < Пристрої, які не відповідають на пінг і ARP, тут не видно; «без пінга» - пристрій є в ARP, але пінг блокує.
 > I dispositivi che non rispondono né al ping né all'ARP non sono visibili qui; «nessun ping» - il dispositivo è in ARP ma blocca il ping.
 
-< Перевірка DNS: 
-> Verifica DNS: 
 
-<  (у полі IP чи порожньо - беру типовий домен)
->  (il campo contiene un IP o è vuoto - viene usato un dominio tipico)
 
-< Система (з кешем Windows): 
-> Sistema (con cache di Windows): 
 
 < лише IPv6
 > solo IPv6
 
-< Система (з кешем Windows): адресу не знайдено
-> Sistema (con cache di Windows): indirizzo non trovato
 
-< DNS адаптера «
-> DNS della scheda «
 
-<  мс → 
->  ms → 
 
 < У активних адаптерів немає DNS-серверів (або вони не ввімкнені).
 > Le schede attive non hanno server DNS (o non sono abilitati).
@@ -11331,3 +11317,93 @@
 
 < Читаю перелік пристроїв…
 > Lettura dell'elenco dei dispositivi…
+
+< адаптер «
+> adattatore «
+
+< Сервер працює, у середньому 
+> Il server funziona, in media 
+
+< Ви вже ним користуєтесь.
+> Lo usi già.
+
+< У полі IP DNS-сервера (наприклад, 1.1.1.1) - перевіряє, чи він працює і чи швидший за ваш поточний.\nУ полі ім'я сайту - як його бачать ваші DNS і публічні сервери.\nПоле порожнє - чи працюють ваші DNS-сервери.
+> IP di un server DNS nel campo (es. 1.1.1.1): verifica se funziona ed è più veloce dell'attuale.\nNome di un sito nel campo: come lo vedono i tuoi DNS e i server pubblici.\nCampo vuoto: se i tuoi server DNS funzionano.
+
+< Ваш поточний DNS ({0}, {1}) не повільніший - змінювати не обов'язково.
+> Il tuo DNS attuale ({0}, {1}) non è più lento: non serve cambiarlo.
+
+< Публічні DNS-сервери - підставити в поле:
+> Server DNS pubblici - inserisci nel campo:
+
+< У черзі
+> In coda
+
+< Ваші поточні DNS не відповідають - можна перейти на цей сервер на вкладці «Адаптери».
+> I tuoi DNS attuali non rispondono: puoi passare a questo server nella scheda «Adattatori».
+
+< Ваші DNS-сервери:
+> I tuoi server DNS:
+
+< не вдалося завантажити
+> download non riuscito
+
+< Чи відповідає сервер (запити трьох відомих сайтів):
+> Il server risponde? (tre siti noti):
+
+< : не відповідає
+> : non risponde
+
+< Адреса з поля
+> Indirizzo dal campo
+
+< Windows не знаходить цю адресу
+> Windows non trova questo indirizzo
+
+< Публічні DNS-сервери - для порівняння:
+> Server DNS pubblici - per confronto:
+
+< Встановлення: {0} з {1} · {2}%
+> Installazione: {0} di {1} · {2}%
+
+< Через які вузли йде трафік до адреси і де з'являється затримка
+> Attraverso quali nodi passa il traffico verso l'indirizzo e dove compare il ritardo
+
+< Перевірка DNS для імені 
+> Verifica DNS per il nome 
+
+< DNS та IP
+> DNS e IP
+
+< Він швидший за ваш поточний ({0}, {1}) - перейти можна на вкладці «Адаптери».
+> È più veloce dell'attuale ({0}, {1}): puoi cambiarlo nella scheda «Adattatori».
+
+< Ваші поточні DNS-сервери - для порівняння:
+> I tuoi server DNS attuali - per confronto:
+
+< Повторити
+> Riprova
+
+< Перевірка DNS-сервера 
+> Verifica del server DNS 
+
+< Windows знаходить адресу: 
+> Windows trova l'indirizzo: 
+
+< Встановлення
+> Installazione
+
+< Сервер не відповідає: за цією адресою немає DNS-сервера, або порт 53 заблоковано.
+> Il server non risponde: a questo indirizzo non c'è un server DNS, oppure la porta 53 è bloccata.
+
+< : це він і є
+> : è proprio lui
+
+< Перевірка DNS: чи працюють ваші DNS-сервери (на прикладі 
+> Verifica DNS: i tuoi server DNS funzionano? (con 
+
+< Помилка
+> Errore
+
+< Цей ПК і локальна мережа
+> Questo PC e rete locale

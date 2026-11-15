@@ -7,7 +7,8 @@ Widgets sit at the top of the panel; click one to open its window. Order them wi
 | **Time & date** | Clock, calendar, public holidays (from date.nager.at) and world days, your own dates, alarms, timers, stopwatch, desktop clocks (digital, analog, calendar). Clock accuracy can be checked against a time server. |
 | **Weather** | Current weather, hourly and weekly forecast, weather themes, European/American units. |
 | **System monitor** | CPU, GPU, RAM, with graphs; specs; *Tasks* - processes and services; *Analysis* - load of a process (or a group with its children) over time; *History* - temperatures and load over the day. Temperatures can be shown in the tray. |
-| **Network** | Download/upload speed, ping, adapters, Wi-Fi, firewall switch. |
+| **Network** | Download/upload speed, ping, adapters, Wi-Fi, firewall switch. Diagnostics: ping, traceroute, ports; DNS check (a DNS server IP in the field - does it work and is it faster than yours; a site name - how different DNS servers see it; empty - do your DNS servers work); local network scan. |
+| **Devices** | Device and driver manager: problem devices, disabling and removal, driver store, updates from Windows Update with progress for each driver. See [[Tools]]. |
 | **Storage** | Drives with free space; health (SMART) and maintenance; formatting; file recovery. |
 | **Battery** | Charge and power state (shown only on devices with a battery). |
 | **Notes** | Notes on the desktop; they can be locked in place and saved to a file (.txt or .rtf - header menu). |
