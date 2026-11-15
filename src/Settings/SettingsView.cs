@@ -152,6 +152,8 @@ sealed partial class SettingsForm
         cbFx.SelectedIndex = Math.Max(0, Math.Min(4, c.HoverFx));
         chAnim.Checked = c.Anim;
         chDeskFont.Checked = c.DeskNoteFont;
+        chWAlerts.Checked = c.WAlerts; chWHistory.Checked = c.WHistory; chWReport.Checked = c.WGameReport;
+        nWCpuT.Value = c.WCpuT; nWGpuT.Value = c.WGpuT; nWVram.Value = c.WVramPct; nWProcGb.Value = c.WProcGb;
         int ak = Array.IndexOf(logKeepIds, c.LogKeep);
         cbLogKeep.SelectedIndex = ak >= 0 ? ak : 2;
         cbTheme.SelectedIndex = ThemeIndex(c.ThemeId);
@@ -263,6 +265,9 @@ sealed partial class SettingsForm
         c.HoverFx = Math.Max(0, cbFx.SelectedIndex);
         c.Anim = chAnim.Checked;
         c.DeskNoteFont = chDeskFont.Checked;
+        c.WAlerts = chWAlerts.Checked; c.WHistory = chWHistory.Checked; c.WGameReport = chWReport.Checked;
+        c.WCpuT = (int)nWCpuT.Value; c.WGpuT = (int)nWGpuT.Value; c.WVramPct = (int)nWVram.Value; c.WProcGb = (int)nWProcGb.Value;
+        Watch.FromCfg(c);
         c.LogKeep = logKeepIds[Math.Max(0, cbLogKeep.SelectedIndex)];
         bool keepChanged = LogKeep.Spec != c.LogKeep;
         LogKeep.Spec = c.LogKeep;

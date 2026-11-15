@@ -301,7 +301,9 @@ sealed partial class NeoBar : Form
         AfterShown();
         Seasons.Start(this);
         Dice.Changed += DiceRedraw;
-        UiWatch.Start(Handle);          // сторож зависань (свій потік) - записує їх у журнал помилок
+        UiWatch.Start(Handle);
+        Watch.FromCfg(cfg);
+        Watch.Start(this);              // критичні сповіщення, історія за добу, звіт після гри          // сторож зависань (свій потік) - записує їх у журнал помилок
         // строк зберігання журналів - через хвилину після запуску, щоб не заважати старту
         LogKeep.Spec = cfg.LogKeep;
         System.Windows.Forms.Timer lt = new System.Windows.Forms.Timer();
@@ -322,6 +324,7 @@ sealed partial class NeoBar : Form
         Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnPrefChanged;
         Dice.Changed -= DiceRedraw;
         UiWatch.Stop();
+        Watch.Stop();
         anim.Stop(); poll.Stop(); wtick.Stop();
         UnhookForeground();
         try { Win.UnregisterHotKey(Handle, 1); } catch (Exception skipEx) { SbLog.Skip(skipEx); }

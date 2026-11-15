@@ -114,6 +114,15 @@ static class SelfTest
                 LogKeep.Trim(f, 'd', 30, null);
                 Check("журнали: усе давнє - файл видалено", !File.Exists(f), "");
             });
+            Run("proctree", delegate
+            {
+                // 10 - корінь, 11 і 12 - його дочірні, 13 - онук; 14 має PID батька 10, але запущений раніше (чужий процес)
+                List<SysProc> all = new List<SysProc>();
+                int[][] d = { new[] { 10, 1, 100 }, new[] { 11, 10, 110 }, new[] { 12, 10, 120 }, new[] { 13, 12, 130 }, new[] { 14, 10, 50 }, new[] { 15, 1, 140 } };
+                foreach (int[] x in d) { SysProc s = new SysProc(); s.Pid = x[0]; s.Parent = x[1]; s.Created = x[2]; all.Add(s); }
+                Dictionary<int, SysProc> tr = SysProcs.Tree(all, 10);
+                Check("група процесів: корінь, дочірні й онук", tr.Count == 4 && tr.ContainsKey(13) && !tr.ContainsKey(14) && !tr.ContainsKey(15), string.Join(",", new List<int>(tr.Keys).ConvertAll(delegate (int i) { return i.ToString(); }).ToArray()));
+            });
             Run("search", delegate
             {
                 FindSpec s = FindSpec.Parse("звіт ext:pdf", 0);

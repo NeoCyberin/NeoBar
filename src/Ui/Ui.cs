@@ -194,6 +194,22 @@ static class Ico
                     g.FillRectangle(b, cx - h * 0.13f, cy - h * 0.7f, h * 0.08f, h * 0.15f);
                     g.FillRectangle(b, cx + h * 0.05f, cy - h * 0.7f, h * 0.08f, h * 0.15f);
                     break;
+                case "chip":   // мікросхема: корпус і ніжки з чотирьох боків (пристрої й драйвери)
+                {
+                    float cs = h * 0.62f;
+                    using (GraphicsPath cp = Util.Round(Rectangle.Round(new RectangleF(cx - cs, cy - cs, cs * 2, cs * 2)), Math.Max(1, (int)(h * 0.16f))))
+                        g.DrawPath(p, cp);
+                    g.FillRectangle(b, cx - cs * 0.38f, cy - cs * 0.38f, cs * 0.76f, cs * 0.76f);
+                    for (int k = -1; k <= 1; k++)
+                    {
+                        float o = k * cs * 0.55f;
+                        g.DrawLine(p, cx + o, cy - cs, cx + o, cy - h);
+                        g.DrawLine(p, cx + o, cy + cs, cx + o, cy + h);
+                        g.DrawLine(p, cx - cs, cy + o, cx - h, cy + o);
+                        g.DrawLine(p, cx + cs, cy + o, cx + h, cy + o);
+                    }
+                    break;
+                }
                 case "gear":   // гайковий ключ (налаштування віджета)
                 case "wrench":
                 {

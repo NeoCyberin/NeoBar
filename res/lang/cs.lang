@@ -10681,8 +10681,6 @@
 < Читання даних
 > Čtení dat
 
-< НАЖИВО
-> ŽIVĚ
 
 < Об'єкти малювання: шрифти, пера, зображення. Windows дозволяє до 10 000 на процес - далі програма перестає малюватись
 > Kreslicí objekty: písma, pera, obrázky. Windows povoluje až 10 000 na proces - pak se program přestane vykreslovat
@@ -10696,8 +10694,6 @@
 < Відеокарта
 > Grafická karta
 
-< Перегляд запису - не наживо
-> Prohlížení záznamu - ne živě
 
 < Збережений журнал
 > Uložený záznam
@@ -10765,3 +10761,573 @@
 
 < Журнали й підсумки з вкладки «Аналіз» у Моніторі системи (типова тека).
 > Záznamy a souhrny z karty „Analýza“ v monitoru systému (výchozí složka).
+
+< Іде запис - графік рухається разом із ним
+> Probíhá záznam - graf se pohybuje s ním
+
+< перегляд запису
+> prohlížení záznamu
+
+< Сума показників процесу й усіх, які він запустив (вкладки браузера, лаунчер і гра). Нові дочірні додаються самі
+> Součet procesu a všeho, co spustil (karty prohlížeče, spouštěč a hra). Nové podřízené procesy se přidají samy
+
+< Температури й навантаження за добу
+> Teploty a zátěž za den
+
+< Процесор: навантаження в середньому {0}, температура в середньому {1}, найвища {2}
+> Procesor: průměrná zátěž {0}, průměrná teplota {1}, nejvyšší {2}
+
+< Зайнято {0} % пам'яті. Найбільше займають: {1}.
+> Obsazeno {0} % paměti. Nejvíc zabírají: {1}.
+
+< Події під час запису:
+> Události během záznamu:
+
+< Щохвилини температури й навантаження. Видно в Моніторі системи → «Історія»; перевірка системи пояснює нею збої
+> Teploty a zátěž každou minutu. Vidět v Monitor systému → „Historie“; kontrola systému jimi vysvětluje poruchy
+
+<  Відеокарта тоді була дуже гаряча - найімовірніше, перегрів: перевірте вентилятори й пил, знизьте розгін.
+>  Grafická karta byla tehdy velmi horká - nejspíš přehřátí: zkontrolujte ventilátory a prach, snižte přetaktování.
+
+< Температура відеокарти {0} °C (межа {1} °C).
+> Teplota grafické karty {0} °C (mez {1} °C).
+
+< Сповіщень ще не було.
+> Zatím žádná upozornění.
+
+< Щохвилини, від {0}. Найвища температура й середнє навантаження за хвилину; розриви - NeoBar не працював.
+> Každou minutu, od {0}. Nejvyšší teplota a průměrná zátěž za minutu; mezery - NeoBar neběžel.
+
+< відеопам'ять {0} %
+> videopaměť {0} %
+
+< Температура процесора {0} °C (межа {1} °C).
+> Teplota procesoru {0} °C (mez {1} °C).
+
+< Температури
+> Teploty
+
+< відеокарта
+> grafická karta
+
+< Події під час гри:
+> Události během hry:
+
+< Навантаження
+> Zátěž
+
+< Усього: {0}. Останні: 
+> Celkem: {0}. Poslední: 
+
+< Відеокарта перегрівається
+> Grafická karta se přehřívá
+
+< °C; для більшості процесорів критично - 95-100
+> °C; pro většinu procesorů kritické 95-100
+
+< пам'ять {0} %
+> paměť {0} %
+
+< % зайнятої пам'яті відеокарти
+> % obsazené paměti grafické karty
+
+< Межа температури процесора
+> Mez teploty procesoru
+
+< Відеопам'ять майже вичерпана
+> Videopaměť téměř plná
+
+< FPS, температури, навантаження й події за гру - сповіщенням і файлом у «Документи → NeoBar → Ігри» (для ігор понад 2 хв)
+> FPS, teploty, zátěž a události hry - jako oznámení a soubor v Dokumenty → NeoBar → Hry (pro hry delší než 2 min)
+
+< Межа пам'яті одного процесу
+> Mez paměti jednoho procesu
+
+< FPS: не рахувався (увімкніть оверлей для цієї гри)
+> FPS: nepočítáno (zapněte overlay pro tuto hru)
+
+< Windows:
+> Windows:
+
+< Windows: відеодрайвер завис і перезапустився
+> Windows: grafický ovladač zamrzl a restartoval se
+
+< Звіт після гри: {0}
+> Zpráva po hře: {0}
+
+< Разом із дочірніми процесами (сума показників)
+> Spolu s podřízenými procesy (součet hodnot)
+
+< Windows: раптове вимкнення або перезавантаження
+> Windows: náhlé vypnutí nebo restart
+
+< , навантаження {0} %
+> , zátěž {0} %
+
+< {0} (PID {1}) займає {2} оперативної пам'яті (межа {3}). Можливо, у програмі витік пам'яті.
+> {0} (PID {1}) zabírá {2} operační paměti (mez {3}). Program možná má únik paměti.
+
+< Нагляд за системою
+> Dohled nad systémem
+
+< Windows: бракувало пам'яті
+> Windows: nedostatek paměti
+
+< ГБ оперативної пам'яті; 0 - половина всієї пам'яті
+> GB operační paměti; 0 - polovina veškeré paměti
+
+< Історія за добу
+> Historie za den
+
+< Звіт після гри
+> Zpráva po hře
+
+< Сповіщень під час гри: {0}.
+> Upozornění během hry: {0}.
+
+<  Температура відеокарти тоді була в нормі - причина, найімовірніше, у драйвері чи розгоні, а не в перегріві.
+>  Teplota grafické karty byla tehdy v normě - příčinou je nejspíš ovladač nebo přetaktování, ne přehřátí.
+
+< з дочірніми ({0})
+> s podřízenými ({0})
+
+< Клік - повний звіт.
+> Klik - celá zpráva.
+
+<  Перед раптовим вимкненням навантаження було на межі - можливо, блоку живлення бракує потужності.
+>  Před náhlým vypnutím byla zátěž na hraně - zdroji možná chybí výkon.
+
+< Перегрів, вичерпана пам'ять чи відеопам'ять, процес, що з'їв забагато пам'яті. Умова має триматися ~15 с; кожне сповіщення записується в журнал і позначається в записі аналізу процесу
+> Přehřátí, vyčerpaná paměť či videopaměť, proces, který spotřebuje příliš paměti. Stav musí trvat ~15 s; každé upozornění se zapíše do záznamu a vyznačí v analýze procesu
+
+< Журнал сповіщень
+> Záznam upozornění
+
+< Пам'ять: найбільше {0}; відеопам'ять: найбільше {1}
+> Paměť: nejvíc {0}; videopaměť: nejvíc {1}
+
+< Процесор перегрівається
+> Procesor se přehřívá
+
+<  Увімкніть «Історію за добу» (Налаштування → Панель), щоб наступного разу було видно температури в ту хвилину.
+>  Zapněte „Historii za den“ (Nastavení → Panel), abyste příště viděli teploty v tu minutu.
+
+< перед цим 
+> předtím 
+
+< Усі критичні сповіщення з часом
+> Všechna kritická upozornění s časem
+
+< Разом із дочірніми процесами
+> Spolu s podřízenými procesy
+
+< Процес займає забагато пам'яті
+> Proces zabírá příliš paměti
+
+< Межа відеопам'яті
+> Mez videopaměti
+
+< {0} - {1}, тривалість {2}
+> {0} - {1}, trvání {2}
+
+< з дочірніми
+> s podřízenými
+
+<  Відеопам'ять тоді була майже вся зайнята - гра чи програма вимагала більше, ніж є; знизьте якість текстур.
+>  Videopaměť byla tehdy téměř plná - hra či program potřebovaly víc, než je; snižte kvalitu textur.
+
+< Відеокарта: навантаження в середньому {0}, температура в середньому {1}, найвища {2}
+> Grafická karta: průměrná zátěž {0}, průměrná teplota {1}, nejvyšší {2}
+
+< Усі процеси групи завершились.
+> Všechny procesy skupiny skončily.
+
+< °C; для більшості відеокарт критично - 85-95
+> °C; pro většinu grafických karet kritické 85-95
+
+<  Перед раптовим вимкненням було дуже гаряче - комп'ютер міг вимкнутись від перегріву.
+>  Před náhlým vypnutím bylo velmi horko - počítač se mohl vypnout kvůli přehřátí.
+
+< о {0}: 
+> v {0}: 
+
+< Гра: {0}.
+> Hra: {0}.
+
+< Зайнято {0} % відеопам'яті ({1} з {2} ГБ). Гра чи програма може почати гальмувати або впасти.
+> Obsazeno {0} % videopaměti ({1} z {2} GB). Hra či program mohou začít trhat nebo spadnout.
+
+< Історію вимкнено: Налаштування → Панель → «Нагляд за системою».
+> Historie je vypnutá: Nastavení → Panel → „Dohled nad systémem“.
+
+< Критичні сповіщення за добу
+> Kritická upozornění za den
+
+< Межа температури відеокарти
+> Mez teploty grafické karty
+
+< Збираю дані: перша точка з'явиться за хвилину. Історія зберігається, поки NeoBar працює.
+> Sbírám data: první bod se objeví za minutu. Historie se zaznamenává, dokud běží NeoBar.
+
+< Оперативна пам'ять майже вичерпана
+> Operační paměť téměř plná
+
+< FPS: середній {0}, 1 % low {1}, найнижчий {2} (о {3})
+> FPS: průměr {0}, 1 % low {1}, nejnižší {2} (v {3})
+
+< Критичні сповіщення
+> Kritická upozornění
+
+< процесор
+> procesor
+
+< Найвища температура: процесор {0}, відеокарта {1}.
+> Nejvyšší teplota: procesor {0}, grafická karta {1}.
+
+< Драйвер не встановлено
+> Ovladač není nainstalován
+
+< ID обладнання: 
+> ID hardwaru: 
+
+< Проблема, код {0}
+> Problém, kód {0}
+
+< Видалити пристрій
+> Odebrat zařízení
+
+< Пристрої, яких зараз немає, лише засмічують список
+> Zařízení, která tu nejsou, jen zaplňují seznam
+
+< Підключені пристрої без службових (програмні, томи, системні шини, концентратори USB)
+> Připojená zařízení bez servisních (softwarová, svazky, systémové sběrnice, rozbočovače USB)
+
+< Частину драйверів не вдалося встановити
+> Část ovladačů se nepodařilo nainstalovat
+
+< Windows зупинила пристрій: він повідомив про збій
+> Windows zařízení zastavil: ohlásilo poruchu
+
+< Основні
+> Hlavní
+
+< Пристрої й драйвери: згрупований список без повторів, проблемні пристрої, вимкнення й видалення, сховище драйверів, оновлення з Windows Update
+> Zařízení a ovladače: seskupený seznam bez duplicit, problémová zařízení, vypnutí a odebrání, úložiště ovladačů, aktualizace z Windows Update
+
+< Виробник: 
+> Výrobce: 
+
+< Видалити драйвер {0} ({1}) для «{2}»: прибрати його з усіх пристроїв, що ним користуються, і зі сховища драйверів? Windows підбере інший драйвер, якщо він є.
+> Smazat ovladač {0} ({1}) pro „{2}“: odebrat ho ze všech zařízení, která ho používají, a z úložiště ovladačů? Windows vybere jiný ovladač, pokud existuje.
+
+< Завантажити й встановити драйверів: {0}? Windows Update зробить це сам; може знадобитись перезавантаження.
+> Stáhnout a nainstalovat ovladače ({0})? Windows Update to udělá sám; může být potřeba restart.
+
+< Готово. Щоб зміни набули чинності, перезавантажте комп'ютер.
+> Hotovo. Aby se změny projevily, restartujte počítač.
+
+< Читаю сховище драйверів…
+> Čtu úložiště ovladačů…
+
+< Пошкоджено записи в реєстрі - перевстановіть драйвер
+> Záznamy v registru jsou poškozené - přeinstalujte ovladač
+
+< Від'єднано: колись був підключений, зараз його немає
+> Odpojeno: kdysi bylo připojené, teď tu není
+
+< Вбудовані у Windows драйвери не видаляються
+> Ovladače vestavěné ve Windows se nemažou
+
+< Драйвер пошкоджено або його бракує
+> Ovladač je poškozený nebo chybí
+
+< Що робити: пошукайте драйвер у вкладці «Оновлення» або на сайті виробника за ID обладнання.
+> Co dělat: hledejte ovladač na kartě „Aktualizace“ nebo na webu výrobce podle ID hardwaru.
+
+< Windows не змогла завантажити драйвер
+> Windows nedokázal načíst ovladač
+
+< Видалити пакет {0} ({1}, {2}) зі сховища драйверів? Пристрої зараз ним не користуються.
+> Smazat balíček {0} ({1}, {2}) z úložiště ovladačů? Žádné zařízení ho teď nepoužívá.
+
+< Знайдено: {0}
+> Nalezeno: {0}
+
+< Для змін потрібні права адміністратора - Windows запитає дозвіл.
+> Změny potřebují práva správce - Windows požádá o svolení.
+
+< Не знайдено pnputil.exe
+> pnputil.exe nenalezen
+
+< Готово.
+> Hotovo.
+
+< Пошук пристрою
+> Hledat zařízení
+
+< Встановити всі ({0})
+> Nainstalovat vše ({0})
+
+< (однакових: {0})
+> (stejných: {0})
+
+< потрібне перезавантаження
+> je potřeba restart
+
+< не вдалося видалити {0} з {1}
+> nepodařilo se smazat {0} z {1}
+
+< Усі пристрої працюють - проблем не знайдено.
+> Všechna zařízení fungují - žádné problémy.
+
+< Драйвер: 
+> Ovladač: 
+
+< Нічого не знайдено.
+> Nic nenalezeno.
+
+< Windows Update повернув код {0}
+> Windows Update vrátil kód {0}
+
+< Встановити драйвери
+> Nainstalovat ovladače
+
+< Видалити застарілі
+> Smazat zastaralé
+
+< Підпис драйвера не перевірено
+> Podpis ovladače neověřen
+
+< Пристрої
+> Zařízení
+
+< Сховище драйверів
+> Úložiště ovladačů
+
+< Усі пристрої працюють, драйвери встановлено.
+> Všechna zařízení fungují, ovladače jsou nainstalované.
+
+< Потребують уваги
+> Vyžadují pozornost
+
+< Пристрої: потребують уваги - {0}
+> Zařízení: vyžadují pozornost - {0}
+
+< Пошук змін обладнання…
+> Hledám změny hardwaru…
+
+< Видаляю застарілі драйвери…
+> Mažu zastaralé ovladače…
+
+< Windows Update шукає драйвери - це може тривати до хвилини.
+> Windows Update hledá ovladače - může to trvat až minutu.
+
+< Прибрати {0} від'єднаних пристроїв (старі флешки, монітори, адаптери)? Пристрої, критичні для Windows, не зачіпаються. Якщо котрийсь підключити знову, Windows додасть його сама.
+> Odebrat {0} odpojených zařízení (staré flashky, monitory, adaptéry)? Zařízení kritická pro Windows se nedotknou. Po opětovném připojení je Windows přidá sám.
+
+< не вдалося прибрати {0} з {1}
+> nepodařilo se odebrat {0} z {1}
+
+< Невідомий пристрій
+> Neznámé zařízení
+
+< ID обладнання скопійовано.
+> ID hardwaru zkopírováno.
+
+< Завантажую й встановлюю…
+> Stahuji a instaluji…
+
+< \n\nЯкщо це ваша єдина клавіатура чи миша, увімкнути її назад буде важко.
+> \n\nPokud je to vaše jediná klávesnice či myš, bude těžké ji zase zapnout.
+
+< Копіювати ID
+> Kopírovat ID
+
+< Вимкнути «{0}»{1}? Увімкнути назад можна тут же, у фільтрі «Вимкнені».
+> Vypnout „{0}“{1}? Zapnout ho lze tady, ve filtru „Vypnutá“.
+
+< pnputil не відповідає
+> pnputil neodpovídá
+
+< Від'єднані
+> Odpojená
+
+< Вимкнути пристрій
+> Vypnout zařízení
+
+< Не налаштовано: драйвер не встановлено
+> Nenakonfigurováno: ovladač není nainstalován
+
+< Видалити «{0}»{1} з системи? Драйвер лишиться в сховищі: після «Шукати зміни обладнання» або перезавантаження Windows знайде пристрій і встановить його знову. Так лікують «зависле» обладнання.
+> Odebrat „{0}“{1} ze systému? Ovladač zůstane v úložišti: po „Vyhledat změny hardwaru“ nebo restartu ho Windows najde a nainstaluje znovu. Tak se léčí „zaseknutý“ hardware.
+
+< Драйвер завантажено, але пристрою не знайдено
+> Ovladač načten, ale zařízení nenalezeno
+
+< код {0}
+> kód {0}
+
+< , рахую розмір…
+> , počítám velikost…
+
+< Підготовлено до безпечного від'єднання
+> Připraveno k bezpečnému odebrání
+
+< Усі пристрої, зокрема службові й від'єднані
+> Všechna zařízení včetně servisních a odpojených
+
+< Видалити {0} застарілих пакетів драйверів ({1})? Для кожного є новіша версія, і жоден підключений пристрій ними не користується.
+> Smazat {0} zastaralých balíčků ovladačů ({1})? Ke každému existuje novější verze a žádné připojené zařízení je nepoužívá.
+
+< Пристрій відсутній або працює неправильно
+> Zařízení chybí nebo nefunguje správně
+
+< Потребують уваги: {0}. 
+> Vyžadují pozornost: {0}. 
+
+< Вимкнені
+> Vypnutá
+
+< Однакових пристроїв: {0} (дії - для всіх)
+> Stejných zařízení: {0} (akce platí pro všechna)
+
+< Ним користуються підключені пристрої - видаліть його з вкладки «Пристрої» («Видалити драйвер»)
+> Používají ho připojená zařízení - smažte ho z karty „Zařízení“ („Smazat ovladač“)
+
+< Вимикаю…
+> Vypínám…
+
+< використовується ({0})
+> používá se ({0})
+
+< Не вдається запустити: драйвер несумісний чи пошкоджений, або пристрій несправний
+> Nelze spustit: ovladač je nekompatibilní či poškozený, nebo je zařízení vadné
+
+< Драйвер повернув помилку під час запуску
+> Ovladač při spuštění vrátil chybu
+
+< Встановлення драйверів потребує прав адміністратора: запустіть NeoBar від імені адміністратора
+> Instalace ovladačů vyžaduje práva správce: spusťte NeoBar jako správce
+
+< Прибрати всі від'єднані
+> Odebrat všechna odpojená
+
+< Прибрати від'єднаний «{0}»{1}? Якщо підключити його знову, Windows додасть його сама.
+> Odebrat odpojené „{0}“{1}? Po opětovném připojení ho Windows přidá sám.
+
+< Критичний для запуску Windows - вимкнення й видалення недоступні
+> Kritické pro start Windows - vypnutí a odebrání nejsou dostupné
+
+< Прибрати від'єднані
+> Odebrat odpojená
+
+< Драйвер треба перевстановити
+> Ovladač je třeba přeinstalovat
+
+< Колись підключені, зараз їх немає: старі флешки, монітори, адаптери VPN. Їх можна прибрати - при підключенні Windows додасть знову
+> Kdysi připojená, teď chybí: staré flashky, monitory, adaptéry VPN. Lze je odebrat - po připojení je Windows přidá znovu
+
+< Інші пристрої
+> Ostatní zařízení
+
+< Драйвер не потрібен або вбудований
+> Ovladač není potřeba nebo je vestavěný
+
+< Видалити драйвер
+> Smazat ovladač
+
+< Служба: 
+> Služba: 
+
+< Пристрої й драйвери
+> Zařízení a ovladače
+
+< Пристрої, які вимкнено вручну
+> Ručně vypnutá zařízení
+
+< Драйвер заблоковано: він відомий проблемами
+> Ovladač zablokován: má známé problémy
+
+< Встановити
+> Nainstalovat
+
+< Зміни робить вбудований засіб Windows (pnputil). Критичні для запуску Windows пристрої не вимикаються й не видаляються.
+> Změny provádí vestavěný nástroj Windows (pnputil). Zařízení kritická pro start se nikdy nevypínají ani neodebírají.
+
+< Тут порожньо.
+> Tady nic není.
+
+< Цей засіб потребує Windows 10 версії 2004 або новішої
+> Tento nástroj vyžaduje Windows 10 verze 2004 nebo novější
+
+< \n\nЕкран на мить згасне, далі Windows покаже зображення без драйвера відеокарти (низька роздільність, без ігор).
+> \n\nObrazovka na chvíli zhasne, pak Windows zobrazí obraz bez grafického ovladače (nízké rozlišení, bez her).
+
+< лише від'єднаними
+> jen odpojenými
+
+< Прибираю від'єднані пристрої…
+> Odebírám odpojená zařízení…
+
+< Видаляю драйвер…
+> Mažu ovladač…
+
+< Драйвери, які Microsoft пропонує через Windows Update для вашого обладнання. Для відеокарт новіші драйвери зазвичай на сайті виробника (AMD, NVIDIA, Intel).
+> Ovladače, které Microsoft nabízí přes Windows Update pro váš hardware. Pro grafické karty bývají novější ovladače na webu výrobce (AMD, NVIDIA, Intel).
+
+< Драйвер: не встановлено
+> Ovladač: není nainstalován
+
+< Вмикаю…
+> Zapínám…
+
+< Стан: 
+> Stav: 
+
+< \nКлік - список пристроїв, драйвери й оновлення
+> \nKlik - seznam zařízení, ovladače a aktualizace
+
+< Працює
+> Funguje
+
+< ; застарілих: {0}
+> ; zastaralých: {0}
+
+< Старі версії драйверів, які лишились після оновлень і якими не користується жоден підключений пристрій
+> Staré verze ovladačů zbylé po aktualizacích, které nepoužívá žádné připojené zařízení
+
+< Зараз не підключено
+> Teď nepřipojeno
+
+< \n\nЯкщо через цей адаптер ви в інтернеті, з'єднання зникне.
+> \n\nPokud jste přes tento adaptér online, připojení zmizí.
+
+< Пристрої з помилкою: немає драйвера, не запускається, Windows зупинила
+> Zařízení s chybou: bez ovladače, nespouští se, zastavil je Windows
+
+< Що робити: перепідключіть пристрій, оновіть або перевстановіть драйвер («Видалити пристрій», потім «Шукати зміни обладнання»).
+> Co dělat: znovu připojte zařízení, aktualizujte nebo přeinstalujte ovladač („Odebrat zařízení“, pak „Vyhledat změny hardwaru“).
+
+< \n\nДля відеокарти Windows перейде на базовий драйвер (низька роздільність) до встановлення нового.
+> \n\nU grafické karty přejde Windows na základní ovladač (nízké rozlišení), dokud nenainstalujete nový.
+
+< застарілий
+> zastaralý
+
+< Шукати зміни обладнання (як у Диспетчері пристроїв) і перечитати список
+> Vyhledat změny hardwaru (jako ve Správci zařízení) a načíst seznam znovu
+
+< Сторонніх пакетів драйверів: {0}
+> Balíčků ovladačů třetích stran: {0}
+
+< Шукати оновлення
+> Hledat aktualizace
+
+< Нових драйверів у Windows Update немає.
+> Ve Windows Update nejsou nové ovladače.
+
+< Видаляю…
+> Mažu…
+
+< Читаю перелік пристроїв…
+> Čtu seznam zařízení…
