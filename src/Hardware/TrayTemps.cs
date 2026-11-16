@@ -207,14 +207,17 @@ static class TrayTemps
     {
         Slot s = slots[i];
         float v = Value(i);
-        string t = float.IsNaN(v) ? "–" : Math.Round(v).ToString();
+        bool none = float.IsNaN(v);
+        string t = none ? "–" : Math.Round(v).ToString();
         int col = s.Col.ToArgb();
-        if (s.Added && s.Shown == t && s.ColArgb == col) return;
+        string tip = s.Name + ": " + (none ? (Sensors.Ready ? (i == 0 ? L.T("драйвер не віддає цей датчик") : VendorGpu.Why()) : L.T("читаю датчик…")) : t + " °C");
+        if (s.Added && s.Shown == t && s.ColArgb == col && s.Tip == tip) return;
         try
         {
             Icon old = s.Ico;
-            s.Ico = Make(t, s.Col);
-            s.Tip = s.Name + ": " + (float.IsNaN(v) ? "—" : t + " °C");
+            // немає даних - сіра риска й пояснення в підказці, а не риска кольору датчика
+            s.Ico = Make(t, none ? Color.FromArgb(150, 150, 150) : s.Col);
+            s.Tip = tip;
             if (!s.Added) Add(s);
             else
             {

@@ -96,12 +96,16 @@ static class VendorGpu
                     if (!buses.Add(bus)) continue;                  // кожен ГП трапляється кілька разів (за виходами)
                     int st;
                     if (active != null && active(adlCtx, idx, out st) == 0 && st == 0) { }
+                    // окрема відеокарта важливіша за вбудоване ядро Ryzen (воно віддає ще й датчики ЦП, тож датчиків у нього буває більше):
+                    // у неї є вентилятор, температура пам'яті чи hotspot
                     int cnt = CountSensors(idx);
+                    if (cnt > 0 && (Has(14) || Has(15) || Has(9) || Has(27) || Has(50) || Has(51))) cnt += 1000;
                     adlAll.Add(idx);
                     LogSensors(idx, Marshal.PtrToStringAnsi(new IntPtr(a.ToInt64() + 280)), bus);
                     if (cnt > bestCount) { bestCount = cnt; best = idx; AdlName = Marshal.PtrToStringAnsi(new IntPtr(a.ToInt64() + 280)); }
                 }
                 adlIndex = best;
+                if (best >= 0) SbLog.W(SbLog.Sensors, "ADL: беру адаптер " + best + " (" + AdlName.Trim() + ")");
                 Status = best >= 0 ? "AMD ADL: " + AdlName.Trim() : L.T("AMD: датчики ADL недоступні (потрібна RX 400 або новіша)");
             }
             finally { Marshal.FreeHGlobal(arr); }
@@ -120,6 +124,16 @@ static class VendorGpu
             return c;
         }
         catch { return 0; }
+    }
+
+    static bool Has(int id) { return Marshal.ReadInt32(pmBuf, 4 + id * 8) != 0; }
+
+    // чому датчика немає - для підказки (драйвер є, але саме цього значення не дає)
+    public static string Why()
+    {
+        if (adlIndex >= 0 && AdlName.Trim().Length > 0) return L.F("драйвер AMD не віддає цей датчик для {0}", AdlName.Trim());
+        if (Status.Length > 0) return Status;
+        return L.T("драйвер не віддає цей датчик");
     }
 
     // у журнал: які датчики віддає драйвер (щоб знати, чого бракує)
@@ -154,7 +168,8 @@ static class VendorGpu
             if (adlPm(adlCtx, adlIndex, pmBuf) != 0) return false;
             float v;
             // індекси ADL_PMLOG_*: 1 частота ГП, 2 пам'яті, 8 температура (край), 9 пам'ять, 14 вентилятор об/хв, 15 вентилятор %,
-            // 19 завантаження ГП, 20 завантаження пам'яті, 21 напруга ГП, 23 потужність, 27 hotspot, 32 темп. ЦП, 33 потужн. ЦП, 34 частота ЦП
+            // 19 завантаження ГП, 20 завантаження пам'яті, 21 напруга ГП, 23 потужність, 27 hotspot, 32 темп. ЦП, 33 потужн. ЦП, 34 частота ЦП,
+            // 50/51 hotspot кристала графіки (GCD) і кеш-пам'яті (MCD) - так його віддають чиплетні RX 7000 замість 27
             if (Sensor(1, out v)) s.GfxClock = v;
             if (Sensor(2, out v)) s.MemClock = v;
             if (Sensor(8, out v)) s.Temp = v;
@@ -165,7 +180,13 @@ static class VendorGpu
             if (Sensor(20, out v)) s.MemLoad = v;
             if (Sensor(21, out v)) s.VoltMv = v;
             if (Sensor(23, out v)) s.PowerW = v;
-            if (Sensor(27, out v)) s.Hotspot = v;
+            if (Sensor(27, out v) && v > 0) s.Hotspot = v;
+            else
+            {
+                float gcd, mcd;
+                bool g1 = Sensor(50, out gcd) && gcd > 0, m1 = Sensor(51, out mcd) && mcd > 0;
+                if (g1 || m1) s.Hotspot = Math.Max(g1 ? gcd : 0, m1 ? mcd : 0);       // найгарячіша точка
+            }
             if (Sensor(32, out v) && v > 0) s.CpuTemp = v;
             if (Sensor(33, out v) && v > 0) s.CpuPowerW = v;
             if (Sensor(34, out v) && v > 0) s.CpuClock = v;

@@ -11407,3 +11407,66 @@
 
 < Цей ПК і локальна мережа
 > Tento PC a místní síť
+
+< Перезавантажте комп'ютер і повторіть.
+> Restartujte počítač a zkuste to znovu.
+
+< Жодне оновлення не встановилося
+> Žádná aktualizace se nenainstalovala
+
+< Найчастіше на комп'ютері неправильні дата чи час - перевірте їх і повторіть.
+> Nejčastěji má počítač špatné datum či čas - zkontrolujte je a zkuste to znovu.
+
+< Немає доступу
+> Přístup odepřen
+
+< Звільніть місце на системному диску (віджет «Очищення») і повторіть.
+> Uvolněte místo na systémovém disku (widget „Čištění“) a zkuste to znovu.
+
+< Оновлення заблоковано груповою політикою чи реєстром (так роблять програми для вимкнення оновлень). Поверніть доступ до Windows Update і повторіть.
+> Aktualizace blokuje zásada skupiny nebo registr (dělají to programy pro vypnutí aktualizací). Obnovte přístup k Windows Update a zkuste to znovu.
+
+< Бракує місця на диску
+> Na disku chybí místo
+
+< Увімкніть службу «Windows Update» (wuauserv): Монітор системи → Завдання → Служби, тип запуску «Вручну».
+> Zapněte službu „Windows Update“ (wuauserv): Monitor systému → Úlohy → Služby, typ spouštění „Ručně“.
+
+< Windows Update вимкнено політикою
+> Windows Update je vypnutý zásadou
+
+< Windows Update зараз зайнятий іншим встановленням
+> Windows Update je zaneprázdněn jinou instalací
+
+< Запустіть NeoBar від імені адміністратора.
+> Spusťte NeoBar jako správce.
+
+< Операцію скасовано
+> Operace zrušena
+
+< Не вдалося встановити захищене з'єднання з Windows Update
+> Nepodařilo se navázat zabezpečené spojení s Windows Update
+
+< Код помилки: 
+> Kód chyby: 
+
+< Дочекайтеся, поки воно закінчиться, або перезавантажте комп'ютер і повторіть.
+> Počkejte, až skončí, nebo restartujte počítač a zkuste to znovu.
+
+< Служба Windows Update вимкнена
+> Služba Windows Update je vypnutá
+
+< Перевірте інтернет. Якщо інтернет є - доступ до серверів Microsoft блокує брандмауер, VPN, проксі, файл hosts або програма, що вимикає оновлення й телеметрію. Спробуйте пізніше або вимкніть таке блокування.
+> Zkontrolujte internet. Pokud funguje, přístup k serverům Microsoftu blokuje brána firewall, VPN, proxy, soubor hosts nebo program vypínající aktualizace a telemetrii. Zkuste to později nebo blokování vypněte.
+
+< Немає зв'язку із сервером Windows Update
+> Žádné spojení se serverem Windows Update
+
+< драйвер не віддає цей датчик
+> ovladač tento senzor neposkytuje
+
+< читаю датчик…
+> čtu senzor…
+
+< драйвер AMD не віддає цей датчик для {0}
+> ovladač AMD tento senzor pro {0} neposkytuje

@@ -488,7 +488,7 @@ sealed partial class DeviceWindow : ToolWindow
         Btn(g, bb, updBusy ? L.T("Шукаю…") : L.T("Шукати оновлення"), canFind ? (Action)FindUpdates : null, ups == null ? 1 : 0, canFind);
         int y = r.Y + Px(52);
         if (updBusy && ups == null) { TxtC(g, L.T("Windows Update шукає драйвери - це може тривати до хвилини."), F, new Rectangle(r.X, y + Px(20), r.Width, Px(24)), P.Sub); return; }
-        if (updErr.Length > 0) { TxtW(g, L.T("Не вдалося: ") + updErr, F, new Rectangle(r.X, y, r.Width, Px(48)), P.Bad); return; }
+        if (updErr.Length > 0) { PaintErr(g, new Rectangle(r.X, y, r.Width, Px(130)), updErr); return; }
         if (ups == null) return;
         if (ups.Count == 0) { TxtC(g, L.T("Нових драйверів у Windows Update немає."), F, new Rectangle(r.X, y + Px(20), r.Width, Px(24)), P.Good); return; }
         int pend = Pending();
@@ -555,6 +555,25 @@ sealed partial class DeviceWindow : ToolWindow
         VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(4)), total, list.Height, sc, delegate (int v) { scroll[TabUpd] = v; Invalidate(); });
     }
 
+    // помилка: заголовок, порада, код - у картці, а не червоним рядком
+    void PaintErr(Graphics g, Rectangle r, string err)
+    {
+        string[] p = err.Split('\n');
+        string head = p[0], code = "", tip = "";
+        for (int i = 1; i < p.Length; i++)
+        {
+            if (p[i].Length == 0) continue;
+            if (p[i].StartsWith(L.T("Код помилки: "))) code = p[i]; else tip = tip.Length > 0 ? tip + " " + p[i] : p[i];
+        }
+        Card(g, r);
+        Rectangle ir = Rectangle.Inflate(r, -Px(14), -Px(12));
+        using (SolidBrush b = new SolidBrush(P.Bad)) g.FillEllipse(b, ir.X, ir.Y + Px(6), Px(8), Px(8));
+        TxtL(g, head, FB, new Rectangle(ir.X + Px(16), ir.Y, ir.Width - Px(16), Px(22)), P.Fg);
+        int y = ir.Y + Px(26);
+        if (tip.Length > 0) { TxtW(g, tip, F, new Rectangle(ir.X + Px(16), y, ir.Width - Px(16), Px(60)), P.Sub); y += Px(62); }
+        if (code.Length > 0) TxtL(g, code, FS, new Rectangle(ir.X + Px(16), ir.Bottom - Px(18), ir.Width - Px(16), Px(18)), Util.Blend(P.Bg, P.Sub, 0.7f));
+    }
+
     void FindUpdates()
     {
         updBusy = true; updErr = "";
@@ -604,7 +623,7 @@ sealed partial class DeviceWindow : ToolWindow
                 queued.Clear();
                 if (e == null || e.Length == 0) Say(L.T("Готово."), false);
                 else if (e == "!") Say(L.T("Готово. Щоб зміни набули чинності, перезавантажте комп'ютер."), false);
-                else Say(L.T("Не вдалося: ") + e, true);
+                else { string[] p = e.Split('\n'); Say(p.Length > 1 && p[1].Length > 0 ? p[0] + ". " + p[1] : p[0], true); }   // без коду - він у підказці драйвера
                 Reload();                           // список пристроїв - тихо у фоні
                 Invalidate();
             });

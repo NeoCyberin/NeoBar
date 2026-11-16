@@ -11407,3 +11407,66 @@
 
 < Цей ПК і локальна мережа
 > This PC and local network
+
+< Перезавантажте комп'ютер і повторіть.
+> Restart the computer and try again.
+
+< Жодне оновлення не встановилося
+> No update was installed
+
+< Найчастіше на комп'ютері неправильні дата чи час - перевірте їх і повторіть.
+> Most often the computer's date or time is wrong - check them and try again.
+
+< Немає доступу
+> Access denied
+
+< Звільніть місце на системному диску (віджет «Очищення») і повторіть.
+> Free up space on the system drive (Cleanup widget) and try again.
+
+< Оновлення заблоковано груповою політикою чи реєстром (так роблять програми для вимкнення оновлень). Поверніть доступ до Windows Update і повторіть.
+> Updates are blocked by group policy or the registry (update-disabling tools do this). Restore access to Windows Update and try again.
+
+< Бракує місця на диску
+> Not enough disk space
+
+< Увімкніть службу «Windows Update» (wuauserv): Монітор системи → Завдання → Служби, тип запуску «Вручну».
+> Turn on the "Windows Update" service (wuauserv): System monitor → Tasks → Services, startup type "Manual".
+
+< Windows Update вимкнено політикою
+> Windows Update is disabled by policy
+
+< Windows Update зараз зайнятий іншим встановленням
+> Windows Update is busy with another installation
+
+< Запустіть NeoBar від імені адміністратора.
+> Run NeoBar as administrator.
+
+< Операцію скасовано
+> Operation cancelled
+
+< Не вдалося встановити захищене з'єднання з Windows Update
+> Could not establish a secure connection to Windows Update
+
+< Код помилки: 
+> Error code: 
+
+< Дочекайтеся, поки воно закінчиться, або перезавантажте комп'ютер і повторіть.
+> Wait for it to finish, or restart the computer and try again.
+
+< Служба Windows Update вимкнена
+> The Windows Update service is disabled
+
+< Перевірте інтернет. Якщо інтернет є - доступ до серверів Microsoft блокує брандмауер, VPN, проксі, файл hosts або програма, що вимикає оновлення й телеметрію. Спробуйте пізніше або вимкніть таке блокування.
+> Check the internet. If it works, access to Microsoft servers is blocked by a firewall, VPN, proxy, the hosts file or a tool that disables updates and telemetry. Try later or turn that blocking off.
+
+< Немає зв'язку із сервером Windows Update
+> No connection to the Windows Update server
+
+< драйвер не віддає цей датчик
+> the driver does not provide this sensor
+
+< читаю датчик…
+> reading the sensor…
+
+< драйвер AMD не віддає цей датчик для {0}
+> the AMD driver does not report this sensor for {0}
