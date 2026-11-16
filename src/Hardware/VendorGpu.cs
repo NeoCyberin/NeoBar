@@ -235,7 +235,18 @@ static class VendorGpu
                 }
                 if (pref.Length > 0 && best >= 0 && gpus[best].Name != pref)
                     for (int i = 0; i < gpus.Count; i++) if (gpus[i].Sensors > 0 && gpus[i].Name == pref) best = i;
-                // основний запит датчиків (QueryPMLogData) нічого не дав - пробуємо журнал драйвера, далі OverdriveN
+                // основний запит датчиків (QueryPMLogData) нічого не дав - спершу новий інтерфейс драйвера (ADLX)
+                if (best < 0 && gpus.Count > 0 && InitAdlx(pref))
+                {
+                    adlxMode = true;
+                    for (int i = 0; i < gpus.Count; i++)
+                    {
+                        if (xNames.Contains(gpus[i].Name)) gpus[i].Sensors = 1;
+                        if (gpus[i].Name == xName) best = i;
+                    }
+                    if (best < 0) { best = 0; gpus[0].Sensors = 1; }
+                }
+                // далі - журнал драйвера й OverdriveN
                 if (best < 0 && gpus.Count > 0)
                 {
                     List<int> order = new List<int>();
@@ -267,7 +278,7 @@ static class VendorGpu
                 if (gpus.Count == 0) Status = L.F("AMD: драйвер не показав жодної відеокарти AMD ({0})", string.Join(", ", seenV.ToArray()));
                 adlIndex = best >= 0 ? idxOf[best] : -1;
                 AdlName = best >= 0 ? gpus[best].Name : "";
-                if (best >= 0) { Status = "AMD ADL: " + AdlName + (logMode ? L.T(" (журнал драйвера)") : odnMode ? L.T(" (лише температури)") : ""); adlRetries = 0; }
+                if (best >= 0) { Status = (adlxMode ? "AMD ADLX: " + (xName.Length > 0 ? xName : AdlName) : "AMD ADL: " + AdlName) + (logMode ? L.T(" (журнал драйвера)") : odnMode ? L.T(" (лише температури)") : ""); adlRetries = 0; }
                 else if (gpus.Count > 0)
                 {
                     List<string> nm = new List<string>();
@@ -278,7 +289,7 @@ static class VendorGpu
                     adlRetryAt = DateTime.UtcNow.AddSeconds(waits[Math.Min(adlRetries, waits.Length - 1)]);
                     adlRetries++;
                 }
-                SbLog.W(SbLog.Sensors, "ADL: " + (best >= 0 ? "беру " + AdlName + (logMode ? " (журнал драйвера)" : odnMode ? " (OverdriveN)" : "") : "датчиків немає") + (pref.Length > 0 ? ", у налаштуваннях - " + pref : ""));
+                SbLog.W(SbLog.Sensors, "ADL: " + (best >= 0 ? "беру " + AdlName + (adlxMode ? " (ADLX)" : "") + (logMode ? " (журнал драйвера)" : odnMode ? " (OverdriveN)" : "") : "датчиків немає") + (pref.Length > 0 ? ", у налаштуваннях - " + pref : ""));
             }
             finally { Marshal.FreeHGlobal(arr); }
         }
@@ -335,6 +346,122 @@ static class VendorGpu
 
     static float Odn(int v) { return v > 1000 ? v / 1000f : v; }
 
+    // ---------------- AMD ADLX ----------------
+    // Новий інтерфейс драйвера AMD (amdadlx64.dll) - ним користуються Adrenalin і FanControl. Свіжі драйвери можуть не
+    // віддавати датчики через старий ADL зовсім, тож коли ADL мовчить (або не дає hotspot) - беремо звідси.
+    // Об'єкти ADLX - таблиці функцій, як у COM; номери - порядок методів в ADLX SDK (ISystem.h, IPerformanceMonitoring.h).
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate int XFullVer(out ulong v);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate int XInit(ulong ver, out IntPtr sys);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate int XTerm();
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int XOut(IntPtr self, out IntPtr o);
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int XGpuOut(IntPtr self, IntPtr gpu, out IntPtr o);
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int XAt(IntPtr self, uint i, out IntPtr o);
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate uint XSize(IntPtr self);
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int XRel(IntPtr self);
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int XDbl(IntPtr self, out double v);
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int XInt(IntPtr self, out int v);
+
+    static readonly Dictionary<IntPtr, Delegate> xFns = new Dictionary<IntPtr, Delegate>();
+    static IntPtr xSys, xPerf, xGpu;
+    static XTerm xTerm;
+    static bool xTried, adlxMode;
+    static string xName = "";
+    static readonly List<string> xNames = new List<string>();
+
+    static T VFn<T>(IntPtr obj, int slot) where T : class
+    {
+        IntPtr f = Marshal.ReadIntPtr(Marshal.ReadIntPtr(obj), slot * IntPtr.Size);
+        Delegate d;
+        if (!xFns.TryGetValue(f, out d) || !(d is T)) { d = Marshal.GetDelegateForFunctionPointer(f, typeof(T)); xFns[f] = d; }
+        return d as T;
+    }
+
+    static void XRelease(IntPtr o)
+    {
+        try { if (o != IntPtr.Zero) VFn<XRel>(o, 1)(o); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+    }
+
+    static bool InitAdlx(string pref)
+    {
+        if (xTried) return xGpu != IntPtr.Zero;
+        xTried = true;
+        try
+        {
+            IntPtr lib = LoadSys(IntPtr.Size == 8 ? "amdadlx64.dll" : "amdadlx32.dll");
+            if (lib == IntPtr.Zero) { SbLog.W(SbLog.Sensors, "ADLX: бібліотеки драйвера немає"); return false; }
+            XFullVer fv = Fn<XFullVer>(lib, "ADLXQueryFullVersion");
+            XInit init = Fn<XInit>(lib, "ADLXInitialize");
+            xTerm = Fn<XTerm>(lib, "ADLXTerminate");
+            if (fv == null || init == null) return false;
+            ulong ver;
+            if (fv(out ver) != 0) return false;
+            int r = init(ver, out xSys);
+            if (r != 0 || xSys == IntPtr.Zero) { SbLog.W(SbLog.Sensors, "ADLX: не ініціалізувався, код " + r); xSys = IntPtr.Zero; return false; }
+            IntPtr list;
+            if (VFn<XOut>(xSys, 1)(xSys, out list) != 0 || list == IntPtr.Zero) return false;                 // GetGPUs
+            if (VFn<XOut>(xSys, 9)(xSys, out xPerf) != 0 || xPerf == IntPtr.Zero) { XRelease(list); return false; }   // GetPerformanceMonitoringServices
+            uint n = VFn<XSize>(list, 3)(list);
+            IntPtr pick = IntPtr.Zero; string pickName = ""; int pickRank = -1;
+            xNames.Clear();
+            for (uint i = 0; i < n && i < 16; i++)
+            {
+                IntPtr gpu;
+                if (VFn<XAt>(list, 11)(list, i, out gpu) != 0 || gpu == IntPtr.Zero) continue;                // At (IADLXGPUList)
+                IntPtr sp; int type = 0;
+                string nm = VFn<XOut>(gpu, 7)(gpu, out sp) == 0 && sp != IntPtr.Zero ? (Marshal.PtrToStringAnsi(sp) ?? "").Trim() : "";   // Name
+                VFn<XInt>(gpu, 5)(gpu, out type);                                                             // Type: 1 - вбудована, 2 - окрема
+                // чи віддає ця відеокарта хоч щось
+                IntPtr m;
+                bool ok = VFn<XGpuOut>(xPerf, 18)(xPerf, gpu, out m) == 0 && m != IntPtr.Zero;                // GetCurrentGPUMetrics
+                if (ok) XRelease(m);
+                SbLog.W(SbLog.Sensors, "ADLX відеокарта " + i + " (" + nm + ", тип " + type + "): " + (ok ? "датчики є" : "датчики недоступні"));
+                int rank = !ok ? -1 : pref.Length > 0 && nm == pref ? 3 : type == 2 ? 2 : 1;
+                if (ok) xNames.Add(nm);
+                if (rank > pickRank) { XRelease(pick); pick = gpu; pickName = nm; pickRank = rank; }
+                else XRelease(gpu);
+            }
+            XRelease(list);
+            if (pickRank < 0) { XRelease(pick); pick = IntPtr.Zero; }
+            xGpu = pick; xName = pickName;
+            return xGpu != IntPtr.Zero;
+        }
+        catch (Exception ex) { SbLog.W(SbLog.Sensors, "ADLX: " + ex.Message); xGpu = IntPtr.Zero; return false; }
+    }
+
+    static void ResetAdlx()
+    {
+        XRelease(xGpu); XRelease(xPerf);
+        xGpu = IntPtr.Zero; xPerf = IntPtr.Zero;
+        try { if (xSys != IntPtr.Zero && xTerm != null) xTerm(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        xSys = IntPtr.Zero;
+        xTried = false; adlxMode = false;
+    }
+
+    // показники з ADLX; onlyHot - лише hotspot (решту вже дав ADL)
+    static bool ReadAdlx(VendorStats s, bool onlyHot)
+    {
+        if (xGpu == IntPtr.Zero) return false;
+        IntPtr m;
+        if (VFn<XGpuOut>(xPerf, 18)(xPerf, xGpu, out m) != 0 || m == IntPtr.Zero) return false;
+        try
+        {
+            double d; int v;
+            if (VFn<XDbl>(m, 8)(m, out d) == 0 && d > 0 && d < 150) s.Hotspot = (float)d;                     // GPUHotspotTemperature
+            if (onlyHot) return true;
+            if (VFn<XDbl>(m, 4)(m, out d) == 0) s.Load = (float)d;                                            // GPUUsage
+            if (VFn<XInt>(m, 5)(m, out v) == 0) s.GfxClock = v;                                               // GPUClockSpeed
+            if (VFn<XInt>(m, 6)(m, out v) == 0) s.MemClock = v;                                               // GPUVRAMClockSpeed
+            if (VFn<XDbl>(m, 7)(m, out d) == 0) s.Temp = (float)d;                                            // GPUTemperature
+            if (VFn<XDbl>(m, 9)(m, out d) == 0 && d > 0) s.PowerW = (float)d;                                 // GPUPower
+            else if (VFn<XDbl>(m, 10)(m, out d) == 0 && d > 0) s.PowerW = (float)d;                           // GPUTotalBoardPower
+            if (VFn<XInt>(m, 11)(m, out v) == 0) s.FanRpm = v;                                                // GPUFanSpeed
+            if (VFn<XInt>(m, 13)(m, out v) == 0) s.VoltMv = v;                                                // GPUVoltage
+            s.Source = "AMD";
+            return !float.IsNaN(s.Temp) || !float.IsNaN(s.Load);
+        }
+        finally { XRelease(m); }
+    }
+
     static bool ReadAdl(VendorStats s)
     {
         if (preferChanged) { preferChanged = false; ResetAdl(); adlRetries = 0; }
@@ -343,6 +470,7 @@ static class VendorGpu
         if (adlIndex < 0 || adlPm == null) return false;
         try
         {
+            if (adlxMode) return ReadAdlx(s, false);
             if (odnMode)
             {
                 // лише температури: 1 - край, 2 - пам'ять, 7 - hotspot (мілліградуси)
@@ -400,6 +528,8 @@ static class VendorGpu
                 int tv;
                 if (odnTemp(adlCtx, adlIndex, 7, out tv) == 0 && tv > 0) s.Hotspot = Odn(tv);
             }
+            // hotspot так і немає - новий інтерфейс драйвера (ADLX) його зазвичай має
+            if (float.IsNaN(s.Hotspot) && InitAdlx(Prefer.Length > 0 ? Prefer : AdlName)) ReadAdlx(s, true);
             if (logMode && float.IsNaN(s.Temp) && float.IsNaN(s.Load)) return false;          // журнал ще порожній
             if (Sensor(32, out v) && v > 0) s.CpuTemp = v;
             if (Sensor(33, out v) && v > 0) s.CpuPowerW = v;
@@ -691,6 +821,7 @@ static class VendorGpu
     static void ResetAdl()
     {
         StopLog();
+        ResetAdlx();
         logTried = false;
         logMode = false; odnMode = false;
         try { if (adlCtx != IntPtr.Zero && adlDestroy != null) adlDestroy(adlCtx); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
