@@ -30,6 +30,7 @@ static class VendorGpu
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlActive(IntPtr ctx, int index, out int status);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlPmLog(IntPtr ctx, int index, IntPtr output);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlDestroy(IntPtr ctx);
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlOdnTemp(IntPtr ctx, int index, int type, out int temp);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlDevCreate(IntPtr ctx, int index, out uint device);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlDevDestroy(IntPtr ctx, uint device);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int AdlLogSupport(IntPtr ctx, int index, IntPtr info);
@@ -65,6 +66,9 @@ static class VendorGpu
     static AdlLogStart logStart;
     static AdlLogStop logStop;
     static uint logDev;
+    // режими, коли QueryPMLogData не працює: усі датчики з журналу драйвера або лише температури через OverdriveN
+    static bool logMode, odnMode;
+    static AdlOdnTemp odnTemp;
     static int logIndex = -1;
     static IntPtr logAddr, logIn, logOut;
     static bool logTried;
@@ -171,6 +175,7 @@ static class VendorGpu
             logSupport = Fn<AdlLogSupport>(lib, "ADL2_Adapter_PMLog_Support_Get");
             logStart = Fn<AdlLogStart>(lib, "ADL2_Adapter_PMLog_Start");
             logStop = Fn<AdlLogStop>(lib, "ADL2_Adapter_PMLog_Stop");
+            odnTemp = Fn<AdlOdnTemp>(lib, "ADL2_OverdriveN_Temperature_Get");
             if (create == null || num == null || info == null || adlPm == null) { Status = L.T("AMD: драйвер без потрібних функцій ADL"); return; }
             adlAllocKeep = Alloc;
             if (create(adlAllocKeep, 1, out adlCtx) != 0 || adlCtx == IntPtr.Zero) { Status = L.T("AMD: ADL не ініціалізувався"); return; }
@@ -191,6 +196,7 @@ static class VendorGpu
                 // для кожної шини беремо запис, що віддає найбільше датчиків
                 Dictionary<int, int> byBus = new Dictionary<int, int>();          // шина -> номер у gpus
                 List<int> idxOf = new List<int>(), score = new List<int>();
+                List<List<int>> allIdx = new List<List<int>>();
                 List<Gpu> gpus = new List<Gpu>();
                 for (int i = 0; i < n; i++)
                 {
@@ -212,8 +218,9 @@ static class VendorGpu
                     {
                         gi = gpus.Count; byBus[bus] = gi;
                         Gpu g = new Gpu(); g.Name = name.Length > 0 ? name : "AMD #" + bus;
-                        gpus.Add(g); idxOf.Add(idx); score.Add(-1);
+                        gpus.Add(g); idxOf.Add(idx); score.Add(-1); allIdx.Add(new List<int>());
                     }
+                    if (allIdx[gi].Count < 8) allIdx[gi].Add(idx);
                     if (sc > score[gi]) { score[gi] = sc; idxOf[gi] = idx; gpus[gi].Sensors = cnt; }
                 }
                 int best = -1;
@@ -228,11 +235,39 @@ static class VendorGpu
                 }
                 if (pref.Length > 0 && best >= 0 && gpus[best].Name != pref)
                     for (int i = 0; i < gpus.Count; i++) if (gpus[i].Sensors > 0 && gpus[i].Name == pref) best = i;
+                // основний запит датчиків (QueryPMLogData) нічого не дав - пробуємо журнал драйвера, далі OverdriveN
+                if (best < 0 && gpus.Count > 0)
+                {
+                    List<int> order = new List<int>();
+                    for (int i = 0; i < gpus.Count; i++) if (pref.Length > 0 && gpus[i].Name == pref) order.Add(i);
+                    for (int i = 0; i < gpus.Count; i++) if (!order.Contains(i) && gpus[i].Name.IndexOf("(TM) Graphics", StringComparison.OrdinalIgnoreCase) < 0) order.Add(i);
+                    for (int i = 0; i < gpus.Count; i++) if (!order.Contains(i)) order.Add(i);
+                    foreach (int gi in order)
+                    {
+                        foreach (int idx in allIdx[gi])
+                        {
+                            StartLog(idx);
+                            if (logAddr != IntPtr.Zero) { logMode = true; break; }
+                            int tv;
+                            int ro = odnTemp != null ? odnTemp(adlCtx, idx, 1, out tv) : -1;
+                            SbLog.W(SbLog.Sensors, "ADL адаптер " + idx + " (" + gpus[gi].Name + "): журнал драйвера не запустився; OverdriveN " + (ro == 0 ? "працює" : "код " + ro));
+                            if (ro == 0) { odnMode = true; logTried = true; break; }
+                        }
+                        if (logMode || odnMode)
+                        {
+                            best = gi;
+                            idxOf[gi] = logMode ? logIndex : allIdx[gi][0];
+                            foreach (int idx in allIdx[gi]) { int tv; if (odnMode && odnTemp(adlCtx, idx, 1, out tv) == 0) { idxOf[gi] = idx; break; } }
+                            gpus[gi].Sensors = 1;
+                            break;
+                        }
+                    }
+                }
                 lock (AdlGpus) { AdlGpus.Clear(); AdlGpus.AddRange(gpus); }
                 if (gpus.Count == 0) Status = L.F("AMD: драйвер не показав жодної відеокарти AMD ({0})", string.Join(", ", seenV.ToArray()));
                 adlIndex = best >= 0 ? idxOf[best] : -1;
                 AdlName = best >= 0 ? gpus[best].Name : "";
-                if (best >= 0) { Status = "AMD ADL: " + AdlName; adlRetries = 0; }
+                if (best >= 0) { Status = "AMD ADL: " + AdlName + (logMode ? L.T(" (журнал драйвера)") : odnMode ? L.T(" (лише температури)") : ""); adlRetries = 0; }
                 else if (gpus.Count > 0)
                 {
                     List<string> nm = new List<string>();
@@ -243,7 +278,7 @@ static class VendorGpu
                     adlRetryAt = DateTime.UtcNow.AddSeconds(waits[Math.Min(adlRetries, waits.Length - 1)]);
                     adlRetries++;
                 }
-                SbLog.W(SbLog.Sensors, "ADL: " + (best >= 0 ? "беру " + AdlName : "датчиків немає") + (pref.Length > 0 ? ", у налаштуваннях - " + pref : ""));
+                SbLog.W(SbLog.Sensors, "ADL: " + (best >= 0 ? "беру " + AdlName + (logMode ? " (журнал драйвера)" : odnMode ? " (OverdriveN)" : "") : "датчиків немає") + (pref.Length > 0 ? ", у налаштуваннях - " + pref : ""));
             }
             finally { Marshal.FreeHGlobal(arr); }
         }
@@ -279,7 +314,8 @@ static class VendorGpu
         if (!SbLog.On(SbLog.Sensors)) return;
         try
         {
-            if (adlPm(adlCtx, idx, pmBuf) != 0) { SbLog.W(SbLog.Sensors, "ADL адаптер " + idx + " (" + (name ?? "").Trim() + ", шина " + bus + "): датчики недоступні"); return; }
+            int rc = adlPm(adlCtx, idx, pmBuf);
+            if (rc != 0) { SbLog.W(SbLog.Sensors, "ADL адаптер " + idx + " (" + (name ?? "").Trim() + ", шина " + bus + "): датчики недоступні, код " + rc); return; }
             StringBuilder sb = new StringBuilder();
             for (int sid = 1; sid < 256; sid++)
                 if (Marshal.ReadInt32(pmBuf, 4 + sid * 8) != 0) sb.Append(sid + "=" + Marshal.ReadInt32(pmBuf, 4 + sid * 8 + 4) + " ");
@@ -291,10 +327,13 @@ static class VendorGpu
     static bool Sensor(int id, out float v)
     {
         v = float.NaN;
+        if (logMode) { v = LogValue(id); return !float.IsNaN(v); }
         if (Marshal.ReadInt32(pmBuf, 4 + id * 8) == 0) return false;
         v = Marshal.ReadInt32(pmBuf, 4 + id * 8 + 4);
         return true;
     }
+
+    static float Odn(int v) { return v > 1000 ? v / 1000f : v; }
 
     static bool ReadAdl(VendorStats s)
     {
@@ -304,7 +343,18 @@ static class VendorGpu
         if (adlIndex < 0 || adlPm == null) return false;
         try
         {
-            if (adlPm(adlCtx, adlIndex, pmBuf) != 0) return false;
+            if (odnMode)
+            {
+                // лише температури: 1 - край, 2 - пам'ять, 7 - hotspot (мілліградуси)
+                int tv;
+                if (odnTemp(adlCtx, adlIndex, 1, out tv) != 0) return false;
+                s.Temp = Odn(tv);
+                if (odnTemp(adlCtx, adlIndex, 7, out tv) == 0 && tv > 0) s.Hotspot = Odn(tv);
+                if (odnTemp(adlCtx, adlIndex, 2, out tv) == 0 && tv > 0) s.MemTemp = Odn(tv);
+                s.Source = "AMD";
+                return true;
+            }
+            if (!logMode && adlPm(adlCtx, adlIndex, pmBuf) != 0) return false;
             float v;
             // індекси ADL_PMLOG_*: 1 частота ГП, 2 пам'яті, 8 температура (край), 9 пам'ять, 14 вентилятор об/хв, 15 вентилятор %,
             // 19 завантаження ГП, 20 завантаження пам'яті, 21 напруга ГП, 23 потужність, 27 hotspot, 32 темп. ЦП, 33 потужн. ЦП, 34 частота ЦП,
@@ -327,7 +377,7 @@ static class VendorGpu
                 if (g1 || m1) s.Hotspot = Math.Max(g1 ? gcd : 0, m1 ? mcd : 0);       // найгарячіша точка
             }
             // hotspot чи температури пам'яті немає - беремо з журналу драйвера (див. StartLog)
-            if (float.IsNaN(s.Hotspot) || float.IsNaN(s.MemTemp))
+            if (!logMode && (float.IsNaN(s.Hotspot) || float.IsNaN(s.MemTemp)))
             {
                 if (!logTried) StartLog(adlIndex);
                 if (logAddr != IntPtr.Zero)
@@ -345,6 +395,12 @@ static class VendorGpu
                     if (float.IsNaN(s.MemTemp)) { float m3 = LogValue(9); if (m3 > 0 && m3 < 150) s.MemTemp = m3; }
                 }
             }
+            if (float.IsNaN(s.Hotspot) && odnTemp != null)
+            {
+                int tv;
+                if (odnTemp(adlCtx, adlIndex, 7, out tv) == 0 && tv > 0) s.Hotspot = Odn(tv);
+            }
+            if (logMode && float.IsNaN(s.Temp) && float.IsNaN(s.Load)) return false;          // журнал ще порожній
             if (Sensor(32, out v) && v > 0) s.CpuTemp = v;
             if (Sensor(33, out v) && v > 0) s.CpuPowerW = v;
             if (Sensor(34, out v) && v > 0) s.CpuClock = v;
@@ -353,7 +409,7 @@ static class VendorGpu
             if (float.IsNaN(s.CpuTemp) || float.IsNaN(s.CpuClock) || float.IsNaN(s.CpuPowerW))
                 foreach (int idx in adlAll)
                 {
-                    if (idx == adlIndex || adlPm(adlCtx, idx, pmBuf) != 0) continue;
+                    if (logMode || idx == adlIndex || adlPm(adlCtx, idx, pmBuf) != 0) continue;
                     if (float.IsNaN(s.CpuTemp) && Sensor(32, out v) && v > 0) s.CpuTemp = v;
                     if (float.IsNaN(s.CpuPowerW) && Sensor(33, out v) && v > 0) s.CpuPowerW = v;
                     if (float.IsNaN(s.CpuClock) && Sensor(34, out v) && v > 0) s.CpuClock = v;
@@ -636,6 +692,7 @@ static class VendorGpu
     {
         StopLog();
         logTried = false;
+        logMode = false; odnMode = false;
         try { if (adlCtx != IntPtr.Zero && adlDestroy != null) adlDestroy(adlCtx); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         adlCtx = IntPtr.Zero;
         adlIndex = -1;
