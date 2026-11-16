@@ -11510,3 +11510,9 @@
 
 <  ГБ (спільна з ОЗП)
 >  GB (shared with RAM)
+
+<  (журнал драйвера)
+>  (driver log)
+
+<  (лише температури)
+>  (temperatures only)
