@@ -141,6 +141,10 @@ sealed partial class SettingsForm
         loading = true;
         int si = Array.IndexOf(sideIds, c.Side);
         cbSide.SelectedIndex = si >= 0 ? si : 1;
+        // відеокарта для датчиків: збережена, навіть якщо зараз її не знайдено (щоб не загубити вибір)
+        int gi = gpuIds.IndexOf(c.GpuSensor);
+        if (gi < 0 && c.GpuSensor.Length > 0) { gpuIds.Add(c.GpuSensor); cbGpu.Items.Add(c.GpuSensor + L.T(" (зараз не знайдено)")); gi = gpuIds.Count - 1; }
+        cbGpu.SelectedIndex = Math.Max(0, gi);
         int mi = monIds.IndexOf(c.Monitor);
         if (mi < 0) mi = monIds.IndexOf("");
         cbMonitor.SelectedIndex = mi >= 0 ? mi : 0;
@@ -268,6 +272,8 @@ sealed partial class SettingsForm
         c.WAlerts = chWAlerts.Checked; c.WHistory = chWHistory.Checked; c.WGameReport = chWReport.Checked;
         c.WCpuT = (int)nWCpuT.Value; c.WGpuT = (int)nWGpuT.Value; c.WVramPct = (int)nWVram.Value; c.WProcGb = (int)nWProcGb.Value;
         Watch.FromCfg(c);
+        c.GpuSensor = gpuIds[Math.Max(0, Math.Min(gpuIds.Count - 1, cbGpu.SelectedIndex))];
+        VendorGpu.SetPrefer(c.GpuSensor);
         c.LogKeep = logKeepIds[Math.Max(0, cbLogKeep.SelectedIndex)];
         bool keepChanged = LogKeep.Spec != c.LogKeep;
         LogKeep.Spec = c.LogKeep;

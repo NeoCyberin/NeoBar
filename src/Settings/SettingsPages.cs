@@ -215,6 +215,17 @@ sealed partial class SettingsForm
             bTrayCol[i] = Bt(L.T("Колір"), "", 110, delegate { PickTrayColor(ti); });
             k.Row(tn[i], td[i], chTray[i], bTrayCol[i]);
         }
+        // звідки брати датчики відеокарти: автоматично або конкретна (коли їх кілька - окрема й вбудована в Ryzen)
+        cbGpu = Cb(320, L.T("Автоматично"));
+        gpuIds.Add("");
+        lock (VendorGpu.AdlGpus)
+            foreach (VendorGpu.Gpu g in VendorGpu.AdlGpus)
+            {
+                gpuIds.Add(g.Name);
+                cbGpu.Items.Add(g.Name + (g.Sensors > 0 ? "" : L.T(" (датчики недоступні)")));
+            }
+        k.Row(L.T("Відеокарта для датчиків"), L.T("Звідки брати температуру й hotspot, коли відеокарт кілька (окрема й вбудована в процесор)") +
+            (VendorGpu.Status.Length > 0 ? ". " + L.T("Зараз: ") + VendorGpu.Status : ""), cbGpu);
 
         k = p.Card(L.T("Нагляд за системою"));
         chWAlerts = Tg();
