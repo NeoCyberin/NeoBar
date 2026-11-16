@@ -11486,3 +11486,12 @@
 
 < Зараз: 
 > Teraz: 
+
+< AMD: драйвер не повідомив про відеокарти (ADL {0}, {1})
+> AMD: sterownik nie zgłosił kart graficznych (ADL {0}, {1})
+
+< AMD: драйвер не віддав список відеокарт (ADL {0})
+> AMD: sterownik nie zwrócił listy kart graficznych (ADL {0})
+
+< AMD: драйвер не показав жодної відеокарти AMD ({0})
+> AMD: sterownik nie pokazał żadnej karty graficznej AMD ({0})
