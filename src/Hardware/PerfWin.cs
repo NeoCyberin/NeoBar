@@ -176,25 +176,42 @@ sealed partial class PerfWindow : SbWindow
     {
         Card(g, r);
         Rectangle ri = Rectangle.Inflate(r, -Px(12), -Px(8));
-        int lw = Px(170);
+        // чотири рядки (є другий відеоадаптер) - нижчі: ширша ліва частина, обидва повзунки в один ряд
+        bool compact = r.Height < Px(170);
+        int lw = compact ? Px(250) : Px(170);
         TxtL(g, title, FB, new Rectangle(ri.X, ri.Y, lw, Px(20)), P.Fg);
         TxtL(g, sub, FS, new Rectangle(ri.X, ri.Y + Px(20), lw, Px(18)), P.Sub);
         for (int i = 0; i < vals.Length; i++)
             TxtL(g, vals[i], i == 0 ? FBig : F, new Rectangle(ri.X, ri.Y + Px(40) + (i == 0 ? 0 : Px(14) + i * Px(18)), lw, i == 0 ? Px(34) : Px(18)), i == 0 ? c : P.Fg);
         Graph(g, new Rectangle(ri.X + lw, ri.Y + Px(2), ri.Width - lw, ri.Height - Px(4)), H(hist), max, c);
+        if (key == null) return;                // без повзунків (другий відеоадаптер - лише тут)
         // показувати цей рядок у віджетах на панелі та на столі
         bool on = key == "cpu" ? Widgets.PerfCpu : (key == "gpu" ? Widgets.PerfGpu : Widgets.PerfRam);
         string k2 = key;
-        Switch(g, new Rectangle(ri.X, ri.Bottom - Px(22), lw - Px(10), Px(22)), L.T("На панелі"), on, delegate { Bar.SetPerfShow(k2, !on); });
         bool onDesk = deskSel.Contains(key);
-        Switch(g, new Rectangle(ri.X, ri.Bottom - Px(50), lw - Px(10), Px(22)), L.T("На столі"), onDesk, delegate { if (!onDesk) deskSel.Add(k2); else if (deskSel.Count > 1) deskSel.Remove(k2); Invalidate(); });
+        Rectangle sp, sd;
+        if (compact)
+        {
+            int hw = (lw - Px(16)) / 2;
+            sd = new Rectangle(ri.X, ri.Bottom - Px(20), hw, Px(20));
+            sp = new Rectangle(ri.X + hw + Px(6), ri.Bottom - Px(20), hw, Px(20));
+        }
+        else
+        {
+            sp = new Rectangle(ri.X, ri.Bottom - Px(22), lw - Px(10), Px(22));
+            sd = new Rectangle(ri.X, ri.Bottom - Px(50), lw - Px(10), Px(22));
+        }
+        Switch(g, sp, L.T("На панелі"), on, delegate { Bar.SetPerfShow(k2, !on); });
+        Switch(g, sd, L.T("На столі"), onDesk, delegate { if (!onDesk) deskSel.Add(k2); else if (deskSel.Count > 1) deskSel.Remove(k2); Invalidate(); });
     }
 
     void PaintMonitor(Graphics g, Rectangle r)
     {
         CultureInfo ic = CultureInfo.InvariantCulture;
         int gap = Px(8);
-        int rh = (r.Height - gap * 2) / 3;
+        bool two = Sensors.Gpu2Name.Length > 0;
+        int rows = two ? 4 : 3;
+        int rh = (r.Height - gap * (rows - 1)) / rows;
         Color cc = Color.FromArgb(70, 170, 255), gc = Color.FromArgb(90, 200, 110), rc = Color.FromArgb(200, 120, 240);
         if (Util.Lum(P.Bg) > 140) { cc = Color.FromArgb(20, 110, 210); gc = Color.FromArgb(30, 140, 60); rc = Color.FromArgb(140, 60, 190); }
 
@@ -213,9 +230,20 @@ sealed partial class PerfWindow : SbWindow
         string vr = (Sensors.VramTotalGb > 0 ? "VRAM " + Sensors.VramUsedGb.ToString("0.0", ic) + L.T(" з ") + Sensors.VramTotalGb.ToString("0", ic) + L.T(" ГБ") : "") +
                     (Sensors.GpuFan > 0 ? L.T(" · вент. ") + Sensors.GpuFan + L.T(" об/хв") : (float.IsNaN(Sensors.GpuFanPct) ? "" : L.T(" · вент. ") + Math.Round(Sensors.GpuFanPct) + "%"));
         if (Sensors.VendorSource.Length > 0) gs += " · " + Sensors.VendorSource;
-        Row(g, new Rectangle(r.X, r.Y + (rh + gap), r.Width, rh), L.T("ГП"), gs, new[] { Sensors.F0(Sensors.GpuLoad, "%"), gt, vr }, "gpu", 100, gc, "gpu");
+        Row(g, new Rectangle(r.X, r.Y + (rh + gap), r.Width, rh), two ? L.T("ГП · окрема") : L.T("ГП"), gs, new[] { Sensors.F0(Sensors.GpuLoad, "%"), gt, vr }, "gpu", 100, gc, "gpu");
+        int ny = r.Y + (rh + gap) * 2;
+        if (two)
+        {
+            // другий адаптер (вбудований у процесор чи ще одна карта): завантаження, температура, пам'ять (власна + спільна з ОЗП)
+            Color g2c = Util.Blend(gc, P.Sub, 0.45f);
+            string t2 = (float.IsNaN(Sensors.Gpu2Temp) ? L.T("темп. —") : Math.Round(Sensors.Gpu2Temp) + " °C");
+            string m2 = double.IsNaN(Sensors.Gpu2MemGb) ? "" : L.T("пам'ять ") + Sensors.Gpu2MemGb.ToString("0.0", ic) + L.T(" ГБ (спільна з ОЗП)");
+            Row(g, new Rectangle(r.X, ny, r.Width, rh), Sensors.Gpu2Integrated ? L.T("ГП · вбудована") : L.T("ГП · друга"), Sensors.Gpu2Name,
+                new[] { Sensors.F0(Sensors.Gpu2Load, "%"), t2, m2 }, "gpu2", 100, g2c, null);
+            ny += rh + gap;
+        }
 
         string ru = Sensors.RamTotalGb > 0 ? Sensors.RamUsedGb.ToString("0.0", ic) + L.T(" з ") + Sensors.RamTotalGb.ToString("0.0", ic) + L.T(" ГБ") : "";
-        Row(g, new Rectangle(r.X, r.Y + (rh + gap) * 2, r.Width, rh), L.T("Оперативна пам'ять"), L.T("ОЗП"), new[] { Sensors.F0(Sensors.Ram, "%"), ru }, "ram", 100, rc, "ram");
+        Row(g, new Rectangle(r.X, ny, r.Width, rh), L.T("Оперативна пам'ять"), L.T("ОЗП"), new[] { Sensors.F0(Sensors.Ram, "%"), ru }, "ram", 100, rc, "ram");
     }
 }

@@ -11495,3 +11495,18 @@
 
 < AMD: драйвер не показав жодної відеокарти AMD ({0})
 > AMD: sterownik nie pokazał żadnej karty graficznej AMD ({0})
+
+< ГП · окрема
+> GPU · osobna
+
+< ГП · вбудована
+> GPU · zintegrowana
+
+< ГП · друга
+> GPU · druga
+
+< пам'ять 
+> pamięć 
+
+<  ГБ (спільна з ОЗП)
+>  GB (współdzielona z RAM)
