@@ -257,6 +257,11 @@ static class Sensors
                         GpuLoad = float.NaN, GpuTemp = float.NaN, GpuPower = float.NaN, Vram = float.NaN, FpsNow = float.NaN, FrameMs = float.NaN,
                         GpuClock = float.NaN, MemClock = float.NaN, Hotspot = float.NaN, MemTemp = float.NaN, GpuPowerW = float.NaN,
                         GpuVolt = float.NaN, GpuFanPct = float.NaN, CpuPowerW = float.NaN, CpuPeak = float.NaN;
+    // другий відеоадаптер (зазвичай вбудований у процесор): назва порожня - його немає
+    public static string Gpu2Name = "";
+    public static float Gpu2Load = float.NaN, Gpu2Temp = float.NaN;
+    public static double Gpu2MemGb = double.NaN;
+    public static bool Gpu2Integrated;
     public const double BusyPct = 20;        // потік вважається працюючим, якщо завантажений понад цей відсоток
     public static int CpuBusy = -1;          // скільки логічних процесорів працює (понад BusyPct %)
     public static int CpuThreads;            // скільки логічних процесорів порахували
@@ -345,6 +350,7 @@ static class Sensors
                 pdh.Add("tz", "\\Thermal Zone Information(*)\\Temperature");
             pdh.Add("gpu", "\\GPU Engine(*)\\Utilization Percentage");
             pdh.Add("vram", "\\GPU Adapter Memory(*)\\Dedicated Usage");
+            pdh.Add("shmem", "\\GPU Adapter Memory(*)\\Shared Usage");
             pdh.Collect();
         }
         catch { pdh = null; }
@@ -432,7 +438,37 @@ static class Sensors
         public int CpuBusy = -1, CpuThreads, GpuFan = -1;
         public double VramUsedGb, VramTotalGb;
         public bool TempIsAcpi;
-        public string GpuName = "", VendorSource = "";
+        public string GpuName = "", VendorSource = "", Gpu2Name = "";
+        public float Gpu2Load = float.NaN, Gpu2Temp = float.NaN;
+        public double Gpu2MemGb = double.NaN;
+        public bool Gpu2Integrated;
+    }
+
+    // завантаження адаптера: найзавантаженіший рушій (3D, відео, копіювання...) - як у Диспетчері завдань
+    static float EngineLoad(string key)
+    {
+        Dictionary<string, double> eng = new Dictionary<string, double>();
+        foreach (KeyValuePair<string, double> kv in pdh.Values("gpu"))
+        {
+            string nk = kv.Key.ToLowerInvariant();
+            if (nk.IndexOf(key, StringComparison.Ordinal) < 0) continue;
+            int e = nk.IndexOf("_eng_", StringComparison.Ordinal);
+            string ek = e >= 0 ? nk.Substring(e) : nk;
+            double s;
+            eng.TryGetValue(ek, out s);
+            eng[ek] = s + kv.Value;
+        }
+        double mx = 0;
+        foreach (double v in eng.Values) mx = Math.Max(mx, v);
+        return eng.Count > 0 ? (float)Math.Min(100, mx) : float.NaN;
+    }
+
+    static double MemUsed(string counter, string key, out bool any)
+    {
+        double used = 0; any = false;
+        foreach (KeyValuePair<string, double> kv in pdh.Values(counter))
+            if (kv.Key.ToLowerInvariant().IndexOf(key, StringComparison.Ordinal) >= 0) { used += kv.Value; any = true; }
+        return used;
     }
 
     static Snap ready;
@@ -478,9 +514,14 @@ static class Sensors
     {
         Snap n = new Snap();
         n.VramUsedGb = VramUsedGb; n.VramTotalGb = VramTotalGb;       // без нового значення лишаються попередні
-        GpuAdapter ga = null;
-        try { List<GpuAdapter> al = Gpu.Adapters(); if (al.Count > 0) ga = al[0]; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        GpuAdapter ga = null, ga2 = null;
+        try { List<GpuAdapter> al = Gpu.Adapters(); if (al.Count > 0) ga = al[0]; if (al.Count > 1) ga2 = al[1]; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         n.GpuName = ga != null ? ga.Name : "";
+        if (ga2 != null)
+        {
+            n.Gpu2Name = ga2.Name;
+            n.Gpu2Integrated = ga2.Dedicated < 2UL * 1073741824UL;          // мало власної пам'яті - вбудований у процесор
+        }
         if (pdh != null)
         {
             pdh.Collect();
@@ -513,27 +554,20 @@ static class Sensors
 
             n.GpuLoad = float.NaN;
             n.Vram = float.NaN;
+            if (ga2 != null)
+            {
+                string key2 = ga2.LuidKey.ToLowerInvariant();
+                n.Gpu2Load = EngineLoad(key2);
+                bool a1, a2;
+                double m = MemUsed("vram", key2, out a1) + MemUsed("shmem", key2, out a2);
+                if (a1 || a2) n.Gpu2MemGb = m / 1073741824.0;
+            }
             if (ga != null)
             {
                 string key = ga.LuidKey.ToLowerInvariant();
-                Dictionary<string, double> eng = new Dictionary<string, double>();
-                foreach (KeyValuePair<string, double> kv in pdh.Values("gpu"))
-                {
-                    string nk = kv.Key.ToLowerInvariant();
-                    if (nk.IndexOf(key, StringComparison.Ordinal) < 0) continue;
-                    int e = nk.IndexOf("_eng_", StringComparison.Ordinal);
-                    string ek = e >= 0 ? nk.Substring(e) : nk;
-                    double s;
-                    eng.TryGetValue(ek, out s);
-                    eng[ek] = s + kv.Value;
-                }
-                double mx = 0;
-                foreach (double v in eng.Values) mx = Math.Max(mx, v);
-                if (eng.Count > 0) n.GpuLoad = (float)Math.Min(100, mx);
-                double used = 0;
-                bool any = false;
-                foreach (KeyValuePair<string, double> kv in pdh.Values("vram"))
-                    if (kv.Key.ToLowerInvariant().IndexOf(key, StringComparison.Ordinal) >= 0) { used += kv.Value; any = true; }
+                n.GpuLoad = EngineLoad(key);
+                bool any;
+                double used = MemUsed("vram", key, out any);
                 if (any)
                 {
                     n.VramUsedGb = used / 1073741824.0;
@@ -548,6 +582,11 @@ static class Sensors
         {
             double t, p; int f;
             if (Gpu.Perf(ga, out t, out p, out f)) { n.GpuTemp = (float)t; n.GpuPower = (float)p; n.GpuFan = f; }
+        }
+        if (ga2 != null)
+        {
+            double t2, p2; int f2;
+            if (Gpu.Perf(ga2, out t2, out p2, out f2) && !double.IsNaN(t2)) n.Gpu2Temp = (float)t2;
         }
 
         // датчики виробника відеокарти (AMD ADL / NVIDIA NVML)
@@ -584,6 +623,7 @@ static class Sensors
     {
         applied = true;
         GpuName = n.GpuName;
+        Gpu2Name = n.Gpu2Name; Gpu2Load = n.Gpu2Load; Gpu2Temp = n.Gpu2Temp; Gpu2MemGb = n.Gpu2MemGb; Gpu2Integrated = n.Gpu2Integrated;
         CpuPeak = n.CpuPeak;
         CpuBusy = n.CpuBusy;
         CpuThreads = n.CpuThreads;
@@ -635,6 +675,7 @@ static class Sensors
         Push("ctemp", CpuTemp);
         Push("cpow", CpuPowerW);
         Push("gpu", GpuLoad);
+        if (Gpu2Name.Length > 0) Push("gpu2", Gpu2Load);
         Push("gclk", GpuClock);
         Push("mclk", MemClock);
         Push("gtemp", GpuTemp);
