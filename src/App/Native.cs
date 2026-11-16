@@ -153,6 +153,8 @@ static class Win
     public delegate bool EnumWindowsProc(IntPtr h, IntPtr l);
     [DllImport("user32.dll")] public static extern bool EnumWindows(EnumWindowsProc cb, IntPtr l);
     [DllImport("user32.dll")] public static extern bool IsWindow(IntPtr h);
+    [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr h);
+    [DllImport("dwmapi.dll")] public static extern int DwmGetWindowAttribute(IntPtr h, int attr, out int val, int size);
     [DllImport("user32.dll")] public static extern IntPtr GetAncestor(IntPtr h, uint flags);
     [DllImport("user32.dll")] public static extern IntPtr GetWindow(IntPtr h, uint cmd);
     [DllImport("user32.dll")] public static extern IntPtr GetShellWindow();
@@ -229,6 +231,50 @@ static class Nat
             bool full = r.left <= b.Left && r.top <= b.Top && r.right >= b.Right && r.bottom >= b.Bottom;
             bool covers = full || (!onlyFullscreen && Win.IsZoomed(h));
             return covers && !IsTransientOverlay(h);
+        }
+        catch { return false; }
+    }
+
+    // Чи робочий стіл повністю схований: на КОЖНОМУ з моніторів, де видно шпалери, є розгорнуте чи повноекранне вікно.
+    // Не лише вікно з фокусом: розгорнуте вікно на одному моніторі не ховає шпалери на іншому. Прозорі накладки
+    // (оверлеї відеокарти, Discord, Steam), службові й приховані (cloaked) вікна стіл не закривають.
+    public static bool DesktopHidden(bool allMonitors)
+    {
+        try
+        {
+            System.Windows.Forms.Screen[] scr = allMonitors ? System.Windows.Forms.Screen.AllScreens : new[] { System.Windows.Forms.Screen.PrimaryScreen };
+            bool[] hid = new bool[scr.Length];
+            int left = scr.Length;
+            Win.EnumWindows(delegate (IntPtr h, IntPtr l)
+            {
+                if (!Win.IsWindowVisible(h) || Win.IsIconic(h)) return true;
+                int ex = GetStyle(h, -20);
+                if ((ex & 0x20) != 0 || (ex & 0x80) != 0 || (ex & 0x08000000) != 0) return true;       // прозоре для миші, службове, без активації
+                bool zoom = Win.IsZoomed(h);
+                Win.RECT r;
+                if (!Win.GetWindowRect(h, out r)) return true;
+                for (int i = 0; i < scr.Length; i++)
+                {
+                    if (hid[i]) continue;
+                    Rectangle b = scr[i].Bounds;
+                    bool full = r.left <= b.Left && r.top <= b.Top && r.right >= b.Right && r.bottom >= b.Bottom;
+                    // розгорнуте вікно лежить на цьому моніторі (його центр) і займає робочу область
+                    bool max = zoom && b.Contains((r.left + r.right) / 2, (r.top + r.bottom) / 2);
+                    if (!full && !max) continue;
+                    uint pid;
+                    if (Win.GetWindowThreadProcessId(h, out pid) != 0 && pid == SelfPid) break;
+                    StringBuilder cls = new StringBuilder(64);
+                    Win.GetClassName(h, cls, 64);
+                    string c = cls.ToString();
+                    if (c == "Progman" || c == "WorkerW" || c == "Shell_TrayWnd" || c == "Shell_SecondaryTrayWnd") break;
+                    int cloaked;
+                    if (Win.DwmGetWindowAttribute(h, 14, out cloaked, 4) == 0 && cloaked != 0) break;       // DWMWA_CLOAKED: вікно є, але його не видно
+                    if (IsTransientOverlay(h)) break;
+                    hid[i] = true; left--;
+                }
+                return left > 0;
+            }, IntPtr.Zero);
+            return left == 0;
         }
         catch { return false; }
     }

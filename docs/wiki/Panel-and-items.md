@@ -4,7 +4,7 @@
 
 - **Screen edge:** left, right, top or bottom, on any monitor. Width of a left/right panel: 56-240 px.
 - **Docked:** other windows adapt to the panel. **Auto-hide:** the panel lies over the windows and appears when the mouse reaches the edge. The *compact panel* option (sized to the content, centred, rounded) is for a top/bottom panel in auto-hide mode.
-- **Games and fullscreen programs:** the panel hides, search is disabled and everything else pauses; only the game overlay keeps working.
+- **Game mode** turns on by itself when a game from the library is in the foreground: the panel and desktop widgets hide, panel sensors, ping, search and security watch pause, and NeoBar's memory is released for the game. Only the overlay, the frame limiter and system watch keep running. The *Fullscreen programs* option does the same for fullscreen video or a presentation.
 - Start with Windows; run always as administrator (no UAC prompt at start).
 
 ## Items (Settings → Items)

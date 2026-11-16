@@ -30,10 +30,17 @@ sealed class DeskClock : LayeredForm
         if (s.Kind == "trash") { cleanHook = delegate { try { if (IsHandleCreated && !IsDisposed) BeginInvoke(new Action(TrashChanged)); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }; Cleaner.Changed += cleanHook; }
         if (s.Kind == "weather")
         {
-            // анімація погоди на віджеті: ~15 кадрів/с, лише коли є що показувати
+            // анімація погоди на віджеті: ~15 кадрів/с, лише коли є що показувати; без опадів, у грі чи коли віджет
+            // сховано таймер прокидається раз на секунду, а не 15 разів
             fxTimer = new System.Windows.Forms.Timer();
             fxTimer.Interval = 66;
-            fxTimer.Tick += delegate { if (Visible && ClockData.Bar != null && WeatherFx.Active(ClockData.Bar.Config)) Redraw(); };
+            fxTimer.Tick += delegate
+            {
+                bool act = Visible && !NeoBar.Paused && ClockData.Bar != null && WeatherFx.Active(ClockData.Bar.Config);
+                int want = act ? 66 : 1000;
+                if (fxTimer.Interval != want) fxTimer.Interval = want;
+                if (act) Redraw();
+            };
             fxTimer.Start();
         }
     }

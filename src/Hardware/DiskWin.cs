@@ -631,6 +631,10 @@ sealed class DiskWindow : SbWindow
             if (why.Length > 0) { msg = why; Invalidate(); return; }
             new FormatWindow(Bar, cur, di).Show();
         }, 0, !busy && fixedOk);
+        // суміжні засоби - тут же, щоб усе про диски було в одному місці (окремі віджети «Очищення» й «Відновлення» не обов'язкові)
+        Btn(g, new Rectangle(r.X + bw + Px(8), y, bw, bh), L.T("Відновити видалені файли…"), delegate { Bar.OpenRecover(); }, 0, true);
+        y += bh + Px(8);
+        Btn(g, new Rectangle(r.X, y, bw, bh), L.T("Очистити Windows від сміття…"), delegate { Bar.OpenClean(); }, 0, true);
         y += bh + Px(10);
         TxtW(g, (IsHdd ? L.T("Жорсткий диск: оптимізація = дефрагментація.") : L.T("SSD, флешки й карти пам'яті не дефрагментуються - для них виконується TRIM (повідомлення накопичувачу про звільнені блоки).")) +
             L.T(" Перевірка, оптимізація й зміна літери потребують прав адміністратора."), FS, new Rectangle(r.X, y, r.Width, Px(36)), P.Sub);

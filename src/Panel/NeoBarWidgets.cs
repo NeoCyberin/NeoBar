@@ -169,6 +169,8 @@ sealed partial class NeoBar
 
     public void OpenDevices() { OpenWin("devices", FirstWidget("devices"), delegate { return new DeviceWindow(this); }, false); }
 
+    public void OpenRecover() { OpenWin("recover", FirstWidget("recover"), delegate { return new RecoverPickWindow(this); }, false); }
+
     public void OpenClean() { OpenWin("clean", FirstWidget("clean"), delegate { return new CleanWindow(this); }, false); }
 
     // аналіз чи очищення завершено - оновити розмір сміття на віджеті
@@ -531,7 +533,7 @@ sealed partial class NeoBar
         // вигляд оверлею залежить від гри (загальний або власний)
         if (!object.ReferenceEquals(Games.Current, lookGame)) { lookGame = Games.Current; try { OverlayCfg.UseGame(lookGame); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         try { FpsLimiter.Tick(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
-        if (cfg.FsHide) CheckFullscreen();
+        if (cfg.FsHide || suspended || Games.InForeground) CheckFullscreen();
         if (OverlayModule.Visible != OverlayModule.Want) OverlayModule.Tick();
     }
 
@@ -574,6 +576,7 @@ sealed partial class NeoBar
             {
                 try
                 {
+                    if (!IsHandleCreated) return;
                     BeginInvoke(new Action(delegate
                     {
                         foreach (Entry x in entries) if (x.Kind == Kind.Widget && x.Target == "disk") { x.Sig = ""; Invalidate(RectOf(x)); }

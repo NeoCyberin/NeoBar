@@ -261,7 +261,7 @@ static class SysCheck
                 if (ev.Crash > 0) p.Add(L.F("збої NeoBar: {0} (востаннє {1}: {2})", ev.Crash, ev.CrashAt.ToString("g"), ev.CrashWhat));
                 string tip = ev.Gpu > 0 ? L.T(" Зависання відеодрайвера - найчастіше перегрів, розгін або нестабільний драйвер відеокарти; варто оновити або перевстановити драйвер.") : "";
                 tip += Explain(ev, gx, px);
-                if (!Watch.History && (ev.Gpu > 0 || ev.Power > 0)) tip += L.T(" Увімкніть «Історію за добу» (Налаштування → Панель), щоб наступного разу було видно температури в ту хвилину.");
+                if (!Watch.History && (ev.Gpu > 0 || ev.Power > 0)) tip += L.T(" Увімкніть «Історію за добу» (Налаштування → Система), щоб наступного разу було видно температури в ту хвилину.");
                 l.Add(new CheckItem(L.T("Стабільність системи"), ev.Gpu + ev.Mem + ev.Power > 0 ? 1 : 3, L.F("За {0} днів: ", SysEvents.Days) + string.Join("; ", p.ToArray()) + "." + tip)
                     .Add(L.T("Журнал подій"), delegate { Run("eventvwr.msc", "/c:System"); })
                     .Add(L.T("Історія"), delegate { NeoBar nb = ClockData.Bar; if (nb != null) nb.OpenPerf(4); }));

@@ -9,7 +9,7 @@ Widgets sit at the top of the panel; click one to open its window. Order them wi
 | **System monitor** | CPU, GPU, RAM, with graphs; specs; *Tasks* - processes and services; *Analysis* - load of a process (or a group with its children) over time; *History* - temperatures and load over the day. Temperatures can be shown in the tray. |
 | **Network** | Download/upload speed, ping, adapters, Wi-Fi, firewall switch. Diagnostics: ping, traceroute, ports; DNS check (a DNS server IP in the field - does it work and is it faster than yours; a site name - how different DNS servers see it; empty - do your DNS servers work); local network scan. |
 | **Devices** | Device and driver manager: problem devices, disabling and removal, driver store, updates from Windows Update with progress for each driver. See [[Tools]]. |
-| **Storage** | Drives with free space; health (SMART) and maintenance; formatting; file recovery. |
+| **Storage** | Drives with free space; health (SMART), speed and maintenance; formatting. The Maintenance tab also opens Windows cleanup and file recovery - separate widgets for them are optional. |
 | **Battery** | Charge and power state (shown only on devices with a battery). |
 | **Notes** | Notes on the desktop; they can be locked in place and saved to a file (.txt or .rtf - header menu). |
 | **Palette** | Eyedropper, colour models (HEX and others), swatches, one click copies HEX. |
@@ -47,7 +47,7 @@ Hover the graph to see the exact value and time. Minimum and maximum are marked 
 
 **Process groups.** The *Together with child processes* switch in the new-recording window sums the process and everything it started (browser tabs, launcher and game); new children are added automatically, and recording continues while any process of the group is alive. Critical alerts during recording are marked on the graph with a red line (hover to see what happened) and go into the .txt summary.
 
-## System watch (Settings → Panel)
+## System watch (Settings → System)
 
 Every 5 seconds NeoBar watches the sensors (cheap - the same shared polling the widgets use):
 

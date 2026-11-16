@@ -276,12 +276,15 @@ static class MftIndex
     }
 
     // звільнити пам'ять, якщо пошуком довго не користувались (наступний пошук збудує індекс знову)
+    // звільнити індекс негайно (ігровий режим): наступний пошук збере його знову
+    public static void Free() { IdleCheck("now"); }
+
     static void IdleCheck(object o)
     {
         lock (gate)
         {
             if (!ready || building) return;
-            if (unchecked(Environment.TickCount - (int)Interlocked.Read(ref lastUse)) < IdleMinutes * 60000) return;
+            if (o == null && unchecked(Environment.TickCount - (int)Interlocked.Read(ref lastUse)) < IdleMinutes * 60000) return;
             vols = new List<Vol>();
             ready = false; count = 0;
             if (idle != null) { idle.Dispose(); idle = null; }

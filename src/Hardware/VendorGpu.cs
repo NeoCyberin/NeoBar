@@ -871,6 +871,8 @@ static class CpuTempWmi
         return last;
     }
 
+    static int misses;
+
     static void Refresh()
     {
         float res = float.NaN; string src = "";
@@ -895,11 +897,12 @@ static class CpuTempWmi
                     if (float.IsNaN(best) || v > best) best = v;
                 }
                 float r = !float.IsNaN(pkg) ? pkg : best;
-                if (!float.IsNaN(r)) { last = r; Source = ns.Substring(ns.IndexOf('\\') + 1); return; }
+                if (!float.IsNaN(r)) { last = r; Source = ns.Substring(ns.IndexOf('\\') + 1); misses = 0; return; }
             }
             catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }
-        next = DateTime.Now.AddSeconds(30);       // нічого не запущено - не питати щосекунди
+        // нічого не запущено - не питати щосекунди; після кількох невдач - раз на 5 хв (кожен запит - виняток COM)
+        next = DateTime.Now.AddSeconds(++misses <= 2 ? 30 : 300);
         last = res; Source = src;
     }
 }
