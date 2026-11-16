@@ -60,6 +60,22 @@ static class VendorGpu
 
     static IntPtr Alloc(int size) { return Marshal.AllocHGlobal(Math.Max(1, size)); }
 
+    // відеокарти AMD, які знайшов ADL: назва й скільки датчиків віддає (0 - жодного) - для вибору в налаштуваннях і пояснень
+    public sealed class Gpu { public string Name = ""; public int Sensors; }
+    public static readonly List<Gpu> AdlGpus = new List<Gpu>();
+    public static volatile string Prefer = "";      // назва відеокарти для датчиків з налаштувань; "" - автоматично
+    static volatile bool preferChanged;
+    static DateTime adlRetryAt = DateTime.MinValue;
+    static int adlRetries;
+
+    public static void SetPrefer(string name)
+    {
+        name = name ?? "";
+        if (name == Prefer) return;
+        Prefer = name;
+        preferChanged = true;
+    }
+
     static void InitAdl()
     {
         adlTried = true;
@@ -70,7 +86,6 @@ static class VendorGpu
             AdlCreate create = Fn<AdlCreate>(lib, "ADL2_Main_Control_Create");
             AdlNum num = Fn<AdlNum>(lib, "ADL2_Adapter_NumberOfAdapters_Get");
             AdlInfo info = Fn<AdlInfo>(lib, "ADL2_Adapter_AdapterInfo_Get");
-            AdlActive active = Fn<AdlActive>(lib, "ADL2_Adapter_Active_Get");
             adlPm = Fn<AdlPmLog>(lib, "ADL2_New_QueryPMLogData_Get");
             adlDestroy = Fn<AdlDestroy>(lib, "ADL2_Main_Control_Destroy");
             if (create == null || num == null || info == null || adlPm == null) { Status = L.T("AMD: драйвер без потрібних функцій ADL"); return; }
@@ -86,27 +101,57 @@ static class VendorGpu
                 for (int i = 0; i < n * infoSize; i++) Marshal.WriteByte(arr, i, 0);
                 for (int i = 0; i < n; i++) Marshal.WriteInt32(arr, i * infoSize, infoSize);
                 if (info(adlCtx, arr, infoSize * n) != 0) return;
-                HashSet<int> buses = new HashSet<int>();
-                int best = -1, bestCount = 0;
+                // кожна відеокарта трапляється в списку кілька разів (за виходами), і датчики віддає не обов'язково перший запис -
+                // для кожної шини беремо запис, що віддає найбільше датчиків
+                Dictionary<int, int> byBus = new Dictionary<int, int>();          // шина -> номер у gpus
+                List<int> idxOf = new List<int>(), score = new List<int>();
+                List<Gpu> gpus = new List<Gpu>();
                 for (int i = 0; i < n; i++)
                 {
                     IntPtr a = new IntPtr(arr.ToInt64() + i * infoSize);
                     int idx = Marshal.ReadInt32(a, 4), bus = Marshal.ReadInt32(a, 264), vendor = Marshal.ReadInt32(a, 276);
                     if (vendor != 1002 && vendor != 0x1002) continue;
-                    if (!buses.Add(bus)) continue;                  // кожен ГП трапляється кілька разів (за виходами)
-                    int st;
-                    if (active != null && active(adlCtx, idx, out st) == 0 && st == 0) { }
+                    string name = (Marshal.PtrToStringAnsi(new IntPtr(a.ToInt64() + 280)) ?? "").Trim();
+                    int cnt = CountSensors(idx);
                     // окрема відеокарта важливіша за вбудоване ядро Ryzen (воно віддає ще й датчики ЦП, тож датчиків у нього буває більше):
                     // у неї є вентилятор, температура пам'яті чи hotspot
-                    int cnt = CountSensors(idx);
-                    if (cnt > 0 && (Has(14) || Has(15) || Has(9) || Has(27) || Has(50) || Has(51))) cnt += 1000;
-                    adlAll.Add(idx);
-                    LogSensors(idx, Marshal.PtrToStringAnsi(new IntPtr(a.ToInt64() + 280)), bus);
-                    if (cnt > bestCount) { bestCount = cnt; best = idx; AdlName = Marshal.PtrToStringAnsi(new IntPtr(a.ToInt64() + 280)); }
+                    int sc = cnt > 0 && (Has(14) || Has(15) || Has(9) || Has(27) || Has(50) || Has(51)) ? cnt + 1000 : cnt;
+                    int gi;
+                    if (!byBus.TryGetValue(bus, out gi))
+                    {
+                        gi = gpus.Count; byBus[bus] = gi;
+                        Gpu g = new Gpu(); g.Name = name.Length > 0 ? name : "AMD #" + bus;
+                        gpus.Add(g); idxOf.Add(idx); score.Add(-1);
+                    }
+                    if (sc > score[gi]) { score[gi] = sc; idxOf[gi] = idx; gpus[gi].Sensors = cnt; }
                 }
-                adlIndex = best;
-                if (best >= 0) SbLog.W(SbLog.Sensors, "ADL: беру адаптер " + best + " (" + AdlName.Trim() + ")");
-                Status = best >= 0 ? "AMD ADL: " + AdlName.Trim() : L.T("AMD: датчики ADL недоступні (потрібна RX 400 або новіша)");
+                int best = -1;
+                string pref = Prefer;
+                for (int i = 0; i < gpus.Count; i++)
+                {
+                    LogSensors(idxOf[i], gpus[i].Name, i);
+                    if (gpus[i].Sensors <= 0) continue;
+                    adlAll.Add(idxOf[i]);
+                    if (pref.Length > 0 && gpus[i].Name == pref) { best = i; break; }
+                    if (best < 0 || score[i] > score[best]) best = i;
+                }
+                if (pref.Length > 0 && best >= 0 && gpus[best].Name != pref)
+                    for (int i = 0; i < gpus.Count; i++) if (gpus[i].Sensors > 0 && gpus[i].Name == pref) best = i;
+                lock (AdlGpus) { AdlGpus.Clear(); AdlGpus.AddRange(gpus); }
+                adlIndex = best >= 0 ? idxOf[best] : -1;
+                AdlName = best >= 0 ? gpus[best].Name : "";
+                if (best >= 0) { Status = "AMD ADL: " + AdlName; adlRetries = 0; }
+                else if (gpus.Count > 0)
+                {
+                    List<string> nm = new List<string>();
+                    foreach (Gpu g in gpus) nm.Add(g.Name);
+                    Status = L.F("AMD: драйвер поки не віддає датчики для {0} - спробую ще раз", string.Join(", ", nm.ToArray()));
+                    // одразу після входу в Windows драйвер може бути ще не готовий - пробуємо знову за 20 с, 1 хв, 3 хв, далі раз на 10 хв
+                    int[] waits = { 20, 60, 180, 600 };
+                    adlRetryAt = DateTime.UtcNow.AddSeconds(waits[Math.Min(adlRetries, waits.Length - 1)]);
+                    adlRetries++;
+                }
+                SbLog.W(SbLog.Sensors, "ADL: " + (best >= 0 ? "беру " + AdlName : "датчиків немає") + (pref.Length > 0 ? ", у налаштуваннях - " + pref : ""));
             }
             finally { Marshal.FreeHGlobal(arr); }
         }
@@ -161,6 +206,8 @@ static class VendorGpu
 
     static bool ReadAdl(VendorStats s)
     {
+        if (preferChanged) { preferChanged = false; ResetAdl(); adlRetries = 0; }
+        if (adlTried && adlIndex < 0 && adlRetryAt != DateTime.MinValue && DateTime.UtcNow >= adlRetryAt) { adlRetryAt = DateTime.MinValue; ResetAdl(); }
         if (!adlTried) InitAdl();
         if (adlIndex < 0 || adlPm == null) return false;
         try
@@ -474,13 +521,18 @@ static class VendorGpu
     }
 
     // забути контексти бібліотек драйверів - наступне опитування підключиться заново (бібліотеки лишаються завантаженими)
-    static void Reinit()
+    static void ResetAdl()
     {
         try { if (adlCtx != IntPtr.Zero && adlDestroy != null) adlDestroy(adlCtx); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         adlCtx = IntPtr.Zero;
         adlIndex = -1;
         adlAll.Clear();
         adlTried = false;
+    }
+
+    static void Reinit()
+    {
+        ResetAdl();
         try { if (nvDev != IntPtr.Zero && nvShutdown != null) nvShutdown(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         nvDev = IntPtr.Zero;
         nvTried = false;

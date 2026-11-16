@@ -93,6 +93,7 @@ sealed class Cfg
     // поведінка
     public string Mode = "fixed";      // fixed | autohide
     public string Monitor = "";        // "" = основний, інакше DeviceName
+    public string GpuSensor = "";      // відеокарта для датчиків драйвера (назва); "" - автоматично
     public bool Compact;               // угорі/внизу: вікно по вмісту й по центру
     public int CornerGap = 48;         // автосховок: відступ від кутів екрана, px
     public bool ShowSearch = true;
@@ -337,6 +338,7 @@ static class Store
 
             case "mode": cfg.Mode = lv == "autohide" ? "autohide" : "fixed"; break;
             case "monitor": cfg.Monitor = val; break;
+            case "gpusensor": cfg.GpuSensor = val; break;
             case "compact": cfg.Compact = B(val); break;
             case "cornergap":
                 if (int.TryParse(val, out n)) cfg.CornerGap = Math.Max(0, Math.Min(300, n));
@@ -522,6 +524,7 @@ static class Store
         sb.AppendLine("@side " + c.Side);
         sb.AppendLine("@mode " + c.Mode);
         if (c.Monitor.Length > 0) sb.AppendLine("@monitor " + c.Monitor);
+        if (c.GpuSensor.Length > 0) sb.AppendLine("@gpusensor " + c.GpuSensor);
         sb.AppendLine("@compact " + Yn(c.Compact));
         sb.AppendLine("@cornergap " + c.CornerGap);
         sb.AppendLine("@width " + c.Width);

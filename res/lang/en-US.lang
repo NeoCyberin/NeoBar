@@ -3275,8 +3275,6 @@
 < AMD: ADL не ініціалізувався
 > AMD: ADL did not initialize
 
-< AMD: датчики ADL недоступні (потрібна RX 400 або новіша)
-> AMD: ADL sensors unavailable (RX 400 or newer required)
 
 < Intel: бібліотеки драйвера (ControlLib.dll) немає
 > Intel: driver library (ControlLib.dll) missing
@@ -11470,3 +11468,21 @@
 
 < драйвер AMD не віддає цей датчик для {0}
 > the AMD driver does not report this sensor for {0}
+
+<  (датчики недоступні)
+>  (sensors unavailable)
+
+< Звідки брати температуру й hotspot, коли відеокарт кілька (окрема й вбудована в процесор)
+> Where to take temperature and hotspot from when there are several GPUs (discrete and the one built into the CPU)
+
+< AMD: драйвер поки не віддає датчики для {0} - спробую ще раз
+> AMD: the driver is not reporting sensors for {0} yet - will try again
+
+<  (зараз не знайдено)
+>  (not found now)
+
+< Відеокарта для датчиків
+> GPU for sensors
+
+< Зараз: 
+> Now: 

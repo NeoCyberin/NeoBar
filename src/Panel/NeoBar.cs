@@ -303,6 +303,7 @@ sealed partial class NeoBar : Form
         Dice.Changed += DiceRedraw;
         UiWatch.Start(Handle);
         Watch.FromCfg(cfg);
+        VendorGpu.SetPrefer(cfg.GpuSensor);
         Watch.Start(this);              // критичні сповіщення, історія за добу, звіт після гри          // сторож зависань (свій потік) - записує їх у журнал помилок
         // строк зберігання журналів - через хвилину після запуску, щоб не заважати старту
         LogKeep.Spec = cfg.LogKeep;

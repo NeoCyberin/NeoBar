@@ -29,6 +29,7 @@ sealed partial class SettingsForm : Form, IGradHost
     List<Entry> list = new List<Entry>();
     readonly string[] sideIds = { "left", "right", "top", "bottom" };
     readonly List<string> monIds = new List<string>();
+    readonly List<string> gpuIds = new List<string>();
     readonly string[] styleIds = { "regular", "bold", "italic", "bolditalic" };
     bool loading, adminWas, autoWas;
 
@@ -67,7 +68,7 @@ sealed partial class SettingsForm : Form, IGradHost
     string wTitle = "", wDesc = "";
 
     // «Панель» і «Пошук»
-    SCombo cbSide, cbMonitor, cbMode;
+    SCombo cbSide, cbMonitor, cbMode, cbGpu;
     SNum nW, nGap;
     CheckBox chCompact, chFs, chAuto, chSearch, chHot, chFiles, chAdmin;
     CheckBox[] chTray = new CheckBox[3];                  // температури в треї: ЦП, ГП, hotspot
