@@ -160,7 +160,7 @@ static class VendorGpu
         try
         {
             IntPtr lib = LoadSys(IntPtr.Size == 8 ? "atiadlxx.dll" : "atiadlxy.dll");
-            if (lib == IntPtr.Zero) return;
+            if (lib == IntPtr.Zero) { SbLog.W(SbLog.Sensors, "ADL: бібліотеки драйвера AMD немає"); return; }
             AdlCreate create = Fn<AdlCreate>(lib, "ADL2_Main_Control_Create");
             AdlNum num = Fn<AdlNum>(lib, "ADL2_Adapter_NumberOfAdapters_Get");
             AdlInfo info = Fn<AdlInfo>(lib, "ADL2_Adapter_AdapterInfo_Get");
@@ -175,7 +175,8 @@ static class VendorGpu
             adlAllocKeep = Alloc;
             if (create(adlAllocKeep, 1, out adlCtx) != 0 || adlCtx == IntPtr.Zero) { Status = L.T("AMD: ADL не ініціалізувався"); return; }
             int n;
-            if (num(adlCtx, out n) != 0 || n <= 0 || n > 256) return;
+            int rn = num(adlCtx, out n);
+            if (rn != 0 || n <= 0 || n > 256) { Status = L.F("AMD: драйвер не повідомив про відеокарти (ADL {0}, {1})", rn, n); return; }
             const int infoSize = 1572;                          // розмір AdapterInfo (Windows)
             IntPtr arr = Marshal.AllocHGlobal(infoSize * n);
             if (pmBuf == IntPtr.Zero) pmBuf = Marshal.AllocHGlobal(4 + 256 * 8);
@@ -183,7 +184,9 @@ static class VendorGpu
             {
                 for (int i = 0; i < n * infoSize; i++) Marshal.WriteByte(arr, i, 0);
                 for (int i = 0; i < n; i++) Marshal.WriteInt32(arr, i * infoSize, infoSize);
-                if (info(adlCtx, arr, infoSize * n) != 0) return;
+                int ri = info(adlCtx, arr, infoSize * n);
+                if (ri != 0) { Status = L.F("AMD: драйвер не віддав список відеокарт (ADL {0})", ri); return; }
+                List<string> seenV = new List<string>();
                 // кожна відеокарта трапляється в списку кілька разів (за виходами), і датчики віддає не обов'язково перший запис -
                 // для кожної шини беремо запис, що віддає найбільше датчиків
                 Dictionary<int, int> byBus = new Dictionary<int, int>();          // шина -> номер у gpus
@@ -193,8 +196,13 @@ static class VendorGpu
                 {
                     IntPtr a = new IntPtr(arr.ToInt64() + i * infoSize);
                     int idx = Marshal.ReadInt32(a, 4), bus = Marshal.ReadInt32(a, 264), vendor = Marshal.ReadInt32(a, 276);
-                    if (vendor != 1002 && vendor != 0x1002) continue;
                     string name = (Marshal.PtrToStringAnsi(new IntPtr(a.ToInt64() + 280)) ?? "").Trim();
+                    string udid = (Marshal.PtrToStringAnsi(new IntPtr(a.ToInt64() + 8)) ?? "").ToUpperInvariant();
+                    // AMD - за кодом виробника; деякі драйвери пишуть його інакше, тож ще за PCI-ідентифікатором і назвою
+                    bool amd = vendor == 1002 || vendor == 0x1002 || udid.Contains("VEN_1002")
+                               || name.IndexOf("Radeon", StringComparison.OrdinalIgnoreCase) >= 0 || name.StartsWith("AMD", StringComparison.OrdinalIgnoreCase);
+                    if (seenV.Count < 8) seenV.Add(vendor + ":" + (name.Length > 0 ? name : "?"));
+                    if (!amd) continue;
                     int cnt = CountSensors(idx);
                     // окрема відеокарта важливіша за вбудоване ядро Ryzen (воно віддає ще й датчики ЦП, тож датчиків у нього буває більше):
                     // у неї є вентилятор, температура пам'яті чи hotspot
@@ -221,6 +229,7 @@ static class VendorGpu
                 if (pref.Length > 0 && best >= 0 && gpus[best].Name != pref)
                     for (int i = 0; i < gpus.Count; i++) if (gpus[i].Sensors > 0 && gpus[i].Name == pref) best = i;
                 lock (AdlGpus) { AdlGpus.Clear(); AdlGpus.AddRange(gpus); }
+                if (gpus.Count == 0) Status = L.F("AMD: драйвер не показав жодної відеокарти AMD ({0})", string.Join(", ", seenV.ToArray()));
                 adlIndex = best >= 0 ? idxOf[best] : -1;
                 AdlName = best >= 0 ? gpus[best].Name : "";
                 if (best >= 0) { Status = "AMD ADL: " + AdlName; adlRetries = 0; }
