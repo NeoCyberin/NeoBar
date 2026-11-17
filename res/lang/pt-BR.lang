@@ -2186,8 +2186,6 @@
 < Відновити в…
 > Recuperar para…
 
-< Відновлення файлів
-> Recuperação de arquivos
 
 < Папка, з якої зникли файли (для видаленої теки - та, де вона лежала)
 > Pasta de onde os arquivos sumiram (para uma pasta excluída - aquela onde ela estava)
@@ -9437,8 +9435,6 @@
 < QR-код: текст, посилання, Wi-Fi, контакт та інше\nКлік - створити QR-код
 > QR code: texto, link, Wi-Fi, contato e mais\nClique - criar um QR code
 
-< Відновлення видалених файлів і папок з диска чи флешки\nКлік - вибрати диск і знайти файли
-> Recuperar arquivos e pastas excluídos de uma unidade ou pen drive\nClique - escolher uma unidade e encontrar arquivos
 
 < Безпека: перевірка…
 > Segurança: verificando…
@@ -9464,17 +9460,9 @@
 < Шифрування тексту й файлів, хеш-суми\nКлік - відкрити (можна й перетягнути файл у вікно)
 > Criptografia de texto e arquivos, hashes\nClique - abrir (você também pode arrastar um arquivo para a janela)
 
-< Сміття: 
-> Lixo: 
 
-<  (перевірено о 
->  (verificado às 
 
-< Очищення Windows від сміття
-> Limpeza de lixo do Windows
 
-< \nКлік - аналіз і очищення
-> \nClique - analisar e limpar
 
 < Нотатки на робочому столі: 
 > Notas da área de trabalho: 
@@ -11052,8 +11040,6 @@
 < Потребують уваги
 > Precisam de atenção
 
-< Пристрої: потребують уваги - {0}
-> Dispositivos: precisam de atenção - {0}
 
 < Пошук змін обладнання…
 > Procurando alterações de hardware…
@@ -11181,8 +11167,6 @@
 < Служба: 
 > Serviço: 
 
-< Пристрої й драйвери
-> Dispositivos e drivers
 
 < Пристрої, які вимкнено вручну
 > Dispositivos desativados manualmente
@@ -11226,8 +11210,6 @@
 < Стан: 
 > Estado: 
 
-< \nКлік - список пристроїв, драйвери й оновлення
-> \nClique - lista de dispositivos, drivers e atualizações
 
 < Працює
 > Funcionando
@@ -11488,11 +11470,7 @@
 < Нотатки на робочому столі: текст і списки, захист паролем
 > Notas na área de trabalho: texto e listas, proteção por senha
 
-< Монітор системи: навантаження й температури ЦП, відеокарти й пам'яті, характеристики, процеси й служби, аналіз програми, історія за добу
-> Monitor do sistema: carga e temperaturas de CPU, placa de vídeo e memória, especificações, processos e serviços, análise de programa, histórico diário
 
-< Простір: диски й флешки - вільне місце, стан (SMART), швидкість, обслуговування
-> Armazenamento: discos e pen drives - espaço livre, estado (SMART), velocidade, manutenção
 
 < Де стоїть панель, як поводиться в іграх і як запускається
 > Onde fica o painel, como se comporta em jogos e como inicia
@@ -11515,17 +11493,11 @@
 < Кубик: випадкове число або вибір зі свого списку (що подивитися, у що пограти)
 > Dado: número aleatório ou escolha da sua lista (o que assistir, o que jogar)
 
-< Пристрої й драйвери: список без повторів, проблемні пристрої, вимкнення й видалення, сховище драйверів, оновлення з Windows Update
-> Dispositivos e drivers: lista sem duplicatas, dispositivos com problema, desativar e remover, repositório de drivers, atualizações do Windows Update
 
 < Мережа: швидкість, пінг, адаптери й Wi-Fi, діагностика, брандмауер
 > Rede: velocidade, ping, adaptadores e Wi-Fi, diagnóstico, firewall
 
-< Очищення: тимчасові файли, кеші браузерів і програм, звіти про помилки
-> Limpeza: arquivos temporários, caches de navegadores e programas, relatórios de erros
 
-< Відновлення видалених файлів і папок з диска чи флешки, також після форматування
-> Recuperação de arquivos e pastas excluídos de um disco ou pen drive, também após formatar
 
 < Поки запущена гра з бібліотеки NeoBar - навіть згорнута, у вікні чи на іншому моніторі. За пів хвилини відео звільняє відеокарту, на екрані лишається останній кадр
 > Enquanto um jogo da biblioteca do NeoBar estiver rodando - mesmo minimizado, em janela ou em outro monitor. Após meio minuto o vídeo libera a placa de vídeo e fica o último quadro na tela
@@ -11547,3 +11519,18 @@
 
 < Історію вимкнено: Налаштування → Система → «Нагляд за системою».
 > Histórico desativado: Configurações → Sistema → Vigilância do sistema.
+
+< Запис програми
+> Gravação de programa
+
+< Температури й навантаження всієї системи щохвилини за останню добу, разом зі сповіщеннями й збоями Windows
+> Temperaturas e carga de todo o sistema a cada minuto no último dia, com alertas e falhas do Windows
+
+< Монітор системи: навантаження й температури ЦП, відеокарти й пам'яті, характеристики, пристрої й драйвери, процеси й служби, аналіз програми й історія за добу
+> Monitor do sistema: carga e temperaturas de CPU, placa de vídeo e memória, especificações, dispositivos e drivers, processos e serviços, análise de programa e histórico diário
+
+< Простір: диски й флешки - вільне місце, стан (SMART), швидкість, обслуговування; очищення Windows від сміття; відновлення видалених файлів
+> Armazenamento: discos e pen drives - espaço livre, estado (SMART), velocidade, manutenção; limpeza do Windows; recuperação de arquivos excluídos
+
+< Навантаження однієї програми (чи групи з дочірніми процесами) у часі, з журналом
+> Carga de um programa (ou grupo com processos filhos) ao longo do tempo, com log

@@ -181,7 +181,7 @@ static class Watch
         AddEvent(title + ". " + text);
         try { ProcRecorder.AddMark(title); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         if (game != null) game.Events.Add(DateTime.Now.ToString("HH:mm") + "  " + title);
-        try { NeoBar b = bar; if (b != null && !b.IsDisposed) ToastForm.ShowClick(b, title, text, "bell", delegate { b.OpenPerf(4); }); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        try { NeoBar b = bar; if (b != null && !b.IsDisposed) ToastForm.ShowClick(b, title, text, "bell", delegate { b.OpenPerf(PerfWindow.TabHistory); }); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
     public static void TrimLog(char mode, int n) { lock (logGate) LogKeep.Trim(AlertLog, mode, n, null); }

@@ -2186,8 +2186,6 @@
 < Відновити в…
 > Obnovit do…
 
-< Відновлення файлів
-> Obnova souborů
 
 < Папка, з якої зникли файли (для видаленої теки - та, де вона лежала)
 > Složka, ze které soubory zmizely (u smazané složky - ta, ve které byla)
@@ -9437,8 +9435,6 @@
 < QR-код: текст, посилання, Wi-Fi, контакт та інше\nКлік - створити QR-код
 > QR kód: text, odkaz, Wi-Fi, kontakt a další\nKlik - vytvořit QR kód
 
-< Відновлення видалених файлів і папок з диска чи флешки\nКлік - вибрати диск і знайти файли
-> Obnovit smazané soubory a složky z disku nebo USB flash disku\nKlik - vybrat disk a najít soubory
 
 < Безпека: перевірка…
 > Zabezpečení: kontroluje se…
@@ -9464,17 +9460,9 @@
 < Шифрування тексту й файлів, хеш-суми\nКлік - відкрити (можна й перетягнути файл у вікно)
 > Šifrování textu a souborů, hashe\nKlik - otevřít (soubor lze také přetáhnout do okna)
 
-< Сміття: 
-> Odpad: 
 
-<  (перевірено о 
->  (zkontrolováno v 
 
-< Очищення Windows від сміття
-> Čištění odpadu Windows
 
-< \nКлік - аналіз і очищення
-> \nKlik - analyzovat a vyčistit
 
 < Нотатки на робочому столі: 
 > Poznámky na ploše: 
@@ -11052,8 +11040,6 @@
 < Потребують уваги
 > Vyžadují pozornost
 
-< Пристрої: потребують уваги - {0}
-> Zařízení: vyžadují pozornost - {0}
 
 < Пошук змін обладнання…
 > Hledám změny hardwaru…
@@ -11181,8 +11167,6 @@
 < Служба: 
 > Služba: 
 
-< Пристрої й драйвери
-> Zařízení a ovladače
 
 < Пристрої, які вимкнено вручну
 > Ručně vypnutá zařízení
@@ -11226,8 +11210,6 @@
 < Стан: 
 > Stav: 
 
-< \nКлік - список пристроїв, драйвери й оновлення
-> \nKlik - seznam zařízení, ovladače a aktualizace
 
 < Працює
 > Funguje
@@ -11488,11 +11470,7 @@
 < Нотатки на робочому столі: текст і списки, захист паролем
 > Poznámky na ploše: text a seznamy, ochrana heslem
 
-< Монітор системи: навантаження й температури ЦП, відеокарти й пам'яті, характеристики, процеси й служби, аналіз програми, історія за добу
-> Monitor systému: zátěž a teploty CPU, grafiky a paměti, parametry, procesy a služby, analýza programu, denní historie
 
-< Простір: диски й флешки - вільне місце, стан (SMART), швидкість, обслуговування
-> Úložiště: disky a flashky - volné místo, stav (SMART), rychlost, údržba
 
 < Де стоїть панель, як поводиться в іграх і як запускається
 > Kde panel stojí, jak se chová ve hrách a jak se spouští
@@ -11515,17 +11493,11 @@
 < Кубик: випадкове число або вибір зі свого списку (що подивитися, у що пограти)
 > Kostka: náhodné číslo nebo výběr z vlastního seznamu (na co se dívat, co hrát)
 
-< Пристрої й драйвери: список без повторів, проблемні пристрої, вимкнення й видалення, сховище драйверів, оновлення з Windows Update
-> Zařízení a ovladače: seznam bez duplicit, problémová zařízení, vypnutí a odebrání, úložiště ovladačů, aktualizace z Windows Update
 
 < Мережа: швидкість, пінг, адаптери й Wi-Fi, діагностика, брандмауер
 > Síť: rychlost, ping, adaptéry a Wi-Fi, diagnostika, firewall
 
-< Очищення: тимчасові файли, кеші браузерів і програм, звіти про помилки
-> Čištění: dočasné soubory, mezipaměti prohlížečů a programů, hlášení chyb
 
-< Відновлення видалених файлів і папок з диска чи флешки, також після форматування
-> Obnova smazaných souborů a složek z disku či flashky, i po formátování
 
 < Поки запущена гра з бібліотеки NeoBar - навіть згорнута, у вікні чи на іншому моніторі. За пів хвилини відео звільняє відеокарту, на екрані лишається останній кадр
 > Dokud běží hra z knihovny NeoBar - i minimalizovaná, v okně nebo na jiném monitoru. Po půl minutě video uvolní grafickou kartu a na obrazovce zůstane poslední snímek
@@ -11547,3 +11519,18 @@
 
 < Історію вимкнено: Налаштування → Система → «Нагляд за системою».
 > Historie je vypnutá: Nastavení → Systém → Dohled nad systémem.
+
+< Запис програми
+> Záznam programu
+
+< Температури й навантаження всієї системи щохвилини за останню добу, разом зі сповіщеннями й збоями Windows
+> Teploty a zátěž celého systému každou minutu za poslední den, s upozorněními a selháními Windows
+
+< Монітор системи: навантаження й температури ЦП, відеокарти й пам'яті, характеристики, пристрої й драйвери, процеси й служби, аналіз програми й історія за добу
+> Monitor systému: zátěž a teploty CPU, grafiky a paměti, parametry, zařízení a ovladače, procesy a služby, analýza programu a denní historie
+
+< Простір: диски й флешки - вільне місце, стан (SMART), швидкість, обслуговування; очищення Windows від сміття; відновлення видалених файлів
+> Úložiště: disky a flashky - volné místo, stav (SMART), rychlost, údržba; čištění Windows; obnova smazaných souborů
+
+< Навантаження однієї програми (чи групи з дочірніми процесами) у часі, з журналом
+> Zátěž jednoho programu (nebo skupiny s podřízenými procesy) v čase, s protokolem

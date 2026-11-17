@@ -11,7 +11,8 @@ using System.Windows.Forms;
 // ======================================================================
 sealed partial class PerfWindow
 {
-    const int TabHistory = 4;
+    public const int TabHistory = 5;       // для OpenPerf: «Аналіз» у режимі «Історія за добу»
+    bool anDay;
     readonly List<Rectangle> hsPlots = new List<Rectangle>();
 
     sealed class HsLine { public string Name; public Color C; public Func<HistPoint, float> V; public string Unit; }

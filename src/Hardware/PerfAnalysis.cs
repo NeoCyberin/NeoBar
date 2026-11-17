@@ -14,7 +14,7 @@ using System.Windows.Forms;
 // ======================================================================
 sealed partial class PerfWindow
 {
-    const int TabAnalysis = 3;
+    const int TabAnalysis = 4;
     int anMetric;
     double anHead = -1;             // позиція програвача (номер заміру); -1 - кінець (наживо)
     bool anPlay, anSetup;
@@ -118,8 +118,8 @@ sealed partial class PerfWindow
         Point old = anMouse;
         anMouse = e.Location;
         base.OnMouseMove(e);
-        if (Tab == TabAnalysis && (was || anPlot.Contains(anMouse))) Invalidate(anPlot.Width > 0 ? Rectangle.Inflate(anPlot, Px(120), Px(40)) : ClientRectangle);
-        if (Tab == TabHistory)
+        if (Tab == TabAnalysis && !anDay && (was || anPlot.Contains(anMouse))) Invalidate(anPlot.Width > 0 ? Rectangle.Inflate(anPlot, Px(120), Px(40)) : ClientRectangle);
+        if (Tab == TabAnalysis && anDay)
             foreach (Rectangle hp in hsPlots) if (hp.Contains(anMouse) || hp.Contains(old)) { Invalidate(); break; }
     }
 
@@ -146,6 +146,7 @@ sealed partial class PerfWindow
         anMsg = "";
         anSetup = true;
         Tab = TabAnalysis;
+        anDay = false;
         OnTab();
         Invalidate();
     }
@@ -277,7 +278,7 @@ sealed partial class PerfWindow
         if (rec) DangerBtn(g, b1, L.T("Зупинити запис"), delegate { ProcRecorder.Stop(null); AnReload(); Invalidate(); }, true);
         else Btn(g, b1, L.T("Новий запис…"), delegate
         {
-            if (anPid == 0) { Tab = 2; OnTab(); Invalidate(); return; }      // процес ще не вибрано - до «Завдань»
+            if (anPid == 0) { Tab = TabProcs; OnTab(); Invalidate(); return; }      // процес ще не вибрано - до «Завдань»
             anLog = ProcRecorder.DefaultLog(anName); anSetup = true; Invalidate();
         }, 1, true);
         Btn(g, b2, L.T("Відкрити журнал…"), OpenRec, 0, !rec);

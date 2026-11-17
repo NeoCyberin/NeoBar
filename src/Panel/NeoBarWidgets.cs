@@ -105,11 +105,19 @@ sealed partial class NeoBar
     public void OpenWeather() { OpenWin("weather", FirstWidget("weather"), delegate { return new WeatherWindow(this); }, false); }
     public void OpenBattery() { OpenWin("battery", FirstWidget("battery"), delegate { return new BatteryWindow(this); }, false); }
 
-    public void OpenDisk(Entry e)
+    public void OpenDisk(Entry e) { OpenDisk(e, 0); }
+
+    // «Простір»; очищення й відновлення - його вкладки (відкрите вікно лише перемикає вкладку)
+    public void OpenDisk(Entry e, int tab)
     {
         SbWindow old;
-        if (wins.TryGetValue("disk", out old) && !old.IsDisposed) old.Close();
-        OpenWin("disk", e, delegate { return new DiskWindow(this, e); }, false);
+        if (wins.TryGetValue("disk", out old) && !old.IsDisposed)
+        {
+            DiskWindow dw = old as DiskWindow;
+            if (dw != null && tab >= DiskWindow.TabClean) { dw.SetTab(tab); old.Activate(); return; }
+            old.Close();
+        }
+        OpenWin("disk", e, delegate { return new DiskWindow(this, e, tab); }, false);
     }
 
     public void OpenPerf(int tab)
@@ -157,31 +165,25 @@ sealed partial class NeoBar
             case "color": ToggleWin("color", delegate { OpenColor(en); }); return;
             case "dice": ToggleWin("dice", delegate { OpenWin("dice", en, delegate { return new DiceWindow(this); }, false); }); return;
             case "qr": ToggleWin("qr", delegate { OpenWin("qr", en, delegate { return new QrWindow(this); }, false); }); return;
-            case "clean": ToggleWin("clean", delegate { OpenWin("clean", en, delegate { return new CleanWindow(this); }, false); }); return;
-            case "recover": ToggleWin("recover", delegate { OpenWin("recover", en, delegate { return new RecoverPickWindow(this); }, false); }); return;
             case "security": ToggleWin("security", delegate { OpenWin("security", en, delegate { return new SecWindow(this); }, false); }); return;
             case "crypt": ToggleWin("crypt", delegate { OpenWin("crypt", en, delegate { return new CryptWindow(this); }, false); }); return;
-            case "devices": ToggleWin("devices", delegate { OpenWin("devices", en, delegate { return new DeviceWindow(this); }, false); }); return;
         }
     }
 
     public void OpenSecurity() { OpenWin("security", FirstWidget("security"), delegate { return new SecWindow(this); }, false); }
 
-    public void OpenDevices() { OpenWin("devices", FirstWidget("devices"), delegate { return new DeviceWindow(this); }, false); }
+    public void OpenDevices() { OpenPerf(PerfWindow.TabDevices); }
 
-    public void OpenRecover() { OpenWin("recover", FirstWidget("recover"), delegate { return new RecoverPickWindow(this); }, false); }
+    public void OpenRecover() { OpenDisk(FirstWidget("disk"), DiskWindow.TabRecover); }
 
-    public void OpenClean() { OpenWin("clean", FirstWidget("clean"), delegate { return new CleanWindow(this); }, false); }
+    public void OpenClean() { OpenDisk(FirstWidget("disk"), DiskWindow.TabClean); }
 
     // аналіз чи очищення завершено - оновити розмір сміття на віджеті
     public void CleanRedraw()
     {
         try
         {
-            ClockData.RedrawKind("trash");
-            if (IsDisposed || !IsHandleCreated) return;
-            foreach (Entry x in entries)
-                if (x.Kind == Kind.Widget && x.Target == "clean") { x.Sig = ""; Invalidate(RectOf(x)); }
+            ClockData.RedrawKind("trash");          // кошик на робочому столі показує розмір сміття
         }
         catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }

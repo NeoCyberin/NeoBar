@@ -2186,8 +2186,6 @@
 < Відновити в…
 > Recover to…
 
-< Відновлення файлів
-> File recovery
 
 < Папка, з якої зникли файли (для видаленої теки - та, де вона лежала)
 > Folder the files disappeared from (for a deleted folder - the one where it was)
@@ -9437,8 +9435,6 @@
 < QR-код: текст, посилання, Wi-Fi, контакт та інше\nКлік - створити QR-код
 > QR code: text, link, Wi-Fi, contact and more\nClick - create a QR code
 
-< Відновлення видалених файлів і папок з диска чи флешки\nКлік - вибрати диск і знайти файли
-> Recover deleted files and folders from a drive or USB stick\nClick - choose a drive and find files
 
 < Безпека: перевірка…
 > Security: checking…
@@ -9464,17 +9460,9 @@
 < Шифрування тексту й файлів, хеш-суми\nКлік - відкрити (можна й перетягнути файл у вікно)
 > Text and file encryption, hashes\nClick - open (you can also drag a file into the window)
 
-< Сміття: 
-> Junk: 
 
-<  (перевірено о 
->  (checked at 
 
-< Очищення Windows від сміття
-> Windows junk cleanup
 
-< \nКлік - аналіз і очищення
-> \nClick - analyze and clean
 
 < Нотатки на робочому столі: 
 > Desktop notes: 
@@ -11052,8 +11040,6 @@
 < Потребують уваги
 > Need attention
 
-< Пристрої: потребують уваги - {0}
-> Devices: need attention - {0}
 
 < Пошук змін обладнання…
 > Scanning for hardware changes…
@@ -11181,8 +11167,6 @@
 < Служба: 
 > Service: 
 
-< Пристрої й драйвери
-> Devices and drivers
 
 < Пристрої, які вимкнено вручну
 > Devices disabled manually
@@ -11226,8 +11210,6 @@
 < Стан: 
 > Status: 
 
-< \nКлік - список пристроїв, драйвери й оновлення
-> \nClick - device list, drivers and updates
 
 < Працює
 > Working
@@ -11488,11 +11470,7 @@
 < Нотатки на робочому столі: текст і списки, захист паролем
 > Desktop notes: text and lists, password protection
 
-< Монітор системи: навантаження й температури ЦП, відеокарти й пам'яті, характеристики, процеси й служби, аналіз програми, історія за добу
-> System monitor: CPU, GPU and memory load and temperatures, specs, processes and services, app analysis, daily history
 
-< Простір: диски й флешки - вільне місце, стан (SMART), швидкість, обслуговування
-> Storage: drives and USB sticks - free space, health (SMART), speed, maintenance
 
 < Де стоїть панель, як поводиться в іграх і як запускається
 > Where the panel is, how it behaves in games and how it starts
@@ -11515,17 +11493,11 @@
 < Кубик: випадкове число або вибір зі свого списку (що подивитися, у що пограти)
 > Dice: random number or a pick from your own list (what to watch, what to play)
 
-< Пристрої й драйвери: список без повторів, проблемні пристрої, вимкнення й видалення, сховище драйверів, оновлення з Windows Update
-> Devices and drivers: list without duplicates, problem devices, disabling and removal, driver store, updates from Windows Update
 
 < Мережа: швидкість, пінг, адаптери й Wi-Fi, діагностика, брандмауер
 > Network: speed, ping, adapters and Wi-Fi, diagnostics, firewall
 
-< Очищення: тимчасові файли, кеші браузерів і програм, звіти про помилки
-> Cleanup: temporary files, browser and app caches, error reports
 
-< Відновлення видалених файлів і папок з диска чи флешки, також після форматування
-> Recovery of deleted files and folders from a drive or USB stick, also after formatting
 
 < Поки запущена гра з бібліотеки NeoBar - навіть згорнута, у вікні чи на іншому моніторі. За пів хвилини відео звільняє відеокарту, на екрані лишається останній кадр
 > While a game from the NeoBar library is running - even minimised, windowed or on another monitor. After half a minute the video releases the graphics card and the last frame stays on screen
@@ -11547,3 +11519,18 @@
 
 < Історію вимкнено: Налаштування → Система → «Нагляд за системою».
 > History is off: Settings → System → System watch.
+
+< Запис програми
+> App recording
+
+< Температури й навантаження всієї системи щохвилини за останню добу, разом зі сповіщеннями й збоями Windows
+> Temperatures and load of the whole system every minute over the last day, with alerts and Windows failures
+
+< Монітор системи: навантаження й температури ЦП, відеокарти й пам'яті, характеристики, пристрої й драйвери, процеси й служби, аналіз програми й історія за добу
+> System monitor: CPU, GPU and memory load and temperatures, specs, devices and drivers, processes and services, app analysis and daily history
+
+< Простір: диски й флешки - вільне місце, стан (SMART), швидкість, обслуговування; очищення Windows від сміття; відновлення видалених файлів
+> Storage: drives and USB sticks - free space, health (SMART), speed, maintenance; Windows junk cleanup; recovery of deleted files
+
+< Навантаження однієї програми (чи групи з дочірніми процесами) у часі, з журналом
+> Load of one app (or a group with its child processes) over time, with a log

@@ -236,7 +236,6 @@ static class Widgets
             case "notes": return Notes.Count + "|" + Notes.LockedCount;
             case "color": return ColorMath.Hex(ColorState.Cur);
             case "dice": return Dice.Sig;
-            case "clean": return Cleaner.LastFound + "|" + Cleaner.Busy;
             case "security": return SecScan.LastAt.Ticks + "|" + SecScan.Busy;
         }
         return "";
@@ -322,7 +321,6 @@ static class Widgets
                 return (dv.Length == 0 ? L.T("Кубик: ще не кидали") : L.T("Кубик: ") + Dice.Text(dv)) + L.T("\nКлік - налаштування кубика");
             }
             case "qr": return L.T("QR-код: текст, посилання, Wi-Fi, контакт та інше\nКлік - створити QR-код");
-            case "recover": return L.T("Відновлення видалених файлів і папок з диска чи флешки\nКлік - вибрати диск і знайти файли");
             case "security":
             {
                 if (SecScan.Busy) return L.T("Безпека: перевірка…");
@@ -332,8 +330,6 @@ static class Widgets
                 return L.T("Безпека (о ") + SecScan.LastAt.ToString("HH:mm") + "): " + (sb + sw == 0 ? L.T("підозрілого не знайдено") : (sb > 0 ? L.T("підозріло - ") + sb : "") + (sb > 0 && sw > 0 ? ", " : "") + (sw > 0 ? L.T("варто перевірити - ") + sw : "")) + L.T("\nКлік - подробиці");
             }
             case "crypt": return L.T("Шифрування тексту й файлів, хеш-суми\nКлік - відкрити (можна й перетягнути файл у вікно)");
-            case "devices": return (DeviceWindow.LastProblems > 0 ? L.F("Пристрої: потребують уваги - {0}", DeviceWindow.LastProblems) : L.T("Пристрої й драйвери")) + L.T("\nКлік - список пристроїв, драйвери й оновлення");
-            case "clean": return (Cleaner.LastFound >= 0 ? L.T("Сміття: ") + Cleaner.Size(Cleaner.LastFound) + L.T(" (перевірено о ") + Cleaner.LastAt.ToString("HH:mm") + ")" : L.T("Очищення Windows від сміття")) + L.T("\nКлік - аналіз і очищення");
             case "notes": return L.T("Нотатки на робочому столі: ") + Notes.Count + (Notes.LockedCount > 0 ? L.T(" (на шпалерах: ") + Notes.LockedCount + ")" : "") + L.T("\nКлік - створити, заблокувати або розблокувати");
         }
         return "";
@@ -875,32 +871,6 @@ static class Widgets
                     Txt(g, L.T("QR-код"), sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), sec);
                 break;
             }
-            case "recover":
-            {
-                // значок: диск і кругла стрілка «повернути» у плашці
-                float s = Math.Max(6 * sc, Math.Min(h * 0.52f, w * 0.74f));
-                float x0 = inner.X + (w - s) / 2f, y0 = inner.Y + h * 0.04f;
-                Ico.Draw(g, "drive", new RectangleF(x0, y0, s * 0.86f, s * 0.86f), text);
-                SmoothingMode smr = g.SmoothingMode;
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                float bd = s * 0.54f, bx = x0 + s - bd, by = y0 + s - bd, rr = bd * 0.27f, bcx = bx + bd / 2f, bcy = by + bd / 2f;
-                using (SolidBrush pb = new SolidBrush(plate.A > 200 ? plate : Util.Opaque(t.Bg))) g.FillEllipse(pb, bx - s * 0.03f, by - s * 0.03f, bd + s * 0.06f, bd + s * 0.06f);
-                using (SolidBrush ab = new SolidBrush(acc)) g.FillEllipse(ab, bx, by, bd, bd);
-                Color ink = Util.Opaque(t.Bg);
-                using (Pen ap = new Pen(ink, Math.Max(1.2f, bd * 0.11f)))
-                {
-                    g.DrawArc(ap, bcx - rr, bcy - rr, rr * 2, rr * 2, -50, -280);
-                    double ea = 30 * Math.PI / 180;          // кінець дуги й напрямок руху проти годинникової
-                    float ex = bcx + rr * (float)Math.Cos(ea), ey = bcy + rr * (float)Math.Sin(ea);
-                    float tx = (float)Math.Sin(ea), ty = -(float)Math.Cos(ea), nx = (float)Math.Cos(ea), ny = (float)Math.Sin(ea), hl = rr * 0.9f, hw = rr * 0.55f;
-                    using (SolidBrush hb = new SolidBrush(ink))
-                        g.FillPolygon(hb, new PointF[] { new PointF(ex + tx * hl, ey + ty * hl), new PointF(ex + nx * hw, ey + ny * hw), new PointF(ex - nx * hw, ey - ny * hw) });
-                }
-                g.SmoothingMode = smr;
-                using (Font sm = CapFont(font, L.T("Відновити"), h, capW))
-                    Txt(g, L.T("Відновити"), sm, new Rectangle(capX, inner.Y + (int)(h * 0.66f), capW, (int)(h * 0.32f)), sec);
-                break;
-            }
             case "security":
             {
                 int sb, sw;
@@ -914,32 +884,12 @@ static class Widgets
                     Txt(g, cap3, sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), done && sb + sw > 0 ? shc : sec);
                 break;
             }
-            case "devices":
-            {
-                float s = Math.Max(6 * sc, Math.Min(h * 0.5f, w * 0.7f));
-                bool bad = DeviceWindow.LastProblems > 0;
-                Color dc = bad ? Color.FromArgb(240, 175, 50) : text;
-                Ico.Draw(g, "chip", new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.06f, s, s), dc);
-                string capD = bad ? DeviceWindow.LastProblems.ToString() : L.T("Пристрої");
-                using (Font sm = CapFont(font, capD, h, capW))
-                    Txt(g, capD, sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), bad ? dc : sec);
-                break;
-            }
             case "crypt":
             {
                 float s = Math.Max(6 * sc, Math.Min(h * 0.5f, w * 0.7f));
                 Ico.Draw(g, "key", new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.06f, s, s), text);
                 using (Font sm = CapFont(font, L.T("Шифр"), h, capW))
                     Txt(g, L.T("Шифр"), sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), sec);
-                break;
-            }
-            case "clean":
-            {
-                float s = Math.Max(6 * sc, Math.Min(h * 0.5f, w * 0.7f));
-                Ico.Draw(g, "trash", new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.06f, s, s), Cleaner.Busy ? acc : text);
-                string cap2 = Cleaner.Busy ? "…" : (Cleaner.LastFound >= 0 ? Cleaner.Size(Cleaner.LastFound) : L.T("Очищення"));
-                using (Font sm = CapFont(font, cap2, h, capW))
-                    Txt(g, cap2, sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), Cleaner.LastFound > (1L << 30) ? acc : sec);
                 break;
             }
             case "dice":
