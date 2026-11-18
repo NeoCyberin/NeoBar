@@ -9767,23 +9767,11 @@
 < Температури в треї
 > Temperaturen im Infobereich
 
-< Температура ЦП
-> CPU-Temperatur
 
-< Температура ГП
-> GPU-Temperatur
 
-< Температура ГП: hotspot
-> GPU-Temperatur: Hotspot
 
-< Окремий значок біля годинника Windows із числом у градусах. Для температури процесора часто потрібні права адміністратора.
-> Ein eigenes Symbol neben der Windows-Uhr mit der Zahl in Grad. Für die CPU-Temperatur sind oft Administratorrechte nötig.
 
-< Окремий значок біля годинника Windows із числом у градусах.
-> Ein eigenes Symbol neben der Windows-Uhr mit der Zahl in Grad.
 
-< Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).
-> Der heißeste Punkt des Grafikchips; nicht jede Grafikkarte meldet ihn (dann zeigt das Symbol einen Strich).
 
 < Диски ще читаються, повторіть за мить.
 > Die Datenträger werden noch gelesen, versuchen Sie es gleich noch einmal.
@@ -11536,3 +11524,33 @@
 
 < AMD: драйвер перестав віддавати датчики (ADLX) - до перезапуску NeoBar температура береться з Windows
 > AMD: Der Treiber liefert keine Sensoren mehr (ADLX) - bis zum Neustart von NeoBar kommt die Temperatur von Windows
+
+< зараз не підключено
+> derzeit nicht angeschlossen
+
+< Додати піктограму температури в трей
+> Temperatursymbol im Infobereich hinzufügen
+
+< Окремий значок біля годинника Windows із числом у градусах. Щоб змінити порядок значків, перетягніть їх прямо в області сповіщень Windows. Для температури процесора часто потрібні права адміністратора
+> Ein eigenes Symbol neben der Windows-Uhr mit der Zahl in Grad. Um die Reihenfolge zu ändern, ziehen Sie die Symbole direkt im Infobereich von Windows. Für die CPU-Temperatur sind oft Administratorrechte nötig
+
+< Відеокарта: hotspot
+> Grafikkarte: Hotspot
+
+< зараз без даних - на значку буде риска
+> derzeit keine Daten - das Symbol zeigt einen Strich
+
+< диск не віддає температуру
+> das Laufwerk liefert keine Temperatur
+
+< Друга відеокарта
+> Zweite Grafikkarte
+
+< Вбудована відеокарта
+> Integrierte Grafik
+
+< Вибрати датчик…
+> Sensor wählen…
+
+< Відеокарта: пам'ять
+> Grafikkarte: Speicher

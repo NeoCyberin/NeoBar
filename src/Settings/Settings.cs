@@ -72,9 +72,15 @@ sealed partial class SettingsForm : Form, IGradHost
     SCombo cbSide, cbMonitor, cbMode, cbGpu;
     SNum nW, nGap;
     CheckBox chCompact, chFs, chAuto, chSearch, chHot, chFiles, chAdmin;
-    CheckBox[] chTray = new CheckBox[3];                  // температури в треї: ЦП, ГП, hotspot
-    Button[] bTrayCol = new Button[3];
-    Color[] trayCol = new Color[3];
+    // температури в треї: вибрані датчики (у порядку додавання), їхні кольори, кнопки кольору й список «додати»
+    readonly List<string> trayKeys = new List<string>();
+    readonly Dictionary<string, Color> trayCols = new Dictionary<string, Color>();
+    readonly Dictionary<string, Button> trayBtn = new Dictionary<string, Button>();
+    readonly List<string> trayAddKeys = new List<string>();
+    List<TrayTemps.Src> trayCat = new List<TrayTemps.Src>();
+    SCombo cbTrayAdd;
+    SCard trayCard;
+    bool trayFilling;
     HotkeyBox hkSearch;
     CheckBox chSuggest, chWelcome, chUpd;
     Label lHkSearch;

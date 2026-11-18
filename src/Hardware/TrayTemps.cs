@@ -9,20 +9,20 @@ using System.Text;
 using System.Windows.Forms;
 
 // ======================================================================
-//  Температури в треї: для ЦП, ГП і hotspot ГП - окремий значок із числом (градуси) обраного кольору.
-//  Вмикається в налаштуваннях («Система»). Значки малюються лише коли число змінилося; у грі й повноекранній
-//  програмі зникають разом з іншими датчиками панелі.
+//  Температури в треї: окремий значок із числом (градуси) обраного кольору для кожного вибраного датчика -
+//  процесор, відеокарта (край, hotspot, пам'ять), друга відеокарта, диски. Додаються в налаштуваннях («Система»).
+//  Значки малюються лише коли число змінилося; у грі й повноекранній програмі зникають разом з іншими датчиками панелі.
 //  Кожен значок має постійний ідентифікатор (номер і GUID, прив'язаний до шляху NeoBar.exe), тож Windows запам'ятовує
 //  його як той самий значок: показ на панелі завдань і місце, куди його перетягнули, зберігаються між запусками.
 //  Програма сама не може поставити значок на конкретне місце - це вирішує Windows; уперше вони додаються в порядку
-//  ЦП, ГП, hotspot.
+//  списку в налаштуваннях, далі порядок задає користувач, перетягуючи їх біля годинника.
 // ======================================================================
 static class TrayTemps
 {
     sealed class Slot
     {
-        public string Name = "";
-        public bool On, Added, UseGuid = true;
+        public string Key = "", Name = "";
+        public bool Added, UseGuid = true;
         public Color Col;
         public Icon Ico;
         public string Shown = "", Tip = "";
@@ -52,7 +52,73 @@ static class TrayTemps
     const int CallbackMsg = 0x8000 + 0x51;
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] static extern bool Shell_NotifyIcon(uint msg, ref NID d);
 
-    static readonly Slot[] slots = { new Slot(), new Slot(), new Slot() };
+    static readonly List<Slot> slots = new List<Slot>();
+
+    // ---------- датчики, які можна вивести в трей ----------
+    public sealed class Src { public string Key = "", Name = "", Dev = ""; public Color Def; }
+
+    static readonly Color CCpu = Color.FromArgb(70, 170, 255), CGpu = Color.FromArgb(90, 200, 110), CHot = Color.FromArgb(255, 150, 60),
+                          CMem = Color.FromArgb(190, 120, 255), CGpu2 = Color.FromArgb(70, 200, 200), CDisk = Color.FromArgb(240, 200, 70);
+
+    // що є зараз: процесор і відеокарта - завжди (значок покаже риску, якщо драйвер не віддає датчик), друга відеокарта
+    // й диски - якщо є
+    public static List<Src> Catalog()
+    {
+        List<Src> l = new List<Src>();
+        l.Add(Mk("cpu", L.T("Процесор"), Sensors.CpuName, CCpu));
+        l.Add(Mk("gpu", L.T("Відеокарта"), Sensors.GpuName, CGpu));
+        l.Add(Mk("hot", L.T("Відеокарта: hotspot"), Sensors.GpuName, CHot));
+        l.Add(Mk("gmem", L.T("Відеокарта: пам'ять"), Sensors.GpuName, CMem));
+        if (Sensors.Gpu2Name.Length > 0) l.Add(Mk("gpu2", Sensors.Gpu2Integrated ? L.T("Вбудована відеокарта") : L.T("Друга відеокарта"), Sensors.Gpu2Name, CGpu2));
+        foreach (DiskInfo d in DiskTemps.Scan()) l.Add(Mk(DiskTemps.Key(d), L.T("Диск"), d.Model, CDisk));
+        return l;
+    }
+
+    static Src Mk(string k, string n, string dev, Color c) { Src s = new Src(); s.Key = k; s.Name = n; s.Dev = (dev ?? "").Trim(); s.Def = c; return s; }
+
+    public static float ValueOf(string key)
+    {
+        switch (key)
+        {
+            case "cpu": return Sensors.CpuTemp;
+            case "gpu": return Sensors.GpuTemp;
+            case "hot": return Sensors.Hotspot;
+            case "gmem": return Sensors.MemTemp;
+            case "gpu2": return Sensors.Gpu2Temp;
+        }
+        return key.StartsWith("disk:") ? DiskTemps.Value(key) : float.NaN;
+    }
+
+    // колір за замовчуванням для датчика (поки користувач не вибрав свій)
+    public static Color DefColor(string key)
+    {
+        switch (key)
+        {
+            case "cpu": return CCpu;
+            case "gpu": return CGpu;
+            case "hot": return CHot;
+            case "gmem": return CMem;
+            case "gpu2": return CGpu2;
+        }
+        return CDisk;
+    }
+
+    // назва датчика для підказки значка (без опитування дисків)
+    static string NameOf(string key)
+    {
+        switch (key)
+        {
+            case "cpu": return L.T("Процесор");
+            case "gpu": return L.T("Відеокарта");
+            case "hot": return L.T("Відеокарта: hotspot");
+            case "gmem": return L.T("Відеокарта: пам'ять");
+            case "gpu2": return Sensors.Gpu2Integrated ? L.T("Вбудована відеокарта") : L.T("Друга відеокарта");
+        }
+        string m = DiskTemps.Model(key);
+        return L.T("Диск") + (m.Length > 0 ? " " + m : "");
+    }
+
+    static bool NeedsGpu(string key) { return key == "gpu" || key == "hot" || key == "gmem" || key == "gpu2"; }
     static NeoBar bar;
     static bool hooked, updHooked, running;
     static Wnd wnd;
@@ -82,7 +148,7 @@ static class TrayTemps
             if (taskbarCreated != 0 && m.Msg == taskbarCreated)
             {
                 // Провідник перезапустився - значки треба додати знову
-                foreach (Slot s in slots) if (s.Added) { s.Added = false; Add(s); }
+                foreach (Slot s in slots.ToArray()) if (s.Added) { s.Added = false; Add(s); }
             }
             base.WndProc(ref m);
         }
@@ -106,19 +172,14 @@ static class TrayTemps
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
 
-    static float Value(int i)
-    {
-        return i == 0 ? Sensors.CpuTemp : (i == 1 ? Sensors.GpuTemp : Sensors.Hotspot);
-    }
-
     // постійний GUID значка: свій для кожного значка й кожного розташування NeoBar.exe (Windows прив'язує GUID до шляху)
-    static Guid GuidOf(int i)
+    static Guid GuidOf(string key)
     {
         try
         {
             using (MD5 md = MD5.Create())
             {
-                byte[] h = md.ComputeHash(Encoding.UTF8.GetBytes("NeoBar.TrayTemp." + i + "|" + Application.ExecutablePath.ToLowerInvariant()));
+                byte[] h = md.ComputeHash(Encoding.UTF8.GetBytes("NeoBar.TrayTemp." + key + "|" + Application.ExecutablePath.ToLowerInvariant()));
                 h[7] = (byte)((h[7] & 0x0F) | 0x30);
                 h[8] = (byte)((h[8] & 0x3F) | 0x80);
                 return new Guid(h);
@@ -131,29 +192,53 @@ static class TrayTemps
     public static void Configure(Cfg c, NeoBar b, bool run)
     {
         bar = b;
-        slots[0].On = c.TrayCpu; slots[1].On = c.TrayGpu; slots[2].On = c.TrayHot;
-        slots[0].Col = c.TrayCpuCol; slots[1].Col = c.TrayGpuCol; slots[2].Col = c.TrayHotCol;
-        slots[0].Name = L.T("ЦП"); slots[1].Name = L.T("ГП"); slots[2].Name = L.T("ГП") + " hotspot";
-        bool any = false, gpu = false;
-        for (int i = 0; i < 3; i++)
+        // бажаний набір: ключ і колір у порядку налаштувань
+        List<string> keys = new List<string>();
+        Dictionary<string, Color> cols = new Dictionary<string, Color>();
+        foreach (string it in c.Tray)
         {
-            if (slots[i].Id == 0) { slots[i].Id = (uint)(101 + i); slots[i].G = GuidOf(i); slots[i].UseGuid = slots[i].G != Guid.Empty; }
-            if (slots[i].On) { any = true; if (i > 0) gpu = true; }
+            int p = it.IndexOf('|');
+            if (p <= 0) continue;
+            string k = it.Substring(0, p);
+            if (keys.Contains(k)) continue;
+            Color col = Util.ParseColor(it.Substring(p + 1));
+            keys.Add(k);
+            cols[k] = col.IsEmpty ? DefColor(k) : col;
         }
-        running = any && run;
+        running = keys.Count > 0 && run;
+        bool gpu = false, disk = false;
+        foreach (string k in keys) { if (NeedsGpu(k)) gpu = true; if (k.StartsWith("disk:")) disk = true; }
         Sensors.Use("tray", running ? (gpu ? 2 : 1) : 0);
+        DiskTemps.Watch(running && disk);
         if (!updHooked) { updHooked = true; Sensors.Updated += OnData; }
         if (!hooked) { hooked = true; Application.ApplicationExit += delegate { RemoveAll(); }; }
         if (running && wnd == null) { try { wnd = new Wnd(); } catch (Exception ex) { Util.ErrorLog(ex); return; } }
-        bool same = true;
-        for (int i = 0; i < 3; i++) if ((running && slots[i].On) != slots[i].Added) same = false;
+
+        bool same = running && slots.Count == keys.Count;
+        if (same) for (int i = 0; i < keys.Count; i++) if (slots[i].Key != keys[i]) same = false;
         if (!same)
         {
-            // набір змінився - додаємо всі заново, з кінця: новий значок Windows ставить лівіше, тож зліва направо - ЦП, ГП, hotspot
+            // набір змінився - додаємо всі заново, з кінця: новий значок Windows ставить лівіше, тож зліва направо - як у списку
             RemoveAll();
-            for (int i = 2; i >= 0; i--) if (running && slots[i].On) Show(i);
+            slots.Clear();
+            if (!running) return;
+            HashSet<uint> ids = new HashSet<uint>();
+            foreach (string k in keys)
+            {
+                Slot s = new Slot();
+                s.Key = k;
+                // постійний номер за ключем (Windows пам'ятає значок і за ним); збіг - наступний вільний
+                uint id = 101 + (uint)((k.GetHashCode() & 0x7FFFFFFF) % 4000);
+                while (!ids.Add(id)) id++;
+                s.Id = id;
+                s.G = GuidOf(k);
+                s.UseGuid = s.G != Guid.Empty;
+                slots.Add(s);
+            }
         }
-        else for (int i = 0; i < 3; i++) if (running && slots[i].On) Show(i);
+        foreach (Slot s in slots) { s.Col = cols[s.Key]; s.Name = NameOf(s.Key); }
+        if (!same) { for (int i = slots.Count - 1; i >= 0; i--) Show(slots[i]); }
+        else foreach (Slot s in slots) Show(s);
     }
 
     static void OnData()
@@ -169,7 +254,8 @@ static class TrayTemps
 
     static void Refresh()
     {
-        for (int i = 0; i < 3; i++) if (running && slots[i].On) Show(i);
+        if (!running) return;
+        foreach (Slot s in slots.ToArray()) Show(s);
     }
 
     static NID Data(Slot s, uint flags)
@@ -203,14 +289,14 @@ static class TrayTemps
         s.Added = true;
     }
 
-    static void Show(int i)
+    static void Show(Slot s)
     {
-        Slot s = slots[i];
-        float v = Value(i);
+        float v = ValueOf(s.Key);
         bool none = float.IsNaN(v);
         string t = none ? "–" : Math.Round(v).ToString();
         int col = s.Col.ToArgb();
-        string tip = s.Name + ": " + (none ? (Sensors.Ready ? (i == 0 ? L.T("драйвер не віддає цей датчик") : VendorGpu.Why()) : L.T("читаю датчик…")) : t + " °C");
+        string why = s.Key.StartsWith("disk:") ? L.T("диск не віддає температуру") : NeedsGpu(s.Key) ? VendorGpu.Why() : L.T("драйвер не віддає цей датчик");
+        string tip = s.Name + ": " + (none ? (Sensors.Ready ? why : L.T("читаю датчик…")) : t + " °C");
         if (s.Added && s.Shown == t && s.ColArgb == col && s.Tip == tip) return;
         try
         {
@@ -251,7 +337,7 @@ static class TrayTemps
 
     static void RemoveAll()
     {
-        foreach (Slot s in slots) Remove(s);
+        foreach (Slot s in slots.ToArray()) Remove(s);
     }
 
     // число свого кольору на прозорому тлі, з тонкою темною обводкою, щоб читалося і на світлій, і на темній панелі завдань
@@ -295,5 +381,54 @@ static class TrayTemps
             try { using (Icon tmp = Icon.FromHandle(h)) return (Icon)tmp.Clone(); }
             finally { Win.DestroyIcon(h); }
         }
+    }
+}
+
+// Температури дисків для значків у треї: опитуються не щосекунди, а раз на 15 с у фоні (запит до диска - не до пам'яті),
+// і лише поки в треї є значок диска
+static class DiskTemps
+{
+    static readonly Dictionary<string, float> vals = new Dictionary<string, float>();
+    static readonly Dictionary<string, string> models = new Dictionary<string, string>();
+    static System.Threading.Timer timer;
+    static int busy;
+
+    public static string Key(DiskInfo d) { return "disk:" + (d.Serial.Trim().Length > 0 ? d.Serial.Trim() : d.Model.Trim()); }
+
+    // фізичні диски з температурою (для вибору в налаштуваннях)
+    public static List<DiskInfo> Scan()
+    {
+        List<DiskInfo> l = new List<DiskInfo>();
+        for (int no = 0; no < 16; no++)
+        {
+            DiskInfo d = Vols.Disk(no);
+            if (d.Model.Length == 0 || d.Optical || double.IsNaN(d.TempC)) continue;
+            l.Add(d);
+            lock (vals) { vals[Key(d)] = (float)d.TempC; models[Key(d)] = d.Model; }
+        }
+        return l;
+    }
+
+    public static float Value(string key) { float v; lock (vals) return vals.TryGetValue(key, out v) ? v : float.NaN; }
+
+    public static string Model(string key) { string m; lock (vals) return models.TryGetValue(key, out m) ? m : ""; }
+
+    public static void Watch(bool on)
+    {
+        if (on && timer == null) timer = new System.Threading.Timer(delegate { Tick(); }, null, 0, 15000);
+        else if (!on && timer != null) { timer.Dispose(); timer = null; }
+    }
+
+    static void Tick()
+    {
+        if (System.Threading.Interlocked.Exchange(ref busy, 1) == 1) return;
+        try
+        {
+            HashSet<string> seen = new HashSet<string>();
+            foreach (DiskInfo d in Scan()) seen.Add(Key(d));
+            lock (vals) foreach (string k in new List<string>(vals.Keys)) if (!seen.Contains(k)) vals[k] = float.NaN;    // диск від'єднано
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        finally { System.Threading.Interlocked.Exchange(ref busy, 0); }
     }
 }

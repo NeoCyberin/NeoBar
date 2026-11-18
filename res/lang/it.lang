@@ -9767,23 +9767,11 @@
 < Температури в треї
 > Temperature nell'area di notifica
 
-< Температура ЦП
-> Temperatura della CPU
 
-< Температура ГП
-> Temperatura della GPU
 
-< Температура ГП: hotspot
-> Temperatura della GPU: hotspot
 
-< Окремий значок біля годинника Windows із числом у градусах. Для температури процесора часто потрібні права адміністратора.
-> Un'icona separata vicino all'orologio di Windows con il numero in gradi. La temperatura della CPU richiede spesso i diritti di amministratore.
 
-< Окремий значок біля годинника Windows із числом у градусах.
-> Un'icona separata vicino all'orologio di Windows con il numero in gradi.
 
-< Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).
-> Il punto più caldo del chip grafico; non tutte le schede lo riportano (l'icona mostra allora un trattino).
 
 < Диски ще читаються, повторіть за мить.
 > I dischi sono ancora in lettura, riprova tra un momento.
@@ -11536,3 +11524,33 @@
 
 < AMD: драйвер перестав віддавати датчики (ADLX) - до перезапуску NeoBar температура береться з Windows
 > AMD: il driver non fornisce più i sensori (ADLX) - fino al riavvio di NeoBar la temperatura arriva da Windows
+
+< зараз не підключено
+> non collegato ora
+
+< Додати піктограму температури в трей
+> Aggiungi un'icona della temperatura nell'area di notifica
+
+< Окремий значок біля годинника Windows із числом у градусах. Щоб змінити порядок значків, перетягніть їх прямо в області сповіщень Windows. Для температури процесора часто потрібні права адміністратора
+> Un'icona separata accanto all'orologio di Windows con il numero in gradi. Per cambiare l'ordine delle icone, trascinale direttamente nell'area di notifica di Windows. La temperatura del processore spesso richiede diritti di amministratore
+
+< Відеокарта: hotspot
+> Scheda video: hotspot
+
+< зараз без даних - на значку буде риска
+> nessun dato ora - l'icona mostrerà un trattino
+
+< диск не віддає температуру
+> il disco non fornisce la temperatura
+
+< Друга відеокарта
+> Seconda scheda video
+
+< Вбудована відеокарта
+> Scheda video integrata
+
+< Вибрати датчик…
+> Scegli un sensore…
+
+< Відеокарта: пам'ять
+> Scheda video: memoria

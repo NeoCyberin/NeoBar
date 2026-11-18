@@ -9767,23 +9767,11 @@
 < Температури в треї
 > Temperatury w zasobniku
 
-< Температура ЦП
-> Temperatura procesora
 
-< Температура ГП
-> Temperatura karty graficznej
 
-< Температура ГП: hotspot
-> Temperatura karty graficznej: hotspot
 
-< Окремий значок біля годинника Windows із числом у градусах. Для температури процесора часто потрібні права адміністратора.
-> Osobna ikona obok zegara Windows z liczbą w stopniach. Temperatura procesora często wymaga uprawnień administratora.
 
-< Окремий значок біля годинника Windows із числом у градусах.
-> Osobna ikona obok zegara Windows z liczbą w stopniach.
 
-< Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).
-> Najgorętszy punkt układu graficznego; nie każda karta go podaje (wtedy ikona pokazuje kreskę).
 
 < Диски ще читаються, повторіть за мить.
 > Dyski są jeszcze odczytywane, spróbuj za chwilę.
@@ -11536,3 +11524,33 @@
 
 < AMD: драйвер перестав віддавати датчики (ADLX) - до перезапуску NeoBar температура береться з Windows
 > AMD: sterownik przestał udostępniać czujniki (ADLX) - do ponownego uruchomienia NeoBar temperatura pochodzi z Windows
+
+< зараз не підключено
+> teraz niepodłączony
+
+< Додати піктограму температури в трей
+> Dodaj ikonę temperatury do zasobnika
+
+< Окремий значок біля годинника Windows із числом у градусах. Щоб змінити порядок значків, перетягніть їх прямо в області сповіщень Windows. Для температури процесора часто потрібні права адміністратора
+> Osobna ikona przy zegarze Windows z liczbą w stopniach. Aby zmienić kolejność ikon, przeciągnij je bezpośrednio w obszarze powiadomień Windows. Temperatura procesora często wymaga uprawnień administratora
+
+< Відеокарта: hotspot
+> Karta graficzna: hotspot
+
+< зараз без даних - на значку буде риска
+> teraz brak danych - ikona pokaże kreskę
+
+< диск не віддає температуру
+> dysk nie podaje temperatury
+
+< Друга відеокарта
+> Druga karta graficzna
+
+< Вбудована відеокарта
+> Zintegrowana karta graficzna
+
+< Вибрати датчик…
+> Wybierz czujnik…
+
+< Відеокарта: пам'ять
+> Karta graficzna: pamięć

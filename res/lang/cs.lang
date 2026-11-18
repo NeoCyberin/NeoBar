@@ -9767,23 +9767,11 @@
 < Температури в треї
 > Teploty v oznamovací oblasti
 
-< Температура ЦП
-> Teplota procesoru
 
-< Температура ГП
-> Teplota grafické karty
 
-< Температура ГП: hotspot
-> Teplota grafické karty: hotspot
 
-< Окремий значок біля годинника Windows із числом у градусах. Для температури процесора часто потрібні права адміністратора.
-> Samostatná ikona vedle hodin Windows s číslem ve stupních. Teplota procesoru často vyžaduje práva správce.
 
-< Окремий значок біля годинника Windows із числом у градусах.
-> Samostatná ikona vedle hodin Windows s číslem ve stupních.
 
-< Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).
-> Nejžhavější bod grafického čipu; ne každá karta ho hlásí (ikona pak ukazuje pomlčku).
 
 < Диски ще читаються, повторіть за мить.
 > Disky se ještě načítají, zkuste to za chvíli.
@@ -11536,3 +11524,33 @@
 
 < AMD: драйвер перестав віддавати датчики (ADLX) - до перезапуску NeoBar температура береться з Windows
 > AMD: ovladač přestal poskytovat senzory (ADLX) - do restartu NeoBaru se teplota bere z Windows
+
+< зараз не підключено
+> teď nepřipojeno
+
+< Додати піктограму температури в трей
+> Přidat ikonu teploty do oznamovací oblasti
+
+< Окремий значок біля годинника Windows із числом у градусах. Щоб змінити порядок значків, перетягніть їх прямо в області сповіщень Windows. Для температури процесора часто потрібні права адміністратора
+> Samostatná ikona vedle hodin Windows s číslem ve stupních. Pořadí ikon změníte jejich přetažením přímo v oznamovací oblasti Windows. Teplota procesoru často vyžaduje práva správce
+
+< Відеокарта: hotspot
+> Grafická karta: hotspot
+
+< зараз без даних - на значку буде риска
+> teď bez dat - ikona ukáže pomlčku
+
+< диск не віддає температуру
+> disk neposkytuje teplotu
+
+< Друга відеокарта
+> Druhá grafická karta
+
+< Вбудована відеокарта
+> Integrovaná grafika
+
+< Вибрати датчик…
+> Vybrat senzor…
+
+< Відеокарта: пам'ять
+> Grafická karta: paměť

@@ -217,17 +217,45 @@ sealed partial class SettingsForm
     {
         SPage p = new SPage();
         SCard k = p.Card(L.T("Температури в треї"));
-        string[] tn = { L.T("Температура ЦП"), L.T("Температура ГП"), L.T("Температура ГП: hotspot") };
-        string[] td = { L.T("Окремий значок біля годинника Windows із числом у градусах. Для температури процесора часто потрібні права адміністратора."),
-                        L.T("Окремий значок біля годинника Windows із числом у градусах."),
-                        L.T("Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).") };
-        for (int i = 0; i < 3; i++)
+        trayCard = k;
+        // що можна вивести: процесор, відеокарта (край, hotspot, пам'ять), друга відеокарта, диски; плюс збережені,
+        // яких зараз немає (від'єднаний диск) - щоб їх можна було прибрати
+        trayCat = TrayTemps.Catalog();
+        foreach (string it in owner.Config.Tray)
         {
-            int ti = i;
-            chTray[i] = Tg();
-            bTrayCol[i] = Bt(L.T("Колір"), "", 110, delegate { PickTrayColor(ti); });
-            k.Row(tn[i], td[i], chTray[i], bTrayCol[i]);
+            int pp = it.IndexOf('|');
+            string kk = pp > 0 ? it.Substring(0, pp) : it;
+            bool known = false;
+            foreach (TrayTemps.Src s0 in trayCat) if (s0.Key == kk) known = true;
+            if (known) continue;
+            TrayTemps.Src sx = new TrayTemps.Src();
+            sx.Key = kk; sx.Name = L.T("Диск"); sx.Dev = L.T("зараз не підключено"); sx.Def = TrayTemps.DefColor(kk);
+            trayCat.Add(sx);
         }
+        foreach (TrayTemps.Src s in trayCat)
+        {
+            string key = s.Key;
+            TrayTemps.Src ss = s;
+            Button bc = Bt(L.T("Колір"), "", 110, delegate { PickTrayColor(key); });
+            trayBtn[key] = bc;
+            Button br = Bt(L.T("Прибрати"), "", 110, delegate { trayKeys.Remove(key); FillTrayAdd(); trayCard.Queue(); });
+            SRow r = k.Row(s.Name + (s.Dev.Length > 0 ? " - " + s.Dev : ""), "", bc, br);
+            r.DescFn = delegate { return TrayValue(ss.Key); };
+            r.When = delegate { return trayKeys.Contains(key); };
+        }
+        cbTrayAdd = Cb(420);
+        cbTrayAdd.SelectedIndexChanged += delegate
+        {
+            if (trayFilling || cbTrayAdd.SelectedIndex <= 0) return;
+            string key = trayAddKeys[cbTrayAdd.SelectedIndex - 1];
+            trayKeys.Add(key);
+            if (!trayCols.ContainsKey(key)) trayCols[key] = TrayTemps.DefColor(key);
+            FillTrayAdd();
+            UpdateTraySwatches();
+            trayCard.Queue();
+        };
+        k.Row(L.T("Додати піктограму температури в трей"), L.T("Окремий значок біля годинника Windows із числом у градусах. Щоб змінити порядок значків, перетягніть їх прямо в області сповіщень Windows. Для температури процесора часто потрібні права адміністратора"), cbTrayAdd)
+            .When = delegate { return trayAddKeys.Count > 0; };
         // звідки брати датчики відеокарти: автоматично або конкретна (коли їх кілька - окрема й вбудована в Ryzen)
         cbGpu = Cb(320, L.T("Автоматично"));
         gpuIds.Add("");

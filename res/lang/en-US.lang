@@ -9767,23 +9767,11 @@
 < Температури в треї
 > Temperatures in the tray
 
-< Температура ЦП
-> CPU temperature
 
-< Температура ГП
-> GPU temperature
 
-< Температура ГП: hotspot
-> GPU temperature: hotspot
 
-< Окремий значок біля годинника Windows із числом у градусах. Для температури процесора часто потрібні права адміністратора.
-> A separate icon near the Windows clock showing the number in degrees. CPU temperature often needs administrator rights.
 
-< Окремий значок біля годинника Windows із числом у градусах.
-> A separate icon near the Windows clock showing the number in degrees.
 
-< Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).
-> The hottest spot of the GPU chip; not every graphics card reports it (the icon shows a dash then).
 
 < Диски ще читаються, повторіть за мить.
 > The disks are still being read, try again in a moment.
@@ -11536,3 +11524,33 @@
 
 < AMD: драйвер перестав віддавати датчики (ADLX) - до перезапуску NeoBar температура береться з Windows
 > AMD: the driver stopped reporting sensors (ADLX) - until NeoBar restarts, temperature comes from Windows
+
+< зараз не підключено
+> not connected now
+
+< Додати піктограму температури в трей
+> Add a temperature icon to the tray
+
+< Окремий значок біля годинника Windows із числом у градусах. Щоб змінити порядок значків, перетягніть їх прямо в області сповіщень Windows. Для температури процесора часто потрібні права адміністратора
+> A separate icon next to the Windows clock with the number in degrees. To change the order of icons, drag them right in the Windows notification area. CPU temperature often needs administrator rights
+
+< Відеокарта: hotspot
+> GPU: hotspot
+
+< зараз без даних - на значку буде риска
+> no data now - the icon will show a dash
+
+< диск не віддає температуру
+> the drive does not report temperature
+
+< Друга відеокарта
+> Second GPU
+
+< Вбудована відеокарта
+> Integrated GPU
+
+< Вибрати датчик…
+> Choose a sensor…
+
+< Відеокарта: пам'ять
+> GPU: memory
