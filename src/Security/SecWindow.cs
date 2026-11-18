@@ -10,27 +10,38 @@ using System.Windows.Forms;
 // ======================================================================
 //  Вікно «Безпека»: результат сканування за вкладками, пояснення кожної знахідки й дії з підтвердженням.
 //  Нічого не видаляється: автозапуск вимикається так само, як у Диспетчері завдань (і так само вмикається назад),
-//  процес завершується лише після «Так».
+//  процес завершується лише після «Так». Остання вкладка - «Шифрування» (SecCrypt.cs).
 // ======================================================================
-sealed class SecWindow : VtWindow
+sealed partial class SecWindow : VtWindow
 {
-    readonly int[] scroll = new int[5];
-    readonly bool[] all = new bool[5];          // «показувати все» - окремо для кожної вкладки
+    readonly int[] scroll = new int[6];
+    readonly bool[] all = new bool[6];          // «показувати все» - окремо для кожної вкладки
     volatile bool fixing;
 
-    public SecWindow(NeoBar bar) : base(bar, L.T("Безпека"), 620, 780)
-    { Glyph = "\uEA18";
+    public SecWindow(NeoBar bar) : base(bar, L.T("Безпека"), 620, 780) { Setup(); }
+
+    // окреме вікно для пунктів контекстного меню файлів, коли панель не запущена
+    public SecWindow(Theme t, float sc) : base(t, sc, L.T("Безпека"), 620, 780) { Setup(); }
+
+    void Setup()
+    {
+        Glyph = "\uEA18";
         SecScan.Changed += OnData;
         SecFix.Load();
+        CrSetup();
         SetTabs();
-        SecTray.Alert(false);          // вікно відкрито - червона крапка на значку в треї гасне
+        if (!Standalone) SecTray.Alert(false);          // вікно відкрито - червона крапка на значку в треї гасне
     }
 
-    // файли, перетягнуті у вікно, - на перевірку
-    protected override void Dropped(string[] files) { foreach (string f in files) if (File.Exists(f)) Details(f); }
+    // файли, перетягнуті у вікно: на вкладці «Шифрування» - туди, інакше на перевірку
+    protected override void Dropped(string[] files)
+    {
+        if (Tab == TabCrypt) { CrDropped(files); return; }
+        foreach (string f in files) if (File.Exists(f)) Details(f);
+    }
 
-    // вкладки: «Файл» - головна (стан сканування, перевірка файлів, ключ VirusTotal), далі знахідки й списки
-    const int TabFile = 0, TabProc = 1, TabAuto = 2, TabSys = 3, TabLists = 4;
+    // вкладки: «Файл» - головна (стан сканування, перевірка файлів, ключ VirusTotal), далі знахідки, списки й шифрування
+    const int TabFile = 0, TabProc = 1, TabAuto = 2, TabSys = 3, TabLists = 4, TabCrypt = 5;
 
     void PickCheck()
     {
@@ -60,6 +71,7 @@ sealed class SecWindow : VtWindow
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         SecScan.Changed -= OnData;
+        CrClosed();
         base.OnFormClosed(e);
     }
 
@@ -74,12 +86,13 @@ sealed class SecWindow : VtWindow
     {
         bool done = SecScan.LastAt != DateTime.MinValue;
         int np = done ? Flagged(SecScan.Proc) + Flagged(SecScan.Svc) : 0, na = done ? Flagged(SecScan.Auto) : 0, ns = done ? Flagged(SecScan.Sys) : 0;
-        string[] t = new string[5];
+        string[] t = new string[6];
         t[TabFile] = L.T("Файл");
         t[TabProc] = L.T("Процеси") + (np > 0 ? " · " + np : "");             // служби - теж процеси, тож разом
         t[TabAuto] = L.T("Автозапуск") + (na > 0 ? " · " + na : "");
         t[TabSys] = L.T("Система") + (ns > 0 ? " · " + ns : "");
         t[TabLists] = L.T("Списки");
+        t[TabCrypt] = L.T("Шифрування");
         Tabs = t;
     }
 
@@ -534,6 +547,7 @@ sealed class SecWindow : VtWindow
     protected override void PaintBody(Graphics g, Rectangle r)
     {
         if (Tab == TabFile) { PaintFileTab(g, r); return; }
+        if (Tab == TabCrypt) { PaintCrypt(g, r); return; }
         int y = r.Y;
         int foot = Px(44);
         if (Tab == TabLists)

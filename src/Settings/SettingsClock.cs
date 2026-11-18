@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -10,7 +10,7 @@ using System.Windows.Forms;
 sealed partial class SettingsForm
 {
     SCombo cbTz, cbHolCountry, cbHolAt, cbBDay, cbBMonth, cbEaster, cbXmas;
-    CheckBox chClock24, chClockSec, chSyncStart, chHolOnline, chHolWorld, chWeekNum, chHolNotify;
+    CheckBox chClock24, chClockSec, chSyncStart, chHolOnline, chHolWorld, chHolIntl, chWeekNum, chHolNotify;
     SNum nHolDelay;
     SCard tzCard, ntpCard;
     readonly List<string> tzIds = new List<string>();     // id поясу для кожного рядка cbTz (рядок 0 - автоматично)
@@ -75,7 +75,9 @@ sealed partial class SettingsForm
         chHolOnline = Tg();
         hc.Row(L.T("Брати свята з інтернету"), L.T("date.nager.at; оновлюються під час кожного запуску панелі"), chHolOnline);
         chHolWorld = Tg();
-        hc.Row(L.T("Світові дні"), L.T("День святого Валентина, День матері, Хелловін, Різдво й інші важливі дати (зелена позначка)"), chHolWorld);
+        hc.Row(L.T("Світові свята"), L.T("Новий рік, День святого Валентина, Великдень, День матері, Хелловін, Різдво (зелена позначка, зі сповіщенням)"), chHolWorld);
+        chHolIntl = Tg();
+        hc.Row(L.T("Міжнародні дні"), L.T("Дні ООН (День Землі, День миру, День прав людини…) і свята інших культур: Китайський Новий рік, Песах, Ханука, Рамадан, Ід аль-Фітр. Лише позначка в календарі, без сповіщень"), chHolIntl);
         // день народження - необов'язково: з'являється в календарі й вмикає запрошення на святкову тему
         cbBDay = Cb(84);
         cbBDay.Items.Add("-");
@@ -176,6 +178,7 @@ sealed partial class SettingsForm
         cbHolCountry.SelectedIndex = ci;
         chHolOnline.Checked = Holidays.Online;
         chHolWorld.Checked = Holidays.World;
+        chHolIntl.Checked = Holidays.Intl;
         DateTime bd;
         bool hasBd = Holidays.BirthdayIn(c, 2000, out bd);      // 2000 - високосний, 29 лютого не губиться
         cbBDay.SelectedIndex = hasBd ? bd.Day : 0;
@@ -217,10 +220,11 @@ sealed partial class SettingsForm
         else ClockData.CheckTz();
 
         string country = cbHolCountry.SelectedIndex > 0 ? Holidays.Countries[cbHolCountry.SelectedIndex - 1][0] : "";
-        bool reload = country != Holidays.Country || chHolOnline.Checked != Holidays.Online || chHolWorld.Checked != Holidays.World;
+        bool reload = country != Holidays.Country || chHolOnline.Checked != Holidays.Online || chHolWorld.Checked != Holidays.World || chHolIntl.Checked != Holidays.Intl;
         Holidays.Country = country;
         Holidays.Online = chHolOnline.Checked;
         Holidays.World = chHolWorld.Checked;
+        Holidays.Intl = chHolIntl.Checked;
         Holidays.WeekNumbers = chWeekNum.Checked;
         Holidays.NotifyOn = chHolNotify.Checked;
         Holidays.NotifyAt = Math.Max(0, cbHolAt.SelectedIndex) * 15;

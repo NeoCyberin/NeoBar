@@ -13,14 +13,15 @@ using System.Windows.Forms;
 // ======================================================================
 sealed class Holiday
 {
-    public const int Public = 0, Mine = 1, World = 2, Birth = 3;
+    public const int Public = 0, Mine = 1, World = 2, Birth = 3, Intl = 4;
     public DateTime Date;
     public string Name = "";
     public bool Own, Yearly;
-    public int Kind;            // Public - державне, Mine - власне (Own), World - світовий день, Birth - день народження
+    public int Kind;            // Public - державне, Mine - власне (Own), World - світовий день, Birth - день народження,
+                                // Intl - міжнародний день ООН чи свято іншої культури (без сповіщень)
 
     // колір позначки в календарі
-    public Color Mark(Pal p) { return Kind == Public ? p.Bad : (Kind == World ? p.Good : p.Acc); }
+    public Color Mark(Pal p) { return Kind == Public ? p.Bad : (Kind == World ? p.Good : (Kind == Intl ? Util.Blend(p.Good, p.Sub, 0.5f) : p.Acc)); }
 
     public string Suffix
     {
@@ -28,6 +29,7 @@ sealed class Holiday
         {
             if (Kind == Public) return L.T("  · державне");
             if (Kind == World) return L.T("  · світовий день");
+            if (Kind == Intl) return L.T("  · міжнародний день");
             if (Kind == Birth) return L.T("  · щороку");
             return Yearly ? L.T("  · щороку") : "";
         }
@@ -38,7 +40,7 @@ static class Holidays
 {
     public static readonly List<Holiday> Own = new List<Holiday>();
     public static string Country = "";          // "" - автоматично за місцем
-    public static bool WeekNumbers = true, Online = true, World = true;
+    public static bool WeekNumbers = true, Online = true, World = true, Intl = true;
     public static bool NotifyOn = true;
     public static int NotifyAt = 9 * 60, NotifyDelay = 5;     // хвилини від півночі; хвилини після запуску
     public static DateTime LastNotified = DateTime.MinValue;
@@ -111,6 +113,7 @@ static class Holidays
                 else if (k == "weeks") WeekNumbers = v.Trim() == "1";
                 else if (k == "online") Online = v.Trim() != "0";
                 else if (k == "world") World = v.Trim() != "0";
+                else if (k == "intl") Intl = v.Trim() != "0";
                 else if (k == "notify") NotifyOn = v.Trim() != "0";
                 else if (k == "notifyat") { int n; if (int.TryParse(v.Trim(), out n)) NotifyAt = Math.Max(0, Math.Min(1439, n)); }
                 else if (k == "notifydelay") { int n; if (int.TryParse(v.Trim(), out n)) NotifyDelay = Math.Max(0, Math.Min(120, n)); }
@@ -143,6 +146,7 @@ static class Holidays
             sb.AppendLine("weeks=" + (WeekNumbers ? 1 : 0));
             sb.AppendLine("online=" + (Online ? 1 : 0));
             sb.AppendLine("world=" + (World ? 1 : 0));
+            sb.AppendLine("intl=" + (Intl ? 1 : 0));
             sb.AppendLine("notify=" + (NotifyOn ? 1 : 0));
             sb.AppendLine("notifyat=" + NotifyAt);
             sb.AppendLine("notifydelay=" + NotifyDelay);
@@ -186,8 +190,9 @@ static class Holidays
             if (l != null) foreach (Holiday h in l) if (h.Date.Date == d.Date) { r.Add(h); pub = true; }
         }
         // світовий день, що збігається з державним святом (Новий рік, Різдво, Великдень…), не дублюється
-        if (World && !pub)
-            foreach (Holiday h in WorldYear(d.Year, Cc(c))) if (h.Date == d.Date) r.Add(h);
+        if ((World || Intl) && !pub)
+            foreach (Holiday h in WorldYear(d.Year, Cc(c)))
+                if (h.Date == d.Date && (h.Kind == Holiday.World ? World : Intl)) r.Add(h);
         return r;
     }
 
@@ -251,25 +256,57 @@ static class Holidays
         return d.AddDays(7 * (n - 1));
     }
 
-    // важливі світові дні за рік (рахуються на місці, без інтернету)
+    // остання субота місяця
+    static DateTime LastSaturday(int y, int m)
+    {
+        DateTime d = new DateTime(y, m, DateTime.DaysInMonth(y, m));
+        while (d.DayOfWeek != DayOfWeek.Saturday) d = d.AddDays(-1);
+        return d;
+    }
+
+    // дата з іншого календаря (місячного, єврейського, ісламського); календарі .NET мають межі років - поза ними пропуск
+    static void Other(Action<DateTime, string> add, int y, Calendar cal, int cy, int month, int day, string name)
+    {
+        try
+        {
+            DateTime d = cal.ToDateTime(cy, month, day, 0, 0, 0, 0);
+            if (d.Year == y) add(d, name);
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+    }
+
+    // ісламське свято: місяць і день за календарем Умм аль-Кура (у різних країнах може відрізнятися на день)
+    static void Hijri(Action<DateTime, string> add, int y, int month, int day, string name)
+    {
+        try
+        {
+            UmAlQuraCalendar h = new UmAlQuraCalendar();
+            int hy = h.GetYear(new DateTime(y, 1, 1));
+            for (int k = 0; k < 2; k++) Other(add, y, h, hy + k, month, day, name);
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+    }
+
+    // важливі світові дні за рік (рахуються на місці, без інтернету).
+    // World - загальновідомі свята (зі сповіщенням), Intl - міжнародні дні ООН і свята інших культур (лише позначка в календарі)
     static List<Holiday> WorldYear(int y, string cc)
     {
         string key = cc + "-" + y;
         List<Holiday> l;
         lock (world) if (world.TryGetValue(key, out l)) return l;
         l = new List<Holiday>();
+        int kind = Holiday.World;
         Action<DateTime, string> add = delegate (DateTime d, string n)
         {
             foreach (Holiday x in l) if (x.Date == d && x.Name == n) return;
-            Holiday h = new Holiday(); h.Date = d; h.Name = n; h.Kind = Holiday.World; l.Add(h);
+            Holiday h = new Holiday(); h.Date = d; h.Name = n; h.Kind = kind; l.Add(h);
         };
+        // ---- загальновідомі свята ----
         add(new DateTime(y, 1, 1), L.T("Новий рік"));
+        if (!JulianXmas(cc)) add(new DateTime(y, 1, 7), L.T("Різдво (юліанський календар)"));
         add(new DateTime(y, 2, 14), L.T("День святого Валентина"));
         add(new DateTime(y, 3, 8), L.T("Міжнародний жіночий день"));
         add(new DateTime(y, 4, 1), L.T("День сміху"));
-        add(new DateTime(y, 4, 7), L.T("Всесвітній день здоров'я"));
-        add(new DateTime(y, 4, 12), L.T("Міжнародний день польоту людини в космос"));
-        add(new DateTime(y, 4, 22), L.T("День Землі"));
         DateTime eo = Easter(y, true), ew = Easter(y, false);
         if (eo == ew) add(eo, L.T("Великдень"));
         else if (Orthodox(cc)) { add(eo, L.T("Великдень")); add(ew, L.T("Великдень (західний обряд)")); }
@@ -277,15 +314,68 @@ static class Holidays
         add(new DateTime(y, 5, 1), L.T("День праці"));
         add(NthSunday(y, 5, 2), L.T("День матері"));
         add(new DateTime(y, 6, 1), L.T("Міжнародний день захисту дітей"));
-        add(new DateTime(y, 6, 5), L.T("Всесвітній день довкілля"));
         add(NthSunday(y, 6, 3), L.T("День батька"));
         add(new DateTime(y, 1, 1).AddDays(255), L.T("День програміста"));
-        add(new DateTime(y, 9, 21), L.T("Міжнародний день миру"));
-        add(new DateTime(y, 10, 5), L.T("Всесвітній день учителя"));
         add(new DateTime(y, 10, 31), L.T("Хелловін"));
-        add(new DateTime(y, 12, 10), L.T("День прав людини"));
         add(new DateTime(y, 12, 25), L.T("Різдво"));
         add(new DateTime(y, 12, 31), L.T("Новорічна ніч"));
+
+        // ---- міжнародні дні ООН та інші загальносвітові дати ----
+        kind = Holiday.Intl;
+        add(new DateTime(y, 1, 27), L.T("Міжнародний день пам'яті жертв Голокосту"));
+        add(new DateTime(y, 2, 4), L.T("Всесвітній день боротьби з раком"));
+        add(new DateTime(y, 2, 21), L.T("Міжнародний день рідної мови"));
+        add(new DateTime(y, 3, 20), L.T("Міжнародний день щастя"));
+        add(new DateTime(y, 3, 21), L.T("Всесвітній день поезії"));
+        add(new DateTime(y, 3, 22), L.T("Всесвітній день водних ресурсів"));
+        add(LastSaturday(y, 3), L.T("Година Землі"));
+        add(new DateTime(y, 4, 7), L.T("Всесвітній день здоров'я"));
+        add(new DateTime(y, 4, 12), L.T("Міжнародний день польоту людини в космос"));
+        add(new DateTime(y, 4, 22), L.T("День Землі"));
+        add(new DateTime(y, 4, 23), L.T("Всесвітній день книги"));
+        add(new DateTime(y, 4, 26), L.T("Міжнародний день пам'яті Чорнобильської катастрофи"));
+        add(new DateTime(y, 5, 3), L.T("Всесвітній день свободи преси"));
+        add(new DateTime(y, 5, 8), L.T("День пам'яті та примирення"));
+        add(new DateTime(y, 5, 15), L.T("Міжнародний день сім'ї"));
+        add(new DateTime(y, 5, 31), L.T("Всесвітній день без тютюну"));
+        add(new DateTime(y, 6, 5), L.T("Всесвітній день довкілля"));
+        add(new DateTime(y, 6, 8), L.T("Всесвітній день океанів"));
+        add(new DateTime(y, 6, 20), L.T("Всесвітній день біженців"));
+        add(new DateTime(y, 6, 21), L.T("Всесвітній день музики"));
+        add(new DateTime(y, 7, 30), L.T("Міжнародний день дружби"));
+        add(new DateTime(y, 8, 12), L.T("Міжнародний день молоді"));
+        add(new DateTime(y, 8, 19), L.T("Всесвітній день гуманітарної допомоги"));
+        add(new DateTime(y, 9, 8), L.T("Міжнародний день грамотності"));
+        add(new DateTime(y, 9, 21), L.T("Міжнародний день миру"));
+        add(new DateTime(y, 9, 27), L.T("Всесвітній день туризму"));
+        add(new DateTime(y, 10, 1), L.T("Міжнародний день людей похилого віку"));
+        add(new DateTime(y, 10, 5), L.T("Всесвітній день учителя"));
+        add(new DateTime(y, 10, 10), L.T("Всесвітній день психічного здоров'я"));
+        add(new DateTime(y, 10, 16), L.T("Всесвітній день продовольства"));
+        add(new DateTime(y, 10, 24), L.T("День Організації Об'єднаних Націй"));
+        add(new DateTime(y, 11, 16), L.T("Міжнародний день толерантності"));
+        add(new DateTime(y, 11, 20), L.T("Всесвітній день дитини"));
+        add(new DateTime(y, 12, 1), L.T("Всесвітній день боротьби зі СНІДом"));
+        add(new DateTime(y, 12, 3), L.T("Міжнародний день людей з інвалідністю"));
+        add(new DateTime(y, 12, 5), L.T("Міжнародний день волонтерів"));
+        add(new DateTime(y, 12, 10), L.T("День прав людини"));
+
+        // ---- свята інших культур (місячні календарі; дата в різних країнах може відрізнятися на день) ----
+        Other(add, y, new ChineseLunisolarCalendar(), y, 1, 1, L.T("Китайський Новий рік"));
+        try
+        {
+            HebrewCalendar hc = new HebrewCalendar();
+            int hy = y + 3760;                                   // єврейський рік, у якому весна цього року
+            Other(add, y, hc, hy, hc.GetMonthsInYear(hy) == 13 ? 8 : 7, 15, L.T("Песах"));
+            Other(add, y, hc, hy + 1, 1, 1, L.T("Рош га-Шана"));
+            Other(add, y, hc, hy + 1, 1, 10, L.T("Йом Кіпур"));
+            Other(add, y, hc, hy + 1, 3, 25, L.T("Ханука"));
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        Hijri(add, y, 9, 1, L.T("Початок Рамадану"));
+        Hijri(add, y, 10, 1, L.T("Ід аль-Фітр (Ураза-байрам)"));
+        Hijri(add, y, 12, 10, L.T("Ід аль-Адха (Курбан-байрам)"));
+
         l.Sort(delegate (Holiday a, Holiday b) { return a.Date.CompareTo(b.Date); });
         lock (world) world[key] = l;
         return l;

@@ -410,7 +410,8 @@ static class ClockData
         Holidays.Save();
         if (l.Count == 0) return;
         List<string> n = new List<string>();
-        foreach (Holiday h in l) n.Add(h.Name);
+        foreach (Holiday h in l) if (h.Kind != Holiday.Intl) n.Add(h.Name);
+        if (n.Count == 0) return;      // міжнародні дні ООН лише позначаються в календарі, без сповіщень
         // коли панель саме вітає святковою темою (ефект і звук), сповіщення мовчить: інакше звуки перебивають один одного
         if (bar != null) ToastForm.Show(bar, L.T("Сьогодні свято"), string.Join(" · ", n.ToArray()), "bell", false, null, Seasons.Greeting(bar) ? "none" : null);
     }

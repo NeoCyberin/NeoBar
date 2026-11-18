@@ -320,21 +320,45 @@ static class Js
 static class Geo
 {
     public static string Source = "";     // звідки останнє автоматичне місце: "windows" або "ip"
+    // чому служба розташування Windows не дала місця: "" - дала; "denied" - заборонено; "disabled" - вимкнено;
+    // "nodata" - служба працює, але не знає, де ПК; "start" - не запустилась
+    public static string WinState = "";
+
+    // Чи є в ПК адаптер Wi-Fi (увімкнений чи ні). Windows визначає місце ПК без GPS за мережами Wi-Fi поруч:
+    // на ПК лише з кабельним інтернетом служба розташування місця зазвичай не знаходить
+    public static bool HasWifi()
+    {
+        try
+        {
+            foreach (System.Net.NetworkInformation.NetworkInterface n in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+                if (n.NetworkInterfaceType == System.Net.NetworkInformation.NetworkInterfaceType.Wireless80211) return true;
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        return false;
+    }
+
+    static string Prop(object o, string name)
+    {
+        try { object v = o.GetType().GetProperty(name).GetValue(o, null); return v != null ? v.ToString() : ""; } catch { return ""; }
+    }
 
     // Служба розташування Windows через System.Device (завантажується динамічно; працює,
-    // якщо в Параметрах дозволено доступ класичних програм до розташування)
+    // якщо в Параметрах дозволено доступ класичних програм до розташування). Перше визначення за Wi-Fi
+    // може тривати кілька секунд, тому чекаємо до ~20 с; стан служби лишається в WinState для «Діагностики».
     public static bool WindowsLocation(out double lat, out double lon)
     {
         lat = lon = double.NaN;
         object w = null;
+        WinState = "start";
         try
         {
             Type t = Type.GetType("System.Device.Location.GeoCoordinateWatcher, System.Device, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", false);
             if (t == null) return false;
             w = Activator.CreateInstance(t);
-            object ok = t.GetMethod("TryStart", new Type[] { typeof(bool), typeof(TimeSpan) }).Invoke(w, new object[] { false, TimeSpan.FromSeconds(6) });
-            if (!(ok is bool) || !(bool)ok) return false;
-            for (int i = 0; i < 40; i++)
+            object ok = t.GetMethod("TryStart", new Type[] { typeof(bool), typeof(TimeSpan) }).Invoke(w, new object[] { false, TimeSpan.FromSeconds(8) });
+            if (Prop(w, "Permission") == "Denied") { WinState = "denied"; return false; }
+            if (!(ok is bool) || !(bool)ok) { WinState = Prop(w, "Status") == "Disabled" ? "disabled" : "start"; return false; }
+            for (int i = 0; i < 80; i++)
             {
                 object pos = t.GetProperty("Position").GetValue(w, null);
                 object loc = pos.GetType().GetProperty("Location").GetValue(pos, null);
@@ -343,10 +367,15 @@ static class Geo
                 {
                     lat = (double)loc.GetType().GetProperty("Latitude").GetValue(loc, null);
                     lon = (double)loc.GetType().GetProperty("Longitude").GetValue(loc, null);
-                    return !double.IsNaN(lat) && !double.IsNaN(lon);
+                    if (double.IsNaN(lat) || double.IsNaN(lon)) break;
+                    WinState = "";
+                    return true;
                 }
+                string st = Prop(w, "Status");
+                if (st == "Disabled") { WinState = Prop(w, "Permission") == "Denied" ? "denied" : "disabled"; return false; }
                 Thread.Sleep(250);
             }
+            WinState = Prop(w, "Permission") == "Denied" ? "denied" : "nodata";
             return false;
         }
         catch { return false; }
@@ -362,6 +391,19 @@ static class Geo
                 }
             }
             catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        }
+    }
+
+    // зрозуміле пояснення стану для журналу
+    public static string WinStateText()
+    {
+        switch (WinState)
+        {
+            case "": return "";
+            case "denied": return "доступ заборонено";
+            case "disabled": return "вимкнено";
+            case "nodata": return "немає даних" + (HasWifi() ? "" : ", Wi-Fi немає");
+            default: return "не запустилась";
         }
     }
 

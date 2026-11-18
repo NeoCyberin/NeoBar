@@ -4,7 +4,7 @@ Widgets sit at the top of the panel; click one to open its window. Order them wi
 
 | Widget | What it does |
 |---|---|
-| **Time & date** | Clock, calendar, public holidays (from date.nager.at) and world days, your own dates, alarms, timers, stopwatch, desktop clocks (digital, analog, calendar). Clock accuracy can be checked against a time server. |
+| **Time & date** | Clock, calendar, public holidays (from date.nager.at), world holidays and international days (UN days, Chinese New Year, Passover, Hanukkah, Ramadan, Eid - marked without notifications), your own dates, alarms, timers, stopwatch, desktop clocks (digital, analog, calendar). Clock accuracy can be checked against a time server. |
 | **Weather** | Current weather, hourly and weekly forecast, weather themes, European/American units. |
 | **System monitor** | CPU, GPU, RAM with graphs (and the integrated GPU, if any); *Specs*; *Devices* - devices and drivers (see [[Tools]]); *Tasks* - processes and services; *Analysis* - recording the load of an app (or a group with its children) or the whole-system history for the day. Temperatures can be shown in the tray as separate icons (Settings → System): CPU, GPU (edge, hotspot, memory), integrated GPU, drives - each in its own color. |
 | **Network** | Download/upload speed, ping, adapters, Wi-Fi, firewall switch. Diagnostics: ping, traceroute, ports; DNS check (a DNS server IP in the field - does it work and is it faster than yours; a site name - how different DNS servers see it; empty - do your DNS servers work); local network scan. |
@@ -12,10 +12,9 @@ Widgets sit at the top of the panel; click one to open its window. Order them wi
 | **Battery** | Charge and power state (shown only on devices with a battery). |
 | **Notes** | Notes on the desktop; they can be locked in place and saved to a file (.txt or .rtf - header menu). |
 | **Palette** | Eyedropper, colour models (HEX and others), swatches, one click copies HEX. |
-| **Dice** | d4-d20, several dice at once, your own names for the sides, history. |
+| **Dice** | d4-d20, several dice at once, your own names for the sides, history. On the panel - a 3D die of the chosen shape with the result on its front face. |
 | **QR code** | Text, link, Wi-Fi, contact, e-mail, SMS, phone, location; error correction level; logo in the centre; save as PNG or SVG. |
-| **Security** | Checks processes, autostart, services and settings. See [[Tools]]. |
-| **Encryption** | Encrypt text and files, hashes. |
+| **Security** | Checks files, processes, autostart, services and settings; the *Encryption* tab - hashes, text and file encryption. See [[Tools]]. |
 
 ## Widgets on the desktop
 
@@ -54,6 +53,6 @@ Every 5 seconds NeoBar watches the sensors (cheap - the same shared polling the 
 
 ## Location and weather (Settings → Location & weather)
 
-NeoBar can detect your location with the Windows location service or, if that is off, by IP address (city-level accuracy). Without permission you set the city by hand: type 3+ letters, or click on the map (OpenStreetMap). The time zone can follow the location. Downloaded data (weather, holidays, map tiles, icons) is cached; without internet the saved data is shown.
+NeoBar can detect your location with the Windows location service or, if that is off or gives nothing, by IP address (city-level accuracy; an IP shows the provider's city). Without GPS, Windows finds the location from nearby Wi-Fi networks, so a desktop PC with wired internet and no Wi-Fi usually gets no location from it - that is normal; Settings → Diagnostics explains which case you have. Without permission you set the city by hand: type 3+ letters, or click on the map (OpenStreetMap). The time zone can follow the location. Downloaded data (weather, holidays, map tiles, icons) is cached; without internet the saved data is shown.
 
 Back: [[Home]]

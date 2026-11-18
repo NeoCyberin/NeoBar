@@ -176,7 +176,7 @@ static class Dice
         catch (Exception ex) { Util.ErrorLog(ex); landed(); }
     }
 
-    // ---------- плоска грань (віджет на панелі) ----------
+    // ---------- точки на грані кубика ----------
     static readonly float[][] Pips =
     {
         new float[] { },
@@ -190,48 +190,114 @@ static class Dice
 
     public static float[] PipsOf(int v) { return v >= 1 && v <= 6 ? Pips[v] : Pips[0]; }
 
-    // грань кубика: точки для 1-6 (кубик на 6 граней), інакше число
-    public static void DrawDie(Graphics g, RectangleF r, int v, Color face, Color ink, Font numFont, string text)
+    // Об'ємний значок кубика для панелі: справжня форма (куб, к4…к20) з освітленими гранями, трохи повернута,
+    // щоб було видно верх і бік. Результат - на передній грані (точки чи число лягають у її площину).
+    // spin - поворот навколо вертикалі в радіанах (поки кубик летить, значок повернутий іншим боком)
+    public static void DrawDie3D(Graphics g, RectangleF r, int v, Color face, Color ink, FontFamily ff, string text, float spin)
     {
+        int kind = Poly.KindFor(Faces);
+        Poly p = kind == 6 ? Poly.Cube() : Poly.Get(kind);
+        if (p == null || p.F == null || p.F.Length == 0) return;
+        // базис «передньої» грані: вона дивиться на глядача, її «угору» - вгору екрана
+        int f0 = 0;
+        if (kind == 6) for (int f = 0; f < p.F.Length; f++) if (p.N[f][2] > 0.9f) f0 = f;
+        float[] n0 = p.N[f0], u0 = p.Up[f0];
+        float[] w0 = { u0[1] * n0[2] - u0[2] * n0[1], u0[2] * n0[0] - u0[0] * n0[2], u0[0] * n0[1] - u0[1] * n0[0] };
+        // нахил: трохи згори й збоку
+        double yaw = (kind == 6 ? -0.55 : -0.22) + spin, pitch = kind == 6 ? 0.42 : 0.3;
+        float cy = (float)Math.Cos(yaw), sy = (float)Math.Sin(yaw), cp = (float)Math.Cos(pitch), spp = (float)Math.Sin(pitch);
+        Func<float[], float[]> rot = delegate (float[] q)
+        {
+            float x = q[0] * w0[0] + q[1] * w0[1] + q[2] * w0[2];
+            float y = q[0] * u0[0] + q[1] * u0[1] + q[2] * u0[2];
+            float z = q[0] * n0[0] + q[1] * n0[1] + q[2] * n0[2];
+            float x1 = x * cy + z * sy, z1 = -x * sy + z * cy;                 // поворот навколо вертикалі
+            float y2 = y * cp - z1 * spp, z2 = y * spp + z1 * cp;               // нахил до глядача (видно верх)
+            return new float[] { x1, y2, z2 };
+        };
+        int nv = p.V.Length;
+        float[][] rv = new float[nv][];
+        for (int i = 0; i < nv; i++) rv[i] = rot(p.V[i]);
+        // масштаб - за обрисом у спокої (під час кидка обрис той самий за висотою, тож значок не «стрибає»)
+        float scale = r.Width / 2f / 1.04f;
+        if (kind == 6) scale = r.Width / 2f / 1.32f;
+        float cx = r.X + r.Width / 2f, cyy = r.Y + r.Height / 2f;
+        Func<float[], PointF> scr = delegate (float[] q) { return new PointF(cx + q[0] * scale, cyy - q[1] * scale); };
+        float[] light = { -0.45f, 0.75f, 0.5f };
+        float ll = (float)Math.Sqrt(light[0] * light[0] + light[1] * light[1] + light[2] * light[2]);
         SmoothingMode sm = g.SmoothingMode;
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        float rad = r.Width * 0.2f;
-        Rectangle ri = Rectangle.Round(r);
-        int kind = Poly.KindFor(Faces);
-        if (kind == 6)
+        int front = -1;
+        float edge = Math.Max(1f, r.Width * 0.035f);
+        using (Pen pn = new Pen(Color.FromArgb(110, ink), edge))
         {
-            using (SolidBrush b = new SolidBrush(face)) Util.FillRound(g, b, ri, (int)rad);
-            using (Pen pn = new Pen(Color.FromArgb(70, ink), Math.Max(1f, r.Width * 0.03f)))
-            using (GraphicsPath gp = Util.Round(ri, (int)rad)) g.DrawPath(pn, gp);
-        }
-        else
-        {
-            // силует форми: трикутник (к4), ромб (к8), дельтоїд (к10), п'ятикутник (к12), шестикутник (к20)
-            using (GraphicsPath gp = new GraphicsPath())
+            pn.LineJoin = LineJoin.Round;
+            for (int f = 0; f < p.F.Length; f++)
             {
-                Poly.Outline(gp, kind, r);
-                using (SolidBrush b = new SolidBrush(face)) g.FillPath(b, gp);
-                using (Pen pn = new Pen(Color.FromArgb(90, ink), Math.Max(1f, r.Width * 0.035f))) { pn.LineJoin = LineJoin.Round; g.DrawPath(pn, gp); }
+                float[] nn = rot(p.N[f]);
+                if (nn[2] <= 0.02f) continue;                                  // задня грань
+                if (f == f0) front = f;                                        // результат - на грані, повернутій до глядача
+                float k = (nn[0] * light[0] + nn[1] * light[1] + nn[2] * light[2]) / ll;
+                Color c = k >= 0.6f ? Util.Blend(face, Color.White, Math.Min(0.35f, (k - 0.6f) * 0.9f)) : Util.Blend(face, Color.Black, Math.Min(0.45f, (0.6f - k) * 0.6f));
+                PointF[] pts = new PointF[p.F[f].Length];
+                for (int i = 0; i < pts.Length; i++) pts[i] = scr(rv[p.F[f][i]]);
+                using (SolidBrush b = new SolidBrush(c)) g.FillPolygon(b, pts);
+                g.DrawPolygon(pn, pts);
             }
-            if (kind == 20)
-                using (Pen pn = new Pen(Color.FromArgb(45, ink), Math.Max(1f, r.Width * 0.025f)))
-                    g.DrawPolygon(pn, new PointF[] { new PointF(r.X + r.Width * 0.5f, r.Y + r.Height * 0.2f), new PointF(r.X + r.Width * 0.82f, r.Y + r.Height * 0.71f), new PointF(r.X + r.Width * 0.18f, r.Y + r.Height * 0.71f) });
-            // число - у центрі грані (у трикутника - нижче, де ширше)
-            if (kind == 4) ri = Rectangle.Round(new RectangleF(r.X, r.Y + r.Height * 0.24f, r.Width, r.Height * 0.66f));
-            else if (kind == 20) ri = Rectangle.Round(new RectangleF(r.X, r.Y + r.Height * 0.3f, r.Width, r.Height * 0.4f));
         }
-        TextFormatFlags tf = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding;
-        if (text != null)
-            TextRenderer.DrawText(g, text, numFont, ri, ink, tf);
-        else if (v >= 1 && v <= 6 && Faces == 6)
+        if (front >= 0)
         {
-            float d = r.Width * 0.17f;
-            float[] p = Pips[v];
-            using (SolidBrush pb = new SolidBrush(ink))
-                for (int i = 0; i + 1 < p.Length; i += 2)
-                    g.FillEllipse(pb, r.X + r.Width * p[i] - d / 2, r.Y + r.Height * p[i + 1] - d / 2, d, d);
+            // площина передньої грані -> екран (ортогональна проєкція площини - афінне перетворення)
+            float[] c0 = p.C[front], up = p.Up[front], nf = p.N[front];
+            float[] rt = { up[1] * nf[2] - up[2] * nf[1], up[2] * nf[0] - up[0] * nf[2], up[0] * nf[1] - up[1] * nf[0] };
+            PointF o = scr(rot(c0));
+            PointF ex = scr(rot(new float[] { c0[0] + rt[0], c0[1] + rt[1], c0[2] + rt[2] }));
+            PointF ey = scr(rot(new float[] { c0[0] + up[0], c0[1] + up[1], c0[2] + up[2] }));
+            Matrix old = g.Transform;
+            // x грані -> (ex - o), y грані (угору) -> (o - ey), бо на екрані y вниз
+            using (Matrix m = new Matrix(ex.X - o.X, ex.Y - o.Y, o.X - ey.X, o.Y - ey.Y, o.X, o.Y))
+            {
+                Matrix full = old.Clone();
+                full.Multiply(m);
+                g.Transform = full;
+                float inr = p.Inr[front];
+                if (text == null && v >= 1 && v <= 6 && Faces == 6)
+                {
+                    float[] pp = Pips[v];
+                    float d = inr * 0.36f;
+                    using (SolidBrush pb = new SolidBrush(ink))
+                        for (int i = 0; i + 1 < pp.Length; i += 2)
+                            g.FillEllipse(pb, (pp[i] * 2 - 1) * inr * 0.98f - d / 2, (pp[i + 1] * 2 - 1) * inr * 0.98f - d / 2, d, d);
+                }
+                else
+                {
+                    string s = text ?? (v > 0 ? v.ToString() : "?");
+                    using (GraphicsPath tp = new GraphicsPath())
+                    using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic))
+                    {
+                        // контур тексту будується великим (на крихітному кеглі GDI+ спотворює гліфи), потім зменшується
+                        const float em = 100f;
+                        sf.Alignment = StringAlignment.Center; sf.LineAlignment = StringAlignment.Center;
+                        tp.AddString(s, ff ?? FontFamily.GenericSansSerif, (int)FontStyle.Bold, em, new PointF(0, 0), sf);
+                        // за потреби зменшити, щоб число вмістилось у вписане коло грані
+                        RectangleF tb = tp.GetBounds();
+                        // у к8…к20 грані дрібні - число трохи більше за грань, інакше на панелі його не прочитати
+                        float room = inr * (kind == 6 ? 1.5f : (kind == 4 ? 1.7f : (kind == 12 ? 1.45f : (kind == 8 ? 1.8f : 2.3f))));
+                        float fit = room / Math.Max(1e-3f, Math.Max(tb.Width, tb.Height));
+                        using (Matrix c2 = new Matrix())
+                        {
+                            c2.Scale(fit, fit);
+                            c2.Translate(-(tb.X + tb.Width / 2), -(tb.Y + tb.Height / 2));
+                            tp.Transform(c2);
+                        }
+                        using (SolidBrush tb2 = new SolidBrush(v > 0 || text != null ? ink : Color.FromArgb(150, ink))) g.FillPath(tb2, tp);
+                    }
+                }
+                g.Transform = old;
+                full.Dispose();
+            }
+            old.Dispose();
         }
-        else if (numFont != null) TextRenderer.DrawText(g, v > 0 ? v.ToString() : "?", numFont, ri, v > 0 ? ink : Color.FromArgb(150, ink), tf);
         g.SmoothingMode = sm;
     }
 }
@@ -264,9 +330,17 @@ sealed class Poly
         return 20;
     }
 
+    // куб для об'ємного значка на панелі (Get(6) - null: у вікні кубиків звичайний кубик малюється окремо)
+    public static Poly Cube() { return GetAny(6); }
+
     public static Poly Get(int kind)
     {
         if (kind == 6) return null;
+        return GetAny(kind);
+    }
+
+    static Poly GetAny(int kind)
+    {
         lock (cache)
         {
             Poly p;
@@ -292,6 +366,9 @@ sealed class Poly
             case 4:
                 v.Add(new float[] { 1, 1, 1 }); v.Add(new float[] { 1, -1, -1 }); v.Add(new float[] { -1, 1, -1 }); v.Add(new float[] { -1, -1, 1 });
                 size = 2.0f; break;
+            case 6:
+                foreach (int x in new int[] { 1, -1 }) foreach (int y in new int[] { 1, -1 }) foreach (int z in new int[] { 1, -1 }) v.Add(new float[] { x, y, z });
+                size = 1f; break;
             case 8:
                 foreach (int s in new int[] { 1, -1 }) { v.Add(new float[] { s, 0, 0 }); v.Add(new float[] { 0, s, 0 }); v.Add(new float[] { 0, 0, s }); }
                 size = 1.7f; break;
@@ -394,6 +471,10 @@ sealed class Poly
             p.Inr[f] = inr;
             p.Rest = Dot(nn, cc);
         }
+        // у квадрата всі вершини однаково далекі - «угору» для куба вздовж ребра, а не в кут
+        if (kind == 6)
+            for (int f = 0; f < fc; f++)
+                p.Up[f] = Math.Abs(p.N[f][1]) < 0.5f ? new float[] { 0, 1, 0 } : new float[] { 0, 0, -Math.Sign(p.N[f][1]) };
         for (int f = 0; f < fc; f++)
         {
             p.Opp[f] = -1;
@@ -402,30 +483,6 @@ sealed class Poly
         return p;
     }
 
-    // плоский силует для віджета на панелі (у квадраті r)
-    public static void Outline(GraphicsPath gp, int kind, RectangleF r)
-    {
-        float x = r.X, y = r.Y, w = r.Width, h = r.Height;
-        Func<float, float, PointF> P = delegate (float a, float b) { return new PointF(x + w * a, y + h * b); };
-        switch (kind)
-        {
-            case 4: gp.AddPolygon(new PointF[] { P(0.5f, 0.04f), P(0.97f, 0.9f), P(0.03f, 0.9f) }); break;
-            case 8: gp.AddPolygon(new PointF[] { P(0.5f, 0.02f), P(0.93f, 0.5f), P(0.5f, 0.98f), P(0.07f, 0.5f) }); break;
-            case 10: gp.AddPolygon(new PointF[] { P(0.5f, 0.02f), P(0.97f, 0.46f), P(0.5f, 0.98f), P(0.03f, 0.46f) }); break;
-            default:
-            {
-                int k = kind == 12 ? 5 : 6;
-                PointF[] pts = new PointF[k];
-                for (int i = 0; i < k; i++)
-                {
-                    double a = -Math.PI / 2 + i * 2 * Math.PI / k;
-                    pts[i] = P(0.5f + 0.49f * (float)Math.Cos(a), (kind == 12 ? 0.54f : 0.5f) + 0.49f * (float)Math.Sin(a));
-                }
-                gp.AddPolygon(pts);
-                break;
-            }
-        }
-    }
 }
 
 // ----------------------------------------------------------------------

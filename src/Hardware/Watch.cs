@@ -34,6 +34,8 @@ static class Watch
     static int lastTick, lastProcScan, procBusy;
 
     public static string AlertLog { get { return Path.Combine(SbLog.Dir, "alerts.log"); } }
+    // звіти після ігор: «Документи → NeoBar → Ігри»
+    public static string ReportDir { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "NeoBar", L.T("Ігри")); } }
     static string HistFile { get { return Path.Combine(Prof.Root, "history.csv"); } }
 
     public static void Start(NeoBar b)
@@ -390,7 +392,7 @@ static class Watch
         string file = "";
         try
         {
-            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "NeoBar", L.T("Ігри"));
+            string dir = ReportDir;
             Directory.CreateDirectory(dir);
             string n = s.Name;
             foreach (char c in Path.GetInvalidFileNameChars()) n = n.Replace(c, '_');

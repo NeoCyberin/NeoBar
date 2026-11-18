@@ -79,16 +79,13 @@ sealed partial class NeoBar
         {
             try
             {
-                if (verb == "scan")
-                {
-                    SecWindow s = OpenWin("security", FirstWidget("security"), delegate { return new SecWindow(this); }, false) as SecWindow;
-                    if (s != null) { s.CheckFile(path); s.Activate(); }
-                    return;
-                }
-                CryptWindow c = OpenWin("crypt", FirstWidget("crypt"), delegate { return new CryptWindow(this); }, false) as CryptWindow;
-                if (c == null) return;
-                if (verb == "hash") c.HashFile(path); else c.AddFiles(new string[] { path });
-                c.Activate();
+                // перевірка, хеш-сума й шифрування - вкладки «Безпеки»
+                SecWindow s = OpenWin("security", FirstWidget("security"), delegate { return new SecWindow(this); }, false) as SecWindow;
+                if (s == null) return;
+                if (verb == "scan") s.CheckFile(path);
+                else if (verb == "hash") s.HashFile(path);
+                else s.AddFiles(new string[] { path });
+                s.Activate();
             }
             catch (Exception ex) { Util.ErrorLog(ex); }
         }));
@@ -166,7 +163,6 @@ sealed partial class NeoBar
             case "dice": ToggleWin("dice", delegate { OpenWin("dice", en, delegate { return new DiceWindow(this); }, false); }); return;
             case "qr": ToggleWin("qr", delegate { OpenWin("qr", en, delegate { return new QrWindow(this); }, false); }); return;
             case "security": ToggleWin("security", delegate { OpenWin("security", en, delegate { return new SecWindow(this); }, false); }); return;
-            case "crypt": ToggleWin("crypt", delegate { OpenWin("crypt", en, delegate { return new CryptWindow(this); }, false); }); return;
         }
     }
 
@@ -438,9 +434,12 @@ sealed partial class NeoBar
                     locating = false;
                     if (cfg.LocMode != "auto") return;
                     // Windows-розташування увімкнене, але не відповіло (служба ще стартує) - повтор
+                    // без Wi-Fi чи із забороненим доступом повтор нічого не дасть - не повторюємо
                     int[] pause = { 45000, 180000, 600000 };
-                    if (!(ok && src == "windows") && winOn && locRetry < pause.Length) ScheduleLocate(pause[locRetry++]);
-                    SbLog.W(SbLog.Panel, "розташування: " + (ok ? src : "не вдалося") + (ok ? ", " + city : ""));
+                    bool hopeless = Geo.WinState == "denied" || Geo.WinState == "disabled" || (Geo.WinState == "nodata" && !Geo.HasWifi());
+                    if (!(ok && src == "windows") && winOn && !hopeless && locRetry < pause.Length) ScheduleLocate(pause[locRetry++]);
+                    string ws = winOn && src != "windows" ? Geo.WinStateText() : "";
+                    SbLog.W(SbLog.Panel, "розташування: " + (ok ? src : "не вдалося") + (ok ? ", " + city : "") + (ws.Length > 0 ? " (Windows: " + ws + ")" : ""));
                     if (!ok) return;
                     Geo.Source = src;
                     bool moved = double.IsNaN(cfg.Lat) || Math.Abs(cfg.Lat - lat) > 0.02 || Math.Abs(cfg.Lon - lon) > 0.02;

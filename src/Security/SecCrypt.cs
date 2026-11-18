@@ -7,11 +7,12 @@ using System.Threading;
 using System.Windows.Forms;
 
 // ======================================================================
-//  Вікно «Шифрування»: хеш-сума файла, шифрування тексту, шифрування файлів (.nbenc або ZIP з AES-256).
+//  «Безпека» → вкладка «Шифрування»: хеш-сума файла, шифрування тексту, шифрування файлів (.nbenc або ZIP з AES-256).
 //  Важка робота (обхід файла, виведення ключа з пароля) - в окремому потоці; вікно лише показує поступ.
 // ======================================================================
-sealed class CryptWindow : ToolWindow
+sealed partial class SecWindow
 {
+    int crSub;                  // підвкладка: 0 - хеш-сума, 1 - текст, 2 - файли
     TextBox tbCmp, tbIn, tbOut, tbPw, tbFpw, tbFpw2;
     Font mono;
     readonly System.Windows.Forms.Timer fast = new System.Windows.Forms.Timer();
@@ -39,15 +40,10 @@ sealed class CryptWindow : ToolWindow
     string fMsg = "";
     bool fMsgBad;
 
-    public CryptWindow(NeoBar bar) : base(bar, L.T("Шифрування"), 580, 640) { Setup(); }
-    public CryptWindow(Theme t, float sc) : base(t, sc, L.T("Шифрування"), 580, 640) { Setup(); }
-
-    void Setup()
+    void CrSetup()
     {
-        Glyph = "\uE72E";
         mono = Util.MakeFont("Consolas", 9f, FontStyle.Regular);
         tbCmp = MakeInput(); tbIn = MakeInput(); tbOut = MakeInput(); tbPw = MakeInput(); tbFpw = MakeInput(); tbFpw2 = MakeInput();
-        Tabs = new string[] { L.T("Хеш-сума"), L.T("Текст"), L.T("Файли") };
         foreach (TextBox t in new TextBox[] { tbIn, tbOut })
         {
             t.Multiline = true; t.WordWrap = true; t.AcceptsReturn = true; t.ScrollBars = ScrollBars.None;
@@ -62,15 +58,16 @@ sealed class CryptWindow : ToolWindow
         tbFpw2.TextChanged += delegate { Invalidate(); };
         tbPw.TextChanged += delegate { Invalidate(); };
         fast.Interval = 120;
-        fast.Tick += delegate { if (hBusy || tBusy || fBusy) Invalidate(); };
-        fast.Start();
+        // таймер поступу працює лише під час обчислень (вмикає Busy())
+        fast.Tick += delegate { if (hBusy || tBusy || fBusy) Invalidate(); else fast.Stop(); };
     }
 
-    protected override void OnFormClosed(FormClosedEventArgs e)
+    void Busy() { if (!fast.Enabled) fast.Start(); }
+
+    void CrClosed()
     {
         hStop = true; fStop = true;
         fast.Stop(); fast.Dispose();
-        base.OnFormClosed(e);
         mono.Dispose();
     }
 
@@ -85,14 +82,23 @@ sealed class CryptWindow : ToolWindow
         HideInputs();
     }
 
+    // відкрити вкладку «Шифрування» на потрібній підвкладці
+    void CrShow(int sub)
+    {
+        if (Tab == TabCrypt && crSub == sub) return;
+        Tab = TabCrypt; crSub = sub;
+        OnTab();
+        Invalidate();
+    }
+
     void HideInputs()
     {
         foreach (TextBox t in new TextBox[] { tbCmp, tbIn, tbOut, tbPw, tbFpw, tbFpw2 }) if (t.Visible) t.Visible = false;
     }
 
-    protected override void Dropped(string[] f)
+    void CrDropped(string[] f)
     {
-        if (Tab == 0)
+        if (crSub == 0)
         {
             foreach (string p in f) if (File.Exists(p)) { HashFile(p); return; }
             return;
@@ -105,12 +111,13 @@ sealed class CryptWindow : ToolWindow
     {
         if (!File.Exists(path)) return;
         EnsureHandle();
-        if (Tab != 0) { Tab = 0; OnTab(); }
+        CrShow(0);
         if (hBusy) { hStop = true; }
         hFile = path;
         hVals = null; hErr = "";
         try { hSize = new FileInfo(path).Length; } catch { hSize = 0; }
         hProg = 0; hStop = false; hBusy = true;
+        Busy();
         string p0 = path;
         Thread t = new Thread(delegate ()
         {
@@ -140,7 +147,7 @@ sealed class CryptWindow : ToolWindow
     public void AddFiles(string[] paths)
     {
         EnsureHandle();
-        if (Tab != 2) { Tab = 2; OnTab(); }
+        CrShow(2);
         foreach (string p in paths)
         {
             if (!File.Exists(p)) continue;
@@ -157,11 +164,21 @@ sealed class CryptWindow : ToolWindow
     }
 
     // ---------- малювання ----------
-    protected override void PaintBody(Graphics g, Rectangle r)
+    void PaintCrypt(Graphics g, Rectangle r)
     {
+        FitTo(r, r.Y + Px(640), Px(640));           // однакова висота для всіх підвкладок - вікно не стрибає
+        // підвкладки
+        string[] subs = { L.T("Хеш-сума"), L.T("Текст"), L.T("Файли") };
+        int cw = (r.Width - Px(16)) / 3;
+        for (int i = 0; i < subs.Length; i++)
+        {
+            int k = i;
+            Chip(g, new Rectangle(r.X + i * (cw + Px(8)), r.Y, cw, Px(32)), subs[i], crSub == i, delegate { if (crSub != k) { crSub = k; HideInputs(); Invalidate(); } });
+        }
+        r = new Rectangle(r.X, r.Y + Px(44), r.Width, r.Height - Px(44));
         int bottom = r.Bottom - Px(30);
-        if (Tab == 0) PaintHash(g, new Rectangle(r.X, r.Y, r.Width, bottom - r.Y - Px(8)));
-        else if (Tab == 1) PaintText(g, new Rectangle(r.X, r.Y, r.Width, bottom - r.Y - Px(8)));
+        if (crSub == 0) PaintHash(g, new Rectangle(r.X, r.Y, r.Width, bottom - r.Y - Px(8)));
+        else if (crSub == 1) PaintText(g, new Rectangle(r.X, r.Y, r.Width, bottom - r.Y - Px(8)));
         else PaintFiles(g, new Rectangle(r.X, r.Y, r.Width, bottom - r.Y - Px(8)));
         Rectangle sw = new Rectangle(r.X, bottom, r.Width, Px(28));
         if (NoteLive) TxtL(g, Note, F, sw, NoteBad ? P.Bad : P.Good);
@@ -283,6 +300,7 @@ sealed class CryptWindow : ToolWindow
         string text = tbIn.Text, pw = tbPw.Text;
         if (enc && Strength(pw) == 0 && Ask(L.T("Шифрування"), L.T("Пароль слабкий (коротший за 8 символів) - такий підбирають швидко.\n\nВсе одно зашифрувати?"), L.T("Зашифрувати"), L.T("Скасувати")) != 0) return;
         tBusy = true;
+        Busy();
         Invalidate();
         Thread t = new Thread(delegate ()
         {
@@ -444,6 +462,7 @@ sealed class CryptWindow : ToolWindow
         foreach (FItem f in work) { f.Done = false; f.Error = ""; f.Result = ""; }
         int mode = fmt;
         fBusy = true; fStop = false; fMsg = ""; fProg = 0;
+        Busy();
         Invalidate();
         Thread t = new Thread(delegate ()
         {

@@ -174,9 +174,20 @@ static class SysCheck
             if (!allow)
                 l.Add(new CheckItem(L.T("Служба розташування Windows"), 3, L.T("Визначення розташування вимкнено (Налаштування → Місце й погода): місто задається вручну, автоматичний часовий пояс недоступний.")));
             else if (why.Length == 0 && auto && Geo.Source == "ip")
-                l.Add(new CheckItem(L.T("Служба розташування Windows"), 1,
-                    L.T("Служба увімкнена, але місця не дала - місто визначено за IP-адресою, тобто це місто провайдера (в Україні часто Київ), а не ваше. Панель ще спробує пізніше; можна вибрати місто вручну (Налаштування → Місце й погода)."))
-                    .Add(L.T("Параметри розташування"), delegate { Open("ms-settings:privacy-location"); }));
+            {
+                string city = cfg != null && cfg.CityName.Length > 0 ? cfg.CityName : (cfg != null ? cfg.City : "");
+                string got = L.F("Місто визначено за IP-адресою: {0}. За IP видно місто провайдера - воно може відрізнятися від вашого; тоді виберіть місто вручну.", city);
+                CheckItem li;
+                if (Geo.WinState == "denied")
+                    li = new CheckItem(L.T("Служба розташування Windows"), 1, L.T("Windows не дала NeoBar доступу до розташування. Дозвольте: Параметри Windows → Конфіденційність і безпека → Розташування → «Дозволити класичним застосункам доступ до вашого розташування».") + " " + got);
+                else if (Geo.WinState == "nodata" && !Geo.HasWifi())
+                    li = new CheckItem(L.T("Служба розташування Windows"), 3, L.T("Служба увімкнена, але в цьому ПК немає Wi-Fi. Без GPS Windows визначає місце за мережами Wi-Fi поруч, тож на ПК з кабельним інтернетом вона місця не знає - це нормально, а не збій.") + " " + got);
+                else
+                    li = new CheckItem(L.T("Служба розташування Windows"), 1, L.T("Служба увімкнена, але місця не дала. Windows визначає місце за мережами Wi-Fi поруч - перевірте, чи увімкнено Wi-Fi; панель ще спробує пізніше.") + " " + got);
+                li.Add(L.T("Параметри розташування"), delegate { Open("ms-settings:privacy-location"); });
+                if (bar != null) li.Add(L.T("Вибрати місто"), delegate { bar.OpenSettingsTab(SettingsForm.PgPlace); });
+                l.Add(li);
+            }
             else if (why.Length == 0)
                 l.Add(new CheckItem(L.T("Служба розташування Windows"), 0, L.T("Увімкнена - місто для погоди, свят і часового поясу визначається точно.")));
             else
@@ -185,6 +196,19 @@ static class SysCheck
                     L.T("Увімкнути: Параметри Windows → Конфіденційність і безпека → Розташування («Служби визначення розташування» та «Дозволити класичним застосункам доступ до вашого розташування»)."))
                     .Add(L.T("Параметри розташування"), delegate { Open("ms-settings:privacy-location"); })
                     .Add(L.T("Служби Windows"), delegate { Run("services.msc"); }));
+        }
+
+        // ---------- елементи панелі, чиїх програм уже немає ----------
+        if (bar != null)
+        {
+            List<string> gone = new List<string>();
+            try { foreach (Entry e in bar.Entries) if (Gone.Is(e)) gone.Add(e.Name); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            if (gone.Count == 0)
+                l.Add(new CheckItem(L.T("Елементи панелі"), 0, L.T("Програми й файли всіх елементів панелі на місці.")));
+            else
+                l.Add(new CheckItem(L.T("Елементи панелі"), 1, L.F("Не знайдено ({0}): ", gone.Count) + string.Join(", ", gone.Count > 6 ? gone.GetRange(0, 6).ToArray() : gone.ToArray()) + (gone.Count > 6 ? "…" : "") +
+                    L.T(". Їхні програми чи файли, мабуть, видалено. Прибрати їх можна в «Налаштування → Елементи» кнопкою «Прибрати зниклі» або через меню елемента на панелі."))
+                    .Add(L.T("Відкрити елементи"), delegate { bar.OpenSettingsTab(SettingsForm.PgItems); }));
         }
 
         // ---------- пошук файлів на вкладці «Комп'ютер» ----------
@@ -460,7 +484,12 @@ static class SysCheck
             using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(cm))
                 if (k != null && string.Equals(k.GetValue("Value") as string, "Deny", StringComparison.OrdinalIgnoreCase)) return L.T("Служби розташування вимкнено в параметрах конфіденційності.");
             using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(cm + @"\NonPackaged"))
+            {
                 if (k != null && string.Equals(k.GetValue("Value") as string, "Deny", StringComparison.OrdinalIgnoreCase)) return L.T("Класичним застосункам (до яких належить NeoBar) заборонено доступ до розташування.");
+                // окремий дозвіл саме для NeoBar (Windows 11 питає його під час першого запиту): шлях програми, де «\» замінено на «#»
+                using (Microsoft.Win32.RegistryKey a = k != null ? k.OpenSubKey(System.Windows.Forms.Application.ExecutablePath.Replace('\\', '#')) : null)
+                    if (a != null && string.Equals(a.GetValue("Value") as string, "Deny", StringComparison.OrdinalIgnoreCase)) return L.T("Для NeoBar доступ до розташування заборонено (у списку класичних застосунків).");
+            }
         }
         catch (Exception skipEx) { SbLog.Skip(skipEx); }
         return "";
@@ -813,7 +842,7 @@ sealed class WelcomeWindow : SbWindow
         Rectangle lr = list.Bounds;
         int sy = lr.Bottom + Px(10);
         Switch(g, new Rectangle(r.X, sy, r.Width, Px(28)), L.T("Більше не показувати це вікно під час запуску"), DontShow, delegate { DontShow = !DontShow; });
-        TxtW(g, L.T("Повернути це вікно й перевірити все ще раз: Налаштування → Діагностика. Хрестик закриває програму."),
+        TxtW(g, L.T("Повернути це вікно: Налаштування → Панель → «Вікно привітання»; перевірити все ще раз - Налаштування → Діагностика. Хрестик закриває програму."),
             FS, new Rectangle(r.X, sy + Px(30), r.Width, Px(20)), P.Sub);
         Btn(g, new Rectangle(r.Right - Px(180), r.Bottom - Px(40), Px(180), Px(40)), L.T("Почати"), delegate { Start = true; Close(); }, 1, true);
         if (!Elevated.IsAdmin)
