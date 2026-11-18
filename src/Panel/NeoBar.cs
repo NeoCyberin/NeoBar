@@ -658,7 +658,7 @@ sealed partial class NeoBar : Form
                 else if (++leave >= 3) { leave = 0; SetExpanded(false); }
             }
         }
-        if ((!autohide || pollN % 13 == 0) && (cfg.FsHide || suspended)) CheckFullscreen();
+        if ((!autohide || suspended || pollN % 13 == 0) && (cfg.FsHide || suspended || Games.InForeground)) CheckFullscreen();
     }
 
     int fsHits;
@@ -669,11 +669,12 @@ sealed partial class NeoBar : Form
         // решту (повноекранне вікно, стан «не турбувати») підтверджує друга перевірка поспіль - короткі накладки
         // на кшталт знімка екрана панель не ховають
         // опцію вимкнули, поки панель була схована - повернути її
-        if (!cfg.FsHide) { fsHits = 0; SetSuspended(false); return; }
+        // гра на передньому плані - ігровий режим завжди; інші повноекранні програми - лише з увімкненою опцією
+        if (!cfg.FsHide && !Games.InForeground) { fsHits = 0; SetSuspended(false); return; }
         // власне вікно на весь екран (піпетка) - не причина ховати панель і ставити все на паузу
         bool own = Nat.ForegroundIsOwn();
-        bool sure = (fsAbn && !own) || Games.InForeground;
-        bool maybe = !sure && !own && (Nat.FullscreenBusy() || Nat.ForegroundCovers(true, IsHandleCreated ? Handle : IntPtr.Zero));
+        bool sure = Games.InForeground || (cfg.FsHide && fsAbn && !own);
+        bool maybe = cfg.FsHide && !sure && !own && (Nat.FullscreenBusy() || Nat.ForegroundCovers(true, IsHandleCreated ? Handle : IntPtr.Zero));
         fsHits = maybe ? fsHits + 1 : 0;
         SetSuspended(sure || (suspended ? maybe : fsHits >= 2));
     }
@@ -702,6 +703,20 @@ sealed partial class NeoBar : Form
         catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
+    // Ігровий режим: гра на передньому плані - працюють лише оверлей, обмежувач кадрів і нагляд за системою.
+    // Пам'ять NeoBar віддаємо грі: індекс пошуку файлів звільняється, робочий набір обрізається (не частіше ніж раз на хвилину,
+    // щоб Alt+Tab туди-сюди не смикав збирач сміття)
+    DateTime gameTrimAt = DateTime.MinValue;
+
+    void EnterGame()
+    {
+        if ((DateTime.UtcNow - gameTrimAt).TotalSeconds < 60) return;
+        gameTrimAt = DateTime.UtcNow;
+        try { MftIndex.Free(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        Trim(true);
+        SbLog.W(SbLog.Panel, "ігровий режим: " + Games.CurrentName + " - панель, віджети й датчики панелі на паузі, пам'ять звільнено");
+    }
+
     // Під час повноекранного режиму панель ховається, а таймери й анімації зупиняються
     void SetSuspended(bool s)
     {
@@ -718,9 +733,12 @@ sealed partial class NeoBar : Form
             Win.ShowWindow(Handle, 0);
             wtick.Stop();
             anim.Stop();
+            poll.Interval = 2000;           // автосховок у грі не потрібен - досить рідкої перевірки, чи гра ще на екрані
+            if (Games.InForeground) EnterGame();
         }
         else
         {
+            poll.Interval = autohide ? 150 : 2000;
             Win.ShowWindow(Handle, 4); // SW_SHOWNOACTIVATE
             Win.SetWindowPos(Handle, (IntPtr)(-1), 0, 0, 0, 0, 0x0013);
             if (wkinds.Count > 0) wtick.Start();
@@ -862,6 +880,7 @@ sealed partial class NeoBar : Form
         {
             try
             {
+                if (!IsHandleCreated) return;           // під час запуску вікна ще немає - панель і так намалюється з готовими даними
                 BeginInvoke(new Action(delegate
                 {
                     if (Widgets.GeoChanged)

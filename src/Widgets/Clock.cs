@@ -707,7 +707,7 @@ static class ClockData
         {
             case "analog": case "timer": case "stopwatch": case "alarm": case "calendar": case "clockcal": return "clock";
             case "fw": return "net";
-            case "trash": return "clean";
+            case "trash": return "disk";          // кошик - з вкладки «Очищення» «Простору»
             default: return deskKind;
         }
     }

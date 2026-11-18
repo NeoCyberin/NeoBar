@@ -117,23 +117,54 @@ sealed partial class SettingsForm
 
     void UpdateTraySwatches()
     {
-        for (int i = 0; i < 3; i++)
+        foreach (KeyValuePair<string, Button> kv in trayBtn)
         {
-            if (bTrayCol[i] == null) continue;
-            Color op = Util.Opaque(trayCol[i]);
-            bTrayCol[i].UseVisualStyleBackColor = false;
-            bTrayCol[i].FlatStyle = FlatStyle.Flat;
-            bTrayCol[i].BackColor = op;
-            bTrayCol[i].ForeColor = Util.Lum(op) > 140 ? Color.Black : Color.White;
-            bTrayCol[i].Invalidate();
+            Color col;
+            if (!trayCols.TryGetValue(kv.Key, out col)) col = TrayTemps.DefColor(kv.Key);
+            Color op = Util.Opaque(col);
+            kv.Value.UseVisualStyleBackColor = false;
+            kv.Value.FlatStyle = FlatStyle.Flat;
+            kv.Value.BackColor = op;
+            kv.Value.ForeColor = Util.Lum(op) > 140 ? Color.Black : Color.White;
+            kv.Value.Invalidate();
         }
     }
 
-    void PickTrayColor(int i)
+    void PickTrayColor(string key)
     {
-        Color nc;
-        if (ColorPick.Ask(this, Util.Opaque(trayCol[i]), out nc)) trayCol[i] = nc;
+        Color cur, nc;
+        if (!trayCols.TryGetValue(key, out cur)) cur = TrayTemps.DefColor(key);
+        if (ColorPick.Ask(this, Util.Opaque(cur), out nc)) trayCols[key] = nc;
         UpdateTraySwatches();
+    }
+
+    // поточне значення датчика - як у списку вибору
+    static string TrayValue(string key)
+    {
+        float v = TrayTemps.ValueOf(key);
+        return float.IsNaN(v) ? L.T("зараз без даних - на значку буде риска") : v.ToString("0.#") + " °C";
+    }
+
+    // список «додати»: ще не вибрані датчики, з поточним значенням - «62 °C - Hotspot - AMD Radeon RX 7900 XT»
+    void FillTrayAdd()
+    {
+        if (cbTrayAdd == null) return;
+        trayFilling = true;
+        try
+        {
+            cbTrayAdd.Items.Clear();
+            trayAddKeys.Clear();
+            cbTrayAdd.Items.Add(L.T("Вибрати датчик…"));
+            foreach (TrayTemps.Src s in trayCat)
+            {
+                if (trayKeys.Contains(s.Key) || s.Dev == L.T("зараз не підключено")) continue;
+                float v = TrayTemps.ValueOf(s.Key);
+                trayAddKeys.Add(s.Key);
+                cbTrayAdd.Items.Add((float.IsNaN(v) ? "– °C" : v.ToString("0.#") + " °C") + " - " + s.Name + (s.Dev.Length > 0 ? " - " + s.Dev : ""));
+            }
+            cbTrayAdd.SelectedIndex = 0;
+        }
+        finally { trayFilling = false; }
     }
 
     void FillView()
@@ -172,9 +203,21 @@ sealed partial class SettingsForm
         cbMode.SelectedIndex = c.Mode == "autohide" ? 1 : 0;
         nGap.Value = Math.Max(nGap.Minimum, Math.Min(nGap.Maximum, c.CornerGap));
         chFs.Checked = c.FsHide;
-        chTray[0].Checked = c.TrayCpu; chTray[1].Checked = c.TrayGpu; chTray[2].Checked = c.TrayHot;
-        trayCol[0] = c.TrayCpuCol; trayCol[1] = c.TrayGpuCol; trayCol[2] = c.TrayHotCol;
+        trayKeys.Clear();
+        trayCols.Clear();
+        foreach (string it in c.Tray)
+        {
+            int p = it.IndexOf('|');
+            if (p <= 0) continue;
+            string k = it.Substring(0, p);
+            if (trayKeys.Contains(k)) continue;
+            Color col = Util.ParseColor(it.Substring(p + 1));
+            trayKeys.Add(k);
+            trayCols[k] = col.IsEmpty ? TrayTemps.DefColor(k) : col;
+        }
+        FillTrayAdd();
         UpdateTraySwatches();
+        if (trayCard != null) trayCard.Queue();
         chHot.Checked = c.Hotkeys;
         chSuggest.Checked = c.SearchSuggest;
         chWelcome.Checked = !c.Welcomed;
@@ -285,8 +328,13 @@ sealed partial class SettingsForm
         c.Mode = cbMode.SelectedIndex == 1 ? "autohide" : "fixed";
         c.CornerGap = (int)nGap.Value;
         c.FsHide = chFs.Checked;
-        c.TrayCpu = chTray[0].Checked; c.TrayGpu = chTray[1].Checked; c.TrayHot = chTray[2].Checked;
-        c.TrayCpuCol = trayCol[0]; c.TrayGpuCol = trayCol[1]; c.TrayHotCol = trayCol[2];
+        c.Tray.Clear();
+        foreach (string k in trayKeys)
+        {
+            Color col;
+            if (!trayCols.TryGetValue(k, out col)) col = TrayTemps.DefColor(k);
+            c.Tray.Add(k + "|" + Util.Hex(col));
+        }
         c.SearchSuggest = chSuggest.Checked;
         c.UpdCheck = chUpd.Checked;
         c.Hotkeys = chHot.Checked && (searchKeyOk & Keys.KeyCode) != Keys.None;

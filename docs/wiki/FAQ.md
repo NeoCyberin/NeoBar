@@ -22,7 +22,7 @@ That happens after a graphics driver hang (Windows restarts the driver - TDR): t
 Settings → Data: export/import a profile (`.nbpack`) or reset it; the old copy stays as `neobar.ini.bak`.
 
 **The panel does not appear in a fullscreen game.**
-That is intentional (Settings → Panel → Games and fullscreen programs).
+That is intentional: it is game mode - in a game only the overlay, the frame limiter and system watch keep running. For other fullscreen programs it is controlled by Settings → Panel → Fullscreen programs.
 
 **How do I report a bug?**
 Open an [issue](https://github.com/NeoCyberin/NeoBar/issues) with your Windows version, what you did, and the error log.

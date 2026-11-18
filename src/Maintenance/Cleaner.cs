@@ -377,45 +377,35 @@ static class Cleaner
     }
 }
 
-sealed class CleanWindow : SbWindow
+// вкладка «Очищення» вікна «Простір»
+sealed partial class DiskWindow
 {
-    int scroll;
+    int clScroll;
     bool cleaned;
 
-    public CleanWindow(NeoBar bar) : base(bar, L.T("Очищення"), 540, 800)
-    { Glyph = "\uE74D";
-        Cleaner.Init();
-        Cleaner.Changed += OnData;
+    bool clHooked;
+
+    void CleanEnter()
+    {
+        if (!clHooked) { clHooked = true; Cleaner.Init(); Cleaner.Changed += ClOnData; }
         if (!Cleaner.Busy && Cleaner.LastAt == DateTime.MinValue) Cleaner.Run(Bar.Config, false);     // перший аналіз - одразу
     }
 
-    void OnData()
+    void CleanLeave() { if (clHooked) { clHooked = false; Cleaner.Changed -= ClOnData; } }
+
+    void ClOnData()
     {
         try { if (!IsDisposed && IsHandleCreated) BeginInvoke(new Action(delegate { Invalidate(); if (!Cleaner.Busy && Bar != null) Bar.CleanRedraw(); })); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
-    // зліва направо: «на робочий стіл» (віджет-кошик), закрити
-    protected override void HeadButtons(Graphics g, ref int right)
-    {
-        Rectangle rr = new Rectangle(right - Px(32), Px(7), Px(32), Px(32));
-        IconBtn(g, rr, "desk", delegate { ClockData.AddDesk("trash"); }, false);
-        right = rr.Left - Px(4);
-    }
-
-    protected override void OnFormClosed(FormClosedEventArgs e)
-    {
-        Cleaner.Changed -= OnData;
-        base.OnFormClosed(e);
-    }
-
-    long Selected()
+    long ClSelected()
     {
         return Cleaner.Pending(Bar.Config);
     }
 
-    void Clean()
+    void DoClean()
     {
-        long sel = Selected();
+        long sel = ClSelected();
         bool rec = false;
         foreach (JunkCat c in Cleaner.Cats) if (c.Recycle && Cleaner.On(Bar.Config, c) && c.Files > 0) rec = true;
         string text = L.T("Видалити вибране сміття (") + Cleaner.Size(sel) + ")?" + (rec ? L.T("\n\nКошик буде очищено - звідти файли вже не повернути.") : "") +
@@ -426,23 +416,18 @@ sealed class CleanWindow : SbWindow
         Invalidate();
     }
 
-    void Save()
+    void ClSave()
     {
         try { Store.Save(Bar.CfgPath, Bar.Config, Bar.Entries); } catch (Exception ex) { Util.ErrorLog(ex); }
     }
 
-    protected override void PaintBody(Graphics g, Rectangle r)
-    {
-        PaintFiles(g, r);
-    }
-
-    void PaintFiles(Graphics g, Rectangle r)
+    void PaintClean(Graphics g, Rectangle r)
     {
         int y = r.Y;
         Rectangle top = new Rectangle(r.X, y, r.Width, Px(86));
         Card(g, top);
         bool busy = Cleaner.Busy;
-        string big = busy ? "…" : (cleaned && Cleaner.LastFreed >= 0 ? Cleaner.Size(Cleaner.LastFreed) : Cleaner.Size(Selected()));
+        string big = busy ? "…" : (cleaned && Cleaner.LastFreed >= 0 ? Cleaner.Size(Cleaner.LastFreed) : Cleaner.Size(ClSelected()));
         string cap = busy ? Cleaner.Stage : (cleaned && Cleaner.LastFreed >= 0 ? L.T("Звільнено") : L.T("Можна звільнити (вибране)"));
         TxtL(g, cap, FS, new Rectangle(top.X + Px(14), top.Y + Px(10), top.Width - Px(180), Px(18)), P.Sub);
         TxtL(g, big, FBig, new Rectangle(top.X + Px(14), top.Y + Px(30), top.Width - Px(180), Px(44)), P.Fg);
@@ -450,7 +435,7 @@ sealed class CleanWindow : SbWindow
         else
         {
             Btn(g, new Rectangle(top.Right - Px(150), top.Y + Px(10), Px(136), Px(30)), L.T("Аналіз"), delegate { cleaned = false; Cleaner.Run(Bar.Config, false); Invalidate(); }, 0, true);
-            Btn(g, new Rectangle(top.Right - Px(150), top.Y + Px(46), Px(136), Px(30)), L.T("Очистити"), Clean, 1, Selected() > 0);
+            Btn(g, new Rectangle(top.Right - Px(150), top.Y + Px(46), Px(136), Px(30)), L.T("Очистити"), DoClean, 1, ClSelected() > 0);
         }
         y = top.Bottom + Px(12);
 
@@ -459,13 +444,13 @@ sealed class CleanWindow : SbWindow
         Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y - Px(46));
         int total = Cleaner.Cats.Count * rowH;
         int maxScroll = Math.Max(0, total - list.Height);
-        scroll = Math.Max(0, Math.Min(maxScroll, scroll));
+        clScroll = Math.Max(0, Math.Min(maxScroll, clScroll));
         GraphicsState st = g.Save();
         g.SetClip(list);
         for (int i = 0; i < Cleaner.Cats.Count; i++)
         {
             JunkCat c = Cleaner.Cats[i];
-            Rectangle rr = new Rectangle(list.X, list.Y + i * rowH - scroll, list.Width, rowH - Px(6));
+            Rectangle rr = new Rectangle(list.X, list.Y + i * rowH - clScroll, list.Width, rowH - Px(6));
             if (rr.Bottom < list.Y || rr.Top > list.Bottom) continue;
             bool on = Cleaner.On(Bar.Config, c);
             Card(g, rr, Over(rr) ? Util.Blend(P.Card, P.Fg, 0.05f) : P.Card);
@@ -482,11 +467,11 @@ sealed class CleanWindow : SbWindow
             TxtL(g, d, FS, new Rectangle(rr.X + Px(12), rr.Y + Px(30), rr.Width - Px(24), Px(18)), c.Note.Length > 0 ? P.Acc : P.Sub);
             JunkCat cc = c;
             Tip(Rectangle.Intersect(rr, list), c.Title + (sz.Length > 0 ? " - " + sz : "") + "\n" + d + (c.Note.Length > 0 ? "\n\n" + c.Desc : ""));      // повний текст: рядок вище обрізається трьома крапками
-            if (!busy && Rectangle.Intersect(rr, list) == rr) Hot(rr, delegate { Cleaner.Toggle(Bar.Config, cc); Save(); Invalidate(); });
+            if (!busy && Rectangle.Intersect(rr, list) == rr) Hot(rr, delegate { Cleaner.Toggle(Bar.Config, cc); ClSave(); Invalidate(); });
         }
         g.Restore(st);
-        Wheel(list, delegate (int dd) { scroll -= dd > 0 ? rowH : -rowH; Invalidate(); });
-        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(10)), total, list.Height, scroll, delegate (int v) { scroll = v; Invalidate(); });
+        Wheel(list, delegate (int dd) { clScroll -= dd > 0 ? rowH : -rowH; Invalidate(); });
+        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(10)), total, list.Height, clScroll, delegate (int v) { clScroll = v; Invalidate(); });
         TxtW(g, L.T("Системні компоненти Windows (оновлення, WinSxS) не чіпаються - для безпеки. Зайняті файли й кеш відкритих програм пропускаються. Реєстр - на вкладці «Реєстр»."),
             FS, new Rectangle(r.X, r.Bottom - Px(40), r.Width, Px(40)), P.Sub);
     }

@@ -123,9 +123,8 @@ sealed class Cfg
     public string Country = "";        // код країни місця (для свят), визначається автоматично
     public bool Fahrenheit, Clock24 = true, ClockSec;
     public bool PerfCpu = true, PerfGpu = true, PerfRam = true;
-    // температури в треї: окремий значок на кожну, зі своїм кольором
-    public bool TrayCpu, TrayGpu, TrayHot;
-    public Color TrayCpuCol = Color.FromArgb(70, 170, 255), TrayGpuCol = Color.FromArgb(90, 200, 110), TrayHotCol = Color.FromArgb(255, 150, 60);
+    // температури в треї: окремий значок на кожен вибраний датчик - «ключ|#колір», у порядку додавання (див. TrayTemps)
+    public List<string> Tray = new List<string>();
     public bool Welcomed, QuickDone;      // QuickDone - швидке налаштування вже показано
     // свята
     public string EasterRite = "";        // Великдень для святкової теми: "" - за країною, "orthodox" - православний, "catholic" - католицький
@@ -224,25 +223,22 @@ static class SysCatalog
 // Віджети, доступні для додавання: ключ, назва
 static class WidgetCatalog
 {
-    // ключ, коротка назва (для списків), повна назва (підказка), група (за ними впорядковані списки й чипи):
-    // 0 - час і довкілля, 1 - система, 2 - інструменти, 3 - обслуговування дисків
+    // ключ, коротка назва (для списків), повний опис (підказка), група - за нею впорядковано списки й чипи:
+    // 0 - час і погода, 1 - система, 2 - диски, 3 - інструменти
     public static readonly string[][] Items = new string[][]
     {
-        new string[] { "clock", L.T("Час і дата"), L.T("Час і дата: годинник та календар, секундомір, таймери, будильники"), "0" },
-        new string[] { "weather", L.T("Погода"), L.T("Погода та прогноз"), "0" },
-        new string[] { "battery", L.T("Батарея"), L.T("Батарея: заряд, знос, цикли"), "0" },
-        new string[] { "perf", L.T("Монітор системи"), L.T("Монітор системи: ЦП, відеокарта, пам'ять і характеристики комплектуючих"), "1" },
-        new string[] { "net", L.T("Мережа"), L.T("Мережа: швидкість, пінг, адаптери та Wi-Fi"), "1" },
-        new string[] { "disk", L.T("Простір"), L.T("Простір: диски й флешки, вільне місце та стан"), "1" },
-        new string[] { "security", L.T("Безпека"), L.T("Безпека: підозрілі процеси, автозапуск, служби й небезпечні налаштування Windows (евристики без бази сигнатур)"), "1" },
-        new string[] { "notes", L.T("Нотатки"), L.T("Нотатки на робочому столі"), "2" },
-        new string[] { "color", L.T("Палітра"), L.T("Палітра: піпетка з екрана, вибір кольору й перетворення в колірні моделі"), "2" },
-        new string[] { "dice", L.T("Кубик"), L.T("Кубик: випадкове число або вибір зі своїх назв (що подивитися, у що пограти)"), "2" },
-        new string[] { "qr", L.T("QR-код"), L.T("QR-код: текст, посилання, Wi-Fi, контакт, email, SMS, телефон, геоточка; логотип у центрі"), "2" },
-        new string[] { "crypt", L.T("Шифрування"), L.T("Шифрування тексту й файлів (AES-256), хеш-суми файлів; пункти в контекстному меню файлів"), "2" },
-        new string[] { "devices", L.T("Пристрої"), L.T("Пристрої й драйвери: згрупований список без повторів, проблемні пристрої, вимкнення й видалення, сховище драйверів, оновлення з Windows Update"), "3" },
-        new string[] { "clean", L.T("Очищення"), L.T("Очищення Windows від сміття: тимчасові файли, кеші браузерів і програм, звіти про помилки"), "3" },
-        new string[] { "recover", L.T("Відновлення"), L.T("Відновлення видалених файлів і папок з диска чи флешки (також після форматування)"), "3" }
+        new string[] { "clock", L.T("Час і дата"), L.T("Час і дата: годинник і календар зі святами, секундомір, таймери, будильники"), "0" },
+        new string[] { "weather", L.T("Погода"), L.T("Погода: зараз, погодинно й на кілька днів"), "0" },
+        new string[] { "perf", L.T("Монітор системи"), L.T("Монітор системи: навантаження й температури ЦП, відеокарти й пам'яті, характеристики, пристрої й драйвери, процеси й служби, аналіз програми й історія за добу"), "1" },
+        new string[] { "net", L.T("Мережа"), L.T("Мережа: швидкість, пінг, адаптери й Wi-Fi, діагностика, брандмауер"), "1" },
+        new string[] { "battery", L.T("Батарея"), L.T("Батарея: заряд, знос, цикли"), "1" },
+        new string[] { "security", L.T("Безпека"), L.T("Безпека: перевірка файлів, підозрілі процеси, автозапуск і небезпечні налаштування Windows (евристики без бази сигнатур)"), "1" },
+        new string[] { "disk", L.T("Простір"), L.T("Простір: диски й флешки - вільне місце, стан (SMART), швидкість, обслуговування; очищення Windows від сміття; відновлення видалених файлів"), "2" },
+        new string[] { "notes", L.T("Нотатки"), L.T("Нотатки на робочому столі: текст і списки, захист паролем"), "3" },
+        new string[] { "color", L.T("Палітра"), L.T("Палітра: піпетка з екрана, вибір кольору, колірні моделі"), "3" },
+        new string[] { "qr", L.T("QR-код"), L.T("QR-код: текст, посилання, Wi-Fi, контакт, email, SMS, телефон, геоточка; логотип у центрі"), "3" },
+        new string[] { "crypt", L.T("Шифрування"), L.T("Шифрування тексту й файлів (AES-256), хеш-суми; пункти в контекстному меню файлів"), "3" },
+        new string[] { "dice", L.T("Кубик"), L.T("Кубик: випадкове число або вибір зі свого списку (що подивитися, у що пограти)"), "3" },
     };
 
     public static string Full(string kind)
@@ -383,12 +379,7 @@ static class Store
             case "fahrenheit": cfg.Fahrenheit = B(val); break;
             case "clock24": cfg.Clock24 = B(val); break;
             case "clocksec": cfg.ClockSec = B(val); break;
-            case "traycpu": cfg.TrayCpu = B(val); break;
-            case "traygpu": cfg.TrayGpu = B(val); break;
-            case "trayhot": cfg.TrayHot = B(val); break;
-            case "traycpucol": col = Util.ParseColor(val); if (!col.IsEmpty) cfg.TrayCpuCol = col; break;
-            case "traygpucol": col = Util.ParseColor(val); if (!col.IsEmpty) cfg.TrayGpuCol = col; break;
-            case "trayhotcol": col = Util.ParseColor(val); if (!col.IsEmpty) cfg.TrayHotCol = col; break;
+            case "tray": if (val.IndexOf('|') > 0 && cfg.Tray.Count < 16) cfg.Tray.Add(val); break;
             case "perfcpu": cfg.PerfCpu = B(val); break;
             case "perfgpu": cfg.PerfGpu = B(val); break;
             case "perfram": cfg.PerfRam = B(val); break;
@@ -581,12 +572,7 @@ static class Store
         sb.AppendLine("@fahrenheit " + Yn(c.Fahrenheit));
         sb.AppendLine("@clock24 " + Yn(c.Clock24));
         sb.AppendLine("@clocksec " + Yn(c.ClockSec));
-        sb.AppendLine("@traycpu " + Yn(c.TrayCpu));
-        sb.AppendLine("@traygpu " + Yn(c.TrayGpu));
-        sb.AppendLine("@trayhot " + Yn(c.TrayHot));
-        sb.AppendLine("@traycpucol " + Util.Hex(c.TrayCpuCol));
-        sb.AppendLine("@traygpucol " + Util.Hex(c.TrayGpuCol));
-        sb.AppendLine("@trayhotcol " + Util.Hex(c.TrayHotCol));
+        foreach (string tr in c.Tray) sb.AppendLine("@tray " + tr);
         sb.AppendLine("@perfcpu " + Yn(c.PerfCpu));
         sb.AppendLine("@perfgpu " + Yn(c.PerfGpu));
         sb.AppendLine("@perfram " + Yn(c.PerfRam));

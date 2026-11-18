@@ -131,7 +131,7 @@ static class DropBridge
     }
 
     // кнопка миші відпущена - перевіряємо рідко; затиснута - часто (щоб устигнути поставити приймач)
-    const int IdlePoll = 150, DragPoll = 40;
+    const int IdlePoll = 150, DragPoll = 40, PausedPoll = 1500;
     static int lastLaunch = Environment.TickCount - 60000;
 
     static string DropExe { get { return Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "NeoBarDrop.exe"); } }
@@ -196,7 +196,7 @@ static class DropBridge
     {
         try
         {
-            if (NeoBar.Paused) { Hide(); wasDown = false; if (poll.Interval != IdlePoll) poll.Interval = IdlePoll; return; }         // гра на весь екран - не стежимо
+            if (NeoBar.Paused) { Hide(); wasDown = false; if (poll.Interval != PausedPoll) poll.Interval = PausedPoll; return; }     // гра на весь екран - не стежимо, прокидаємось рідко
             bool down = (Win.GetAsyncKeyState(GetSystemMetrics(23) != 0 ? 0x02 : 0x01) & 0x8000) != 0;
             int want = down ? DragPoll : IdlePoll;
             if (poll.Interval != want) poll.Interval = want;

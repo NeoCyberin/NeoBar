@@ -6,12 +6,12 @@ using System.Threading;
 using System.Windows.Forms;
 
 // ======================================================================
-//  Вікно «Пристрої»: пристрої за групами (без повторів - однакові зведено в один рядок «×N», службові приховано),
+//  Вкладка «Пристрої» Монітора системи: пристрої за групами (без повторів - однакові зведено в один рядок «×N», службові приховано),
 //  проблемні - окремим фільтром із поясненням коду; дії - вимкнути/увімкнути, видалити пристрій, видалити драйвер,
 //  властивості Windows. «Сховище драйверів» - пакети сторонніх драйверів із розміром і застарілими версіями.
 //  «Оновлення» - драйвери, які пропонує Windows Update.
 // ======================================================================
-sealed partial class DeviceWindow : ToolWindow
+sealed partial class PerfWindow
 {
     const int TabDev = 0, TabStore = 1, TabUpd = 2;
     // фільтри списку пристроїв
@@ -25,20 +25,23 @@ sealed partial class DeviceWindow : ToolWindow
     volatile int updPct = -1;               // загальний відсоток встановлення; -1 - не встановлюємо
     DateTime updDrawn = DateTime.MinValue;
     int filter = FMain;
-    readonly int[] scroll = new int[3];
+    readonly int[] dvScroll = new int[3];
+    int dvSub = TabDev;                     // підвкладка: пристрої / сховище драйверів / оновлення
     string open = "";                       // розгорнутий рядок (ключ групи)
-    readonly TextBox search;
-    public static int LastProblems = -1;    // для підпису віджета на панелі
+    TextBox dvSearch;
 
     sealed class Grp { public string Key, Cls, ClassName; public List<DevItem> Items = new List<DevItem>(); public DevItem First { get { return Items[0]; } } }
 
-    public DeviceWindow(NeoBar bar) : base(bar, L.T("Пристрої"), 700, 760)
+    // перелік читається, лише коли вперше відкрито вкладку
+    void DevEnter()
     {
-        Glyph = "";
-        Tabs = new string[] { L.T("Пристрої"), L.T("Сховище драйверів"), L.T("Оновлення") };
-        search = MakeInput();
-        search.TextChanged += delegate { scroll[TabDev] = 0; Invalidate(); };
-        Reload();
+        if (dvSearch == null)
+        {
+            dvSearch = MakeInput();
+            dvSearch.TextChanged += delegate { dvScroll[TabDev] = 0; Invalidate(); };
+            dvSearch.Visible = dvSub == TabDev;
+        }
+        if (devs == null) Reload();
     }
 
     void Reload()
@@ -54,10 +57,6 @@ sealed partial class DeviceWindow : ToolWindow
             {
                 loading = false;
                 devs = l ?? new List<DevItem>();
-                int bad = 0;
-                foreach (DevItem d in devs) if (d.Bad) bad++;
-                LastProblems = bad;
-                if (Bar != null) Bar.WidgetRedraw("devices");
                 if (pkgs != null) LoadStore();
                 Invalidate();
             });
@@ -95,10 +94,11 @@ sealed partial class DeviceWindow : ToolWindow
 
     void Ui(Action a) { try { if (!IsDisposed && IsHandleCreated) BeginInvoke(a); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
 
-    protected override void OnTab()
+    void DevSub(int s)
     {
-        search.Visible = Tab == TabDev;
-        if (Tab == TabStore && pkgs == null) LoadStore();
+        dvSub = s;
+        if (dvSearch != null) dvSearch.Visible = Tab == TabDevices && dvSub == TabDev;
+        if (dvSub == TabStore && pkgs == null) LoadStore();
         Invalidate();
     }
 
@@ -119,7 +119,7 @@ sealed partial class DeviceWindow : ToolWindow
     {
         List<Grp> res = new List<Grp>();
         if (devs == null) return res;
-        string q = search.Text.Trim();
+        string q = dvSearch.Text.Trim();
         Dictionary<string, Grp> by = new Dictionary<string, Grp>();
         foreach (DevItem d in devs)
         {
@@ -145,12 +145,21 @@ sealed partial class DeviceWindow : ToolWindow
     int Count(int f) { int n = 0; if (devs != null) { int keep = filter; filter = f; foreach (DevItem d in devs) if (Pass(d)) n++; filter = keep; } return n; }
 
     // ---------- малювання ----------
-    protected override void PaintBody(Graphics g, Rectangle r)
+    void PaintDev(Graphics g, Rectangle r)
     {
+        // підвкладки: пристрої, сховище драйверів, оновлення
+        string[] sn = { L.T("Пристрої"), L.T("Сховище драйверів"), L.T("Оновлення") };
+        int cw = Math.Min(Px(200), (r.Width - Px(16)) / 3);
+        for (int i = 0; i < 3; i++)
+        {
+            int k = i;
+            Chip(g, new Rectangle(r.X + i * (cw + Px(8)), r.Y, cw, Px(32)), sn[i], dvSub == i, delegate { if (dvSub != k) DevSub(k); });
+        }
+        r = new Rectangle(r.X, r.Y + Px(44), r.Width, r.Height - Px(44));
         int foot = Px(40);
         Rectangle body = new Rectangle(r.X, r.Y, r.Width, r.Height - foot);
-        if (Tab == TabDev) PaintDevices(g, body);
-        else if (Tab == TabStore) PaintStore(g, body);
+        if (dvSub == TabDev) PaintDevices(g, body);
+        else if (dvSub == TabStore) PaintStore(g, body);
         else PaintUpdates(g, body);
         string ft = NoteLive ? Note : (acting ? L.T("Виконується…") : (Elevated.IsAdmin ? L.T("Зміни робить вбудований засіб Windows (pnputil). Критичні для запуску Windows пристрої не вимикаються й не видаляються.") : L.T("Для змін потрібні права адміністратора - Windows запитає дозвіл.")));
         TxtW(g, ft, FS, new Rectangle(r.X, r.Bottom - Px(36), r.Width, Px(36)), NoteLive ? (NoteBad ? P.Bad : P.Good) : P.Sub);
@@ -160,8 +169,8 @@ sealed partial class DeviceWindow : ToolWindow
     {
         int y = r.Y;
         Rectangle sR = new Rectangle(r.X, y, r.Width - Px(42), Px(32));
-        PlaceInput(g, search, sR);
-        if (search.Text.Length == 0) TxtL(g, L.T("Пошук пристрою"), FS, new Rectangle(sR.X + Px(10), sR.Y, sR.Width, sR.Height), P.Sub);
+        PlaceInput(g, dvSearch, sR);
+        if (dvSearch.Text.Length == 0) TxtL(g, L.T("Пошук пристрою"), FS, new Rectangle(sR.X + Px(10), sR.Y, sR.Width, sR.Height), P.Sub);
         Rectangle rs = new Rectangle(r.Right - Px(32), y, Px(32), Px(32));
         IconBtn(g, rs, "sync", loading || acting ? null : (Action)delegate { Act(L.T("Пошук змін обладнання…"), delegate { return Devices.Rescan(); }); }, false);
         Tip(rs, L.T("Шукати зміни обладнання (як у Диспетчері пристроїв) і перечитати список"));
@@ -183,7 +192,7 @@ sealed partial class DeviceWindow : ToolWindow
             if (cx + w > r.Right) break;
             Rectangle c = new Rectangle(cx, y, w, Px(28));
             int fi = fs[i];
-            Chip(g, c, t, filter == fi, delegate { filter = fi; scroll[TabDev] = 0; open = ""; Invalidate(); });
+            Chip(g, c, t, filter == fi, delegate { filter = fi; dvScroll[TabDev] = 0; open = ""; Invalidate(); });
             Tip(c, ft[i]);
             cx += w + Px(6);
         }
@@ -200,7 +209,7 @@ sealed partial class DeviceWindow : ToolWindow
         }
         if (gs.Count == 0)
         {
-            string e = filter == FBad ? L.T("Усі пристрої працюють - проблем не знайдено.") : (search.Text.Length > 0 ? L.T("Нічого не знайдено.") : L.T("Тут порожньо."));
+            string e = filter == FBad ? L.T("Усі пристрої працюють - проблем не знайдено.") : (dvSearch.Text.Length > 0 ? L.T("Нічого не знайдено.") : L.T("Тут порожньо."));
             TxtC(g, e, F, new Rectangle(list.X, list.Y + Px(30), list.Width, Px(24)), filter == FBad ? P.Good : P.Sub);
             return;
         }
@@ -208,7 +217,7 @@ sealed partial class DeviceWindow : ToolWindow
         int total = 0;
         string lastCls = null;
         foreach (Grp gp in gs) { if (gp.ClassName != lastCls) { total += Px(32); lastCls = gp.ClassName; } total += RowH(gp, w0) + Px(4); }
-        int sc = scroll[TabDev] = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), scroll[TabDev]));
+        int sc = dvScroll[TabDev] = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), dvScroll[TabDev]));
         GraphicsState st = g.Save();
         g.SetClip(list);
         int cy = list.Y - sc;
@@ -231,8 +240,8 @@ sealed partial class DeviceWindow : ToolWindow
             PaintRow(g, rr, gp, list);
         }
         g.Restore(st);
-        Wheel(list, delegate (int d) { scroll[TabDev] -= d > 0 ? Px(120) : -Px(120); Invalidate(); });
-        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(4)), total, list.Height, sc, delegate (int v) { scroll[TabDev] = v; Invalidate(); });
+        Wheel(list, delegate (int d) { dvScroll[TabDev] -= d > 0 ? Px(120) : -Px(120); Invalidate(); });
+        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(4)), total, list.Height, sc, delegate (int v) { dvScroll[TabDev] = v; Invalidate(); });
     }
 
     List<string> Details(Grp gp)
@@ -429,7 +438,7 @@ sealed partial class DeviceWindow : ToolWindow
         });
         int rowH = Px(52), w0 = list.Width - Px(12);
         int total = l.Count * (rowH + Px(4));
-        int sc = scroll[TabStore] = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), scroll[TabStore]));
+        int sc = dvScroll[TabStore] = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), dvScroll[TabStore]));
         GraphicsState st = g.Save();
         g.SetClip(list);
         int cy = list.Y - sc;
@@ -451,8 +460,8 @@ sealed partial class DeviceWindow : ToolWindow
             TxtL(g, Join(p.Version, p.Date, p.Inf, p.Size >= 0 ? SizeText(p.Size) : ""), FS, new Rectangle(rr.X + Px(12), rr.Y + Px(28), del.X - rr.X - Px(20), Px(18)), P.Sub);
         }
         g.Restore(st);
-        Wheel(list, delegate (int d) { scroll[TabStore] -= d > 0 ? Px(120) : -Px(120); Invalidate(); });
-        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(4)), total, list.Height, sc, delegate (int v) { scroll[TabStore] = v; Invalidate(); });
+        Wheel(list, delegate (int d) { dvScroll[TabStore] -= d > 0 ? Px(120) : -Px(120); Invalidate(); });
+        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(4)), total, list.Height, sc, delegate (int v) { dvScroll[TabStore] = v; Invalidate(); });
     }
 
     void DeletePkg(DrvPackage p)
@@ -514,7 +523,7 @@ sealed partial class DeviceWindow : ToolWindow
         y += Px(42);
         Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y);
         int rowH = Px(60), total = ups.Count * rowH;
-        int sc = scroll[TabUpd] = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), scroll[TabUpd]));
+        int sc = dvScroll[TabUpd] = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), dvScroll[TabUpd]));
         GraphicsState st = g.Save();
         g.SetClip(list);
         int yy = list.Y - sc;
@@ -551,8 +560,8 @@ sealed partial class DeviceWindow : ToolWindow
             yy += rowH;
         }
         g.Restore(st);
-        Wheel(list, delegate (int d) { scroll[TabUpd] -= d > 0 ? Px(120) : -Px(120); Invalidate(); });
-        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(4)), total, list.Height, sc, delegate (int v) { scroll[TabUpd] = v; Invalidate(); });
+        Wheel(list, delegate (int d) { dvScroll[TabUpd] -= d > 0 ? Px(120) : -Px(120); Invalidate(); });
+        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(4)), total, list.Height, sc, delegate (int v) { dvScroll[TabUpd] = v; Invalidate(); });
     }
 
     // помилка: заголовок, порада, код - у картці, а не червоним рядком
@@ -582,7 +591,7 @@ sealed partial class DeviceWindow : ToolWindow
         {
             string err;
             List<Devices.Update> l = Devices.FindUpdates(out err);
-            Ui(delegate { updBusy = false; updErr = err; ups = err.Length > 0 ? null : l; scroll[TabUpd] = 0; Invalidate(); });
+            Ui(delegate { updBusy = false; updErr = err; ups = err.Length > 0 ? null : l; dvScroll[TabUpd] = 0; Invalidate(); });
         });
         t.IsBackground = true;
         t.SetApartmentState(ApartmentState.MTA);

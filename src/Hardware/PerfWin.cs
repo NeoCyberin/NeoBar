@@ -15,7 +15,7 @@ using System.Windows.Forms;
 // ----------------------------------------------------------------------
 //  Вікно монітора
 // ----------------------------------------------------------------------
-sealed partial class PerfWindow : SbWindow
+sealed partial class PerfWindow : ToolWindow
 {
     int scroll;
     // показники, позначені повзунком «На столі»: ними заповнюється віджет, коли натиснути кнопку з дисплеєм
@@ -33,16 +33,26 @@ sealed partial class PerfWindow : SbWindow
 
     public PerfWindow(NeoBar bar, int tab) : base(bar, L.T("Монітор системи"), 880, 740)
     { Glyph = "\uE9D9";
-        Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики"), L.T("Завдання"), L.T("Аналіз"), L.T("Історія") };
-        Tab = Math.Max(0, Math.Min(4, tab));
+        Tabs = new string[] { L.T("Продуктивність"), L.T("Характеристики"), L.T("Пристрої"), L.T("Завдання"), L.T("Аналіз") };
+        Pick(tab);
         Sensors.Use("perfwin", 2);
         Sensors.Updated += OnData;
         OnTab();
     }
 
+    // вкладки: TabHistory - не окрема вкладка, а «Аналіз» у режимі «Історія за добу»
+    public const int TabSpecs = 1, TabDevices = 2, TabProcs = 3;
+
+    void Pick(int t)
+    {
+        if (t == TabHistory) { Tab = TabAnalysis; anDay = true; return; }
+        Tab = Math.Max(0, Math.Min(TabAnalysis, t));
+        if (Tab == TabAnalysis) anDay = false;
+    }
+
     void OnData() { if (!IsDisposed) Invalidate(); }
 
-    public void SetTab(int t) { Tab = Math.Max(0, Math.Min(4, t)); OnTab(); Invalidate(); }
+    public void SetTab(int t) { Pick(t); OnTab(); Invalidate(); }
 
     protected override void HeadButtons(Graphics g, ref int right)
     {
@@ -60,14 +70,22 @@ sealed partial class PerfWindow : SbWindow
     protected override void OnTab()
     {
         scroll = 0;
-        if (Tab == 1) HwInfo.Load(false);
-        if (Tab == 2) EnterProcs();
-        if (Tab == TabAnalysis) EnterAnalysis(); else LeaveAnalysis();
-        if (search != null) search.Visible = Tab == 2;
+        if (Tab == TabSpecs) HwInfo.Load(false);
+        if (Tab == TabProcs) EnterProcs();
+        if (Tab == TabDevices) DevEnter();
+        if (dvSearch != null) dvSearch.Visible = Tab == TabDevices && dvSub == TabDev;
+        if (Tab == TabAnalysis && !anDay) EnterAnalysis(); else LeaveAnalysis();
+        if (search != null) search.Visible = Tab == TabProcs;
         sugOpen = false;
     }
 
-    protected override void OnTick() { if (Tab == 2) TickProcs(); else if (Tab == TabAnalysis) { if (ProcRecorder.Recording) Invalidate(); } else if (Tab == TabHistory && DateTime.Now.Second < 2) Invalidate(); else if (Tab == 1 && (HwInfo.Loading || (DateTime.Now - copiedAt).TotalMilliseconds < 1800)) Invalidate(); }
+    protected override void OnTick()
+    {
+        base.OnTick();
+        if (Tab == TabProcs) TickProcs();
+        else if (Tab == TabAnalysis) { if (anDay ? DateTime.Now.Second < 2 : ProcRecorder.Recording) Invalidate(); }
+        else if (Tab == TabSpecs && (HwInfo.Loading || (DateTime.Now - copiedAt).TotalMilliseconds < 1800)) Invalidate();
+    }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
@@ -81,7 +99,22 @@ sealed partial class PerfWindow : SbWindow
 
     protected override void PaintBody(Graphics g, Rectangle r)
     {
-        if (Tab == TabHistory) PaintHistory(g, r); else if (Tab == TabAnalysis) PaintAnalysis(g, r); else if (Tab == 2) { PaintProcs(g, r); PaintSug(g); } else if (Tab == 1) PaintSpecs(g, r); else PaintMonitor(g, r);
+        if (Tab == TabAnalysis)
+        {
+            // «Аналіз»: запис однієї програми або вся система за добу - перемикач угорі
+            int cw = Math.Min(Px(230), (r.Width - Px(8)) / 2);
+            Rectangle c1 = new Rectangle(r.X, r.Y, cw, Px(32)), c2 = new Rectangle(c1.Right + Px(8), r.Y, cw, Px(32));
+            Chip(g, c1, L.T("Запис програми"), !anDay, delegate { if (anDay) { anDay = false; OnTab(); Invalidate(); } });
+            Chip(g, c2, L.T("Історія за добу"), anDay, delegate { if (!anDay) { anDay = true; OnTab(); Invalidate(); } });
+            Tip(c1, L.T("Навантаження однієї програми (чи групи з дочірніми процесами) у часі, з журналом"));
+            Tip(c2, L.T("Температури й навантаження всієї системи щохвилини за останню добу, разом зі сповіщеннями й збоями Windows"));
+            Rectangle rb = new Rectangle(r.X, r.Y + Px(44), r.Width, r.Height - Px(44));
+            if (anDay) PaintHistory(g, rb); else PaintAnalysis(g, rb);
+        }
+        else if (Tab == TabProcs) { PaintProcs(g, r); PaintSug(g); }
+        else if (Tab == TabDevices) PaintDev(g, r);
+        else if (Tab == TabSpecs) PaintSpecs(g, r);
+        else PaintMonitor(g, r);
     }
 
     // ---------- характеристики ----------

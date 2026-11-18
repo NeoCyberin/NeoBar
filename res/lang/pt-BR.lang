@@ -79,14 +79,10 @@
 < Час і дата
 > Data e hora
 
-< Час і дата: годинник та календар, секундомір, таймери, будильники
-> Data e hora: relógio e calendário, cronômetro, temporizadores, alarmes
 
 < Погода
 > Clima
 
-< Погода та прогноз
-> Clima e previsão
 
 < Батарея
 > Bateria
@@ -97,41 +93,27 @@
 < Монітор системи
 > Monitor do sistema
 
-< Монітор системи: ЦП, відеокарта, пам'ять і характеристики комплектуючих
-> Monitor do sistema: CPU, placa de vídeo, memória e especificações do hardware
 
-< Мережа: швидкість, пінг, адаптери та Wi-Fi
-> Rede: velocidade, ping, adaptadores e Wi-Fi
 
 < Простір
 > Armazenamento
 
-< Простір: диски й флешки, вільне місце та стан
-> Armazenamento: discos e pendrives, espaço livre e integridade
 
 < Безпека
 > Segurança
 
-< Безпека: підозрілі процеси, автозапуск, служби й небезпечні налаштування Windows (евристики без бази сигнатур)
-> Segurança: processos suspeitos, inicialização automática, serviços e configurações inseguras do Windows (heurística, sem banco de assinaturas)
 
 < Нотатки
 > Notas
 
-< Нотатки на робочому столі
-> Notas na área de trabalho
 
 < Палітра
 > Paleta
 
-< Палітра: піпетка з екрана, вибір кольору й перетворення в колірні моделі
-> Paleta: conta-gotas de tela, escolha de cor e conversão entre modelos de cor
 
 < Кубик
 > Dado
 
-< Кубик: випадкове число або вибір зі своїх назв (що подивитися, у що пограти)
-> Dado: número aleatório ou sorteio de uma lista sua (o que assistir, o que jogar)
 
 < QR-код
 > Código QR
@@ -142,20 +124,14 @@
 < Шифрування
 > Criptografia
 
-< Шифрування тексту й файлів (AES-256), хеш-суми файлів; пункти в контекстному меню файлів
-> Criptografia de texto e arquivos (AES-256), hashes de arquivos; itens no menu de contexto dos arquivos
 
 < Очищення
 > Limpeza
 
-< Очищення Windows від сміття: тимчасові файли, кеші браузерів і програм, звіти про помилки
-> Limpeza do Windows: arquivos temporários, caches de navegadores e aplicativos, relatórios de erro
 
 < Відновлення
 > Recuperação
 
-< Відновлення видалених файлів і папок з диска чи флешки (також після форматування)
-> Recuperar arquivos e pastas excluídos de um disco ou pendrive (também após formatação)
 
 < # NeoBar - файл налаштувань. Зазвичай його змінює вікно «Налаштування» (кнопка з шестернею на панелі).
 > # Arquivo de configurações do NeoBar. Normalmente é alterado pela janela «Configurações» (botão de engrenagem na barra).
@@ -2210,8 +2186,6 @@
 < Відновити в…
 > Recuperar para…
 
-< Відновлення файлів
-> Recuperação de arquivos
 
 < Папка, з якої зникли файли (для видаленої теки - та, де вона лежала)
 > Pasta de onde os arquivos sumiram (para uma pasta excluída - aquela onde ela estava)
@@ -7030,8 +7004,6 @@
 < Тема, кольори, іконки, підписи й шрифт
 > Tema, cores, ícones, rótulos e fonte
 
-< Де стоїть панель, як поводиться і як запускається
-> Onde fica o painel, como ele se comporta e como inicia
 
 < Поле пошуку, гаряча клавіша й пошук файлів
 > Caixa de pesquisa, atalho de teclado e pesquisa de arquivos
@@ -7480,11 +7452,7 @@
 < Для автосховку, px
 > Para ocultação automática, px
 
-< Ігри й повноекранні програми
-> Jogos e programas em tela cheia
 
-< Ховати панель, вимикати пошук і призупиняти решту - працює лише ігровий оверлей
-> Ocultar o painel, desativar a pesquisa e pausar todo o resto - só o overlay do jogo continua funcionando
 
 < Запуск
 > Inicialização
@@ -7995,8 +7963,6 @@
 < Інакше - лише на основному
 > Senão - só no principal
 
-< Пауза, коли робочий стіл закрито
-> Pausar quando a área de trabalho está coberta
 
 
 < Пауза від батареї
@@ -9469,8 +9435,6 @@
 < QR-код: текст, посилання, Wi-Fi, контакт та інше\nКлік - створити QR-код
 > QR code: texto, link, Wi-Fi, contato e mais\nClique - criar um QR code
 
-< Відновлення видалених файлів і папок з диска чи флешки\nКлік - вибрати диск і знайти файли
-> Recuperar arquivos e pastas excluídos de uma unidade ou pen drive\nClique - escolher uma unidade e encontrar arquivos
 
 < Безпека: перевірка…
 > Segurança: verificando…
@@ -9496,17 +9460,9 @@
 < Шифрування тексту й файлів, хеш-суми\nКлік - відкрити (можна й перетягнути файл у вікно)
 > Criptografia de texto e arquivos, hashes\nClique - abrir (você também pode arrastar um arquivo para a janela)
 
-< Сміття: 
-> Lixo: 
 
-<  (перевірено о 
->  (verificado às 
 
-< Очищення Windows від сміття
-> Limpeza de lixo do Windows
 
-< \nКлік - аналіз і очищення
-> \nClique - analisar e limpar
 
 < Нотатки на робочому столі: 
 > Notas da área de trabalho: 
@@ -9811,23 +9767,11 @@
 < Температури в треї
 > Temperaturas na bandeja
 
-< Температура ЦП
-> Temperatura da CPU
 
-< Температура ГП
-> Temperatura da GPU
 
-< Температура ГП: hotspot
-> Temperatura da GPU: hotspot
 
-< Окремий значок біля годинника Windows із числом у градусах. Для температури процесора часто потрібні права адміністратора.
-> Um ícone separado perto do relógio do Windows com o número em graus. A temperatura da CPU muitas vezes exige direitos de administrador.
 
-< Окремий значок біля годинника Windows із числом у градусах.
-> Um ícone separado perto do relógio do Windows com o número em graus.
 
-< Найгарячіша точка відеочіпа; не всі відеокарти її показують (тоді на значку буде риска).
-> O ponto mais quente do chip gráfico; nem toda placa o informa (o ícone mostra então um traço).
 
 < Диски ще читаються, повторіть за мить.
 > Os discos ainda estão sendo lidos, tente novamente em instantes.
@@ -10653,8 +10597,6 @@
 < Скільки даних за секунду процес записує: файли на дисках, мережа, пристрої
 > Quantos dados por segundo o processo grava: arquivos em disco, rede, dispositivos
 
-< Повноекранна програма чи розгорнуте вікно. Якщо пауза довша за пів хвилини, відео звільняє відеокарту, а на екрані лишається останній кадр
-> Programa em tela cheia ou janela maximizada. Se a pausa passar de meio minuto, o vídeo libera a placa de vídeo e o último quadro fica na tela
 
 < Зберігання журналів
 > Retenção de registros
@@ -10698,8 +10640,6 @@
 < Оперативна пам'ять, МБ
 > Memória RAM, MB
 
-< Поки запущена гра з бібліотеки NeoBar - навіть згорнута, у вікні чи на іншому моніторі
-> Enquanto um jogo da biblioteca do NeoBar estiver rodando - mesmo minimizado, em janela ou em outro monitor
 
 < Записи аналізу процесів
 > Gravações de análise de processos
@@ -10893,8 +10833,6 @@
 < Процесор перегрівається
 > O processador está superaquecendo
 
-<  Увімкніть «Історію за добу» (Налаштування → Панель), щоб наступного разу було видно температури в ту хвилину.
->  Ative o "Histórico do dia" (Configurações → Painel) para ver as temperaturas daquele minuto na próxima vez.
 
 < перед цим 
 > antes disso 
@@ -10941,8 +10879,6 @@
 < Зайнято {0} % відеопам'яті ({1} з {2} ГБ). Гра чи програма може почати гальмувати або впасти.
 > {0}% da memória de vídeo em uso ({1} de {2} GB). O jogo ou programa pode travar ou fechar.
 
-< Історію вимкнено: Налаштування → Панель → «Нагляд за системою».
-> O histórico está desligado: Configurações → Painel → "Vigilância do sistema".
 
 < Критичні сповіщення за добу
 > Alertas críticos do dia
@@ -10995,8 +10931,6 @@
 < Основні
 > Principais
 
-< Пристрої й драйвери: згрупований список без повторів, проблемні пристрої, вимкнення й видалення, сховище драйверів, оновлення з Windows Update
-> Dispositivos e drivers: lista agrupada sem duplicatas, dispositivos com problema, desativar e remover, repositório de drivers, atualizações do Windows Update
 
 < Виробник: 
 > Fabricante: 
@@ -11094,8 +11028,6 @@
 < Потребують уваги
 > Precisam de atenção
 
-< Пристрої: потребують уваги - {0}
-> Dispositivos: precisam de atenção - {0}
 
 < Пошук змін обладнання…
 > Procurando alterações de hardware…
@@ -11223,8 +11155,6 @@
 < Служба: 
 > Serviço: 
 
-< Пристрої й драйвери
-> Dispositivos e drivers
 
 < Пристрої, які вимкнено вручну
 > Dispositivos desativados manualmente
@@ -11268,8 +11198,6 @@
 < Стан: 
 > Estado: 
 
-< \nКлік - список пристроїв, драйвери й оновлення
-> \nClique - lista de dispositivos, drivers e atualizações
 
 < Працює
 > Funcionando
@@ -11472,8 +11400,6 @@
 <  (датчики недоступні)
 >  (sensores indisponíveis)
 
-< Звідки брати температуру й hotspot, коли відеокарт кілька (окрема й вбудована в процесор)
-> De onde tirar a temperatura e o hotspot quando há várias GPUs (dedicada e integrada ao processador)
 
 < AMD: драйвер поки не віддає датчики для {0} - спробую ще раз
 > AMD: o driver ainda não fornece sensores para {0} - vou tentar de novo
@@ -11511,8 +11437,120 @@
 <  ГБ (спільна з ОЗП)
 >  GB (compartilhada com a RAM)
 
-<  (журнал драйвера)
->  (log do driver)
 
-<  (лише температури)
->  (só temperaturas)
+
+< Лише коли на кожному моніторі зі шпалерами є розгорнуте чи повноекранне вікно - заощаджує відеокарту. Вимкнено: шпалери зупиняються тільки для ігор
+> Só quando cada monitor com papel de parede tem uma janela maximizada ou em tela cheia - poupa a placa de vídeo. Desativado: o papel de parede só para em jogos
+
+< Звідки брати температуру, hotspot, потужність і частоту, коли відеокарт кілька (окрема й вбудована в процесор)
+> De onde tirar temperatura, hotspot, potência e frequência quando há várias GPUs (dedicada e integrada ao processador)
+
+< Шифрування тексту й файлів (AES-256), хеш-суми; пункти в контекстному меню файлів
+> Criptografia de texto e arquivos (AES-256), hashes; itens no menu de contexto dos arquivos
+
+< Пауза, коли шпалер не видно
+> Pausar quando o papel de parede não está visível
+
+< Нотатки на робочому столі: текст і списки, захист паролем
+> Notas na área de trabalho: texto e listas, proteção por senha
+
+
+
+< Де стоїть панель, як поводиться в іграх і як запускається
+> Onde fica o painel, como se comporta em jogos e como inicia
+
+< Погода: зараз, погодинно й на кілька днів
+> Clima: agora, por hora e para vários dias
+
+< Відновити видалені файли…
+> Recuperar arquivos excluídos…
+
+< Очистити Windows від сміття…
+> Limpar o lixo do Windows…
+
+< Датчики й температури в треї, критичні сповіщення, історія за добу, звіт після гри
+> Sensores e temperaturas na bandeja, alertas críticos, histórico diário, relatório após o jogo
+
+< Час і дата: годинник і календар зі святами, секундомір, таймери, будильники
+> Hora e data: relógio e calendário com feriados, cronômetro, temporizadores, alarmes
+
+< Кубик: випадкове число або вибір зі свого списку (що подивитися, у що пограти)
+> Dado: número aleatório ou escolha da sua lista (o que assistir, o que jogar)
+
+
+< Мережа: швидкість, пінг, адаптери й Wi-Fi, діагностика, брандмауер
+> Rede: velocidade, ping, adaptadores e Wi-Fi, diagnóstico, firewall
+
+
+
+< Поки запущена гра з бібліотеки NeoBar - навіть згорнута, у вікні чи на іншому моніторі. За пів хвилини відео звільняє відеокарту, на екрані лишається останній кадр
+> Enquanto um jogo da biblioteca do NeoBar estiver rodando - mesmo minimizado, em janela ou em outro monitor. Após meio minuto o vídeo libera a placa de vídeo e fica o último quadro na tela
+
+< Безпека: перевірка файлів, підозрілі процеси, автозапуск і небезпечні налаштування Windows (евристики без бази сигнатур)
+> Segurança: verificação de arquivos, processos suspeitos, inicialização automática e configurações inseguras do Windows (heurísticas, sem base de assinaturas)
+
+< Повноекранні програми
+> Programas em tela cheia
+
+<  Увімкніть «Історію за добу» (Налаштування → Система), щоб наступного разу було видно температури в ту хвилину.
+>  Ative o histórico diário (Configurações → Sistema) para ver as temperaturas daquele minuto da próxima vez.
+
+< Ховати панель і ставити віджети на паузу також для повноекранного відео чи презентації. Для ігор з бібліотеки ігровий режим вмикається завжди: працюють лише оверлей, обмеження кадрів і нагляд за системою, пам'ять NeoBar звільняється для гри
+> Ocultar o painel e pausar os widgets também em vídeo em tela cheia ou apresentação. Para jogos da biblioteca o modo de jogo sempre liga: só funcionam o overlay, o limite de quadros e a vigilância do sistema, e a memória do NeoBar é liberada para o jogo
+
+< Палітра: піпетка з екрана, вибір кольору, колірні моделі
+> Paleta: conta-gotas da tela, seleção de cor, modelos de cor
+
+< Історію вимкнено: Налаштування → Система → «Нагляд за системою».
+> Histórico desativado: Configurações → Sistema → Vigilância do sistema.
+
+< Запис програми
+> Gravação de programa
+
+< Температури й навантаження всієї системи щохвилини за останню добу, разом зі сповіщеннями й збоями Windows
+> Temperaturas e carga de todo o sistema a cada minuto no último dia, com alertas e falhas do Windows
+
+< Монітор системи: навантаження й температури ЦП, відеокарти й пам'яті, характеристики, пристрої й драйвери, процеси й служби, аналіз програми й історія за добу
+> Monitor do sistema: carga e temperaturas de CPU, placa de vídeo e memória, especificações, dispositivos e drivers, processos e serviços, análise de programa e histórico diário
+
+< Простір: диски й флешки - вільне місце, стан (SMART), швидкість, обслуговування; очищення Windows від сміття; відновлення видалених файлів
+> Armazenamento: discos e pen drives - espaço livre, estado (SMART), velocidade, manutenção; limpeza do Windows; recuperação de arquivos excluídos
+
+< Навантаження однієї програми (чи групи з дочірніми процесами) у часі, з журналом
+> Carga de um programa (ou grupo com processos filhos) ao longo do tempo, com log
+
+< Драйвер відеокарти дав збій під час читання датчиків - датчики драйвера вимкнено до перезапуску NeoBar
+> O driver de vídeo falhou ao ler os sensores - sensores do driver desativados até reiniciar o NeoBar
+
+< AMD: драйвер перестав віддавати датчики (ADLX) - до перезапуску NeoBar температура береться з Windows
+> AMD: o driver parou de fornecer sensores (ADLX) - até reiniciar o NeoBar, a temperatura vem do Windows
+
+< зараз не підключено
+> não conectado agora
+
+< Додати піктограму температури в трей
+> Adicionar ícone de temperatura à bandeja
+
+< Окремий значок біля годинника Windows із числом у градусах. Щоб змінити порядок значків, перетягніть їх прямо в області сповіщень Windows. Для температури процесора часто потрібні права адміністратора
+> Um ícone separado ao lado do relógio do Windows com o número em graus. Para mudar a ordem dos ícones, arraste-os na área de notificação do Windows. A temperatura do processador costuma exigir direitos de administrador
+
+< Відеокарта: hotspot
+> Placa de vídeo: hotspot
+
+< зараз без даних - на значку буде риска
+> sem dados agora - o ícone mostrará um traço
+
+< диск не віддає температуру
+> o disco não informa a temperatura
+
+< Друга відеокарта
+> Segunda placa de vídeo
+
+< Вбудована відеокарта
+> Placa de vídeo integrada
+
+< Вибрати датчик…
+> Escolher um sensor…
+
+< Відеокарта: пам'ять
+> Placa de vídeo: memória

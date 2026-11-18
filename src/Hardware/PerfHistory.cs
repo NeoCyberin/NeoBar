@@ -11,7 +11,8 @@ using System.Windows.Forms;
 // ======================================================================
 sealed partial class PerfWindow
 {
-    const int TabHistory = 4;
+    public const int TabHistory = 5;       // для OpenPerf: «Аналіз» у режимі «Історія за добу»
+    bool anDay;
     readonly List<Rectangle> hsPlots = new List<Rectangle>();
 
     sealed class HsLine { public string Name; public Color C; public Func<HistPoint, float> V; public string Unit; }
@@ -22,7 +23,7 @@ sealed partial class PerfWindow
         List<HistPoint> pts = Watch.Points();
         DateTime t1 = DateTime.Now, t0 = t1.AddHours(-24);
         string sub;
-        if (!Watch.History) sub = L.T("Історію вимкнено: Налаштування → Панель → «Нагляд за системою».");
+        if (!Watch.History) sub = L.T("Історію вимкнено: Налаштування → Система → «Нагляд за системою».");
         else if (pts.Count == 0) sub = L.T("Збираю дані: перша точка з'явиться за хвилину. Історія зберігається, поки NeoBar працює.");
         else sub = L.F("Щохвилини, від {0}. Найвища температура й середнє навантаження за хвилину; розриви - NeoBar не працював.", pts[0].T.ToString("dd.MM HH:mm"));
         TxtL(g, L.T("Температури й навантаження за добу"), FB, new Rectangle(r.X, r.Y, r.Width, Px(24)), P.Fg);

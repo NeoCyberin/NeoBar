@@ -261,17 +261,16 @@ static class SysCheck
                 if (ev.Crash > 0) p.Add(L.F("збої NeoBar: {0} (востаннє {1}: {2})", ev.Crash, ev.CrashAt.ToString("g"), ev.CrashWhat));
                 string tip = ev.Gpu > 0 ? L.T(" Зависання відеодрайвера - найчастіше перегрів, розгін або нестабільний драйвер відеокарти; варто оновити або перевстановити драйвер.") : "";
                 tip += Explain(ev, gx, px);
-                if (!Watch.History && (ev.Gpu > 0 || ev.Power > 0)) tip += L.T(" Увімкніть «Історію за добу» (Налаштування → Панель), щоб наступного разу було видно температури в ту хвилину.");
+                if (!Watch.History && (ev.Gpu > 0 || ev.Power > 0)) tip += L.T(" Увімкніть «Історію за добу» (Налаштування → Система), щоб наступного разу було видно температури в ту хвилину.");
                 l.Add(new CheckItem(L.T("Стабільність системи"), ev.Gpu + ev.Mem + ev.Power > 0 ? 1 : 3, L.F("За {0} днів: ", SysEvents.Days) + string.Join("; ", p.ToArray()) + "." + tip)
                     .Add(L.T("Журнал подій"), delegate { Run("eventvwr.msc", "/c:System"); })
-                    .Add(L.T("Історія"), delegate { NeoBar nb = ClockData.Bar; if (nb != null) nb.OpenPerf(4); }));
+                    .Add(L.T("Історія"), delegate { NeoBar nb = ClockData.Bar; if (nb != null) nb.OpenPerf(PerfWindow.TabHistory); }));
             }
             // пристрої з помилкою (немає драйвера, не запускаються, Windows зупинила)
             try
             {
                 List<string> badDev = new List<string>();
                 foreach (DevItem d in Devices.List()) if (d.Bad && !badDev.Contains(d.Name)) badDev.Add(d.Name + " - " + Devices.ProblemText(d).ToLowerInvariant());
-                DeviceWindow.LastProblems = badDev.Count;
                 if (badDev.Count == 0) l.Add(new CheckItem(L.T("Пристрої"), 0, L.T("Усі пристрої працюють, драйвери встановлено.")));
                 else l.Add(new CheckItem(L.T("Пристрої"), 1, L.F("Потребують уваги: {0}. ", badDev.Count) + string.Join("; ", badDev.GetRange(0, Math.Min(3, badDev.Count)).ToArray()) + (badDev.Count > 3 ? "…" : ""))
                     .Add(L.T("Пристрої"), delegate { NeoBar nb = ClockData.Bar; if (nb != null) nb.OpenDevices(); }));
@@ -283,7 +282,7 @@ static class SysCheck
                 List<string> last = new List<string>();
                 for (int i = al.Count - 1; i >= 0 && last.Count < 3; i--) last.Add(al[i].T.ToString("HH:mm") + " - " + al[i].Text);
                 l.Add(new CheckItem(L.T("Критичні сповіщення за добу"), 1, L.F("Усього: {0}. Останні: ", al.Count) + string.Join("; ", last.ToArray()))
-                    .Add(L.T("Історія"), delegate { NeoBar nb = ClockData.Bar; if (nb != null) nb.OpenPerf(4); }));
+                    .Add(L.T("Історія"), delegate { NeoBar nb = ClockData.Bar; if (nb != null) nb.OpenPerf(PerfWindow.TabHistory); }));
             }
             SelfUse.Snap me = SelfUse.Me();
             int wp = WallEngine.Pid;

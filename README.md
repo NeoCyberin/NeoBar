@@ -8,12 +8,15 @@ A side panel for Windows 10/11: launch programs and games, widgets, desktop note
 
 ## Features
 
-- **Panel** - programs, folders, sites and groups; docked or auto-hide, any screen edge; search with an NTFS index, a calculator and unit conversion; profiles with a PIN.
-- **Widgets** - clock, calendar, alarms and timers, weather, system monitor, network and ping, drives, battery, notes, color picker, dice, QR codes; most can also live on the desktop.
-- **Games** - overlay with FPS, frame times and sensors, frame limiter, borderless fullscreen; anti-cheat games are left alone unless you allow it.
-- **Wallpapers** - images, slideshows with transitions, live (video / GIF) wallpapers.
-- **Tools** - junk cleanup, process and service manager, process or process-group load analysis with a log, device and driver manager (problem devices, driver store, updates), system watch (critical overheating and memory alerts, daily temperature history, after-game report), file recovery, disk health (SMART) and formatting, firewall and Wi-Fi, security check, file encryption.
-- **Themes** - 9 themes, a custom one, festive themes; interface in 9 languages (Ukrainian, English, German, French, Spanish, Italian, Czech, Polish, Brazilian Portuguese) and your own translations.
+- **Panel** - programs, folders, sites and groups at any screen edge, docked or auto-hide; drag files onto icons; profiles with a PIN.
+- **Search** - panel items and every file on the computer (NTFS index), a calculator and unit conversion.
+- **Time & weather** - clock and calendar with holidays, stopwatch, timers, alarms; weather now, hourly and for several days. The clock, weather, monitor, network and drives can also live on the desktop.
+- **System** - monitor (CPU, GPU, memory, temperatures) with specs, devices and drivers, processes and services, app load analysis and daily history; network, Wi-Fi and firewall; battery; security check. System watch warns about overheating and low memory and writes an after-game report.
+- **Drives** - free space, health (SMART), speed, check and format, Windows junk cleanup and recovery of deleted files - all in one window.
+- **Tools** - desktop notes, color picker, QR codes, file encryption and hashes, dice.
+- **Games** - overlay with FPS, frame times and sensors, frame limiter, borderless fullscreen. In game mode only the overlay, the limiter and system watch keep running; anti-cheat games are left alone unless you allow it.
+- **Wallpapers** - images, slideshows with transitions, live (video / GIF) wallpapers; paused while a game runs.
+- **Themes & languages** - 9 themes, a custom one, festive themes; interface in 9 languages (Ukrainian, English, German, French, Spanish, Italian, Czech, Polish, Brazilian Portuguese) and your own translations.
 
 ## Screenshots
 
@@ -51,7 +54,7 @@ A new program may trigger a SmartScreen warning ("Windows protected your PC") un
 check that the file is signed by the author (Properties → Digital Signatures), then click **More info → Run anyway**.
 
 Some features (FPS in games, CPU temperature, disk maintenance) need administrator rights;
-NeoBar asks for them only when needed, or can always start elevated (Settings → Panel).
+NeoBar asks for them only when needed, or can always start elevated (Settings → Panel → Startup).
 
 ## Build from source
 

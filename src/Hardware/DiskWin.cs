@@ -10,7 +10,7 @@ using System.Windows.Forms;
 // ======================================================================
 //  Диск: заповненість, накопичувач, SMART, перевірка, оптимізація, вилучення, літера
 // ======================================================================
-sealed class DiskWindow : SbWindow
+sealed partial class DiskWindow : SbWindow
 {
     readonly Entry entry;
     List<Vol> vols = new List<Vol>();
@@ -28,10 +28,14 @@ sealed class DiskWindow : SbWindow
     DateTime letterAt = DateTime.MinValue;
     static uint qcap;
 
-    public DiskWindow(NeoBar bar, Entry e) : base(bar, L.T("Простір"), 560, 660)
+    // вкладки: огляд, стан, швидкість, обслуговування - для вибраного диска; очищення й відновлення - окремо від нього
+    public const int TabClean = 4, TabRecover = 5;
+
+    public DiskWindow(NeoBar bar, Entry e, int tab) : base(bar, L.T("Простір"), 700, 760)
     { Glyph = "\uEDA2";
         entry = e;
-        Tabs = new string[] { L.T("Огляд"), L.T("Стан"), L.T("Швидкість"), L.T("Обслуговування") };
+        Tabs = new string[] { L.T("Огляд"), L.T("Стан"), L.T("Швидкість"), L.T("Обслуговування"), L.T("Очищення"), L.T("Відновлення") };
+        Tab = Math.Max(0, Math.Min(TabRecover, tab));
         Ticker.Interval = 500;
         try { if (qcap == 0) qcap = Win.RegisterWindowMessage("QueryCancelAutoPlay"); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         NeoBar.DisksChanged += OnDevices;
@@ -42,7 +46,16 @@ sealed class DiskWindow : SbWindow
     {
         base.OnHandleCreated(e);
         Reload(Widgets.DiskKey(entry));
+        OnTab();
     }
+
+    protected override void OnTab()
+    {
+        if (Tab == TabClean) CleanEnter();
+        if (Tab == TabRecover) RpEnter();
+    }
+
+    public void SetTab(int t) { Tab = Math.Max(0, Math.Min(TabRecover, t)); OnTab(); Invalidate(); }
 
     void Post(Action a)
     {
@@ -53,6 +66,20 @@ sealed class DiskWindow : SbWindow
     protected override void HeadButtons(Graphics g, ref int right)
     {
         Rectangle gr;
+        if (Tab == TabClean)
+        {
+            gr = new Rectangle(right - Px(32), Px(7), Px(32), Px(32));
+            IconBtn(g, gr, "desk", delegate { ClockData.AddDesk("trash"); }, false);      // кошик на робочий стіл
+            right = gr.Left - Px(4);
+            return;
+        }
+        if (Tab == TabRecover)
+        {
+            gr = new Rectangle(right - Px(32), Px(7), Px(32), Px(32));
+            IconBtn(g, gr, "sync", delegate { RpReload(); }, false);
+            right = gr.Left - Px(4);
+            return;
+        }
         if (Tab == 0)
         {
             gr = new Rectangle(right - Px(32), Px(7), Px(32), Px(32));
@@ -137,6 +164,7 @@ sealed class DiskWindow : SbWindow
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         NeoBar.DisksChanged -= OnDevices;
+        CleanLeave();
         base.OnFormClosed(e);
     }
 
@@ -340,6 +368,8 @@ sealed class DiskWindow : SbWindow
 
     void PaintBody0(Graphics g, Rectangle r)
     {
+        if (Tab == TabClean) { PaintClean(g, r); return; }
+        if (Tab == TabRecover) { PaintRecover(g, r); return; }
         // вибір тому
         int x = r.X, y = r.Y;
         foreach (Vol v in vols)
@@ -631,6 +661,10 @@ sealed class DiskWindow : SbWindow
             if (why.Length > 0) { msg = why; Invalidate(); return; }
             new FormatWindow(Bar, cur, di).Show();
         }, 0, !busy && fixedOk);
+        // суміжні вкладки - для тих, хто шукає їх тут
+        Btn(g, new Rectangle(r.X + bw + Px(8), y, bw, bh), L.T("Відновити видалені файли…"), delegate { SetTab(TabRecover); }, 0, true);
+        y += bh + Px(8);
+        Btn(g, new Rectangle(r.X, y, bw, bh), L.T("Очистити Windows від сміття…"), delegate { SetTab(TabClean); }, 0, true);
         y += bh + Px(10);
         TxtW(g, (IsHdd ? L.T("Жорсткий диск: оптимізація = дефрагментація.") : L.T("SSD, флешки й карти пам'яті не дефрагментуються - для них виконується TRIM (повідомлення накопичувачу про звільнені блоки).")) +
             L.T(" Перевірка, оптимізація й зміна літери потребують прав адміністратора."), FS, new Rectangle(r.X, y, r.Width, Px(36)), P.Sub);

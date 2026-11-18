@@ -27,7 +27,7 @@ static class WallCfg
     public static string Image = "", Video = "";
     public static int Fit;                          // 0 заповнити, 1 вписати, 2 розтягнути, 3 по центру
     public static int Interval = 10;                // хвилин між зображеннями слайд-шоу
-    public static bool Shuffle = true, Mute = true, AllMonitors = true, PauseCovered = true, PauseBattery = true, PauseGame = true;
+    public static bool Shuffle = true, Mute = true, AllMonitors = true, PauseCovered = false, PauseBattery = true, PauseGame = true;
     public static int Fx = 1;                       // 0 без анімації, 1 згасання, 2 зсув, 3 наближення, 4 шторки, 5 випадково
     public static int TransMs = 1200;
 
@@ -41,7 +41,7 @@ static class WallCfg
 
     public static void Load()
     {
-        Mode = 0; Image = Video = ""; Fit = 0; Interval = 10; Shuffle = true; Mute = true; AllMonitors = true; PauseCovered = true; PauseBattery = true; PauseGame = true;
+        Mode = 0; Image = Video = ""; Fit = 0; Interval = 10; Shuffle = true; Mute = true; AllMonitors = true; PauseCovered = false; PauseBattery = true; PauseGame = true;
         Fx = 1; TransMs = 1200;
         try
         {
@@ -62,7 +62,7 @@ static class WallCfg
                     case "shuffle": Shuffle = v == "1"; break;
                     case "mute": Mute = v == "1"; break;
                     case "all": AllMonitors = v == "1"; break;
-                    case "pausecovered": PauseCovered = v == "1"; break;
+                    case "pausehidden": PauseCovered = v == "1"; break;
                     case "pausebattery": PauseBattery = v == "1"; break;
                     case "pausegame": PauseGame = v == "1"; break;
                     case "fx": Fx = Math.Max(0, Math.Min(5, n)); break;
@@ -87,7 +87,7 @@ static class WallCfg
             sb.AppendLine("shuffle=" + (Shuffle ? 1 : 0));
             sb.AppendLine("mute=" + (Mute ? 1 : 0));
             sb.AppendLine("all=" + (AllMonitors ? 1 : 0));
-            sb.AppendLine("pausecovered=" + (PauseCovered ? 1 : 0));
+            sb.AppendLine("pausehidden=" + (PauseCovered ? 1 : 0));
             sb.AppendLine("pausebattery=" + (PauseBattery ? 1 : 0));
             sb.AppendLine("pausegame=" + (PauseGame ? 1 : 0));
             sb.AppendLine("fx=" + Fx);
@@ -874,14 +874,20 @@ static class WallMgr
             }
         }
         // рушій живий і готовий, але вмісту не підтвердив (команда загубилась або прийшла надто рано) - повторюємо
-        if (engine && liveCmd != null && WallEngine.Alive && ackTries < 6 && WallEngine.Ready && WallEngine.StatusValue("content").Length == 0 && WallEngine.StatusValue("error").Length == 0)
+        // (файл стану читаємо лише доки вміст не підтверджено - далі щотику його не чіпаємо)
+        if (engine && liveCmd != null && ackTries < 6 && WallEngine.Alive && WallEngine.Ready)
+        {
+            if (WallEngine.StatusValue("content").Length > 0 || WallEngine.StatusValue("error").Length > 0) ackTries = 6;
+        }
+        if (engine && liveCmd != null && ackTries < 6 && WallEngine.Alive && WallEngine.Ready)
         {
             ackTries++;
             SbLog.W(SbLog.Panel, "шпалери: рушій не підтвердив вміст - повторюю команду (" + ackTries + ")");
             WallEngine.Send(liveCmd);
         }
         if (WallCfg.Mode == 1) return;          // нерухоме зображення: рушій і так нічого не малює, пауза не потрібна
-        bool cover = WallCfg.PauseCovered && (NeoBar.Paused || Nat.FullscreenBusy() || Nat.ForegroundCovers(false, IntPtr.Zero));
+        // зупинка - лише коли шпалер справді ніде не видно (за бажанням) і для ігор; втрата фокусу столом - не причина
+        bool cover = WallCfg.PauseCovered && Nat.DesktopHidden(WallCfg.AllMonitors);
         bool battery = WallCfg.PauseBattery && WallMgr.HasBattery && SystemInformation.PowerStatus.PowerLineStatus == PowerLineStatus.Offline;
         // гра запущена - навіть згорнута, у вікні чи на іншому моніторі (пам'ятаємо її процес, доки він живий)
         if (Games.CurrentPid > 0) gamePid = Games.CurrentPid;

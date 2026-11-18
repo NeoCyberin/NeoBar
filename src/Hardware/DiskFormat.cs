@@ -842,35 +842,25 @@ sealed class RecoverWindow : SbWindow
 // ----------------------------------------------------------------------
 //  Віджет «Відновлення»: вибір диска, потім вікно відновлення цього диска
 // ----------------------------------------------------------------------
-sealed class RecoverPickWindow : SbWindow
+// вкладка «Відновлення» вікна «Простір»: звідки відновлювати (диск, том чи папка); саме відновлення - окреме вікно
+sealed partial class DiskWindow
 {
-    List<Vol> vols = new List<Vol>();
-    List<DiskInfo> disks = new List<DiskInfo>();
-    readonly Dictionary<string, DiskInfo> infos = new Dictionary<string, DiskInfo>();
-    readonly Dictionary<int, string> letters = new Dictionary<int, string>();      // номер диска -> літери його томів
-    bool loading = true;
-    int scroll, tab = 1;                    // 0 - фізичні диски, 1 - логічні, 2 - вибрана папка
-    string note = "";
+    List<Vol> rpVols = new List<Vol>();
+    List<DiskInfo> rpDisks = new List<DiskInfo>();
+    readonly Dictionary<string, DiskInfo> rpInfos = new Dictionary<string, DiskInfo>();
+    readonly Dictionary<int, string> rpLetters = new Dictionary<int, string>();      // номер диска -> літери його томів
+    bool rpLoading = true;
+    int rpScroll, rpTab = 1;                    // 0 - фізичні диски, 1 - логічні, 2 - вибрана папка
+    string rpNote = "";
 
-    public RecoverPickWindow(NeoBar bar) : base(bar, L.T("Відновлення файлів"), 520, 620)
-    { Glyph = "\uE777";
-    }
+    bool rpFirst = true;
 
-    protected override void OnHandleCreated(EventArgs e)
-    {
-        base.OnHandleCreated(e);
-        Reload();
-    }
-
-    void Post(Action a)
-    {
-        try { if (!IsDisposed && IsHandleCreated) BeginInvoke(a); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
-    }
+    void RpEnter() { if (rpFirst) { rpFirst = false; RpReload(); } }
 
     // томи й накопичувачі - у фоні: сплячий диск може відповідати секундами
-    void Reload()
+    void RpReload()
     {
-        loading = true;
+        rpLoading = true;
         Invalidate();
         Util.Bg(delegate
         {
@@ -900,56 +890,48 @@ sealed class RecoverPickWindow : SbWindow
             catch (Exception skipEx) { SbLog.Skip(skipEx); }
             Post(delegate
             {
-                vols = nv; disks = nd;
-                foreach (KeyValuePair<string, DiskInfo> kv in inf) infos[kv.Key] = kv.Value;
-                letters.Clear();
-                foreach (KeyValuePair<int, string> kv in lt) letters[kv.Key] = kv.Value;
-                loading = false; Invalidate();
+                rpVols = nv; rpDisks = nd;
+                foreach (KeyValuePair<string, DiskInfo> kv in inf) rpInfos[kv.Key] = kv.Value;
+                rpLetters.Clear();
+                foreach (KeyValuePair<int, string> kv in lt) rpLetters[kv.Key] = kv.Value;
+                rpLoading = false; Invalidate();
             });
         });
     }
 
-    protected override void HeadButtons(Graphics g, ref int right)
-    {
-        Rectangle rr = new Rectangle(right - Px(32), Px(7), Px(32), Px(32));
-        IconBtn(g, rr, "sync", delegate { Reload(); }, false);
-        right = rr.Left - Px(4);
-    }
-
-    protected override bool AcceptsFiles { get { return true; } }
+    protected override bool AcceptsFiles { get { return Tab == TabRecover; } }
 
     // папку (або файл - тоді його теку) кинули у вікно
     protected override void FilesDropped(string[] files)
     {
         string p = files[0];
         try { if (File.Exists(p)) p = Path.GetDirectoryName(p); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
-        tab = 2;
-        if (loading) { note = L.T("Диски ще читаються, повторіть за мить."); Invalidate(); return; }
-        OpenFolder(p);
+        rpTab = 2;
+        if (rpLoading) { rpNote = L.T("Диски ще читаються, повторіть за мить."); Invalidate(); return; }
+        RpOpenFolder(p);
     }
 
-    void PickFolder()
+    void RpPickFolder()
     {
         string path;
         if (!FolderPick.Ask(this, L.T("Папка, з якої зникли файли (для видаленої теки - та, де вона лежала)"), null, out path)) return;
-        OpenFolder(path);
+        RpOpenFolder(path);
     }
 
-    void OpenFolder(string path)
+    void RpOpenFolder(string path)
     {
         string root = Path.GetPathRoot(path) ?? "";
-        if (root.Length < 3 || root[1] != ':') { note = L.T("Підтримуються лише локальні диски з літерою."); Invalidate(); return; }
+        if (root.Length < 3 || root[1] != ':') { rpNote = L.T("Підтримуються лише локальні диски з літерою."); Invalidate(); return; }
         Vol v = null;
-        foreach (Vol x in vols) if (string.Equals(x.Letter, root.Substring(0, 2), StringComparison.OrdinalIgnoreCase)) v = x;
-        if (v == null) { note = L.T("Диск ") + root + L.T(" не знайдено серед локальних і знімних дисків."); Invalidate(); return; }
-        DiskInfo di; infos.TryGetValue(v.Id, out di);
+        foreach (Vol x in rpVols) if (string.Equals(x.Letter, root.Substring(0, 2), StringComparison.OrdinalIgnoreCase)) v = x;
+        if (v == null) { rpNote = L.T("Диск ") + root + L.T(" не знайдено серед локальних і знімних дисків."); Invalidate(); return; }
+        DiskInfo di; rpInfos.TryGetValue(v.Id, out di);
         string rel = path.Substring(root.Length).Trim('\\');
-        note = "";
+        rpNote = "";
         new RecoverWindow(Bar, v, di, rel).Show();
-        Close();
     }
 
-    protected override void PaintBody(Graphics g, Rectangle r)
+    void PaintRecover(Graphics g, Rectangle r)
     {
         int y = r.Y;
         string[] tn = { L.T("Фізичні диски"), L.T("Логічні диски"), L.T("Вибрана папка") };
@@ -957,11 +939,11 @@ sealed class RecoverPickWindow : SbWindow
         for (int i = 0; i < 3; i++)
         {
             int k = i;
-            Chip(g, new Rectangle(r.X + i * (tw + Px(6)), y, tw, Px(32)), tn[i], tab == i, delegate { tab = k; scroll = 0; note = ""; Invalidate(); });
+            Chip(g, new Rectangle(r.X + i * (tw + Px(6)), y, tw, Px(32)), tn[i], rpTab == i, delegate { rpTab = k; rpScroll = 0; rpNote = ""; Invalidate(); });
         }
         y += Px(42);
-        string intro = tab == 0 ? L.T("Диск цілком: пошук файлів по всьому накопичувачу, зокрема на видалених розділах. Виберіть розділ, щоб побачити імена й папки.")
-                     : tab == 1 ? L.T("Виберіть диск чи флешку, з яких зникли файли або папки.")
+        string intro = rpTab == 0 ? L.T("Диск цілком: пошук файлів по всьому накопичувачу, зокрема на видалених розділах. Виберіть розділ, щоб побачити імена й папки.")
+                     : rpTab == 1 ? L.T("Виберіть диск чи флешку, з яких зникли файли або папки.")
                      : L.T("Виберіть папку, з якої зникли файли. Для видаленої теки виберіть ту, де вона лежала. Буде знайдено все видалене в ній і у вкладених.");
         TxtW(g, intro + L.T(" Нічого не пишіть на цей диск, поки не відновите потрібне: нові файли затирають видалені."), F, new Rectangle(r.X, y, r.Width, Px(70)), P.Fg);
         y += Px(74);
@@ -970,30 +952,28 @@ sealed class RecoverPickWindow : SbWindow
             TxtW(g, L.T("Для читання диска напряму потрібні права адміністратора - запустіть NeoBar від імені адміністратора."), FS, new Rectangle(r.X, y, r.Width, Px(34)), P.Acc);
             y += Px(38);
         }
-        if (tab == 2)
+        if (rpTab == 2)
         {
-            DropZone(g, new Rectangle(r.X, y, r.Width, Px(112)), L.T("Перетягніть папку сюди"), L.T("Вибрати папку…"), PickFolder, !loading);
+            DropZone(g, new Rectangle(r.X, y, r.Width, Px(112)), L.T("Перетягніть папку сюди"), L.T("Вибрати папку…"), RpPickFolder, !rpLoading);
             y += Px(122);
-            if (note.Length > 0) TxtW(g, note, FS, new Rectangle(r.X, y, r.Width, Px(40)), P.Acc);
+            if (rpNote.Length > 0) TxtW(g, rpNote, FS, new Rectangle(r.X, y, r.Width, Px(40)), P.Acc);
             else TxtW(g, L.T("Підійде папка на будь-якому локальному чи знімному диску з NTFS, exFAT або FAT. Мережеві папки не підтримуються."), FS, new Rectangle(r.X, y, r.Width, Px(60)), P.Sub);
-            FitTo(r, y + Px(68), Px(300));
             return;
         }
         int rowH = Px(68);
         Rectangle list = new Rectangle(r.X, y, r.Width, r.Bottom - y);
-        int count = tab == 0 ? disks.Count : vols.Count;
+        int count = rpTab == 0 ? rpDisks.Count : rpVols.Count;
         int total = count * rowH;
         // вікно за висотою - за вмістом (не порожнє при одному диску), але не вище за екран
-        FitTo(r, list.Y + Math.Max(total, Px(70)), Px(300));
-        scroll = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), scroll));
-        if (loading && count == 0) TxtC(g, L.T("Читаю диски…"), F, list, P.Sub);
+        rpScroll = Math.Max(0, Math.Min(Math.Max(0, total - list.Height), rpScroll));
+        if (rpLoading && count == 0) TxtC(g, L.T("Читаю диски…"), F, list, P.Sub);
         else if (count == 0) TxtC(g, L.T("Дисків не знайдено"), F, list, P.Sub);
         GraphicsState st = g.Save();
         g.SetClip(list);
         string sys = Vols.SysRoot();
         for (int i = 0; i < count; i++)
         {
-            Rectangle rr = new Rectangle(list.X, list.Y + i * rowH - scroll, list.Width, rowH - Px(8));
+            Rectangle rr = new Rectangle(list.X, list.Y + i * rowH - rpScroll, list.Width, rowH - Px(8));
             if (rr.Bottom < list.Y || rr.Top > list.Bottom) continue;
             Card(g, rr, Over(rr) ? Util.Blend(P.Card, P.Fg, 0.06f) : P.Card);
             int tx = rr.X + Px(62), tw2 = rr.Width - tx + rr.X - Px(110);
@@ -1001,10 +981,10 @@ sealed class RecoverPickWindow : SbWindow
             bool flash, isSys, ssd;
             DiskInfo d;
             Vol v = null;
-            if (tab == 0)
+            if (rpTab == 0)
             {
-                d = disks[i];
-                string lt; letters.TryGetValue(d.No, out lt);
+                d = rpDisks[i];
+                string lt; rpLetters.TryGetValue(d.No, out lt);
                 lt = lt ?? "";
                 title = L.T("Диск ") + d.No + " · " + (d.Model.Length > 0 ? d.Model : d.Kind);
                 sub = d.Kind + " · " + Vols.Size(d.Size) + (lt.Length > 0 ? L.T(" · томи: ") + lt : L.T(" · без томів"));
@@ -1013,8 +993,8 @@ sealed class RecoverPickWindow : SbWindow
             }
             else
             {
-                v = vols[i];
-                infos.TryGetValue(v.Id, out d);
+                v = rpVols[i];
+                rpInfos.TryGetValue(v.Id, out d);
                 title = v.Title;
                 sub = (v.Fs.Length > 0 ? v.Fs : L.T("без файлової системи")) + " · " + Vols.Size(v.Total) + (d != null ? " · " + d.Kind : "");
                 flash = v.DriveType == 2 || (d != null && (d.Usb || d.BusType == 12 || d.BusType == 13));
@@ -1035,12 +1015,11 @@ sealed class RecoverPickWindow : SbWindow
                 {
                     if (vv != null) new RecoverWindow(Bar, vv, dd).Show();
                     else new RecoverWindow(Bar, dd).Show();
-                    Close();
                 });
             }
         }
         g.Restore(st);
-        Wheel(list, delegate (int dd) { scroll -= dd > 0 ? rowH : -rowH; Invalidate(); });
-        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(8)), total, list.Height, scroll, delegate (int v) { scroll = v; Invalidate(); });
+        Wheel(list, delegate (int dd) { rpScroll -= dd > 0 ? rowH : -rowH; Invalidate(); });
+        VBar(g, new Rectangle(list.Right - Px(6), list.Y + Px(2), Px(4), list.Height - Px(8)), total, list.Height, rpScroll, delegate (int v) { rpScroll = v; Invalidate(); });
     }
 }
