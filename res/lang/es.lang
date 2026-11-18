@@ -11533,3 +11533,6 @@
 
 < Драйвер відеокарти дав збій під час читання датчиків - датчики драйвера вимкнено до перезапуску NeoBar
 > El controlador gráfico falló al leer los sensores: los sensores del controlador están desactivados hasta reiniciar NeoBar
+
+< AMD: драйвер перестав віддавати датчики (ADLX) - до перезапуску NeoBar температура береться з Windows
+> AMD: el controlador dejó de ofrecer sensores (ADLX); hasta reiniciar NeoBar la temperatura viene de Windows
