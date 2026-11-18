@@ -247,6 +247,7 @@ static class VendorGpu
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int XRel(IntPtr self);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int XDbl(IntPtr self, out double v);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int XInt(IntPtr self, out int v);
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)] delegate int XQi(IntPtr self, [MarshalAs(UnmanagedType.LPWStr)] string iid, out IntPtr o);
 
     static readonly Dictionary<IntPtr, Delegate> xFns = new Dictionary<IntPtr, Delegate>();
     static IntPtr xSys, xPerf, xGpu;
@@ -271,6 +272,7 @@ static class VendorGpu
     // ініціалізація після Terminate валила процес (так закривалась панель у 1.9.9), а сам ADLX переживає перезапуск драйвера.
     // Ініціалізація «з будь-яким драйвером» - звичайна на драйвері, новішому за власну бібліотеку, бачить 0 відеокарт.
     static int xHolds;
+    static bool xMem1 = true;          // драйвер має IADLXGPUMetrics1 (температура пам'яті)
     static bool xDead;
 
     static bool InitAdlx(string pref)
@@ -353,6 +355,17 @@ static class VendorGpu
             else if (VFn<XDbl>(m, 9)(m, out d) == 0 && d > 0) s.PowerW = (float)d;                            // GPUPower
             if (VFn<XInt>(m, 11)(m, out v) == 0) s.FanRpm = v;                                                // GPUFanSpeed
             if (VFn<XInt>(m, 13)(m, out v) == 0) s.VoltMv = v;                                                // GPUVoltage
+            // температура пам'яті - лише в розширеному інтерфейсі показників (IADLXGPUMetrics1, драйвери з 2024 р.)
+            if (xMem1)
+            {
+                IntPtr m1;
+                if (VFn<XQi>(m, 2)(m, "IADLXGPUMetrics1", out m1) == 0 && m1 != IntPtr.Zero)
+                {
+                    try { if (VFn<XDbl>(m1, 15)(m1, out d) == 0 && d > 0 && d < 150) s.MemTemp = (float)d; }    // GPUMemoryTemperature
+                    finally { XRelease(m1); }
+                }
+                else { xMem1 = false; SbLog.W(SbLog.Sensors, "ADLX: температура пам'яті недоступна (немає IADLXGPUMetrics1)"); }
+            }
             s.Source = "AMD";
             return !float.IsNaN(s.Temp) || !float.IsNaN(s.Load);
         }
