@@ -11449,11 +11449,7 @@
 <  ГБ (спільна з ОЗП)
 >  GB (shared with RAM)
 
-<  (журнал драйвера)
->  (driver log)
 
-<  (лише температури)
->  (temperatures only)
 
 < Лише коли на кожному моніторі зі шпалерами є розгорнуте чи повноекранне вікно - заощаджує відеокарту. Вимкнено: шпалери зупиняються тільки для ігор
 > Only when every monitor with wallpaper has a maximised or fullscreen window - saves the graphics card. Off: the wallpaper stops only for games
@@ -11534,3 +11530,6 @@
 
 < Навантаження однієї програми (чи групи з дочірніми процесами) у часі, з журналом
 > Load of one app (or a group with its child processes) over time, with a log
+
+< Драйвер відеокарти дав збій під час читання датчиків - датчики драйвера вимкнено до перезапуску NeoBar
+> The graphics driver failed while reading sensors - driver sensors are off until NeoBar restarts

@@ -11449,11 +11449,7 @@
 <  ГБ (спільна з ОЗП)
 >  Go (partagée avec la RAM)
 
-<  (журнал драйвера)
->  (journal du pilote)
 
-<  (лише температури)
->  (températures seulement)
 
 < Лише коли на кожному моніторі зі шпалерами є розгорнуте чи повноекранне вікно - заощаджує відеокарту. Вимкнено: шпалери зупиняються тільки для ігор
 > Seulement quand chaque écran avec fond d'écran a une fenêtre agrandie ou en plein écran - économise la carte graphique. Désactivé : le fond ne s'arrête que pour les jeux
@@ -11534,3 +11530,6 @@
 
 < Навантаження однієї програми (чи групи з дочірніми процесами) у часі, з журналом
 > Charge d'un programme (ou d'un groupe avec ses processus enfants) dans le temps, avec journal
+
+< Драйвер відеокарти дав збій під час читання датчиків - датчики драйвера вимкнено до перезапуску NeoBar
+> Le pilote graphique a planté pendant la lecture des capteurs - capteurs du pilote désactivés jusqu'au redémarrage de NeoBar

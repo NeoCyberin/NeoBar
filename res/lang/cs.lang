@@ -11449,11 +11449,7 @@
 <  ГБ (спільна з ОЗП)
 >  GB (sdílená s RAM)
 
-<  (журнал драйвера)
->  (protokol ovladače)
 
-<  (лише температури)
->  (jen teploty)
 
 < Лише коли на кожному моніторі зі шпалерами є розгорнуте чи повноекранне вікно - заощаджує відеокарту. Вимкнено: шпалери зупиняються тільки для ігор
 > Jen když je na každém monitoru s tapetou maximalizované nebo celoobrazovkové okno - šetří grafickou kartu. Vypnuto: tapeta se zastaví jen kvůli hrám
@@ -11534,3 +11530,6 @@
 
 < Навантаження однієї програми (чи групи з дочірніми процесами) у часі, з журналом
 > Zátěž jednoho programu (nebo skupiny s podřízenými procesy) v čase, s protokolem
+
+< Драйвер відеокарти дав збій під час читання датчиків - датчики драйвера вимкнено до перезапуску NeoBar
+> Grafický ovladač selhal při čtení senzorů - senzory ovladače jsou vypnuté do restartu NeoBaru
