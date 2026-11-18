@@ -5,7 +5,7 @@
 - **Screen edge:** left, right, top or bottom, on any monitor. Width of a left/right panel: 56-240 px.
 - **Docked:** other windows adapt to the panel. **Auto-hide:** the panel lies over the windows and appears when the mouse reaches the edge. The *compact panel* option (sized to the content, centred, rounded) is for a top/bottom panel in auto-hide mode.
 - **Game mode** turns on by itself when a game from the library is in the foreground: the panel and desktop widgets hide, panel sensors, ping, search and security watch pause, and NeoBar's memory is released for the game. Only the overlay, the frame limiter and system watch keep running. The *Fullscreen programs* option does the same for fullscreen video or a presentation.
-- Start with Windows; run always as administrator (no UAC prompt at start).
+- Start with Windows; run always as administrator (no UAC prompt at start); the welcome window and quick setup (*First launch*).
 
 ## Items (Settings → Items)
 
@@ -15,6 +15,7 @@ Programs, folders, sites, groups, separators and widgets. Add them with the butt
 - **Icon:** automatic (from file or folder), drawn in the theme's style, downloaded once from the site, or your own file (.ico, .png, .jpg, .bmp, .exe, .dll).
 - **Groups:** a header with the items below it, either expanded or as a compact 2×2 tile with thumbnails; each group can have its own colour.
 - **Search tags:** comma-separated words that help you find the item.
+- **Missing programs:** if a program or game was uninstalled, its item is dimmed and marked *not found*. Clicking it offers to remove it from the panel; *Remove missing (N)* in the list (or in the item's right-click menu) removes all of them at once. Nothing on the disk is touched; websites, network paths and unplugged drives are never treated as missing.
 
 ## Appearance (Settings → Appearance)
 

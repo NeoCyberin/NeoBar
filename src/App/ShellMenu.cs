@@ -28,7 +28,7 @@ static class ShellMenu
     static string Exe { get { return Application.ExecutablePath; } }
     static string Cmd(string verb) { return "\"" + Exe + "\" --tool " + verb + " \"%1\""; }
 
-    // дві незалежні групи пунктів: "crypt" - хеш-сума, шифрування, розшифрування (вікно «Шифрування»);
+    // дві незалежні групи пунктів: "crypt" - хеш-сума, шифрування, розшифрування («Безпека» → «Шифрування»);
     // "sec" - перевірка файла на підозрілість (вікно «Безпека»). Спільне підменю «NeoBar» є, поки ввімкнена хоч одна
     static readonly string[] CryptVerbs = { "1hash", "2enc", "3dec" };
     static readonly string[] SecVerbs = { "4scan" };
@@ -170,7 +170,7 @@ static class ToolHost
     static float scale = 1f;
     static Control marshal;
     static ApplicationContext ctx;
-    static CryptWindow crypt;
+    static SecWindow crypt;
     static FileCheckWindow check;
 
     public static int Run(string verb, string path)
@@ -296,7 +296,7 @@ static class ToolHost
             }
             if (crypt == null || crypt.IsDisposed)
             {
-                crypt = new CryptWindow(theme, scale);
+                crypt = new SecWindow(theme, scale);
                 crypt.FormClosed += delegate { crypt = null; Closed(); };
                 Place(crypt);
             }

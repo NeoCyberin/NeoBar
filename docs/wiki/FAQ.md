@@ -13,7 +13,7 @@ By default NeoBar does not inject into anti-cheat games; the overlay is then a w
 It is designed to idle: no busy timers, slow work in the background, logs only when you turn them on.
 
 **Where do I find logs?**
-Settings → Diagnostics. A switched-on log writes files up to 2 MB; a switched-off one writes nothing. The error log is always written - send it together with a description of the problem. *Keep logs* sets how long all logs (troubleshooting, errors, process analysis) are kept: all, 7/30/90 days or the last 10/50/200 launches; 30 days by default.
+Settings → Diagnostics → *Logs* - all of them in one place: the error log (always written - send it together with a description of the problem), the panel, overlay and widget logs (written only when switched on, files up to 2 MB), critical notifications, process analysis records and after-game reports. *Keep logs* sets how long all logs (troubleshooting, errors, process analysis) are kept: all, 7/30/90 days or the last 10/50/200 launches; 30 days by default.
 
 **The PC froze, then "NeoBarWall: Application Error" appeared.**
 That happens after a graphics driver hang (Windows restarts the driver - TDR): the live wallpaper engine lost the GPU and crashed. Since 1.8.0 the engine notices the GPU reset, quits quietly without an error window and starts again a few seconds later; GPU sensors reconnect too. Sensor polling runs in the background, so a hung driver no longer stops the panel. Settings → Diagnostics → "System stability" shows what happened (graphics driver hangs, memory shortages, sudden shutdowns over the past week), and the error log records when the system or the panel stood still. Frequent driver hangs are most often overheating, overclocking or an unstable driver.

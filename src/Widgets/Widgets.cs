@@ -329,7 +329,6 @@ static class Widgets
                 SecScan.Count(out sb, out sw);
                 return L.T("Безпека (о ") + SecScan.LastAt.ToString("HH:mm") + "): " + (sb + sw == 0 ? L.T("підозрілого не знайдено") : (sb > 0 ? L.T("підозріло - ") + sb : "") + (sb > 0 && sw > 0 ? ", " : "") + (sw > 0 ? L.T("варто перевірити - ") + sw : "")) + L.T("\nКлік - подробиці");
             }
-            case "crypt": return L.T("Шифрування тексту й файлів, хеш-суми\nКлік - відкрити (можна й перетягнути файл у вікно)");
             case "notes": return L.T("Нотатки на робочому столі: ") + Notes.Count + (Notes.LockedCount > 0 ? L.T(" (на шпалерах: ") + Notes.LockedCount + ")" : "") + L.T("\nКлік - створити, заблокувати або розблокувати");
         }
         return "";
@@ -884,14 +883,6 @@ static class Widgets
                     Txt(g, cap3, sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), done && sb + sw > 0 ? shc : sec);
                 break;
             }
-            case "crypt":
-            {
-                float s = Math.Max(6 * sc, Math.Min(h * 0.5f, w * 0.7f));
-                Ico.Draw(g, "key", new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.06f, s, s), text);
-                using (Font sm = CapFont(font, L.T("Шифр"), h, capW))
-                    Txt(g, L.T("Шифр"), sm, new Rectangle(capX, inner.Y + (int)(h * 0.62f), capW, (int)(h * 0.34f)), sec);
-                break;
-            }
             case "dice":
             {
                 int[] dv = Dice.Shown;
@@ -910,8 +901,9 @@ static class Widgets
                     else if (Dice.Total) tl = Dice.Sum(dv).ToString();
                     else tl = "x" + n;
                 }
-                using (Font nf = FitFont(font, "88", s * 0.55f, (int)(s * 0.86f), FontStyle.Bold))
-                    Dice.DrawDie(g, new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.05f, s, s), tv, face, ink, nf, tl);
+                // об'ємний кубик; поки летить (кидок видно на екрані) - повернутий іншим боком і з «?»
+                float spin = Dice.Rolling ? 0.6f : 0f;
+                Dice.DrawDie3D(g, new RectangleF(inner.X + (w - s) / 2f, inner.Y + h * 0.04f, s, s), tv, face, ink, font.FontFamily, tl, spin);
                 // підпис: тип кубика (к4, к6, к20…) - однаково для всіх; число - на самому кубику
                 string dk = Dice.Locked ? L.T("Кубик") : (n > 1 ? n + L.T("к") + Dice.Faces : L.T("к") + Dice.Faces);
                 string cap = Dice.Rolling ? "…" : (lab ? Dice.LabelOf(dv[0])

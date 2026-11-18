@@ -102,19 +102,27 @@ abstract class SurfPicker : Control
 // ----------------------------------------------------------------------
 sealed class NavRail : SurfPicker
 {
-    public sealed class Item { public string Key, Text; }
+    public sealed class Item { public string Key, Text; public bool Group; }
     public readonly List<Item> Items = new List<Item>();
     public Profile Who;
 
     public NavRail() : base(true) { }
 
-    public void Add(string key, string text) { Item it = new Item(); it.Key = key; it.Text = text; Items.Add(it); Invalidate(); }
+    // group - з цього розділу починається нова група (перед ним проміжок із тонкою лінією)
+    public void Add(string key, string text, bool group) { Item it = new Item(); it.Key = key; it.Text = text; it.Group = group; Items.Add(it); Invalidate(); }
 
     int Top0 { get { return SUi.S(88); } }
     int IH { get { return SUi.S(40); } }
 
     protected override int ItemCount { get { return Items.Count; } }
-    public override Rectangle ItemRect(int i) { return new Rectangle(SUi.S(12), Top0 + i * (IH + SUi.S(3)), Width - SUi.S(24), IH); }
+    int GroupGap { get { return SUi.S(15); } }
+
+    public override Rectangle ItemRect(int i)
+    {
+        int gaps = 0;
+        for (int k = 1; k <= i && k < Items.Count; k++) if (Items[k].Group) gaps++;
+        return new Rectangle(SUi.S(12), Top0 + i * (IH + SUi.S(3)) + gaps * GroupGap, Width - SUi.S(24), IH);
+    }
 
     protected override void OnPaint(PaintEventArgs e)
     {
@@ -169,6 +177,14 @@ sealed class NavRail : SurfPicker
             Rectangle ind = new Rectangle(pr.X + SUi.S(1), pr.Y + (pr.Height - ih) / 2, SUi.S(3), ih);
             using (SolidBrush b = new SolidBrush(FormTheme.Acc)) Util.FillRound(g, b, ind, ind.Width / 2);
         }
+        using (Pen sp = new Pen(Util.Blend(bg, FormTheme.Fg, 0.1f), 1f))
+            for (int i = 1; i < Items.Count; i++)
+                if (Items[i].Group)
+                {
+                    Rectangle r = ItemRect(i);
+                    int ly = r.Y - (GroupGap + SUi.S(3)) / 2 - 1;
+                    g.DrawLine(sp, r.X + SUi.S(14), ly, r.Right - SUi.S(14), ly);
+                }
         for (int i = 0; i < Items.Count; i++)
         {
             Rectangle r = ItemRect(i);

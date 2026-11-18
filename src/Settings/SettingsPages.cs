@@ -208,6 +208,11 @@ sealed partial class SettingsForm
         k.Row(L.T("Автозапуск разом з Windows"), L.T("NeoBar заходить в останній профіль (якщо в нього є PIN - спитає його)"), chAuto);
         chAdmin = Tg();
         k.Row(L.T("Завжди від імені адміністратора"), L.T("Без запиту UAC під час запуску (Windows спитає дозвіл один раз). Потрібно для FPS в іграх, температури процесора й обслуговування дисків."), chAdmin);
+
+        k = p.Card(L.T("Перший запуск"));
+        chWelcome = Tg();
+        k.Row(L.T("Вікно привітання"), L.T("Під час запуску, до появи панелі: перевірка системи й поради"), chWelcome);
+        k.Row(L.T("Швидке налаштування"), L.T("Край екрана, режим, тема, віджети й пошук - в одному вікні (як під час першого запуску)"), Bt(L.T("Відкрити"), "g:view", 130, delegate { OpenQuick(); }));
         return p;
     }
 
@@ -272,7 +277,7 @@ sealed partial class SettingsForm
         chWAlerts = Tg();
         SCard kw = k;
         chWAlerts.CheckedChanged += delegate { kw.Queue(); };         // межі видно лише з увімкненими сповіщеннями
-        k.Row(L.T("Критичні сповіщення"), L.T("Перегрів, вичерпана пам'ять чи відеопам'ять, процес, що з'їв забагато пам'яті. Умова має триматися ~15 с; кожне сповіщення записується в журнал і позначається в записі аналізу процесу"), chWAlerts);
+        k.Row(L.T("Критичні сповіщення"), L.T("Перегрів, вичерпана пам'ять чи відеопам'ять, процес, що з'їв забагато пам'яті. Умова має триматися ~15 с; кожне сповіщення записується в журнал (Діагностика → Журнали) і позначається в записі аналізу процесу"), chWAlerts);
         nWCpuT = Nm(90, 60, 110);
         k.Row(L.T("Межа температури процесора"), L.T("°C; для більшості процесорів критично - 95-100"), nWCpuT).When = delegate { return chWAlerts.Checked; };
         nWGpuT = Nm(90, 60, 110);
@@ -281,11 +286,6 @@ sealed partial class SettingsForm
         k.Row(L.T("Межа відеопам'яті"), L.T("% зайнятої пам'яті відеокарти"), nWVram).When = delegate { return chWAlerts.Checked; };
         nWProcGb = Nm(90, 0, 512);
         k.Row(L.T("Межа пам'яті одного процесу"), L.T("ГБ оперативної пам'яті; 0 - половина всієї пам'яті"), nWProcGb).When = delegate { return chWAlerts.Checked; };
-        k.Row(L.T("Журнал сповіщень"), L.T("Усі критичні сповіщення з часом"), Bt(L.T("Відкрити"), "g:open", 110, delegate
-        {
-            if (!File.Exists(Watch.AlertLog)) { SbDialog.Show(owner, this, L.T("Журнал сповіщень"), L.T("Сповіщень ще не було."), L.T("Гаразд")); return; }
-            try { using (Process.Start("notepad.exe", "\"" + Watch.AlertLog + "\"")) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
-        })).When = delegate { return chWAlerts.Checked; };
         chWHistory = Tg();
         k.Row(L.T("Історія за добу"), L.T("Щохвилини температури й навантаження. Видно в Моніторі системи → «Історія»; перевірка системи пояснює нею збої"), chWHistory);
         chWReport = Tg();
@@ -591,7 +591,7 @@ sealed partial class SettingsForm
         });
     }
 
-    // ---------- «Діагностика»: перевірка системи, вікно привітання, журнали ----------
+    // ---------- «Діагностика»: перевірка системи й усі журнали ----------
 
     DiagList diag;
     bool diagBusy;
@@ -618,64 +618,42 @@ sealed partial class SettingsForm
 
         SPage right = new SPage();
         h.Controls.Add(right);
-        SCard k = right.Card(L.T("Оновлення"));
-        chUpd = Tg();
-        k.Row(L.T("Перевіряти оновлення"), L.T("Під час запуску NeoBar дивиться на GitHub, чи вийшла новіша версія, і пропонує оновитися. Завантажує й встановлює лише після вашої згоди."), chUpd);
-        Button bu = null;
-        bu = Bt(L.T("Перевірити зараз"), "g:refresh", 170, delegate
-        {
-            bu.Enabled = false;
-            Updater.CheckNow(delegate (string msg, string tag)
-            {
-                try
-                {
-                    BeginInvoke(new Action(delegate
-                    {
-                        bu.Enabled = true;
-                        if (tag != null) Updater.OfferFromSettings(owner, this, tag);
-                        else SbDialog.Show(owner, this, L.T("Оновлення"), msg, L.T("Гаразд"));
-                    }));
-                }
-                catch (Exception skipEx) { SbLog.Skip(skipEx); }
-            });
-        });
-        k.Row(L.T("Перевірити оновлення"), L.F("Поточна версія: {0}", Updater.CurrentText), bu);
-
-        k = right.Card(L.T("Перший запуск"));
-        chWelcome = Tg();
-        k.Row(L.T("Вікно привітання"), L.T("Під час запуску, до появи панелі: перевірка системи й поради"), chWelcome);
-        k.Row(L.T("Швидке налаштування"), L.T("Край екрана, режим, тема, віджети й пошук - в одному вікні (як під час першого запуску)"), Bt(L.T("Відкрити"), "g:view", 130, delegate { OpenQuick(); }));
-
-        k = right.Card(L.T("Журнали для пошуку проблем"));
+        // усі журнали в одному місці: що пишеться завжди, що - лише для пошуку проблем, і де лежать записи
+        SCard k = right.Card(L.T("Журнали"));
         SCard kl = k;
+        SRow re = k.Row(L.T("Журнал помилок"), "",
+            Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenErrorLog(); }),
+            Bt(L.T("Очистити"), "g:trash", 110, delegate { try { File.Delete(ErrPath); } catch (Exception skipEx) { SbLog.Skip(skipEx); } kl.Invalidate(); RunDiag(); }));
+        re.DescFn = delegate { long n = 0; try { if (File.Exists(ErrPath)) n = new FileInfo(ErrPath).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); } return L.T("Записується завжди: збої, зависання панелі й системи. Надішліть його разом з описом проблеми.") + " " + L.F("Зараз: {0}", SizeText(n)); };
         for (int i = 0; i < 3; i++)
         {
             int gi = i;
             logChk[i] = Tg();
             logChk[i].Checked = SbLog.GroupOn(i);
             logChk[i].CheckedChanged += delegate { SbLog.SetGroup(gi, logChk[gi].Checked); };
-            SRow lr = k.Row(SbLog.GroupTitles[i], "", logChk[i]);
+            SRow lr = k.Row(L.T("Журнал: ") + SbLog.GroupTitles[i], "", logChk[i]);
             lr.DescFn = delegate { return SbLog.GroupDescs[gi] + ". " + L.F("Зараз: {0}", SizeText(SbLog.GroupSize(gi))); };
         }
+        SRow ral = k.Row(L.T("Критичні сповіщення"), "", Bt(L.T("Відкрити"), "g:open", 110, delegate
+        {
+            if (!File.Exists(Watch.AlertLog)) { SbDialog.Show(owner, this, L.T("Журнал сповіщень"), L.T("Сповіщень ще не було."), L.T("Гаразд")); return; }
+            try { using (Process.Start("notepad.exe", "\"" + Watch.AlertLog + "\"")) { } } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        }));
+        ral.DescFn = delegate { long n = 0; try { if (File.Exists(Watch.AlertLog)) n = new FileInfo(Watch.AlertLog).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); } return L.T("Перегрів, нестача пам'яті тощо - коли увімкнено «Система → Критичні сповіщення».") + " " + L.F("Зараз: {0}", SizeText(n)); };
+        SRow ra = k.Row(L.T("Записи аналізу процесів"), "",
+            Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenDir(ProcRecorder.LogDir, true); }),
+            Bt(L.T("Очистити"), "g:trash", 110, delegate { ClearAnalysis(); kl.Invalidate(); }));
+        ra.DescFn = delegate { return L.T("Журнали й підсумки з вкладки «Аналіз» у Моніторі системи (типова тека).") + " " + L.F("Зараз: {0}", AnalysisText()); };
+        k.Row(L.T("Звіти після ігор"), L.T("Документи → NeoBar → Ігри; пишуться, коли увімкнено «Система → Звіт після гри»"),
+            Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenDir(Watch.ReportDir, true); }));
+
+        // спільне правило й тека
+        k = right.Card(L.T("Зберігання журналів"));
+        cbLogKeep = Cb(190, L.T("Усі"), L.F("{0} днів", 7), L.F("{0} днів", 30), L.F("{0} днів", 90), L.F("Останні {0}", 10), L.F("Останні {0}", 50), L.F("Останні {0}", 200));
+        k.Row(L.T("Зберігати журнали"), L.T("Давніше видаляється само. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу"), cbLogKeep);
         k.Row(L.T("Тека журналів"), L.T("Увімкнений журнал пише у файли до 2 МБ, вимкнений нічого не пише й не сповільнює програму"),
             Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenDir(SbLog.Dir, true); }),
             Bt(L.T("Очистити"), "g:trash", 110, delegate { SbLog.Clear(); kl.Invalidate(); }));
-        // решта журналів: помилок (пишеться завжди) і записи аналізу процесів
-        k = right.Card(L.T("Журнал помилок і записи аналізу"));
-        SCard k2 = k;
-        SRow re = k.Row(L.T("Журнал помилок"), "",
-            Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenErrorLog(); }),
-            Bt(L.T("Очистити"), "g:trash", 110, delegate { try { File.Delete(ErrPath); } catch (Exception skipEx) { SbLog.Skip(skipEx); } k2.Invalidate(); RunDiag(); }));
-        re.DescFn = delegate { long n = 0; try { if (File.Exists(ErrPath)) n = new FileInfo(ErrPath).Length; } catch (Exception skipEx) { SbLog.Skip(skipEx); } return L.T("Записується завжди: збої, зависання панелі й системи. Надішліть його разом з описом проблеми.") + " " + L.F("Зараз: {0}", SizeText(n)); };
-        SRow ra = k.Row(L.T("Записи аналізу процесів"), "",
-            Bt(L.T("Відкрити"), "g:open", 110, delegate { OpenDir(ProcRecorder.LogDir, true); }),
-            Bt(L.T("Очистити"), "g:trash", 110, delegate { ClearAnalysis(); k2.Invalidate(); }));
-        ra.DescFn = delegate { return L.T("Журнали й підсумки з вкладки «Аналіз» у Моніторі системи (типова тека).") + " " + L.F("Зараз: {0}", AnalysisText()); };
-
-        // спільне правило для всього, що вище
-        k = right.Card(L.T("Зберігання журналів"));
-        cbLogKeep = Cb(190, L.T("Усі"), L.F("{0} днів", 7), L.F("{0} днів", 30), L.F("{0} днів", 90), L.F("Останні {0}", 10), L.F("Останні {0}", 50), L.F("Останні {0}", 200));
-        k.Row(L.T("Зберігати журнали"), L.T("Діє на всі журнали вище; давніше видаляється само. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу"), cbLogKeep);
 
         h.Arrange = delegate (Rectangle r)
         {
@@ -820,6 +798,29 @@ sealed partial class SettingsForm
         lCache = Note();
         k.WithNote(k.Row(L.T("Кеш"), L.T("Погода, свята, тайли карти, іконки сайтів і місце за IP; без інтернету показується збережене"),
             Bt(L.T("Очистити"), "g:trash", 170, delegate { NetCache.Clear(); ShowCache(); })), lCache);
+
+        k = p.Card(L.T("Оновлення NeoBar"));
+        chUpd = Tg();
+        k.Row(L.T("Перевіряти оновлення"), L.T("Під час запуску NeoBar дивиться на GitHub, чи вийшла новіша версія, і пропонує оновитися. Завантажує й встановлює лише після вашої згоди."), chUpd);
+        Button bu = null;
+        bu = Bt(L.T("Перевірити зараз"), "g:refresh", 170, delegate
+        {
+            bu.Enabled = false;
+            Updater.CheckNow(delegate (string msg, string tag)
+            {
+                try
+                {
+                    BeginInvoke(new Action(delegate
+                    {
+                        bu.Enabled = true;
+                        if (tag != null) Updater.OfferFromSettings(owner, this, tag);
+                        else SbDialog.Show(owner, this, L.T("Оновлення"), msg, L.T("Гаразд"));
+                    }));
+                }
+                catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            });
+        });
+        k.Row(L.T("Перевірити оновлення"), L.F("Поточна версія: {0}", Updater.CurrentText), bu);
         return p;
     }
 }

@@ -24,6 +24,7 @@ sealed partial class NeoBar
     void Launch(Entry e, bool admin)
     {
         string target = e.Full;
+        if (e.Kind == Kind.Item && AskGone(e)) return;
         if (!PreLaunchCheck(target)) return;
         SbLog.W(SbLog.Panel, "запуск: " + target + (admin ? " (від адміністратора)" : ""));
         RunShell(delegate
@@ -47,6 +48,47 @@ sealed partial class NeoBar
             }
             catch (Exception ex) { LaunchError(target, ex.Message); }
         });
+    }
+
+    // Елемент, чиєї програми вже немає на диску: замість помилки запуску - пропозиція прибрати його з панелі.
+    // true - запуск скасовано
+    bool AskGone(Entry e)
+    {
+        if (!Gone.Is(e)) return false;
+        bool locked = settings != null && !settings.IsDisposed;
+        menuOpen++;
+        // поки відкриті налаштування, список панелі не змінюємо - лише «запустити чи ні»
+        int r = locked
+            ? (SbDialog.Show(this, this, "NeoBar", L.F("«{0}» не знайдено: програму чи файл, мабуть, видалено.", e.Name) + "\n" + e.Full, L.T("Усе одно запустити"), L.T("Скасувати")) == 0 ? 1 : 2)
+            : SbDialog.Show(this, this, "NeoBar", L.F("«{0}» не знайдено: програму чи файл, мабуть, видалено.", e.Name) + "\n" + e.Full + "\n\n" +
+                L.T("Прибрати цей елемент з панелі? Нічого на диску не видаляється."), L.T("Прибрати"), L.T("Усе одно запустити"), L.T("Скасувати"));
+        menuOpen--;
+        if (r == 0)
+        {
+            int i = entries.IndexOf(e);
+            if (i >= 0) { entries.RemoveAt(i); SaveEntries(); }
+            return true;
+        }
+        return r != 1;
+    }
+
+    // прибрати з панелі всі елементи, чиїх програм уже немає (з підтвердженням)
+    void RemoveGoneEntries()
+    {
+        List<string> names = new List<string>();
+        foreach (Entry x in entries) if (Gone.Is(x)) names.Add(x.Name);
+        if (names.Count == 0) return;
+        StringBuilder sb = new StringBuilder();
+        for (int k = 0; k < names.Count && k < 8; k++) sb.Append("\n• ").Append(names[k]);
+        if (names.Count > 8) sb.Append("\n…");
+        menuOpen++;
+        int r = SbDialog.Show(this, this, L.T("Прибрати зниклі"),
+            L.F("Буде прибрано елементів: {0}. Це ті, чиїх програм чи файлів уже немає на диску. Самі програми не чіпаються.", names.Count) + "\n" + sb.ToString(),
+            L.T("Прибрати"), L.T("Скасувати"));
+        menuOpen--;
+        if (r != 0) return;
+        Gone.Remove(entries);
+        SaveEntries();
     }
 
     // раніше тут було попередження про античіт; тепер без «Інтеграції в гру» NeoBar нічого в гру не впроваджує, тож запуск не блокується
@@ -240,6 +282,13 @@ sealed partial class NeoBar
         string delText = e.Kind == Kind.Header ? L.T("Видалити групу (елементи залишаться)") : L.T("Видалити");
         ToolStripItem del = m.Items.Add(delText, null, delegate { DeleteEntry(entries.IndexOf(e)); });
         del.Enabled = !locked;
+        // на панелі є елементи, чиїх програм уже немає - прибрати їх одним пунктом
+        int gone = Gone.Count(entries);
+        if (gone > 0)
+        {
+            ToolStripItem rg = m.Items.Add(L.F("Прибрати зниклі ({0})", gone), null, delegate { RemoveGoneEntries(); });
+            rg.Enabled = !locked;
+        }
 
         menuOpen++;
         m.Closed += delegate

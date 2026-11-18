@@ -39,22 +39,23 @@ sealed partial class SettingsForm : Form, IGradHost
     SHost foot;
     readonly List<Control> pages = new List<Control>();
     int page = -1;
-    // порядок вкладок: вміст і вигляд панелі, її поведінка й пошук, потім шпалери та ігровий оверлей,
-    // наприкінці рідкісне (місце, дані, діагностика)
-    internal const int PgItems = 0, PgView = 1, PgPanel = 2, PgSearch = 3, PgWall = 4, PgOverlay = 5, PgSystem = 6, PgPlace = 7, PgData = 8, PgDiag = 9;
+    // порядок вкладок - чотири групи (у навігації між ними проміжок): сама панель (елементи, вигляд, поведінка);
+    // що вона показує (пошук, шпалери, місце й погода); залізо й ігри (датчики, оверлей); службове (дані, діагностика й журнали)
+    internal const int PgItems = 0, PgView = 1, PgPanel = 2, PgSearch = 3, PgWall = 4, PgPlace = 5, PgSystem = 6, PgOverlay = 7, PgData = 8, PgDiag = 9;
+    static readonly int[] PageGroupStart = { PgSearch, PgSystem, PgData };
     static int lastPage = PgItems;      // остання відкрита вкладка (до закриття NeoBar) - так відкриваються налаштування з меню профілю
     static readonly string[][] PageInfo =
     {
         new[] { "items",  L.T("Елементи"),          L.T("Програми, папки, сайти, групи й віджети на панелі та їхній порядок") },
         new[] { "view",   L.T("Вигляд"),            L.T("Тема, кольори, іконки, підписи й шрифт") },
-        new[] { "panel",  L.T("Панель"),            L.T("Де стоїть панель, як поводиться в іграх і як запускається") },
+        new[] { "panel",  L.T("Панель"),            L.T("Де стоїть панель, як поводиться в іграх, запуск і привітання") },
         new[] { "search", L.T("Пошук"),             L.T("Поле пошуку, гаряча клавіша й пошук файлів") },
         new[] { "wall",   L.T("Шпалери"),           L.T("Зображення, слайд-шоу з переходами й живі шпалери робочого столу") },
-        new[] { "game",   L.T("Ігровий оверлей"),   L.T("Показники поверх гри, ліміт кадрів і налаштування окремих ігор") },
-        new[] { "system", L.T("Система"),           L.T("Датчики й температури в треї, критичні сповіщення, історія за добу, звіт після гри") },
         new[] { "place",  L.T("Місце й погода"),    L.T("Розташування, часовий пояс і точність годинника, свята, джерела даних") },
-        new[] { "data",   L.T("Дані"),              L.T("Експорт, імпорт і скидання налаштувань профілю, кеш з інтернету") },
-        new[] { "diag",   L.T("Діагностика"),       L.T("Стан системи, вікно привітання й журнали для пошуку проблем") },
+        new[] { "system", L.T("Система"),           L.T("Датчики й температури в треї, критичні сповіщення, історія за добу, звіт після гри") },
+        new[] { "game",   L.T("Ігровий оверлей"),   L.T("Показники поверх гри, ліміт кадрів і налаштування окремих ігор") },
+        new[] { "data",   L.T("Дані"),              L.T("Експорт, імпорт і скидання налаштувань профілю, кеш з інтернету, оновлення NeoBar") },
+        new[] { "diag",   L.T("Діагностика"),       L.T("Перевірка системи й усі журнали для пошуку проблем") },
     };
 
     // «Елементи»
@@ -334,7 +335,7 @@ sealed partial class SettingsForm : Form, IGradHost
         nav = new NavRail();
         nav.Who = Prof.Cur;
         nav.BackColor = FormTheme.Bg;
-        foreach (string[] pi in PageInfo) nav.Add(pi[0], pi[1]);
+        for (int i = 0; i < PageInfo.Length; i++) nav.Add(PageInfo[i][0], PageInfo[i][1], Array.IndexOf(PageGroupStart, i) >= 0);
         Controls.Add(nav);
 
         head = new HeadBar();
@@ -345,9 +346,9 @@ sealed partial class SettingsForm : Form, IGradHost
         pages.Add(BuildPanel());
         pages.Add(BuildSearch());
         pages.Add(BuildWall());
-        pages.Add(BuildOverlayTab());
-        pages.Add(BuildSystem());
         pages.Add(BuildPlace());
+        pages.Add(BuildSystem());
+        pages.Add(BuildOverlayTab());
         pages.Add(BuildData());
         pages.Add(BuildDiag());
         foreach (Control p in pages) { p.Visible = false; Controls.Add(p); }

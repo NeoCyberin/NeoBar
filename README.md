@@ -10,10 +10,10 @@ A side panel for Windows 10/11: launch programs and games, widgets, desktop note
 
 - **Panel** - programs, folders, sites and groups at any screen edge, docked or auto-hide; drag files onto icons; profiles with a PIN.
 - **Search** - panel items and every file on the computer (NTFS index), a calculator and unit conversion.
-- **Time & weather** - clock and calendar with holidays, stopwatch, timers, alarms; weather now, hourly and for several days. The clock, weather, monitor, network and drives can also live on the desktop.
-- **System** - monitor (CPU, GPU, memory, temperatures) with specs, devices and drivers, processes and services, app load analysis and daily history; network, Wi-Fi and firewall; battery; security check. System watch warns about overheating and low memory and writes an after-game report.
+- **Time & weather** - clock and calendar with public, world and international holidays, stopwatch, timers, alarms; weather now, hourly and for several days. The clock, weather, monitor, network and drives can also live on the desktop.
+- **System** - monitor (CPU, GPU, memory, temperatures) with specs, devices and drivers, processes and services, app load analysis and daily history; network, Wi-Fi and firewall; battery; security check with file encryption and hashes. System watch warns about overheating and low memory and writes an after-game report.
 - **Drives** - free space, health (SMART), speed, check and format, Windows junk cleanup and recovery of deleted files - all in one window.
-- **Tools** - desktop notes, color picker, QR codes, file encryption and hashes, dice.
+- **Tools** - desktop notes, color picker, QR codes, dice.
 - **Games** - overlay with FPS, frame times and sensors, frame limiter, borderless fullscreen. In game mode only the overlay, the limiter and system watch keep running; anti-cheat games are left alone unless you allow it.
 - **Wallpapers** - images, slideshows with transitions, live (video / GIF) wallpapers; paused while a game runs.
 - **Themes & languages** - 9 themes, a custom one, festive themes; interface in 9 languages (Ukrainian, English, German, French, Spanish, Italian, Czech, Polish, Brazilian Portuguese) and your own translations.

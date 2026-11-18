@@ -79,10 +79,8 @@
 < Час і дата
 > Data i godzina
 
-
 < Погода
 > Pogoda
-
 
 < Батарея
 > Bateria
@@ -93,27 +91,20 @@
 < Монітор системи
 > Monitor systemu
 
-
-
 < Простір
 > Pamięć masowa
-
 
 < Безпека
 > Bezpieczeństwo
 
-
 < Нотатки
 > Notatki
-
 
 < Палітра
 > Paleta
 
-
 < Кубик
 > Kostka
-
 
 < QR-код
 > Kod QR
@@ -124,14 +115,11 @@
 < Шифрування
 > Szyfrowanie
 
-
 < Очищення
 > Czyszczenie
 
-
 < Відновлення
 > Odzyskiwanie
-
 
 < # NeoBar - файл налаштувань. Зазвичай його змінює вікно «Налаштування» (кнопка з шестернею на панелі).
 > # Plik ustawień NeoBar. Zwykle zmienia go okno «Ustawienia» (przycisk z kołem zębatym na pasku).
@@ -300,9 +288,6 @@
 
 < Визначення розташування вимкнено (Налаштування → Місце й погода): місто задається вручну, автоматичний часовий пояс недоступний.
 > Wykrywanie lokalizacji jest wyłączone (Ustawienia → Lokalizacja i pogoda): miasto ustawia się ręcznie, automatyczna strefa czasowa jest niedostępna.
-
-< Служба увімкнена, але місця не дала - місто визначено за IP-адресою, тобто це місто провайдера (в Україні часто Київ), а не ваше. Панель ще спробує пізніше; можна вибрати місто вручну (Налаштування → Місце й погода).
-> Usługa jest włączona, ale nie podała lokalizacji - miasto ustalono na podstawie adresu IP, czyli jest to miasto Twojego dostawcy, nie Twoje. Pasek spróbuje ponownie później; możesz też wybrać miasto ręcznie (Ustawienia → Lokalizacja i pogoda).
 
 < Параметри розташування
 > Ustawienia lokalizacji
@@ -565,9 +550,6 @@
 < Більше не показувати це вікно під час запуску
 > Nie pokazuj więcej tego okna przy starcie
 
-< Повернути це вікно й перевірити все ще раз: Налаштування → Діагностика. Хрестик закриває програму.
-> Aby przywrócić to okno i sprawdzić wszystko ponownie: Ustawienia → Diagnostyka. Krzyżyk zamyka program.
-
 < Почати
 > Start
 
@@ -606,7 +588,6 @@
 
 < Віджети й датчики
 > Widżety i czujniki
-
 
 < Оверлей, ліміт FPS, обгортки старих API, підрахунок кадрів; бібліотека в грі - з наступного запуску гри
 > Nakładka, limit FPS, nakładki zgodności starych API, liczenie klatek; biblioteka w grze - od następnego uruchomienia gry
@@ -2186,7 +2167,6 @@
 < Відновити в…
 > Odzyskaj do…
 
-
 < Папка, з якої зникли файли (для видаленої теки - та, де вона лежала)
 > Folder, z którego zniknęły pliki (dla usuniętego folderu - ten, w którym się znajdował)
 
@@ -3249,7 +3229,6 @@
 < AMD: ADL не ініціалізувався
 > AMD: ADL się nie zainicjował
 
-
 < Intel: бібліотеки драйвера (ControlLib.dll) немає
 > Intel: brak biblioteki sterownika (ControlLib.dll)
 
@@ -3862,7 +3841,6 @@
 < route print - таблиця маршрутів
 > route print - tablica routingu
 
-
 < Які порти слухає цей ПК і яка програма: що доступне з мережі, а що лише локально
 > Na których portach nasłuchuje ten komputer i jaki program: co jest osiągalne z sieci, a co tylko lokalnie
 
@@ -3995,14 +3973,8 @@
 < Пристрої, які не відповідають на пінг і ARP, тут не видно; «без пінга» - пристрій є в ARP, але пінг блокує.
 > Urządzenia, które nie odpowiadają ani na ping, ani na ARP, nie są tu widoczne; «brak pingu» - urządzenie jest w ARP, ale blokuje ping.
 
-
-
-
 < лише IPv6
 > tylko IPv6
-
-
-
 
 < У активних адаптерів немає DNS-серверів (або вони не ввімкнені).
 > Aktywne karty nie mają serwerów DNS (lub nie są włączone).
@@ -7004,7 +6976,6 @@
 < Тема, кольори, іконки, підписи й шрифт
 > Motyw, kolory, ikony, etykiety i czcionka
 
-
 < Поле пошуку, гаряча клавіша й пошук файлів
 > Pole wyszukiwania, skrót klawiszowy i wyszukiwanie plików
 
@@ -7022,12 +6993,6 @@
 
 < Дані
 > Dane
-
-< Експорт, імпорт і скидання налаштувань профілю, кеш з інтернету
-> Eksport, import i resetowanie ustawień profilu, pamięć podręczna internetu
-
-< Стан системи, вікно привітання й журнали для пошуку проблем
-> Stan systemu, okno powitalne i dzienniki do rozwiązywania problemów
 
 < NeoBar - Налаштування
 > NeoBar - Ustawienia
@@ -7118,12 +7083,6 @@
 
 < date.nager.at; оновлюються під час кожного запуску панелі
 > date.nager.at; aktualizowane przy każdym uruchomieniu panelu
-
-< Світові дні
-> Dni światowe
-
-< День святого Валентина, День матері, Хелловін, Різдво й інші важливі дати (зелена позначка)
-> Walentynki, Dzień Matki, Halloween, Boże Narodzenie i inne ważne daty (zielony znacznik)
 
 < не вказано
 > nie ustawiono
@@ -7452,8 +7411,6 @@
 < Для автосховку, px
 > Dla automatycznego ukrywania, px
 
-
-
 < Запуск
 > Uruchamianie
 
@@ -7483,7 +7440,6 @@
 
 < Мова інтерфейсу
 > Język interfejsu
-
 
 < Свій переклад
 > Własne tłumaczenie
@@ -7716,15 +7672,11 @@
 < Край екрана, режим, тема, віджети й пошук - в одному вікні (як під час першого запуску)
 > Krawędź ekranu, tryb, motyw, widżety i wyszukiwanie - w jednym oknie (jak przy pierwszym uruchomieniu)
 
-< Журнали для пошуку проблем
-> Dzienniki do rozwiązywania problemów
-
 < Тека журналів
 > Folder dzienników
 
 < Увімкнений журнал пише у файли до 2 МБ, вимкнений нічого не пише й не сповільнює програму
 > Włączony dziennik zapisuje pliki do 2 MB, wyłączony nic nie zapisuje i nie spowalnia programu
-
 
 < порожньо
 > pusty
@@ -7962,8 +7914,6 @@
 
 < Інакше - лише на основному
 > W przeciwnym razie - tylko na głównym
-
-
 
 < Пауза від батареї
 > Wstrzymaj na baterii
@@ -9435,7 +9385,6 @@
 < QR-код: текст, посилання, Wi-Fi, контакт та інше\nКлік - створити QR-код
 > Kod QR: tekst, link, Wi-Fi, kontakt i więcej\nKliknięcie - utwórz kod QR
 
-
 < Безпека: перевірка…
 > Bezpieczeństwo: sprawdzanie…
 
@@ -9456,13 +9405,6 @@
 
 < \nКлік - подробиці
 > \nKliknięcie - szczegóły
-
-< Шифрування тексту й файлів, хеш-суми\nКлік - відкрити (можна й перетягнути файл у вікно)
-> Szyfrowanie tekstu i plików, skróty\nKliknięcie - otwórz (plik można też przeciągnąć do okna)
-
-
-
-
 
 < Нотатки на робочому столі: 
 > Notatki na pulpicie: 
@@ -9766,12 +9708,6 @@
 
 < Температури в треї
 > Temperatury w zasobniku
-
-
-
-
-
-
 
 < Диски ще читаються, повторіть за мить.
 > Dyski są jeszcze odczytywane, spróbuj za chwilę.
@@ -10220,9 +10156,6 @@
 < Відновити
 > Odzyskaj
 
-< Шифр
-> Szyfr
-
 < Enter - копіювати результат
 > Enter - skopiuj wynik
 
@@ -10328,7 +10261,6 @@
 < Заміряти кожні
 > Mierz co
 
-
 < Запис триває, навіть якщо закрити вікно монітора; зупиняється сам, коли процес завершиться.
 > Zapis trwa, nawet jeśli zamkniesz okno monitora; zatrzyma się sam, gdy proces się zakończy.
 
@@ -10377,7 +10309,6 @@
 < Об'єкти USER
 > Obiekty USER
 
-
 < Перезапустити Провідник? Панель завдань і робочий стіл зникнуть на кілька секунд; відкриті програми й вікна працюватимуть далі.
 > Uruchomić ponownie Eksplorator? Pasek zadań i pulpit znikną na kilka sekund; otwarte programy i okna będą działać dalej.
 
@@ -10386,8 +10317,6 @@
 
 < Почати запис
 > Rozpocznij zapis
-
-
 
 < Провідник завершено, але запустити знову не вдалося. Натисніть Ctrl+Shift+Esc → «Запустити нове завдання» → explorer.exe.
 > Eksplorator został zamknięty, ale nie udało się go ponownie uruchomić. Naciśnij Ctrl+Shift+Esc → Uruchom nowe zadanie → explorer.exe.
@@ -10406,7 +10335,6 @@
 
 < Пік о
 > Szczyt o
-
 
 < Секунд від початку
 > Sekundy od początku
@@ -10434,7 +10362,6 @@
 
 < ЦП, %
 > CPU, %
-
 
 < Читання, КБ/с
 > Odczyt, KB/s
@@ -10478,7 +10405,6 @@
 < Не вдалося видалити журнал.
 > Nie udało się usunąć dziennika.
 
-
 < мін
 > min
 
@@ -10491,22 +10417,17 @@
 < Перемістити журнал «{0}» і його підсумок (.txt) у Кошик?
 > Przenieść dziennik „{0}” i jego podsumowanie (.txt) do Kosza?
 
-
 < Видалити журнал
 > Usuń dziennik
 
 < {0} днів
 > {0} dni
 
-
-
 < Видалити цей журнал і його підсумок (у Кошик)
 > Usuń ten dziennik i jego podsumowanie (do Kosza)
 
 < Останні {0}
 > Ostatnie {0}
-
-
 
 <  Це аномально багато - схоже на витік; перезапустіть NeoBar і надішліть журнал помилок.
 >  To nienormalnie dużo - wygląda na wyciek; uruchom ponownie NeoBar i wyślij dziennik błędów.
@@ -10565,7 +10486,6 @@
 < Пауза під час гри
 > Pauza podczas gry
 
-
 <  Повернути: Налаштування → Шпалери → «Застосувати» або перезапуск NeoBar. Причину шукайте в Налаштування → Діагностика → «Стабільність системи».
 >  Aby przywrócić: Ustawienia → Tapety → „Zastosuj” lub uruchom ponownie NeoBar. Przyczyny szukaj w Ustawienia → Diagnostyka → „Stabilność systemu”.
 
@@ -10581,22 +10501,17 @@
 < Наскільки процес навантажує відеокарту: найзайнятіша її частина (3D, декодування відео тощо), як у Диспетчері завдань
 > Jak bardzo proces obciąża kartę graficzną: jej najbardziej zajęta część (3D, dekodowanie wideo itp.), jak w Menedżerze zadań
 
-< Діє на всі журнали вище; давніше видаляється само. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу
-> Dotyczy wszystkich dzienników powyżej; starsze usuwa się samo. „Ostatnie N” to ostatnie N uruchomień NeoBar (dla dziennika gry - uruchomień gry) i ostatnie N zapisów analizy
-
 < Виділена
 > Przydzielona
 
 < Запис завершено
 > Zapis zakończony
 
-
 < Скільки даних за секунду процес читає: файли на дисках, мережа, пристрої
 > Ile danych na sekundę proces odczytuje: pliki na dyskach, sieć, urządzenia
 
 < Скільки даних за секунду процес записує: файли на дисках, мережа, пристрої
 > Ile danych na sekundę proces zapisuje: pliki na dyskach, sieć, urządzenia
-
 
 < Зберігання журналів
 > Przechowywanie dzienników
@@ -10606,7 +10521,6 @@
 
 < Читання даних
 > Odczyt danych
-
 
 < Об'єкти малювання: шрифти, пера, зображення. Windows дозволяє до 10 000 на процес - далі програма перестає малюватись
 > Obiekty rysowania: czcionki, pióra, obrazy. Windows pozwala na 10 000 na proces - potem program przestaje się rysować
@@ -10619,7 +10533,6 @@
 
 < Відеокарта
 > Karta graficzna
-
 
 < Збережений журнал
 > Zapisany dziennik
@@ -10636,10 +10549,8 @@
 < Вікна, меню, курсори. Windows дозволяє до 10 000 на процес
 > Okna, menu, kursory. Windows pozwala na 10 000 na proces
 
-
 < Оперативна пам'ять, МБ
 > Pamięć RAM, MB
-
 
 < Записи аналізу процесів
 > Zapisy analizy procesów
@@ -10661,9 +10572,6 @@
 
 < Відеокарта, %
 > Karta graficzna, %
-
-< Журнал помилок і записи аналізу
-> Dziennik błędów i zapisy analizy
 
 < Видалити всі записи аналізу ({0}) з типової теки? Поточний запис не зачіпається.
 > Usunąć wszystkie zapisy analizy ({0}) z folderu domyślnego? Bieżący zapis pozostanie.
@@ -10821,9 +10729,6 @@
 <  Перед раптовим вимкненням навантаження було на межі - можливо, блоку живлення бракує потужності.
 >  Przed nagłym wyłączeniem obciążenie było na granicy - może zasilaczowi brakuje mocy.
 
-< Перегрів, вичерпана пам'ять чи відеопам'ять, процес, що з'їв забагато пам'яті. Умова має триматися ~15 с; кожне сповіщення записується в журнал і позначається в записі аналізу процесу
-> Przegrzanie, wyczerpana pamięć lub pamięć wideo, proces zjadający za dużo pamięci. Warunek musi trwać ~15 s; każde powiadomienie trafia do dziennika i jest zaznaczane w zapisie analizy
-
 < Журнал сповіщень
 > Dziennik powiadomień
 
@@ -10833,12 +10738,8 @@
 < Процесор перегрівається
 > Procesor się przegrzewa
 
-
 < перед цим 
 > wcześniej 
-
-< Усі критичні сповіщення з часом
-> Wszystkie krytyczne powiadomienia z czasem
 
 < Разом із дочірніми процесами
 > Razem z procesami potomnymi
@@ -10878,7 +10779,6 @@
 
 < Зайнято {0} % відеопам'яті ({1} з {2} ГБ). Гра чи програма може почати гальмувати або впасти.
 > Zajęte {0}% pamięci wideo ({1} z {2} GB). Gra lub program mogą zacząć się zacinać lub zawiesić.
-
 
 < Критичні сповіщення за добу
 > Krytyczne powiadomienia z doby
@@ -10930,7 +10830,6 @@
 
 < Основні
 > Główne
-
 
 < Виробник: 
 > Producent: 
@@ -11027,7 +10926,6 @@
 
 < Потребують уваги
 > Wymagają uwagi
-
 
 < Пошук змін обладнання…
 > Szukam zmian sprzętu…
@@ -11155,7 +11053,6 @@
 < Служба: 
 > Usługa: 
 
-
 < Пристрої, які вимкнено вручну
 > Urządzenia wyłączone ręcznie
 
@@ -11197,7 +11094,6 @@
 
 < Стан: 
 > Stan: 
-
 
 < Працює
 > Działa
@@ -11400,7 +11296,6 @@
 <  (датчики недоступні)
 >  (czujniki niedostępne)
 
-
 < AMD: драйвер поки не віддає датчики для {0} - спробую ще раз
 > AMD: sterownik jeszcze nie udostępnia czujników dla {0} - spróbuję ponownie
 
@@ -11437,27 +11332,17 @@
 <  ГБ (спільна з ОЗП)
 >  GB (współdzielona z RAM)
 
-
-
 < Лише коли на кожному моніторі зі шпалерами є розгорнуте чи повноекранне вікно - заощаджує відеокарту. Вимкнено: шпалери зупиняються тільки для ігор
 > Tylko gdy na każdym monitorze z tapetą jest zmaksymalizowane lub pełnoekranowe okno - oszczędza kartę graficzną. Wyłączone: tapeta zatrzymuje się tylko dla gier
 
 < Звідки брати температуру, hotspot, потужність і частоту, коли відеокарт кілька (окрема й вбудована в процесор)
 > Skąd brać temperaturę, hotspot, moc i taktowanie, gdy kart graficznych jest kilka (osobna i wbudowana w procesor)
 
-< Шифрування тексту й файлів (AES-256), хеш-суми; пункти в контекстному меню файлів
-> Szyfrowanie tekstu i plików (AES-256), skróty; pozycje w menu kontekstowym plików
-
 < Пауза, коли шпалер не видно
 > Pauza, gdy tapety nie widać
 
 < Нотатки на робочому столі: текст і списки, захист паролем
 > Notatki na pulpicie: tekst i listy, ochrona hasłem
-
-
-
-< Де стоїть панель, як поводиться в іграх і як запускається
-> Gdzie stoi panel, jak zachowuje się w grach i jak się uruchamia
 
 < Погода: зараз, погодинно й на кілька днів
 > Pogoda: teraz, godzinowo i na kilka dni
@@ -11477,17 +11362,11 @@
 < Кубик: випадкове число або вибір зі свого списку (що подивитися, у що пограти)
 > Kostka: losowa liczba lub wybór z własnej listy (co obejrzeć, w co zagrać)
 
-
 < Мережа: швидкість, пінг, адаптери й Wi-Fi, діагностика, брандмауер
 > Sieć: szybkość, ping, adaptery i Wi-Fi, diagnostyka, zapora
 
-
-
 < Поки запущена гра з бібліотеки NeoBar - навіть згорнута, у вікні чи на іншому моніторі. За пів хвилини відео звільняє відеокарту, на екрані лишається останній кадр
 > Dopóki działa gra z biblioteki NeoBar - nawet zminimalizowana, w oknie lub na innym monitorze. Po pół minucie wideo zwalnia kartę graficzną, na ekranie zostaje ostatnia klatka
-
-< Безпека: перевірка файлів, підозрілі процеси, автозапуск і небезпечні налаштування Windows (евристики без бази сигнатур)
-> Bezpieczeństwo: sprawdzanie plików, podejrzane procesy, autostart i niebezpieczne ustawienia Windows (heurystyki bez bazy sygnatur)
 
 < Повноекранні програми
 > Programy pełnoekranowe
@@ -11554,3 +11433,213 @@
 
 < Відеокарта: пам'ять
 > Karta graficzna: pamięć
+
+<   · міжнародний день
+>   · dzień międzynarodowy
+
+< . Їхні програми чи файли, мабуть, видалено. Прибрати їх можна в «Налаштування → Елементи» кнопкою «Прибрати зниклі» або через меню елемента на панелі.
+> . Ich programy lub pliki zostały pewnie usunięte. Usuń je w Ustawienia → Elementy przyciskiem „Usuń brakujące” albo z menu elementu na pasku.
+
+< Windows не дала NeoBar доступу до розташування. Дозвольте: Параметри Windows → Конфіденційність і безпека → Розташування → «Дозволити класичним застосункам доступ до вашого розташування».
+> Windows odmówił NeoBar dostępu do lokalizacji. Zezwól: Ustawienia Windows → Prywatność i zabezpieczenia → Lokalizacja → „Zezwalaj aplikacjom klasycznym na dostęp do lokalizacji”.
+
+< «{0}» не знайдено: програму чи файл, мабуть, видалено.
+> Nie znaleziono „{0}”: program lub plik został pewnie usunięty.
+
+< Ід аль-Адха (Курбан-байрам)
+> Id al-Adha (Święto Ofiarowania)
+
+< Ід аль-Фітр (Ураза-байрам)
+> Id al-Fitr (koniec ramadanu)
+
+< Безпека: перевірка файлів, підозрілі процеси, автозапуск і небезпечні налаштування Windows (евристики без бази сигнатур); шифрування тексту й файлів (AES-256), хеш-суми
+> Bezpieczeństwo: sprawdzanie plików, podejrzane procesy, autostart i ryzykowne ustawienia Windows (heurystyki bez bazy sygnatur); szyfrowanie tekstu i plików (AES-256), sumy kontrolne
+
+< Вибрати місто
+> Wybierz miasto
+
+< Всесвітній день без тютюну
+> Światowy Dzień bez Tytoniu
+
+< Всесвітній день боротьби з раком
+> Światowy Dzień Walki z Rakiem
+
+< Всесвітній день боротьби зі СНІДом
+> Światowy Dzień AIDS
+
+< Всесвітній день біженців
+> Światowy Dzień Uchodźcy
+
+< Всесвітній день водних ресурсів
+> Światowy Dzień Wody
+
+< Всесвітній день гуманітарної допомоги
+> Światowy Dzień Pomocy Humanitarnej
+
+< Всесвітній день дитини
+> Światowy Dzień Dziecka
+
+< Всесвітній день книги
+> Światowy Dzień Książki
+
+< Всесвітній день музики
+> Światowy Dzień Muzyki
+
+< Всесвітній день океанів
+> Światowy Dzień Oceanów
+
+< Всесвітній день поезії
+> Światowy Dzień Poezji
+
+< Всесвітній день продовольства
+> Światowy Dzień Żywności
+
+< Всесвітній день психічного здоров'я
+> Światowy Dzień Zdrowia Psychicznego
+
+< Всесвітній день свободи преси
+> Światowy Dzień Wolności Prasy
+
+< Всесвітній день туризму
+> Światowy Dzień Turystyki
+
+< Відкрити елементи
+> Otwórz elementy
+
+< Година Землі
+> Godzina dla Ziemi
+
+< Давніше видаляється само. «Останні N» - N останніх запусків NeoBar (для журналу гри - запусків гри) і N останніх записів аналізу
+> Starsze wpisy usuwają się same. „Ostatnie N” - N ostatnich uruchomień NeoBar (dla dziennika gry - uruchomień gry) i N ostatnich zapisów analizy
+
+< Де стоїть панель, як поводиться в іграх, запуск і привітання
+> Gdzie stoi pasek, jak zachowuje się w grach, uruchamianie i powitanie
+
+< День Організації Об'єднаних Націй
+> Dzień Organizacji Narodów Zjednoczonych
+
+< День пам'яті та примирення
+> Dzień Pamięci i Pojednania
+
+< Для NeoBar доступ до розташування заборонено (у списку класичних застосунків).
+> Dostęp do lokalizacji jest zablokowany dla NeoBar (na liście aplikacji klasycznych).
+
+< Дні ООН (День Землі, День миру, День прав людини…) і свята інших культур: Китайський Новий рік, Песах, Ханука, Рамадан, Ід аль-Фітр. Лише позначка в календарі, без сповіщень
+> Dni ONZ (Dzień Ziemi, Dzień Pokoju, Dzień Praw Człowieka…) i święta innych kultur: chiński Nowy Rok, Pascha, Chanuka, ramadan, Id al-Fitr. Tylko znacznik w kalendarzu, bez powiadomień
+
+< Документи → NeoBar → Ігри; пишуться, коли увімкнено «Система → Звіт після гри»
+> Dokumenty → NeoBar → Gry; zapisywane, gdy włączono „System → Raport po grze”
+
+< Експорт, імпорт і скидання налаштувань профілю, кеш з інтернету, оновлення NeoBar
+> Eksport, import i reset ustawień profilu, pamięć podręczna z internetu, aktualizacje NeoBar
+
+< Елементи панелі
+> Elementy paska
+
+< Журнал: 
+> Dziennik: 
+
+< Журнали
+> Dzienniki
+
+< Звіти після ігор
+> Raporty po grach
+
+< Йом Кіпур
+> Jom Kipur
+
+< Китайський Новий рік
+> Chiński Nowy Rok
+
+< Міжнародний день волонтерів
+> Międzynarodowy Dzień Wolontariusza
+
+< Міжнародний день грамотності
+> Międzynarodowy Dzień Piśmienności
+
+< Міжнародний день дружби
+> Międzynarodowy Dzień Przyjaźni
+
+< Міжнародний день людей з інвалідністю
+> Międzynarodowy Dzień Osób z Niepełnosprawnościami
+
+< Міжнародний день людей похилого віку
+> Międzynarodowy Dzień Osób Starszych
+
+< Міжнародний день молоді
+> Międzynarodowy Dzień Młodzieży
+
+< Міжнародний день пам'яті Чорнобильської катастрофи
+> Międzynarodowy Dzień Pamięci o Katastrofie w Czarnobylu
+
+< Міжнародний день пам'яті жертв Голокосту
+> Międzynarodowy Dzień Pamięci o Ofiarach Holokaustu
+
+< Міжнародний день рідної мови
+> Międzynarodowy Dzień Języka Ojczystego
+
+< Міжнародний день сім'ї
+> Międzynarodowy Dzień Rodzin
+
+< Міжнародний день толерантності
+> Międzynarodowy Dzień Tolerancji
+
+< Міжнародний день щастя
+> Międzynarodowy Dzień Szczęścia
+
+< Міжнародні дні
+> Dni międzynarodowe
+
+< Місто визначено за IP-адресою: {0}. За IP видно місто провайдера - воно може відрізнятися від вашого; тоді виберіть місто вручну.
+> Miasto ustalone według adresu IP: {0}. IP wskazuje miasto dostawcy - może się różnić od Twojego; wtedy wybierz miasto ręcznie.
+
+< Не знайдено ({0}): 
+> Nie znaleziono ({0}): 
+
+< Новий рік, День святого Валентина, Великдень, День матері, Хелловін, Різдво (зелена позначка, зі сповіщенням)
+> Nowy Rok, Walentynki, Wielkanoc, Dzień Matki, Halloween, Boże Narodzenie (zielony znacznik, z powiadomieniem)
+
+< Перевірка системи й усі журнали для пошуку проблем
+> Sprawdzenie systemu i wszystkie dzienniki do szukania problemów
+
+< Перегрів, вичерпана пам'ять чи відеопам'ять, процес, що з'їв забагато пам'яті. Умова має триматися ~15 с; кожне сповіщення записується в журнал (Діагностика → Журнали) і позначається в записі аналізу процесу
+> Przegrzanie, wyczerpana pamięć lub pamięć wideo, proces zużywający za dużo pamięci. Warunek musi trwać ~15 s; każde powiadomienie trafia do dziennika (Diagnostyka → Dzienniki) i jest oznaczane w zapisie analizy procesu
+
+< Перегрів, нестача пам'яті тощо - коли увімкнено «Система → Критичні сповіщення».
+> Przegrzanie, brak pamięci itp. - gdy włączono „System → Powiadomienia krytyczne”.
+
+< Песах
+> Pascha (Pesach)
+
+< Повернути це вікно: Налаштування → Панель → «Вікно привітання»; перевірити все ще раз - Налаштування → Діагностика. Хрестик закриває програму.
+> Przywrócić to okno: Ustawienia → Pasek → „Okno powitalne”; sprawdzić wszystko ponownie - Ustawienia → Diagnostyka. Krzyżyk zamyka program.
+
+< Початок Рамадану
+> Początek ramadanu
+
+< Прибрати цей елемент з панелі? Нічого на диску не видаляється.
+> Usunąć ten element z paska? Na dysku nic nie zostanie usunięte.
+
+< Програми й файли всіх елементів панелі на місці.
+> Programy i pliki wszystkich elementów paska są na miejscu.
+
+< Рош га-Шана
+> Rosz ha-Szana
+
+< Різдво (юліанський календар)
+> Boże Narodzenie (kalendarz juliański)
+
+< Світові свята
+> Święta światowe
+
+< Служба увімкнена, але в цьому ПК немає Wi-Fi. Без GPS Windows визначає місце за мережами Wi-Fi поруч, тож на ПК з кабельним інтернетом вона місця не знає - це нормально, а не збій.
+> Usługa jest włączona, ale ten komputer nie ma Wi-Fi. Bez GPS Windows ustala lokalizację według pobliskich sieci Wi-Fi, więc na komputerze z internetem przewodowym jej nie zna - to normalne, a nie awaria.
+
+< Служба увімкнена, але місця не дала. Windows визначає місце за мережами Wi-Fi поруч - перевірте, чи увімкнено Wi-Fi; панель ще спробує пізніше.
+> Usługa jest włączona, ale nie podała lokalizacji. Windows ustala ją według pobliskich sieci Wi-Fi - sprawdź, czy Wi-Fi jest włączone; pasek spróbuje ponownie później.
+
+< Усе одно запустити
+> Uruchom mimo to
+
+< Ханука
+> Chanuka
