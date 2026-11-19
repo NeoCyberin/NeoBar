@@ -302,6 +302,8 @@ sealed partial class NeoBar : Form
         Seasons.Start(this);
         Dice.Changed += DiceRedraw;
         UiWatch.Start(Handle);
+        ScreenState.Changed += OnAway;
+        ScreenState.Start();
         Watch.FromCfg(cfg);
         VendorGpu.SetPrefer(cfg.GpuSensor);
         Watch.Start(this);              // критичні сповіщення, історія за добу, звіт після гри          // сторож зависань (свій потік) - записує їх у журнал помилок
@@ -325,6 +327,8 @@ sealed partial class NeoBar : Form
         Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnPrefChanged;
         Dice.Changed -= DiceRedraw;
         UiWatch.Stop();
+        ScreenState.Changed -= OnAway;
+        ScreenState.Stop();
         Watch.Stop();
         anim.Stop(); poll.Stop(); wtick.Stop();
         UnhookForeground();
@@ -738,7 +742,7 @@ sealed partial class NeoBar : Form
         }
         else
         {
-            poll.Interval = autohide ? 150 : 2000;
+            poll.Interval = autohide && !ScreenState.Away ? 150 : 2000;
             Win.ShowWindow(Handle, 4); // SW_SHOWNOACTIVATE
             Win.SetWindowPos(Handle, (IntPtr)(-1), 0, 0, 0, 0, 0x0013);
             if (wkinds.Count > 0) wtick.Start();
@@ -817,9 +821,20 @@ sealed partial class NeoBar : Form
 
     // ---------- віджети: таймер ----------
 
+    // екран вимкнено чи комп'ютер заблоковано: віджети панелі, їхні датчики й пінг стоять, автосховок перевіряється рідко
+    void OnAway()
+    {
+        if (IsDisposed) return;
+        bool a = ScreenState.Away;
+        poll.Interval = a || suspended || !autohide ? 2000 : 150;
+        AfterReloadWidgets();
+        Sensors.Reapply();               // решта користувачів датчиків (трей, нагляд, Монітор системи) - раз на 10 с
+        if (!a && !suspended) { WidgetTick(); Invalidate(); }
+    }
+
     void WidgetTick()
     {
-        if (suspended || wkinds.Count == 0) return;
+        if (suspended || ScreenState.Away || wkinds.Count == 0) return;
         Widgets.Tick(wkinds);
         bool visible = !autohide || slideT > 0.05f;
         if (wkinds.Contains("weather") && Widgets.WeatherDue()) RefreshWeather();

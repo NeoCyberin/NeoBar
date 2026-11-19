@@ -12,6 +12,9 @@ By default NeoBar does not inject into anti-cheat games; the overlay is then a w
 **How much does it use?**
 It is designed to idle: no busy timers, slow work in the background, logs only when you turn them on.
 
+**After a long break the mouse and keyboard don't respond for a while.**
+NeoBar does not intercept input (no keyboard/mouse hooks), so it cannot block it. While the screen is off or the PC is locked it pauses live wallpapers, panel widgets, ping and drive temperatures and polls sensors only every 10 s; wallpapers resume a few seconds after you return so the graphics card isn't loaded right when the monitor wakes. If the whole system stood still, the error log says so, including whether it began right after the screen turned on - then look at the graphics driver (Event Viewer → System: `amdkmdag`/`nvlddmkm`/`Display` 4101), monitor wake-up over DisplayPort, and USB power saving.
+
 **Where do I find logs?**
 Settings → Diagnostics → *Logs* - all of them in one place: the error log (always written - send it together with a description of the problem), the panel, overlay and widget logs (written only when switched on, files up to 2 MB), critical notifications, process analysis records and after-game reports. *Keep logs* sets how long all logs (troubleshooting, errors, process analysis) are kept: all, 7/30/90 days or the last 10/50/200 launches; 30 days by default.
 

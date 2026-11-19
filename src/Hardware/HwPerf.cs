@@ -315,8 +315,13 @@ static class Sensors
         int ms = int.MaxValue;
         foreach (string u in users.Keys) { int v; ms = Math.Min(ms, intervals.TryGetValue(u, out v) ? v : 1000); }
         if (ms == int.MaxValue) ms = 1000;
+        // екран вимкнено чи комп'ютер заблоковано: раз на 10 с (нагляд за перегрівом і історія працюють, відеокарта не смикається щосекунди)
+        if (ScreenState.Away) ms = Math.Max(ms, 10000);
         if (timer.Interval != ms) timer.Interval = ms;
     }
+
+    // стан екрана змінився - перерахувати частоту
+    public static void Reapply() { ApplyInterval(); }
 
     public static int Level
     {
