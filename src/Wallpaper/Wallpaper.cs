@@ -893,7 +893,9 @@ static class WallMgr
         if (Games.CurrentPid > 0) gamePid = Games.CurrentPid;
         else if (gamePid > 0 && !Games.Alive(gamePid)) gamePid = 0;
         bool game = WallCfg.PauseGame && gamePid > 0;
-        bool p = cover || battery || game;
+        // екран вимкнено чи комп'ютер заблоковано (і ще кілька секунд після повернення) - шпалер ніхто не бачить
+        bool away = ScreenState.AwayOrWaking;
+        bool p = cover || battery || game || away;
         if (p != paused)
         {
             paused = p;
