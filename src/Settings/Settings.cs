@@ -262,6 +262,20 @@ sealed partial class SettingsForm : Form, IGradHost
     }
 
     // Відкриває потрібний розділ або елемент (шукаємо за видом, назвою й ціллю)
+    // копія поточного списку елементів (для «Діагностики»; читається з фонового потоку)
+    public List<Entry> ItemsNow()
+    {
+        try { return new List<Entry>(list); } catch { return new List<Entry>(); }
+    }
+
+    // перейти на «Елементи» й вибрати цей елемент зі списку налаштувань
+    public void ShowItem(Entry e)
+    {
+        int i = e != null ? list.IndexOf(e) : -1;
+        nav.SelectedIndex = PgItems;
+        if (i >= 0) RefreshList(i);
+    }
+
     public void ShowEntry(Entry pick, int tab)
     {
         if (pick != null)

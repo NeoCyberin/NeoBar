@@ -201,14 +201,27 @@ static class SysCheck
         // ---------- елементи панелі, чиїх програм уже немає ----------
         if (bar != null)
         {
+            // у вікні налаштувань - їхній поточний список (там елементи могли вже прибрати, ще не застосувавши)
             List<string> gone = new List<string>();
-            try { foreach (Entry e in bar.Entries) if (Gone.Is(e)) gone.Add(e.Name); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            Entry first = null;
+            SettingsForm sf = ui as SettingsForm;
+            try
+            {
+                foreach (Entry e in sf != null ? sf.ItemsNow() : new List<Entry>(bar.Entries))
+                    if (Gone.Is(e)) { gone.Add(e.Name); if (first == null) first = e; }
+            }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            Entry pick = first;
             if (gone.Count == 0)
                 l.Add(new CheckItem(L.T("Елементи панелі"), 0, L.T("Програми й файли всіх елементів панелі на місці.")));
             else
                 l.Add(new CheckItem(L.T("Елементи панелі"), 1, L.F("Не знайдено ({0}): ", gone.Count) + string.Join(", ", gone.Count > 6 ? gone.GetRange(0, 6).ToArray() : gone.ToArray()) + (gone.Count > 6 ? "…" : "") +
                     L.T(". Їхні програми чи файли, мабуть, видалено. Прибрати їх можна в «Налаштування → Елементи» кнопкою «Прибрати зниклі» або через меню елемента на панелі."))
-                    .Add(L.T("Відкрити елементи"), delegate { bar.OpenSettingsTab(SettingsForm.PgItems); }));
+                    .Add(L.T("Відкрити елементи"), delegate
+                    {
+                        // одразу показати перший зниклий елемент (у вікні налаштувань - там само)
+                        if (sf != null && !sf.IsDisposed) sf.ShowItem(pick); else bar.OpenSettingsAt(pick);
+                    }));
         }
 
         // ---------- пошук файлів на вкладці «Комп'ютер» ----------

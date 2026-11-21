@@ -55,6 +55,9 @@ static class Gone
         {
             string tg = IconHi.LinkTarget(file);
             tg = Environment.ExpandEnvironmentVariables((tg ?? "").Trim());
+            // програми з Microsoft Store (ChatGPT, WhatsApp тощо) лежать у WindowsApps у теці з номером версії:
+            // після оновлення старої теки немає, але ярлик запускає програму за її ідентифікатором - вона не зникла
+            if (tg.IndexOf(@"\WindowsApps\", StringComparison.OrdinalIgnoreCase) >= 0) return false;
             if (Reachable(tg) && !File.Exists(tg) && !Directory.Exists(tg)) return true;
         }
         return false;
