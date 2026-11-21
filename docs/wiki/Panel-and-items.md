@@ -15,6 +15,7 @@ Programs, folders, sites, groups, separators and widgets. Add them with the butt
 - **Icon:** automatic (from file or folder), drawn in the theme's style, downloaded once from the site, or your own file (.ico, .png, .jpg, .bmp, .exe, .dll).
 - **Groups:** a header with the items below it, either expanded or as a compact 2×2 tile with thumbnails; each group can have its own colour.
 - **Search tags:** comma-separated words that help you find the item.
+- **New programs:** when a program or game is installed (its shortcut appears in the Start menu), a notification offers to add it - click it and choose a group (Settings → Panel → *Offer new programs*). Uninstall, help and website shortcuts are skipped; while you're playing or away the offer waits.
 - **Missing programs:** if a program or game was uninstalled, its item is dimmed and marked *not found*. Clicking it offers to remove it from the panel; *Remove missing (N)* in the list (or in the item's right-click menu) removes all of them at once. Nothing on the disk is touched; websites, network paths and unplugged drives are never treated as missing.
 
 ## Appearance (Settings → Appearance)

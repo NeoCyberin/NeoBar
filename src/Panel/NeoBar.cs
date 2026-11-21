@@ -304,8 +304,10 @@ sealed partial class NeoBar : Form
         UiWatch.Start(Handle);
         ScreenState.Changed += OnAway;
         ScreenState.Start();
+        NewApps.Configure(this, cfg.OfferNew);
         Watch.FromCfg(cfg);
         VendorGpu.SetPrefer(cfg.GpuSensor);
+        Sensors.Configure(cfg.SensMs, cfg.SensAway);
         Watch.Start(this);              // критичні сповіщення, історія за добу, звіт після гри          // сторож зависань (свій потік) - записує їх у журнал помилок
         // строк зберігання журналів - через хвилину після запуску, щоб не заважати старту
         LogKeep.Spec = cfg.LogKeep;
@@ -329,6 +331,7 @@ sealed partial class NeoBar : Form
         UiWatch.Stop();
         ScreenState.Changed -= OnAway;
         ScreenState.Stop();
+        NewApps.Stop();
         Watch.Stop();
         anim.Stop(); poll.Stop(); wtick.Stop();
         UnhookForeground();
@@ -1044,6 +1047,7 @@ sealed partial class NeoBar : Form
             Widgets.WUpdated = DateTime.MinValue;
         }
         foreach (Entry e in entries) e.Sig = "";
+        if (IsHandleCreated) NewApps.Configure(this, cfg.OfferNew);
         AfterReloadWidgets();
         if (wkinds.Count > 0 && !suspended)
         {

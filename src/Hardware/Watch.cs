@@ -328,16 +328,27 @@ static class Watch
         public double SumCpu, SumGpu, SumCpuT, SumGpuT;
         public int NCpu, NGpu, NCpuT, NGpuT;
         public readonly List<string> Events = new List<string>();
+        public TimeSpan Bg;                         // скільки гра простояла згорнутою
+        public DateTime BgFrom = DateTime.MinValue;
     }
     static Session game;
 
+    // Звіт пишеться, коли процес гри завершився (або на передній план вийшла інша гра).
+    // Згорнута гра - не кінець сесії: показники тоді не збираються, а час у фоні рахується окремо
     static void GameTick()
     {
         int pid = Games.CurrentPid;
-        if (game != null && game.Pid != pid) EndGame();
+        if (game != null && ((pid > 0 && game.Pid != pid) || (pid <= 0 && !Games.Alive(game.Pid)))) EndGame();
+        bool front = pid > 0 && Games.InForeground;
+        if (game != null && !front)
+        {
+            if (game.BgFrom == DateTime.MinValue) game.BgFrom = DateTime.Now;
+            return;
+        }
         if (pid <= 0) return;
         if (game == null) { game = new Session(); game.Pid = pid; game.Name = Games.CurrentName; }
         Session s = game;
+        if (s.BgFrom != DateTime.MinValue) { s.Bg += DateTime.Now - s.BgFrom; s.BgFrom = DateTime.MinValue; }
         if (Sensors.Frame != null && Sensors.Frame.Valid)
         {
             float f = (float)Sensors.Frame.Fps;
@@ -363,12 +374,16 @@ static class Watch
         Session s = game;
         game = null;
         if (s == null || !GameReport) return;
-        TimeSpan len = DateTime.Now - s.Start;
-        if (len.TotalMinutes < 2) return;               // коротке - не гра, а запуск і вихід
+        // кінець - коли процес завершився; якщо гра перед тим стояла згорнутою, рахуємо до моменту згортання
+        DateTime end = s.BgFrom != DateTime.MinValue ? s.BgFrom : DateTime.Now;
+        TimeSpan len = end - s.Start;
+        if (len - s.Bg < TimeSpan.FromMinutes(2)) return;        // коротке - не гра, а запуск і вихід
         StringBuilder b = new StringBuilder();
         b.AppendLine(L.F("Звіт після гри: {0}", s.Name));
-        b.AppendLine(L.F("{0} - {1}, тривалість {2}", s.Start.ToString("yyyy-MM-dd HH:mm"), DateTime.Now.ToString("HH:mm"),
+        b.AppendLine(L.F("{0} - {1}, тривалість {2}", s.Start.ToString("yyyy-MM-dd HH:mm"), end.ToString("HH:mm"),
             ((int)len.TotalHours > 0 ? (int)len.TotalHours + L.T(" год ") : "") + len.Minutes + L.T(" хв")));
+        if (s.Bg.TotalMinutes >= 1)
+            b.AppendLine(L.F("З них гра була згорнута: {0}", ((int)s.Bg.TotalHours > 0 ? (int)s.Bg.TotalHours + L.T(" год ") : "") + s.Bg.Minutes + L.T(" хв")));
         b.AppendLine();
         string fpsLine;
         if (s.Fps.Count > 0)

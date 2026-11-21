@@ -11643,3 +11643,54 @@
 
 < Ханука
 > Chanuka
+
+< (спершу закрийте налаштування)
+> (najpierw zamknij ustawienia)
+
+< {0} с
+> {0} s
+
+< Встановлено «{0}»
+> Zainstalowano „{0}”
+
+< Для віджетів на панелі й столі, температур у треї та Монітора системи. Рідше - менше навантаження; в ігровому оверлеї своя частота
+> Dla widżetów na pasku i pulpicie, temperatur w zasobniku i Monitora systemu. Rzadziej - mniejsze obciążenie; nakładka w grze ma własną częstotliwość
+
+< Додати «{0}»:
+> Dodaj „{0}”:
+
+< З них гра була згорнута: {0}
+> W tym gra była zminimalizowana: {0}
+
+< Клацніть, щоб додати на панель - у групу на вибір
+> Kliknij, aby dodać do paska - do wybranej grupy
+
+< Коли встановлюється програма чи гра (у меню «Пуск» з'являється її ярлик), з'явиться сповіщення: клацніть його й виберіть групу панелі. Ярлики видалення, довідки й сайтів пропускаються
+> Gdy zainstalujesz program lub grę (w menu Start pojawi się skrót), pokaże się powiadomienie: kliknij je i wybierz grupę paska. Skróty odinstalowania, pomocy i stron są pomijane
+
+< Коли екран вимкнено
+> Gdy ekran jest wyłączony
+
+< Не додавати
+> Nie dodawaj
+
+< Оновлювати датчики кожні
+> Odświeżaj czujniki co
+
+< Поки екран вимкнено чи комп'ютер заблоковано, датчики можна опитувати рідше: нагляд за перегрівом працює, а відеокарта не смикається щосекунди
+> Gdy ekran jest wyłączony lub komputer zablokowany, czujniki można odpytywać rzadziej: nadzór przegrzania działa, a karta graficzna nie jest budzona co sekundę
+
+< Прибрати зниклі ({0}) - програм уже немає на диску
+> Usuń brakujące ({0}) - tych programów nie ma już na dysku
+
+< Пропонувати нові програми
+> Proponuj nowe programy
+
+< Так само
+> Tak samo
+
+< на панель, без групи
+> na pasek, bez grupy
+
+< у групу «{0}»
+> do grupy „{0}”
