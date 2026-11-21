@@ -19,6 +19,14 @@ using System.Drawing.Text;
 // Вікно налаштувань: тема й кольори, віджети, пошук міста, експорт/імпорт/скидання
 sealed partial class SettingsForm
 {
+    // індекс найближчого значення зі списку варіантів (значення з файлу могло бути вписане вручну)
+    static int NearestIdx(int[] choices, int v)
+    {
+        int best = 0;
+        for (int i = 1; i < choices.Length; i++) if (Math.Abs(choices[i] - v) < Math.Abs(choices[best] - v)) best = i;
+        return best;
+    }
+
     // ---------- вкладка «Вигляд» ----------
 
     int ThemeIndex(string id)
@@ -173,6 +181,8 @@ sealed partial class SettingsForm
         int si = Array.IndexOf(sideIds, c.Side);
         cbSide.SelectedIndex = si >= 0 ? si : 1;
         // відеокарта для датчиків: збережена, навіть якщо зараз її не знайдено (щоб не загубити вибір)
+        cbSensMs.SelectedIndex = NearestIdx(Sensors.BaseChoices, c.SensMs);
+        cbSensAway.SelectedIndex = NearestIdx(Sensors.AwayChoices, c.SensAway);
         int gi = gpuIds.IndexOf(c.GpuSensor);
         if (gi < 0 && c.GpuSensor.Length > 0) { gpuIds.Add(c.GpuSensor); cbGpu.Items.Add(c.GpuSensor + L.T(" (зараз не знайдено)")); gi = gpuIds.Count - 1; }
         cbGpu.SelectedIndex = Math.Max(0, gi);
@@ -203,6 +213,7 @@ sealed partial class SettingsForm
         cbMode.SelectedIndex = c.Mode == "autohide" ? 1 : 0;
         nGap.Value = Math.Max(nGap.Minimum, Math.Min(nGap.Maximum, c.CornerGap));
         chFs.Checked = c.FsHide;
+        chOfferNew.Checked = c.OfferNew;
         trayKeys.Clear();
         trayCols.Clear();
         foreach (string it in c.Tray)
@@ -316,7 +327,10 @@ sealed partial class SettingsForm
         c.WCpuT = (int)nWCpuT.Value; c.WGpuT = (int)nWGpuT.Value; c.WVramPct = (int)nWVram.Value; c.WProcGb = (int)nWProcGb.Value;
         Watch.FromCfg(c);
         c.GpuSensor = gpuIds[Math.Max(0, Math.Min(gpuIds.Count - 1, cbGpu.SelectedIndex))];
+        c.SensMs = Sensors.BaseChoices[Math.Max(0, cbSensMs.SelectedIndex)];
+        c.SensAway = Sensors.AwayChoices[Math.Max(0, cbSensAway.SelectedIndex)];
         VendorGpu.SetPrefer(c.GpuSensor);
+        Sensors.Configure(c.SensMs, c.SensAway);
         c.LogKeep = logKeepIds[Math.Max(0, cbLogKeep.SelectedIndex)];
         bool keepChanged = LogKeep.Spec != c.LogKeep;
         LogKeep.Spec = c.LogKeep;
@@ -328,6 +342,7 @@ sealed partial class SettingsForm
         c.Mode = cbMode.SelectedIndex == 1 ? "autohide" : "fixed";
         c.CornerGap = (int)nGap.Value;
         c.FsHide = chFs.Checked;
+        c.OfferNew = chOfferNew.Checked;
         c.Tray.Clear();
         foreach (string k in trayKeys)
         {

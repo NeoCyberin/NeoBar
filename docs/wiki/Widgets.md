@@ -49,7 +49,8 @@ Every 5 seconds NeoBar watches the sensors (cheap - the same shared polling the 
 
 - **Critical alerts** - CPU or GPU overheating (limits are configurable, 95 and 90 °C by default), video memory above the limit (95% by default), RAM above 95% (listing the largest users), one process using too much memory (half of all by default). The condition must last ~15 s, and the same alert comes at most once per 10 min. Each goes into the **alert log** (`logs\alerts.log`), the history, and as a mark into a running process analysis.
 - **Daily history** - every minute the highest temperature and average load of CPU, GPU, memory and video memory; kept in `history.csv` next to the program. Shown in **System monitor → Analysis → Daily history** together with events: NeoBar alerts and Windows log findings (graphics driver hangs, memory shortages, sudden shutdowns). The system check uses it to explain failures: whether the GPU was hot when the driver hung, whether the load was at its limit before a sudden shutdown.
-- **After-game report** - for games longer than 2 minutes: FPS (average, 1% low, lowest - when the overlay is on for that game), temperatures and load, alerts during the game. Arrives as a notification; the full report goes to `Documents\NeoBar\Games`.
+- **After-game report** - for games longer than 2 minutes: FPS (average, 1% low, lowest - when the overlay is on for that game), temperatures and load, alerts during the game. Written when the game process exits (minimizing doesn't end the session; time spent minimized is listed separately). Arrives as a notification; the full report goes to `Documents\NeoBar\Games`.
+- **Sensor update rate** - *Update sensors every* (0.5-5 s) for panel and desktop widgets, tray temperatures and the System monitor; *When the screen is off* - a slower rate while the screen is off or the PC is locked (10 s by default). The game overlay has its own rate.
 
 ## Location and weather (Settings → Location & weather)
 

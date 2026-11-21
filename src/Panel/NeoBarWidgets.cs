@@ -563,7 +563,7 @@ sealed partial class NeoBar
         bool panelPerf = false;
         foreach (Entry pe in entries) if (pe.Kind == Kind.Widget && pe.Target == "perf") panelPerf = true;
         // у грі/повноекранній програмі датчики панелі й столу та пінг на паузі (датчики гри - окремо, «game»)
-        bool pz = suspended;
+        bool pz = suspended || ScreenState.Away;      // гра, повноекранна програма або нікого немає біля екрана
         Sensors.Use("panel", panelPerf && !pz ? (Widgets.PerfGpu ? 2 : 1) : 0);          // відеокарті потрібен повний збір даних
         Sensors.Use("desk", ClockData.DeskHas("perf") && !pz ? (ClockData.DeskPerfGpu() ? 2 : 1) : 0);
         try { TrayTemps.Configure(cfg, this, !pz); } catch (Exception ex) { Util.ErrorLog(ex); }

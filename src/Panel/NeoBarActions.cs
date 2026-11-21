@@ -72,6 +72,56 @@ sealed partial class NeoBar
         return r != 1;
     }
 
+    // чи вже є на панелі цей ярлик, його програма чи елемент з такою назвою
+    public bool HasTarget(string lnk, string target, string name)
+    {
+        foreach (Entry e in entries)
+        {
+            if (e.Kind != Kind.Item) continue;
+            if (string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase)) return true;
+            string f = e.Full;
+            if (string.Equals(f, lnk, StringComparison.OrdinalIgnoreCase) || string.Equals(f, target, StringComparison.OrdinalIgnoreCase)) return true;
+            if (f.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) && File.Exists(f) && string.Equals(IconHi.LinkTarget(f), target, StringComparison.OrdinalIgnoreCase)) return true;
+        }
+        return false;
+    }
+
+    // нова програма (див. NewApps): меню «куди додати» - у групу, на панель без групи чи нікуди
+    public void OfferNewApp(string lnk, string name)
+    {
+        if (!File.Exists(lnk)) return;
+        ContextMenuStrip m = new ContextMenuStrip();
+        Color mbg = PopStyle.Bg(T), mtx = PopStyle.Text(T);
+        m.ForeColor = mtx;
+        RoundMenu.Apply(m, mbg, mtx, Util.Opaque(T.Accent), Util.Blend(mbg, mtx, 0.22f), Px(10));
+        ToolStripItem hd = m.Items.Add(L.F("Додати «{0}»:", name));
+        hd.Enabled = false;
+        bool locked = SettingsOpen;
+        string[] files = { lnk };
+        for (int i = 0; i < entries.Count; i++)
+        {
+            if (entries[i].Kind != Kind.Header) continue;
+            int s = i + 1;
+            while (s < entries.Count && entries[s].Kind == Kind.Item) s++;          // кінець групи
+            int slot = s;
+            ToolStripItem gi = m.Items.Add(L.F("у групу «{0}»", entries[i].Name), null, delegate { AddDropped(files, null, slot); });
+            gi.Enabled = !locked;
+        }
+        ToolStripItem root = m.Items.Add(L.T("на панель, без групи"), null, delegate { AddDropped(files, null, -1); });
+        root.Enabled = !locked;
+        if (locked) { ToolStripItem w = m.Items.Add(L.T("(спершу закрийте налаштування)")); w.Enabled = false; }
+        m.Items.Add(new ToolStripSeparator());
+        m.Items.Add(L.T("Не додавати"));
+        menuOpen++;
+        m.Closed += delegate
+        {
+            menuOpen--;
+            BeginInvoke(new Action(m.Dispose));
+        };
+        m.Show(Cursor.Position);
+        MenuGuard.Watch(m);
+    }
+
     // прибрати з панелі всі елементи, чиїх програм уже немає (з підтвердженням)
     void RemoveGoneEntries()
     {

@@ -60,6 +60,7 @@ sealed partial class SettingsForm : Form, IGradHost
 
     // «Елементи»
     SList lb;
+    SCard goneCard;                 // картка зі списком елементів (перекомпонувати, коли з'являється «Прибрати зниклі»)
     Button bUp, bDown, bDel, bGone, bBrowseFile, bBrowseFolder, bBrowseIcon, bFavicon, bColor, bColorReset, bCopy;
     Label lStatus;
     TextBox tbName, tbTarget, tbIconFile, tbTags;
@@ -70,9 +71,9 @@ sealed partial class SettingsForm : Form, IGradHost
     string wTitle = "", wDesc = "";
 
     // «Панель» і «Пошук»
-    SCombo cbSide, cbMonitor, cbMode, cbGpu;
+    SCombo cbSide, cbMonitor, cbMode, cbGpu, cbSensMs, cbSensAway;
     SNum nW, nGap;
-    CheckBox chCompact, chFs, chAuto, chSearch, chHot, chFiles, chAdmin;
+    CheckBox chCompact, chFs, chOfferNew, chAuto, chSearch, chHot, chFiles, chAdmin;
     // температури в треї: вибрані датчики (у порядку додавання), їхні кольори, кнопки кольору й список «додати»
     readonly List<string> trayKeys = new List<string>();
     readonly Dictionary<string, Color> trayCols = new Dictionary<string, Color>();

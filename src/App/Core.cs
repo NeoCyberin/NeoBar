@@ -94,10 +94,13 @@ sealed class Cfg
     public string Mode = "fixed";      // fixed | autohide
     public string Monitor = "";        // "" = основний, інакше DeviceName
     public string GpuSensor = "";      // відеокарта для датчиків драйвера (назва); "" - автоматично
+    public int SensMs = 1000;          // як часто опитувати датчики (панель, стіл, трей, Монітор системи), мс
+    public int SensAway = 10000;       // поки екран вимкнено чи ПК заблоковано, мс; 0 - так само
     public bool Compact;               // угорі/внизу: вікно по вмісту й по центру
     public int CornerGap = 48;         // автосховок: відступ від кутів екрана, px
     public bool ShowSearch = true;
     public bool FsHide = true;         // ховатися під час повноекранних програм
+    public bool OfferNew = true;       // нова програма в меню «Пуск» - запропонувати додати на панель
     public bool UpdCheck = true;       // при запуску дивитися на GitHub, чи вийшла нова версія
     public bool Hotkeys = true;
     public bool SearchSuggest = true;       // пошук пропонує додати знайдені програми на панель
@@ -334,12 +337,15 @@ static class Store
             case "mode": cfg.Mode = lv == "autohide" ? "autohide" : "fixed"; break;
             case "monitor": cfg.Monitor = val; break;
             case "gpusensor": cfg.GpuSensor = val; break;
+            case "sensms": if (int.TryParse(val, out n)) cfg.SensMs = Math.Max(100, Math.Min(5000, n)); break;
+            case "sensaway": if (int.TryParse(val, out n)) cfg.SensAway = Math.Max(0, Math.Min(60000, n)); break;
             case "compact": cfg.Compact = B(val); break;
             case "cornergap":
                 if (int.TryParse(val, out n)) cfg.CornerGap = Math.Max(0, Math.Min(300, n));
                 break;
             case "search": cfg.ShowSearch = B(val); break;
             case "fshide": cfg.FsHide = B(val); break;
+            case "offernew": cfg.OfferNew = B(val); break;
             case "desknotefont": cfg.DeskNoteFont = B(val); break;
             case "logkeep": cfg.LogKeep = val.Trim().ToLowerInvariant(); break;
             case "walerts": cfg.WAlerts = B(val); break;
@@ -515,6 +521,8 @@ static class Store
         sb.AppendLine("@mode " + c.Mode);
         if (c.Monitor.Length > 0) sb.AppendLine("@monitor " + c.Monitor);
         if (c.GpuSensor.Length > 0) sb.AppendLine("@gpusensor " + c.GpuSensor);
+        sb.AppendLine("@sensms " + c.SensMs);
+        sb.AppendLine("@sensaway " + c.SensAway);
         sb.AppendLine("@compact " + Yn(c.Compact));
         sb.AppendLine("@cornergap " + c.CornerGap);
         sb.AppendLine("@width " + c.Width);
@@ -528,6 +536,7 @@ static class Store
         sb.AppendLine("@secwatch " + Yn(c.SecWatch));
         sb.AppendLine("@secused " + Yn(c.SecUsed));
         sb.AppendLine("@fshide " + Yn(c.FsHide));
+        sb.AppendLine("@offernew " + Yn(c.OfferNew));
         sb.AppendLine("@desknotefont " + Yn(c.DeskNoteFont));
         sb.AppendLine("@logkeep " + c.LogKeep);
         sb.AppendLine("@walerts " + Yn(c.WAlerts));

@@ -11643,3 +11643,54 @@
 
 < Ханука
 > Chanuka
+
+< (спершу закрийте налаштування)
+> (nejdřív zavřete nastavení)
+
+< {0} с
+> {0} s
+
+< Встановлено «{0}»
+> „{0}“ nainstalováno
+
+< Для віджетів на панелі й столі, температур у треї та Монітора системи. Рідше - менше навантаження; в ігровому оверлеї своя частота
+> Pro widgety na panelu a ploše, teploty v oznamovací oblasti a Monitor systému. Méně často - menší zátěž; herní overlay má vlastní frekvenci
+
+< Додати «{0}»:
+> Přidat „{0}“:
+
+< З них гра була згорнута: {0}
+> Z toho byla hra minimalizovaná: {0}
+
+< Клацніть, щоб додати на панель - у групу на вибір
+> Klepnutím přidáte na panel - do skupiny podle výběru
+
+< Коли встановлюється програма чи гра (у меню «Пуск» з'являється її ярлик), з'явиться сповіщення: клацніть його й виберіть групу панелі. Ярлики видалення, довідки й сайтів пропускаються
+> Když se nainstaluje program nebo hra (v nabídce Start se objeví jeho zástupce), zobrazí se oznámení: klepněte na něj a vyberte skupinu panelu. Zástupci odinstalace, nápovědy a webů se přeskakují
+
+< Коли екран вимкнено
+> Při vypnuté obrazovce
+
+< Не додавати
+> Nepřidávat
+
+< Оновлювати датчики кожні
+> Aktualizovat senzory každých
+
+< Поки екран вимкнено чи комп'ютер заблоковано, датчики можна опитувати рідше: нагляд за перегрівом працює, а відеокарта не смикається щосекунди
+> Při vypnuté obrazovce nebo zamčeném PC lze senzory číst méně často: hlídání přehřátí funguje dál a grafická karta se nebudí každou sekundu
+
+< Прибрати зниклі ({0}) - програм уже немає на диску
+> Odebrat chybějící ({0}) - tyto programy už na disku nejsou
+
+< Пропонувати нові програми
+> Nabízet nové programy
+
+< Так само
+> Stejně jako jindy
+
+< на панель, без групи
+> na panel, bez skupiny
+
+< у групу «{0}»
+> do skupiny „{0}“

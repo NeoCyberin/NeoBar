@@ -192,8 +192,10 @@ sealed partial class SettingsForm
     {
         if (bGone == null) return;
         int n = Gone.Count(list);
+        bool was = bGone.Visible;
+        if (n > 0) bGone.Text = L.F("Прибрати зниклі ({0}) - програм уже немає на диску", n);
         bGone.Visible = n > 0;
-        if (n > 0) bGone.Text = L.F("Прибрати зниклі ({0})", n);
+        if (was != bGone.Visible && goneCard != null && goneCard.Arrange != null && goneCard.Width > 0) goneCard.Arrange(new Rectangle(0, 0, goneCard.Width, goneCard.Height));
     }
 
     void RemoveGone()

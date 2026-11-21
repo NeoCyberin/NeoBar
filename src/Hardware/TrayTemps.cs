@@ -421,6 +421,7 @@ static class DiskTemps
 
     static void Tick()
     {
+        if (ScreenState.Away) return;      // нікого немає - диски не будимо запитами SMART (жорсткі диски можуть зупинитись)
         if (System.Threading.Interlocked.Exchange(ref busy, 1) == 1) return;
         try
         {

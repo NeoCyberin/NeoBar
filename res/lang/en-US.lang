@@ -11643,3 +11643,54 @@
 
 < Ханука
 > Hanukkah
+
+< (спершу закрийте налаштування)
+> (close the settings first)
+
+< {0} с
+> {0} s
+
+< Встановлено «{0}»
+> “{0}” installed
+
+< Для віджетів на панелі й столі, температур у треї та Монітора системи. Рідше - менше навантаження; в ігровому оверлеї своя частота
+> For widgets on the panel and desktop, tray temperatures and the System monitor. Less often means less load; the game overlay has its own rate
+
+< Додати «{0}»:
+> Add “{0}”:
+
+< З них гра була згорнута: {0}
+> Of which the game was minimized: {0}
+
+< Клацніть, щоб додати на панель - у групу на вибір
+> Click to add it to the panel - into a group of your choice
+
+< Коли встановлюється програма чи гра (у меню «Пуск» з'являється її ярлик), з'явиться сповіщення: клацніть його й виберіть групу панелі. Ярлики видалення, довідки й сайтів пропускаються
+> When a program or game is installed (its shortcut appears in the Start menu), a notification appears: click it and choose a panel group. Uninstall, help and website shortcuts are skipped
+
+< Коли екран вимкнено
+> When the screen is off
+
+< Не додавати
+> Don't add
+
+< Оновлювати датчики кожні
+> Update sensors every
+
+< Поки екран вимкнено чи комп'ютер заблоковано, датчики можна опитувати рідше: нагляд за перегрівом працює, а відеокарта не смикається щосекунди
+> While the screen is off or the PC is locked, sensors can be polled less often: overheating monitoring keeps working and the graphics card isn't poked every second
+
+< Прибрати зниклі ({0}) - програм уже немає на диску
+> Remove missing ({0}) - these programs are no longer on the disk
+
+< Пропонувати нові програми
+> Offer new programs
+
+< Так само
+> Same as usual
+
+< на панель, без групи
+> to the panel, no group
+
+< у групу «{0}»
+> to the “{0}” group

@@ -11643,3 +11643,54 @@
 
 < Ханука
 > Hanoukka
+
+< (спершу закрийте налаштування)
+> (fermez d'abord les paramètres)
+
+< {0} с
+> {0} s
+
+< Встановлено «{0}»
+> « {0} » installé
+
+< Для віджетів на панелі й столі, температур у треї та Монітора системи. Рідше - менше навантаження; в ігровому оверлеї своя частота
+> Pour les widgets de la barre et du bureau, les températures dans la zone de notification et le Moniteur système. Moins souvent = moins de charge ; l'overlay de jeu a sa propre fréquence
+
+< Додати «{0}»:
+> Ajouter « {0} » :
+
+< З них гра була згорнута: {0}
+> Dont jeu réduit : {0}
+
+< Клацніть, щоб додати на панель - у групу на вибір
+> Cliquez pour l'ajouter à la barre, dans le groupe de votre choix
+
+< Коли встановлюється програма чи гра (у меню «Пуск» з'являється її ярлик), з'явиться сповіщення: клацніть його й виберіть групу панелі. Ярлики видалення, довідки й сайтів пропускаються
+> Quand un programme ou un jeu est installé (son raccourci apparaît dans le menu Démarrer), une notification s'affiche : cliquez dessus et choisissez un groupe de la barre. Les raccourcis de désinstallation, d'aide et de sites sont ignorés
+
+< Коли екран вимкнено
+> Écran éteint
+
+< Не додавати
+> Ne pas ajouter
+
+< Оновлювати датчики кожні
+> Actualiser les capteurs toutes les
+
+< Поки екран вимкнено чи комп'ютер заблоковано, датчики можна опитувати рідше: нагляд за перегрівом працює, а відеокарта не смикається щосекунди
+> Écran éteint ou PC verrouillé, les capteurs peuvent être interrogés moins souvent : la surveillance de surchauffe continue et la carte graphique n'est pas sollicitée chaque seconde
+
+< Прибрати зниклі ({0}) - програм уже немає на диску
+> Retirer les introuvables ({0}) - ces programmes ne sont plus sur le disque
+
+< Пропонувати нові програми
+> Proposer les nouveaux programmes
+
+< Так само
+> Comme d'habitude
+
+< на панель, без групи
+> sur la barre, sans groupe
+
+< у групу «{0}»
+> dans le groupe « {0} »

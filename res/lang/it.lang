@@ -11643,3 +11643,54 @@
 
 < Ханука
 > Hanukkah
+
+< (спершу закрийте налаштування)
+> (chiudi prima le impostazioni)
+
+< {0} с
+> {0} s
+
+< Встановлено «{0}»
+> «{0}» installato
+
+< Для віджетів на панелі й столі, температур у треї та Монітора системи. Рідше - менше навантаження; в ігровому оверлеї своя частота
+> Per i widget della barra e del desktop, le temperature nell'area di notifica e il Monitor di sistema. Meno spesso = meno carico; l'overlay di gioco ha la sua frequenza
+
+< Додати «{0}»:
+> Aggiungi «{0}»:
+
+< З них гра була згорнута: {0}
+> Di cui il gioco era ridotto a icona: {0}
+
+< Клацніть, щоб додати на панель - у групу на вибір
+> Fai clic per aggiungerlo alla barra, nel gruppo che preferisci
+
+< Коли встановлюється програма чи гра (у меню «Пуск» з'являється її ярлик), з'явиться сповіщення: клацніть його й виберіть групу панелі. Ярлики видалення, довідки й сайтів пропускаються
+> Quando si installa un programma o un gioco (il suo collegamento compare nel menu Start), appare una notifica: cliccala e scegli un gruppo della barra. I collegamenti di disinstallazione, guida e siti vengono saltati
+
+< Коли екран вимкнено
+> Con lo schermo spento
+
+< Не додавати
+> Non aggiungere
+
+< Оновлювати датчики кожні
+> Aggiorna i sensori ogni
+
+< Поки екран вимкнено чи комп'ютер заблоковано, датчики можна опитувати рідше: нагляд за перегрівом працює, а відеокарта не смикається щосекунди
+> Con lo schermo spento o il PC bloccato, i sensori possono essere letti meno spesso: il controllo del surriscaldamento continua e la scheda video non viene sollecitata ogni secondo
+
+< Прибрати зниклі ({0}) - програм уже немає на диску
+> Rimuovi mancanti ({0}) - questi programmi non sono più sul disco
+
+< Пропонувати нові програми
+> Proponi i nuovi programmi
+
+< Так само
+> Come sempre
+
+< на панель, без групи
+> sulla barra, senza gruppo
+
+< у групу «{0}»
+> nel gruppo «{0}»

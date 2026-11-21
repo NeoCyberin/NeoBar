@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -311,11 +311,28 @@ static class Sensors
     static void ApplyInterval()
     {
         if (timer == null) return;
-        // хто не просив частоти - раз на секунду; якщо всі просили (наприклад, лише фоновий нагляд - раз на 5 с) - найчастіша з них
+        // хто не просив частоти - як у налаштуваннях (BaseMs); якщо всі просили (наприклад, лише фоновий нагляд - раз на 5 с) - найчастіша з них
         int ms = int.MaxValue;
-        foreach (string u in users.Keys) { int v; ms = Math.Min(ms, intervals.TryGetValue(u, out v) ? v : 1000); }
-        if (ms == int.MaxValue) ms = 1000;
+        foreach (string u in users.Keys) { int v; ms = Math.Min(ms, intervals.TryGetValue(u, out v) ? v : BaseMs); }
+        if (ms == int.MaxValue) ms = BaseMs;
+        // екран вимкнено чи комп'ютер заблоковано: рідше, як задано (нагляд за перегрівом і історія працюють, відеокарта не смикається)
+        if (ScreenState.Away && AwayMs > 0) ms = Math.Max(ms, AwayMs);
         if (timer.Interval != ms) timer.Interval = ms;
+    }
+
+    // стан екрана змінився - перерахувати частоту
+    public static void Reapply() { ApplyInterval(); }
+
+    // з налаштувань (Система → Датчики): звичайна частота й частота, поки екран вимкнено чи ПК заблоковано (0 - так само)
+    public static int BaseMs = 1000, AwayMs = 10000;
+    public static readonly int[] BaseChoices = { 500, 1000, 2000, 3000, 5000 };
+    public static readonly int[] AwayChoices = { 0, 10000, 30000, 60000 };
+
+    public static void Configure(int baseMs, int awayMs)
+    {
+        BaseMs = Math.Max(100, Math.Min(5000, baseMs));
+        AwayMs = Math.Max(0, Math.Min(60000, awayMs));
+        ApplyInterval();
     }
 
     public static int Level

@@ -11643,3 +11643,54 @@
 
 < Ханука
 > Chanukka
+
+< (спершу закрийте налаштування)
+> (zuerst die Einstellungen schließen)
+
+< {0} с
+> {0} s
+
+< Встановлено «{0}»
+> „{0}“ installiert
+
+< Для віджетів на панелі й столі, температур у треї та Монітора системи. Рідше - менше навантаження; в ігровому оверлеї своя частота
+> Für Widgets auf Leiste und Desktop, Temperaturen im Infobereich und den Systemmonitor. Seltener bedeutet weniger Last; das Spiel-Overlay hat eine eigene Rate
+
+< Додати «{0}»:
+> „{0}“ hinzufügen:
+
+< З них гра була згорнута: {0}
+> Davon war das Spiel minimiert: {0}
+
+< Клацніть, щоб додати на панель - у групу на вибір
+> Klicken, um es zur Leiste hinzuzufügen - in eine Gruppe nach Wahl
+
+< Коли встановлюється програма чи гра (у меню «Пуск» з'являється її ярлик), з'явиться сповіщення: клацніть його й виберіть групу панелі. Ярлики видалення, довідки й сайтів пропускаються
+> Wenn ein Programm oder Spiel installiert wird (seine Verknüpfung erscheint im Startmenü), erscheint eine Benachrichtigung: Klicken Sie darauf und wählen Sie eine Leistengruppe. Deinstallations-, Hilfe- und Website-Verknüpfungen werden übersprungen
+
+< Коли екран вимкнено
+> Bei ausgeschaltetem Bildschirm
+
+< Не додавати
+> Nicht hinzufügen
+
+< Оновлювати датчики кожні
+> Sensoren aktualisieren alle
+
+< Поки екран вимкнено чи комп'ютер заблоковано, датчики можна опитувати рідше: нагляд за перегрівом працює, а відеокарта не смикається щосекунди
+> Solange der Bildschirm aus oder der PC gesperrt ist, können Sensoren seltener abgefragt werden: Die Überhitzungsüberwachung läuft weiter, und die Grafikkarte wird nicht jede Sekunde geweckt
+
+< Прибрати зниклі ({0}) - програм уже немає на диску
+> Fehlende entfernen ({0}) - diese Programme sind nicht mehr auf dem Datenträger
+
+< Пропонувати нові програми
+> Neue Programme vorschlagen
+
+< Так само
+> Wie sonst
+
+< на панель, без групи
+> auf die Leiste, ohne Gruppe
+
+< у групу «{0}»
+> in die Gruppe „{0}“

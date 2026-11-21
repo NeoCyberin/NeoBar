@@ -41,8 +41,9 @@ sealed partial class SettingsForm
         // «Видалити» - окремо й червоним, щоб не натиснути випадково
         bDel = Bt(L.T("Видалити"), "danger g:trash", 112, delegate { DeleteSel(); });
         left.Controls.Add(bUp); left.Controls.Add(bDown); left.Controls.Add(bDel);
-        // програми, яких уже немає на диску: з'являється лише коли такі є
-        bGone = Bt(L.T("Прибрати зниклі"), "ghost g:trash", 190, delegate { RemoveGone(); });
+        // програми, яких уже немає на диску: окремий рядок під списком, з'являється лише коли такі є
+        bGone = Bt(L.T("Прибрати зниклі"), "g:trash", 190, delegate { RemoveGone(); });
+        goneCard = left;
         bGone.Visible = false;
         left.Controls.Add(bGone);
         ToolTip tt = new ToolTip();
@@ -70,14 +71,15 @@ sealed partial class SettingsForm
             bDel.SetBounds(r.Width - p - bDel.Width, p, bDel.Width, bh);
             bDown.SetBounds(bDel.Left - S(6) - bw, p, bw, bh);
             bUp.SetBounds(bDown.Left - S(4) - bw, p, bw, bh);
-            bGone.SetBounds(bUp.Left - S(10) - bGone.Width, p, bGone.Width, bh);
             int cols = 3, gap = S(6);
             int cw = (r.Width - p * 2 - gap * (cols - 1)) / cols;
             int rowsN = (adds.Length + cols - 1) / cols;
             int ay = r.Height - p - rowsN * bh - (rowsN - 1) * gap;
             la.SetBounds(p + S(4), ay - S(24), S(200), S(20));
             for (int i = 0; i < adds.Length; i++) adds[i].SetBounds(p + (i % cols) * (cw + gap), ay + (i / cols) * (bh + gap), cw, bh);
-            lb.SetBounds(p - S(4), p + bh + S(10), r.Width - p * 2 + S(8), Math.Max(S(60), ay - S(34) - (p + bh + S(10))));
+            int gh = bGone.Visible ? bh + gap : 0;
+            lb.SetBounds(p - S(4), p + bh + S(10), r.Width - p * 2 + S(8), Math.Max(S(60), ay - S(34) - gh - (p + bh + S(10))));
+            if (bGone.Visible) bGone.SetBounds(p, lb.Bottom + gap, r.Width - p * 2, bh);
         };
 
         // праворуч - властивості вибраного й підказки
@@ -202,6 +204,8 @@ sealed partial class SettingsForm
         rg.Indent = true;
         chFs = Tg();
         k.Row(L.T("Повноекранні програми"), L.T("Ховати панель і ставити віджети на паузу також для повноекранного відео чи презентації. Для ігор з бібліотеки ігровий режим вмикається завжди: працюють лише оверлей, обмеження кадрів і нагляд за системою, пам'ять NeoBar звільняється для гри"), chFs);
+        chOfferNew = Tg();
+        k.Row(L.T("Пропонувати нові програми"), L.T("Коли встановлюється програма чи гра (у меню «Пуск» з'являється її ярлик), з'явиться сповіщення: клацніть його й виберіть групу панелі. Ярлики видалення, довідки й сайтів пропускаються"), chOfferNew);
 
         k = p.Card(L.T("Запуск"));
         chAuto = Tg();
@@ -272,6 +276,10 @@ sealed partial class SettingsForm
             }
         k.Row(L.T("Відеокарта для датчиків"), L.T("Звідки брати температуру, hotspot, потужність і частоту, коли відеокарт кілька (окрема й вбудована в процесор)") +
             (VendorGpu.Status.Length > 0 ? ". " + L.T("Зараз: ") + VendorGpu.Status : ""), cbGpu);
+        cbSensMs = Cb(160, L.F("{0} с", 0.5), L.F("{0} с", 1), L.F("{0} с", 2), L.F("{0} с", 3), L.F("{0} с", 5));
+        k.Row(L.T("Оновлювати датчики кожні"), L.T("Для віджетів на панелі й столі, температур у треї та Монітора системи. Рідше - менше навантаження; в ігровому оверлеї своя частота"), cbSensMs);
+        cbSensAway = Cb(160, L.T("Так само"), L.F("{0} с", 10), L.F("{0} с", 30), L.T("1 хв"));
+        k.Row(L.T("Коли екран вимкнено"), L.T("Поки екран вимкнено чи комп'ютер заблоковано, датчики можна опитувати рідше: нагляд за перегрівом працює, а відеокарта не смикається щосекунди"), cbSensAway);
 
         k = p.Card(L.T("Нагляд за системою"));
         chWAlerts = Tg();
