@@ -11922,3 +11922,9 @@
 
 < у кошику з {0} · зникне через {1} дн.
 > dans la corbeille depuis le {0} · supprimée dans {1} j
+
+< Прив'язувати віджети до сітки
+> Aimanter les widgets à une grille
+
+< Під час перетягування віджети й нотатки прилипають до країв екрана, до сусідніх віджетів і до сітки - легко ставити рівно. З Alt - без прив'язки
+> En les faisant glisser, widgets et notes s'aimantent aux bords de l'écran, aux widgets voisins et à une grille : facile de les aligner. Avec Alt, sans aimantation

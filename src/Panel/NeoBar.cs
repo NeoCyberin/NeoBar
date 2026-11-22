@@ -309,6 +309,8 @@ sealed partial class NeoBar : Form
         NewApps.Configure(this, cfg.OfferNew);
         DeskIcons.Bind(this);
         DeskIcons.Configure(cfg.IconsAvoid, DeskBlocks);
+        DeskSnap.On = cfg.DeskSnap;
+        DeskSnap.Others = SnapOthers;
         Watch.FromCfg(cfg);
         VendorGpu.SetPrefer(cfg.GpuSensor);
         Sensors.Configure(cfg.SensMs, cfg.SensAway);
@@ -354,6 +356,16 @@ sealed partial class NeoBar : Form
     {
         if (IsHandleCreated) BeginInvoke(new Action(delegate { DropBackdrop(); ApplyMode(true); }));
         DeskIcons.Later(3000);
+    }
+
+    // до чого прилипає віджет чи нотатка, яку тягнуть: інші віджети (їхній вміст) і нотатки
+    static List<Rectangle> SnapOthers(object self)
+    {
+        List<Rectangle> l = new List<Rectangle>();
+        foreach (DeskSpec d in ClockData.Desk)
+            if (d.Form != null && d.Form != self && !d.Form.IsDisposed && d.Form.Visible) l.Add(d.Form.Card);
+        foreach (KeyValuePair<Form, Rectangle> kv in Notes.DeskForms()) if (kv.Key != self) l.Add(kv.Value);
+        return l;
     }
 
     // де на робочому столі віджети й нотатки (значки з-під них переставляються - DeskIcons)
@@ -1063,6 +1075,7 @@ sealed partial class NeoBar : Form
         }
         foreach (Entry e in entries) e.Sig = "";
         if (IsHandleCreated) { NewApps.Configure(this, cfg.OfferNew); DeskIcons.Configure(cfg.IconsAvoid, DeskBlocks); }
+        DeskSnap.On = cfg.DeskSnap;
         AfterReloadWidgets();
         if (wkinds.Count > 0 && !suspended)
         {

@@ -11922,3 +11922,9 @@
 
 < у кошику з {0} · зникне через {1} дн.
 > in the trash since {0} · deleted in {1} d
+
+< Прив'язувати віджети до сітки
+> Snap widgets to a grid
+
+< Під час перетягування віджети й нотатки прилипають до країв екрана, до сусідніх віджетів і до сітки - легко ставити рівно. З Alt - без прив'язки
+> While dragging, widgets and notes snap to the screen edges, to neighbouring widgets and to a grid - easy to line them up. Hold Alt to drag freely

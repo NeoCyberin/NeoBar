@@ -11922,3 +11922,9 @@
 
 < у кошику з {0} · зникне через {1} дн.
 > im Papierkorb seit {0} · wird in {1} T. gelöscht
+
+< Прив'язувати віджети до сітки
+> Widgets am Raster ausrichten
+
+< Під час перетягування віджети й нотатки прилипають до країв екрана, до сусідніх віджетів і до сітки - легко ставити рівно. З Alt - без прив'язки
+> Beim Ziehen rasten Widgets und Notizen an Bildschirmrändern, benachbarten Widgets und einem Raster ein - so stehen sie leicht gerade. Mit Alt ohne Einrasten

@@ -73,7 +73,7 @@ sealed partial class SettingsForm : Form, IGradHost
     // «Панель» і «Пошук»
     SCombo cbSide, cbMonitor, cbMode, cbGpu, cbSensMs, cbSensAway;
     SNum nW, nGap;
-    CheckBox chCompact, chFs, chOfferNew, chIconsAvoid, chAuto, chSearch, chHot, chFiles, chAdmin;
+    CheckBox chCompact, chFs, chOfferNew, chIconsAvoid, chDeskSnap, chAuto, chSearch, chHot, chFiles, chAdmin;
     // температури в треї: вибрані датчики (у порядку додавання), їхні кольори, кнопки кольору й список «додати»
     readonly List<string> trayKeys = new List<string>();
     readonly Dictionary<string, Color> trayCols = new Dictionary<string, Color>();
