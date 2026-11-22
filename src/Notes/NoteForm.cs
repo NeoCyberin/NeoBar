@@ -88,7 +88,6 @@ sealed class NoteForm : Form
 
         // ----- шапка: [+] [тема] ......... [прозорість] [замок] [✕] -----
         headerPanel = new BufPanel();
-        headerPanel.Dock = DockStyle.Top;
         headerPanel.Height = HeadH;
         headerPanel.Cursor = Cursors.SizeAll;
         headerPanel.MouseDown += delegate(object s, MouseEventArgs e)
@@ -135,7 +134,6 @@ sealed class NoteForm : Form
 
         // ----- панель інструментів -----
         toolbar = new BufPanel();
-        toolbar.Dock = DockStyle.Bottom;
         toolbar.Height = ToolH;
         // тонка лінія між текстом і панеллю форматування - видно, де закінчується текст
         toolbar.Paint += delegate (object so, PaintEventArgs pe)
@@ -170,7 +168,6 @@ sealed class NoteForm : Form
 
         // ----- текст -----
         bodyPanel = new BufPanel();
-        bodyPanel.Dock = DockStyle.Fill;
         bodyPanel.Padding = new Padding(BodyPad);
 
         // назва нотатки над текстом
@@ -256,9 +253,12 @@ sealed class NoteForm : Form
         bodyPanel.Controls.Add(vbar);
         bodyPanel.Controls.Add(titlePanel);
 
-        Controls.Add(bodyPanel);
+        // шапка, текст і панель форматування розкладаються вручну (LayoutParts): три окремі смуги,
+        // текст ніколи не заходить під панель форматування (з Dock поле тексту інколи опинялося під нею)
         Controls.Add(toolbar);
         Controls.Add(headerPanel);
+        Controls.Add(bodyPanel);
+        LayoutParts();
 
         try { NoteTheme t0 = Notes.ThemeOf(n); box.Font = Util.MakeFont(t0.FontName, Notes.FontPt(n, t0), FontStyle.Regular); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
         try
@@ -276,6 +276,25 @@ sealed class NoteForm : Form
         // шар посилань - лише разом із видимою закріпленою нотаткою (у грі нотатки ховаються - і він теж)
         VisibleChanged += delegate { if (links != null) { if (Visible && n.Locked) links.Put(Bounds); else links.Hide(); } };
         Resize += delegate { if (ready && busy == 0 && !n.Locked && Visible) { PullRect(); Notes.Touch(); if (!sizing) UpdateRegion(); } };
+    }
+
+    protected override void OnLayout(LayoutEventArgs e)
+    {
+        base.OnLayout(e);
+        LayoutParts();
+    }
+
+    void LayoutParts()
+    {
+        if (headerPanel == null || toolbar == null || bodyPanel == null) return;
+        Rectangle c = DisplayRectangle;                  // клієнтська область без рамки (Padding)
+        int hh = Math.Min(HeadH, c.Height), th = Math.Min(ToolH, Math.Max(0, c.Height - hh));
+        Rectangle hr = new Rectangle(c.X, c.Y, c.Width, hh);
+        Rectangle tr = new Rectangle(c.X, c.Bottom - th, c.Width, th);
+        Rectangle br = new Rectangle(c.X, hr.Bottom, c.Width, Math.Max(0, tr.Top - hr.Bottom));
+        if (headerPanel.Bounds != hr) headerPanel.Bounds = hr;
+        if (toolbar.Bounds != tr) toolbar.Bounds = tr;
+        if (bodyPanel.Bounds != br) bodyPanel.Bounds = br;
     }
 
     // поле тексту ширше за контейнер на ширину системної смуги прокрутки - вона опиняється за краєм і не видна
@@ -302,13 +321,22 @@ sealed class NoteForm : Form
             int h = full;
             if (box.TextLength > 0)
             {
-                int idx = box.GetCharIndexFromPosition(new Point(Px(4), full - 1));
-                int line = box.GetLineFromCharIndex(idx);
-                int top = box.GetPositionFromCharIndex(box.GetFirstCharIndexFromLine(line)).Y;
-                int next = box.GetFirstCharIndexFromLine(line + 1);
-                int bottom = next > 0 ? box.GetPositionFromCharIndex(next).Y : top + box.Font.Height;
-                // рядок виходить за низ, а над ним є хоч один цілий - поле закінчується над ним
-                if (bottom > full && top > box.Font.Height && top < full) h = top;
+                // ідемо від першого видимого рядка вниз; положення рядків не залежать від висоти поля,
+                // тож результат не «гойдається» між укороченим і повним полем
+                IntPtr hb = box.Handle;
+                int first = (int)Win.SendMessage(hb, 0x00CE, 0, 0);          // EM_GETFIRSTVISIBLELINE
+                int count = (int)Win.SendMessage(hb, 0x00BA, 0, 0);          // EM_GETLINECOUNT
+                int lh = box.Font.Height;
+                for (int i = Math.Max(0, first); i < count && i < first + 400; i++)
+                {
+                    int top = box.GetPositionFromCharIndex(box.GetFirstCharIndexFromLine(i)).Y;
+                    int ni = i + 1 < count ? box.GetFirstCharIndexFromLine(i + 1) : -1;
+                    int bottom = ni > 0 ? box.GetPositionFromCharIndex(ni).Y : top + lh;
+                    if (bottom <= full) continue;
+                    // рядок i не вміщається: поле закінчується над ним (якщо над ним є хоч щось)
+                    if (top > 0 && top < full) h = top;
+                    break;
+                }
             }
             if (box.Height != h) box.Height = h;
         }
@@ -1587,6 +1615,7 @@ sealed class NoteForm : Form
     }
 
     bool snapMoved;                 // нотатку тягнули (не змінювали розмір) - після відпускання стане на сітку
+    Point moveGrab;                 // курсор відносно лівого верхнього кута на початку перетягування
 
     protected override void WndProc(ref Message m)
     {
@@ -1597,13 +1626,18 @@ sealed class NoteForm : Form
 
         if (m.Msg == WM_SYSCOMMAND && ((int)m.WParam & 0xFFF0) == SC_MINIMIZE) return;   // нотатку не згортаємо
         // WM_MOVING: нотатку тягнуть - прив'язка до країв екрана, інших віджетів чи сітки
+        // WM_ENTERSIZEMOVE: де курсор відносно нотатки - далі місце рахується від курсора,
+        // а не від попереднього (уже «прилиплого») положення, інакше нотатка застрягала біля краю
+        if (m.Msg == 0x0231) moveGrab = new Point(Cursor.Position.X - Left, Cursor.Position.Y - Top);
         if (m.Msg == 0x0216 && m.LParam != IntPtr.Zero && n != null && !n.Locked)
         {
             snapMoved = true;
             try
             {
                 int l = Marshal.ReadInt32(m.LParam, 0), tp = Marshal.ReadInt32(m.LParam, 4), rr = Marshal.ReadInt32(m.LParam, 8), b = Marshal.ReadInt32(m.LParam, 12);
-                Point s = DeskSnap.Snap(Rectangle.FromLTRB(l, tp, rr, b), this);
+                Point c = Cursor.Position;
+                Rectangle want = new Rectangle(c.X - moveGrab.X, c.Y - moveGrab.Y, rr - l, b - tp);
+                Point s = DeskSnap.Snap(want, this);
                 Marshal.WriteInt32(m.LParam, 0, s.X); Marshal.WriteInt32(m.LParam, 4, s.Y);
                 Marshal.WriteInt32(m.LParam, 8, s.X + rr - l); Marshal.WriteInt32(m.LParam, 12, s.Y + b - tp);
                 m.Result = (IntPtr)1;
