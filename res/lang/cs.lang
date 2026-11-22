@@ -11926,5 +11926,5 @@
 < Прив'язувати віджети до сітки
 > Přichytávat widgety k mřížce
 
-< Під час перетягування віджети й нотатки прилипають до країв екрана, до сусідніх віджетів і до сітки - легко ставити рівно. З Alt - без прив'язки
-> Při přetahování se widgety a poznámky přichytávají k okrajům obrazovky, k sousedním widgetům a k mřížce - snadno je srovnáte. S Alt bez přichytávání
+< Віджети й нотатки рухаються вільно, але біля краю екрана чи сусіднього віджета прилипають, а коли їх відпустити - стають на сітку. З Alt - без прив'язки
+> Widgety a poznámky se pohybují volně, ale u okraje obrazovky nebo sousedního widgetu se přichytí a po puštění se srovnají do mřížky. S Alt bez přichytávání

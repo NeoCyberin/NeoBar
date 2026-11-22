@@ -11926,5 +11926,5 @@
 < Прив'язувати віджети до сітки
 > Widgets am Raster ausrichten
 
-< Під час перетягування віджети й нотатки прилипають до країв екрана, до сусідніх віджетів і до сітки - легко ставити рівно. З Alt - без прив'язки
-> Beim Ziehen rasten Widgets und Notizen an Bildschirmrändern, benachbarten Widgets und einem Raster ein - so stehen sie leicht gerade. Mit Alt ohne Einrasten
+< Віджети й нотатки рухаються вільно, але біля краю екрана чи сусіднього віджета прилипають, а коли їх відпустити - стають на сітку. З Alt - без прив'язки
+> Widgets und Notizen bewegen sich frei, haften aber an Bildschirmrändern oder benachbarten Widgets und rasten beim Loslassen im Raster ein. Mit Alt ohne Einrasten

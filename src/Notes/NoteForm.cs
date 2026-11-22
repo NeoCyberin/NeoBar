@@ -1586,6 +1586,8 @@ sealed class NoteForm : Form
         try { n.Title = titleBox.Text; n.Text = box.Text; n.Rtf = box.Rtf; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
+    bool snapMoved;                 // нотатку тягнули (не змінювали розмір) - після відпускання стане на сітку
+
     protected override void WndProc(ref Message m)
     {
         const int WM_MOUSEACTIVATE = 0x0021;
@@ -1597,6 +1599,7 @@ sealed class NoteForm : Form
         // WM_MOVING: нотатку тягнуть - прив'язка до країв екрана, інших віджетів чи сітки
         if (m.Msg == 0x0216 && m.LParam != IntPtr.Zero && n != null && !n.Locked)
         {
+            snapMoved = true;
             try
             {
                 int l = Marshal.ReadInt32(m.LParam, 0), tp = Marshal.ReadInt32(m.LParam, 4), rr = Marshal.ReadInt32(m.LParam, 8), b = Marshal.ReadInt32(m.LParam, 12);
@@ -1604,6 +1607,17 @@ sealed class NoteForm : Form
                 Marshal.WriteInt32(m.LParam, 0, s.X); Marshal.WriteInt32(m.LParam, 4, s.Y);
                 Marshal.WriteInt32(m.LParam, 8, s.X + rr - l); Marshal.WriteInt32(m.LParam, 12, s.Y + b - tp);
                 m.Result = (IntPtr)1;
+            }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        }
+        // WM_EXITSIZEMOVE: нотатку відпустили - на сітку (якщо не прилипла до краю чи сусіда)
+        if (m.Msg == 0x0232 && snapMoved && n != null && !n.Locked)
+        {
+            snapMoved = false;
+            try
+            {
+                Point s = DeskSnap.Snap(Bounds, this, true);
+                if (s != Location) Location = s;
             }
             catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }

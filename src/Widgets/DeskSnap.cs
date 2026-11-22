@@ -4,9 +4,10 @@ using System.Drawing;
 using System.Windows.Forms;
 
 // ======================================================================
-//  Прив'язка віджетів і нотаток на робочому столі під час перетягування:
-//  до країв екрана (з відступом), до країв і сусідства з іншими віджетами, інакше - до сітки.
-//  Alt під час перетягування - без прив'язки (точне положення).
+//  Прив'язка віджетів і нотаток на робочому столі.
+//  Під час перетягування - лише «магніт»: біля краю екрана чи сусіднього віджета прилипає, решта руху вільна.
+//  Коли відпустили (final) - якщо ні до чого не прилипло, стає на найближчу клітинку сітки.
+//  Alt - без прив'язки (точне положення).
 // ======================================================================
 static class DeskSnap
 {
@@ -16,13 +17,15 @@ static class DeskSnap
 
     public static int Grid { get { return Px(16); } }      // крок сітки
     static int Gap { get { return Px(12); } }               // відступ від краю екрана й між віджетами
-    static int Pull { get { return Px(14); } }              // наскільки близько, щоб «прилипнути»
+    static int Pull { get { return Px(10); } }              // наскільки близько, щоб «прилипнути»
 
     // інші віджети й нотатки (екранні прямокутники вмісту), крім того, що тягнуть
     public static Func<object, List<Rectangle>> Others;
 
     // r - куди хочуть поставити вміст (екранні координати); повертає скориговане місце лівого верхнього кута
-    public static Point Snap(Rectangle r, object self)
+    public static Point Snap(Rectangle r, object self) { return Snap(r, self, false); }
+
+    public static Point Snap(Rectangle r, object self, bool final)
     {
         if (!On || (Control.ModifierKeys & Keys.Alt) != 0) return r.Location;
         Rectangle wa = Screen.FromRectangle(r).WorkingArea;
@@ -33,16 +36,15 @@ static class DeskSnap
         foreach (Rectangle o in os)
         {
             if (o.IsEmpty) continue;
-            // по горизонталі: вирівняти краї або стати поруч (якщо по вертикалі вони поряд)
+            // лише сусіди поруч: вирівняти краї або стати впритул з відступом (далекі віджети не «тягнуть»)
             bool nearV = r.Bottom + g * 3 > o.Top && r.Top - g * 3 < o.Bottom;
             bool nearH = r.Right + g * 3 > o.Left && r.Left - g * 3 < o.Right;
-            xs.Add(o.Left); xs.Add(o.Right - r.Width);
             if (nearV) { xs.Add(o.Right + g); xs.Add(o.Left - g - r.Width); }
-            ys.Add(o.Top); ys.Add(o.Bottom - r.Height);
-            if (nearH) { ys.Add(o.Bottom + g); ys.Add(o.Top - g - r.Height); }
+            if (nearH) { ys.Add(o.Bottom + g); ys.Add(o.Top - g - r.Height); xs.Add(o.Left); xs.Add(o.Right - r.Width); }
+            if (nearV) { ys.Add(o.Top); ys.Add(o.Bottom - r.Height); }
         }
-        int x = Best(r.X, xs, wa.Left + g, Grid);
-        int y = Best(r.Y, ys, wa.Top + g, Grid);
+        int x = Best(r.X, xs, wa.Left + g, final ? Grid : 1);
+        int y = Best(r.Y, ys, wa.Top + g, final ? Grid : 1);
         return new Point(x, y);
     }
 
