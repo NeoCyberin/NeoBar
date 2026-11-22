@@ -250,7 +250,7 @@ sealed class NoteForm : Form
         vbar = new NoteScroll(box, delegate { return Notes.ThemeOf(n); });
         vbar.Dock = DockStyle.Right;
         vbar.Width = Px(10);
-        box.ViewChanged += delegate { vbar.Invalidate(); };
+        box.ViewChanged += delegate { vbar.Invalidate(); if (ready) FitLines(); };
         box.TextChanged += delegate { vbar.Invalidate(); };
         bodyPanel.Controls.Add(boxHost);
         bodyPanel.Controls.Add(vbar);
@@ -282,9 +282,38 @@ sealed class NoteForm : Form
     void LayoutBox()
     {
         Size cs = boxHost.ClientSize;
-        Rectangle want = new Rectangle(0, 0, cs.Width + SystemInformation.VerticalScrollBarWidth, cs.Height);
-        if (box.Bounds != want) box.Bounds = want;
+        Rectangle want = new Rectangle(0, 0, cs.Width + SystemInformation.VerticalScrollBarWidth, box.IsHandleCreated ? box.Height : cs.Height);
+        if (box.Left != 0 || box.Top != 0 || box.Width != want.Width) box.Bounds = want;
+        FitLines();
         vbar.Invalidate();
+    }
+
+    // Поле тексту закінчується на межі останнього цілого рядка: рядок, що не вміщається повністю,
+    // не видно наполовину над панеллю форматування - під полем лишається смужка тла.
+    bool fitBusy;
+    void FitLines()
+    {
+        if (fitBusy || !box.IsHandleCreated) return;
+        fitBusy = true;
+        try
+        {
+            int full = boxHost.ClientSize.Height;
+            if (full <= 0) return;
+            int h = full;
+            if (box.TextLength > 0)
+            {
+                int idx = box.GetCharIndexFromPosition(new Point(Px(4), full - 1));
+                int line = box.GetLineFromCharIndex(idx);
+                int top = box.GetPositionFromCharIndex(box.GetFirstCharIndexFromLine(line)).Y;
+                int next = box.GetFirstCharIndexFromLine(line + 1);
+                int bottom = next > 0 ? box.GetPositionFromCharIndex(next).Y : top + box.Font.Height;
+                // рядок виходить за низ, а над ним є хоч один цілий - поле закінчується над ним
+                if (bottom > full && top > box.Font.Height && top < full) h = top;
+            }
+            if (box.Height != h) box.Height = h;
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        finally { fitBusy = false; }
     }
 
     // ---- без мигтіння при зміні розміру ----
