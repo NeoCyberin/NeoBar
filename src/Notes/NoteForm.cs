@@ -250,7 +250,7 @@ sealed class NoteForm : Form
         vbar = new NoteScroll(box, delegate { return Notes.ThemeOf(n); });
         vbar.Dock = DockStyle.Right;
         vbar.Width = Px(10);
-        box.ViewChanged += delegate { vbar.Invalidate(); };
+        box.ViewChanged += delegate { vbar.Invalidate(); if (ready) FitLines(); };
         box.TextChanged += delegate { vbar.Invalidate(); };
         bodyPanel.Controls.Add(boxHost);
         bodyPanel.Controls.Add(vbar);
@@ -282,9 +282,38 @@ sealed class NoteForm : Form
     void LayoutBox()
     {
         Size cs = boxHost.ClientSize;
-        Rectangle want = new Rectangle(0, 0, cs.Width + SystemInformation.VerticalScrollBarWidth, cs.Height);
-        if (box.Bounds != want) box.Bounds = want;
+        Rectangle want = new Rectangle(0, 0, cs.Width + SystemInformation.VerticalScrollBarWidth, box.IsHandleCreated ? box.Height : cs.Height);
+        if (box.Left != 0 || box.Top != 0 || box.Width != want.Width) box.Bounds = want;
+        FitLines();
         vbar.Invalidate();
+    }
+
+    // Поле тексту закінчується на межі останнього цілого рядка: рядок, що не вміщається повністю,
+    // не видно наполовину над панеллю форматування - під полем лишається смужка тла.
+    bool fitBusy;
+    void FitLines()
+    {
+        if (fitBusy || !box.IsHandleCreated) return;
+        fitBusy = true;
+        try
+        {
+            int full = boxHost.ClientSize.Height;
+            if (full <= 0) return;
+            int h = full;
+            if (box.TextLength > 0)
+            {
+                int idx = box.GetCharIndexFromPosition(new Point(Px(4), full - 1));
+                int line = box.GetLineFromCharIndex(idx);
+                int top = box.GetPositionFromCharIndex(box.GetFirstCharIndexFromLine(line)).Y;
+                int next = box.GetFirstCharIndexFromLine(line + 1);
+                int bottom = next > 0 ? box.GetPositionFromCharIndex(next).Y : top + box.Font.Height;
+                // рядок виходить за низ, а над ним є хоч один цілий - поле закінчується над ним
+                if (bottom > full && top > box.Font.Height && top < full) h = top;
+            }
+            if (box.Height != h) box.Height = h;
+        }
+        catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        finally { fitBusy = false; }
     }
 
     // ---- без мигтіння при зміні розміру ----
@@ -1557,6 +1586,8 @@ sealed class NoteForm : Form
         try { n.Title = titleBox.Text; n.Text = box.Text; n.Rtf = box.Rtf; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
     }
 
+    bool snapMoved;                 // нотатку тягнули (не змінювали розмір) - після відпускання стане на сітку
+
     protected override void WndProc(ref Message m)
     {
         const int WM_MOUSEACTIVATE = 0x0021;
@@ -1568,6 +1599,7 @@ sealed class NoteForm : Form
         // WM_MOVING: нотатку тягнуть - прив'язка до країв екрана, інших віджетів чи сітки
         if (m.Msg == 0x0216 && m.LParam != IntPtr.Zero && n != null && !n.Locked)
         {
+            snapMoved = true;
             try
             {
                 int l = Marshal.ReadInt32(m.LParam, 0), tp = Marshal.ReadInt32(m.LParam, 4), rr = Marshal.ReadInt32(m.LParam, 8), b = Marshal.ReadInt32(m.LParam, 12);
@@ -1575,6 +1607,17 @@ sealed class NoteForm : Form
                 Marshal.WriteInt32(m.LParam, 0, s.X); Marshal.WriteInt32(m.LParam, 4, s.Y);
                 Marshal.WriteInt32(m.LParam, 8, s.X + rr - l); Marshal.WriteInt32(m.LParam, 12, s.Y + b - tp);
                 m.Result = (IntPtr)1;
+            }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        }
+        // WM_EXITSIZEMOVE: нотатку відпустили - на сітку (якщо не прилипла до краю чи сусіда)
+        if (m.Msg == 0x0232 && snapMoved && n != null && !n.Locked)
+        {
+            snapMoved = false;
+            try
+            {
+                Point s = DeskSnap.Snap(Bounds, this, true);
+                if (s != Location) Location = s;
             }
             catch (Exception skipEx) { SbLog.Skip(skipEx); }
         }

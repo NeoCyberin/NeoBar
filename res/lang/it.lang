@@ -11926,5 +11926,5 @@
 < Прив'язувати віджети до сітки
 > Aggancia i widget a una griglia
 
-< Під час перетягування віджети й нотатки прилипають до країв екрана, до сусідніх віджетів і до сітки - легко ставити рівно. З Alt - без прив'язки
-> Durante il trascinamento widget e note si agganciano ai bordi dello schermo, ai widget vicini e a una griglia: facile allinearli. Con Alt senza aggancio
+< Віджети й нотатки рухаються вільно, але біля краю екрана чи сусіднього віджета прилипають, а коли їх відпустити - стають на сітку. З Alt - без прив'язки
+> Widget e note si muovono liberamente ma si agganciano vicino a un bordo dello schermo o a un widget vicino e, rilasciati, si allineano alla griglia. Con Alt senza aggancio

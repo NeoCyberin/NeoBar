@@ -1125,6 +1125,10 @@ sealed class DeskClock : LayeredForm
         if (dragging)
         {
             dragging = false; Capture = false;
+            // відпустили - на сітку (якщо не прилипло до краю чи сусіда)
+            Size cs0 = Want();
+            Point fs = DeskSnap.Snap(new Rectangle(Left + dx0, Top + T0, cs0.Width, cs0.Height), this, true);
+            if (fs != new Point(Left + dx0, Top + T0)) Location = new Point(fs.X - dx0, fs.Y - T0);
             spec.X = Left + dx0; spec.Y = Top + T0;
             ClockData.Save();
             KeepBottom();
