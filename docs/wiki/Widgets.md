@@ -10,7 +10,7 @@ Widgets sit at the top of the panel; click one to open its window. Order them wi
 | **Network** | Download/upload speed, ping, adapters, Wi-Fi, firewall switch. Diagnostics: ping, traceroute, ports; DNS check (a DNS server IP in the field - does it work and is it faster than yours; a site name - how different DNS servers see it; empty - do your DNS servers work); local network scan. |
 | **Storage** | Drives with free space; health (SMART), speed, maintenance and formatting; *Cleanup* - Windows junk; *Recovery* - deleted files and folders from a drive or USB stick. |
 | **Battery** | Charge and power state (shown only on devices with a battery). |
-| **Notes** | Notes on the desktop; they can be locked in place and saved to a file (.txt or .rtf - header menu). |
+| **Notes** | Notes on the desktop; they can be locked in place and saved to a file (.txt or .rtf - header menu). The cross offers *Hide* (the note stays in the *Hidden* tab of the notes window, off the desktop) or *To trash* (restorable for 30 days, then deleted). |
 | **Palette** | Eyedropper, colour models (HEX and others), swatches, one click copies HEX. |
 | **Dice** | d4-d20, several dice at once, your own names for the sides, history. On the panel - a 3D die of the chosen shape with the result on its front face. |
 | **QR code** | Text, link, Wi-Fi, contact, e-mail, SMS, phone, location; error correction level; logo in the centre; save as PNG or SVG. |
@@ -18,7 +18,7 @@ Widgets sit at the top of the panel; click one to open its window. Order them wi
 
 ## Widgets on the desktop
 
-Most widgets can be put on the desktop (the screen button in the widget's window). Drag a widget to move it, the corner to resize it: the size has limits, so the small captions always stay readable. The lock pins it in place (clicks go through to the desktop); the slider sets transparency. Large captions (time, temperature, totals) use the theme's notes font - Settings → Appearance → *Notes font in desktop widgets* turns this off.
+Most widgets can be put on the desktop (the screen button in the widget's window). Drag a widget to move it, the corner to resize it: the size has limits, so the small captions always stay readable. The lock pins it in place (clicks go through to the desktop); the slider sets transparency. Large captions (time, temperature, totals) use the theme's notes font - Settings → Appearance → *Notes font in desktop widgets* turns this off. Desktop icons that end up under a widget or note are moved to the nearest free spot of the icon grid (Settings → Panel → *Icons not under widgets*; doesn't work while Windows' *Auto arrange icons* is on).
 
 ## Process analysis (System monitor → Analysis)
 

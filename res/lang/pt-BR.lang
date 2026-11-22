@@ -4633,9 +4633,6 @@
 < Закріпити текст на робочому столі
 > Fixar o texto na área de trabalho
 
-< Видалити нотатку
-> Excluir nota
-
 < Розмір тексту нотатки: малий, стандартний, великий
 > Tamanho do texto da nota: pequeno, padrão, grande
 
@@ -4665,9 +4662,6 @@
 
 < Налаштувати тему «
 > Personalizar o tema «
-
-< Видалити цю нотатку?
-> Excluir esta nota?
 
 < Смайли
 > Carinhas
@@ -5049,9 +5043,6 @@
 
 < Чекати
 > Aguardar
-
-< Хеш-сума й шифрування в контекстному меню файлів
-> Hash e criptografia no menu de contexto do arquivo
 
 < Не вдалося змінити меню: 
 > Não foi possível alterar o menu: 
@@ -10135,9 +10126,6 @@
 < Перезапустити NeoBar
 > Reiniciar o NeoBar
 
-< Клік по нотатці - показати її; перемикач - закріпити на шпалерах або редагувати.
-> Clique numa nota para mostrá-la; o interruptor a fixa no papel de parede ou permite editá-la.
-
 < Перетягніть файл сюди
 > Solte um arquivo aqui
 
@@ -11694,3 +11682,243 @@
 
 < у групу «{0}»
 > no grupo “{0}”
+
+< «Відновити» повертає нотатку туди, де вона була.
+> “Restaurar” devolve a nota para onde estava.
+
+< » назовсім? Відновити її вже не вийде.
+> ” permanentemente? Não será possível restaurá-la depois.
+
+< Інший…
+> Outro…
+
+< Видалити «{0}» із сейфа назовсім?
+> Excluir “{0}” do cofre permanentemente?
+
+< Видалити назовсім нотатки з кошика ({0})?
+> Excluir permanentemente as notas da lixeira ({0})?
+
+< Видаляти оригінали після додавання (лише перевірені копії)
+> Excluir originais após adicionar (só cópias verificadas)
+
+< Відкрити сейф
+> Abrir o cofre
+
+< Відкритих копій, ще зайнятих програмами: {0} - їх приберу пізніше; закрийте ці програми.
+> Cópias abertas ainda em uso por programas: {0} - serão removidas depois; feche esses programas.
+
+< Відкрито тимчасову копію - її буде стерто, коли сейф замкнеться. Зміни в ній у сейф не потрапляють: щоб зберегти, додайте файл знову.
+> Uma cópia temporária foi aberta - será apagada quando o cofre for trancado. Alterações nela não vão para o cofre: para guardá-las, adicione o arquivo de novo.
+
+< Додано файлів: {0}.
+> Arquivos adicionados: {0}.
+
+< Додати в сейф…
+> Adicionar ao cofre…
+
+< Додати й видалити
+> Adicionar e excluir
+
+< Додати теку…
+> Adicionar pasta…
+
+< Замкнути
+> Trancar
+
+< Зберегти все…
+> Salvar tudo…
+
+< Збережено файлів: {0} - у «{1}».
+> Arquivos salvos: {0} - em “{1}”.
+
+< Змінити пароль…
+> Alterar senha…
+
+< Значки не під віджетами
+> Ícones fora dos widgets
+
+< Значки робочого столу
+> Ícones da área de trabalho
+
+< Значок робочого столу, що опинився під віджетом NeoBar чи нотаткою, переставляється на найближче вільне місце. Не працює, коли у Windows увімкнено «Упорядковувати значки автоматично»
+> Um ícone da área de trabalho que fique sob um widget do NeoBar ou uma nota é movido para o lugar livre mais próximo. Não funciona com “Organizar ícones automaticamente” ativado no Windows
+
+< Клік по нотатці - показати її; перемикач - закріпити на шпалерах; око - приховати; кошик - прибрати.
+> Clique numa nota para mostrá-la; o interruptor a fixa no papel de parede; o olho a oculta; a lixeira a remove.
+
+< Кошик порожній
+> A lixeira está vazia
+
+< Куди зберегти розшифровані файли
+> Onde salvar os arquivos descriptografados
+
+< Лише додати
+> Só adicionar
+
+< Не вдалося дістатися до значків робочого столу (Провідник не відповів) - значки з-під віджетів не відсуваються. Подробиці - у журналі віджетів.
+> Não foi possível acessar os ícones da área de trabalho (o Explorer não respondeu) - os ícones não são afastados dos widgets. Detalhes no log de widgets.
+
+< Не вдалося: {0}
+> Falhou: {0}
+
+< Неправильний поточний пароль.
+> A senha atual está errada.
+
+< Новий пароль замінить старий; файли перешифровувати не треба. Забутий пароль не відновити.
+> A nova senha substitui a antiga; não é preciso criptografar os arquivos de novo. Uma senha esquecida não pode ser recuperada.
+
+< Новий:
+> Nova:
+
+< Нотатки в кошику зникають назовсім через {0} днів.
+> As notas na lixeira são excluídas permanentemente após {0} dias.
+
+< Оригіналів видалено: {0}.
+> Originais excluídos: {0}.
+
+< Очистити кошик
+> Esvaziar lixeira
+
+< Пароль змінено. Файли не перешифровувались - змінився лише ключ до них.
+> Senha alterada. Os arquivos não foram criptografados de novo - só a chave deles mudou.
+
+< Пароль неможливо відновити: забудете - файли в сейфі втрачено назавжди.
+> A senha não pode ser recuperada: se esquecê-la, os arquivos do cofre se perdem para sempre.
+
+< Перелік файлів сейфа пошкоджено.
+> A lista de arquivos do cofre está danificada.
+
+< Перетягніть сюди файли чи теки
+> Arraste arquivos ou pastas para cá
+
+< Поточний:
+> Atual:
+
+< Прибрати зі столу: приховати або в кошик
+> Remover da área de trabalho: ocultar ou para a lixeira
+
+< Прибрати нотатку з робочого столу?
+> Remover a nota da área de trabalho?
+
+< Прихована лишається в списку нотаток; з кошика її можна відновити протягом {0} днів.
+> Uma nota oculta fica na lista de notas; da lixeira pode ser restaurada em até {0} dias.
+
+< Прихована нотатка нікуди не зникає - вона просто не займає місце на робочому столі.
+> Uma nota oculta não some - só não ocupa espaço na área de trabalho.
+
+< Прихованих нотаток немає
+> Nenhuma nota oculta
+
+< Приховані
+> Ocultas
+
+< Приховані нотатки не показуються на робочому столі, але зберігаються тут. «Показати» повертає нотатку на стіл.
+> Notas ocultas não aparecem na área de trabalho, mas ficam guardadas aqui. “Mostrar” devolve a nota à área de trabalho.
+
+< Приховати нотатку
+> Ocultar nota
+
+< Продовжити?
+> Continuar?
+
+< Після додавання оригінали буде видалено назовсім (не в кошик), але лише ті, чию копію в сейфі перевірено.\n\nНа SSD залишки видаленого файла інколи можна відновити спеціальними програмами.
+> Após adicionar, os originais serão excluídos permanentemente (não para a lixeira), mas só aqueles cuja cópia no cofre foi verificada.\n\nEm um SSD, restos de um arquivo excluído às vezes podem ser recuperados com programas especiais.
+
+< Сейф
+> Cofre
+
+< Сейф - тека, де файли лежать лише зашифрованими (AES-256): без пароля їх не прочитати, навіть назви. Перетягніть файли сюди чи виберіть «Додати в сейф» у контекстному меню файла.
+> O cofre é uma pasta onde os arquivos ficam só criptografados (AES-256): sem a senha ninguém os lê, nem os nomes. Arraste arquivos para cá ou escolha “Adicionar ao cofre” no menu de contexto de um arquivo.
+
+< Сейф замкнено.
+> O cofre está trancado.
+
+< Сейф замкнено. Введіть пароль, щоб побачити й відкрити файли.
+> O cofre está trancado. Digite a senha para ver e abrir os arquivos.
+
+< Сейф замкнено: {0} хв без дій.
+> Cofre trancado: {0} min sem atividade.
+
+< Сейф замкнено: екран вимкнено чи комп'ютер заблоковано.
+> Cofre trancado: a tela desligou ou o PC foi bloqueado.
+
+< Сейф замкнеться сам: коли закриєте вікно, вимкнеться екран чи після {0} хв без дій.
+> O cofre se tranca sozinho: ao fechar a janela, quando a tela desliga ou após {0} min sem atividade.
+
+< Сейф пошкоджено.
+> O cofre está danificado.
+
+< Сейф створено. Перетягніть сюди файли або натисніть «Додати файли…».
+> Cofre criado. Arraste arquivos para cá ou clique em “Adicionar arquivos…”.
+
+< Сейф ще працює з файлами. Зупинити й закрити?
+> O cofre ainda está processando arquivos. Parar e fechar?
+
+< Створити сейф
+> Criar cofre
+
+< Тека сейфа:
+> Pasta do cofre:
+
+< Тека сейфа: наявний сейф відкриється, у порожній теці буде створено новий
+> Pasta do cofre: um cofre existente será aberto; numa pasta vazia será criado um novo
+
+< Тека, яку додати в сейф
+> Pasta a adicionar ao cofre
+
+< У Windows увімкнено «Упорядковувати значки автоматично» - значки розставляє сама Windows, тому NeoBar не може відсувати їх з-під віджетів. Вимкнути: правий клік на робочому столі → «Вигляд» → «Упорядковувати значки автоматично».
+> “Organizar ícones automaticamente” está ativado no Windows - o próprio Windows posiciona os ícones, então o NeoBar não pode afastá-los dos widgets. Para desativar: clique direito na área de trabalho → Exibir → Organizar ícones automaticamente.
+
+< У кошик
+> Para a lixeira
+
+< У цій теці вже є сейф.
+> Já existe um cofre nesta pasta.
+
+< Файл «{0}» у сейфі змінено чи пошкоджено.
+> O arquivo “{0}” no cofre foi alterado ou danificado.
+
+< Файл «{0}» у сейфі обрізано.
+> O arquivo “{0}” no cofre está truncado.
+
+< Файл «{0}» у сейфі пошкоджено.
+> O arquivo “{0}” no cofre está danificado.
+
+< Файли, які додати в сейф
+> Arquivos a adicionar ao cofre
+
+< Файлів чекає на додавання: {0}. Відкрийте сейф паролем.
+> Arquivos aguardando: {0}. Abra o cofre com a senha.
+
+< Файлів: {0} · {1}
+> Arquivos: {0} · {1}
+
+< Хеш-сума, шифрування й сейф у контекстному меню файлів
+> Hash, criptografia e cofre no menu de contexto dos arquivos
+
+< Це не сейф NeoBar або його пошкоджено.
+> Isto não é um cofre do NeoBar, ou está danificado.
+
+< Ще раз:
+> De novo:
+
+< відкриваю…
+> abrindo…
+
+< додаю…
+> adicionando…
+
+< змінюю пароль…
+> alterando a senha…
+
+< прихована
+> oculta
+
+< розшифровую…
+> descriptografando…
+
+< створюю сейф…
+> criando o cofre…
+
+< у кошику з {0} · зникне через {1} дн.
+> na lixeira desde {0} · some em {1} d

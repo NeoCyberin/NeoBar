@@ -89,6 +89,11 @@ sealed class Note
     public string Title = "";                                  // назва нотатки (показується в списку нотаток)
     public string Text = "";
     public string Rtf = "";
+    public bool Hidden;                                        // прихована: є в списку нотаток, але не на робочому столі
+    public DateTime Trashed = DateTime.MinValue;              // коли перенесено в кошик (MinValue - не в кошику)
+
+    public bool InTrash { get { return Trashed != DateTime.MinValue; } }
+    public bool OnDesk { get { return !InTrash && !Hidden; } }
 
     // підпис у списку: назва, а якщо її нема - початок тексту
     public string Label
@@ -153,11 +158,16 @@ static class Notes
     public static string PanelId = "dark";
 
     public static int Px(float v) { return (int)Math.Round(v * Scale); }
-    public static int Count { get { return All.Count; } }
+    public const int TrashDays = 30;          // скільки днів нотатка лежить у кошику, перш ніж зникне назовсім
+
+    // нотатки на робочому столі (без прихованих і кошика)
+    public static int Count { get { int n = 0; foreach (Note x in All) if (x.OnDesk) n++; return n; } }
+    public static int HiddenCount { get { int n = 0; foreach (Note x in All) if (x.Hidden && !x.InTrash) n++; return n; } }
+    public static int TrashCount { get { int n = 0; foreach (Note x in All) if (x.InTrash) n++; return n; } }
 
     public static int LockedCount
     {
-        get { int n = 0; foreach (Note x in All) if (x.Locked) n++; return n; }
+        get { int n = 0; foreach (Note x in All) if (x.OnDesk && x.Locked) n++; return n; }
     }
 
     public static event Action Changed;
@@ -222,7 +232,10 @@ static class Notes
         ColorEmoji.Init();
         path = Path.Combine(dir, "notes.ini");
         Load();
-        foreach (Note n in All) Open(n);
+        // кошик: старше TrashDays - назовсім
+        int purged = All.RemoveAll(delegate (Note x) { return x.InTrash && (DateTime.Now - x.Trashed).TotalDays > TrashDays; });
+        if (purged > 0) Save();
+        foreach (Note n in All) if (n.OnDesk) Open(n);
 
         // закріплені нотатки періодично повертаємо на дно, щоб клік по робочому столу їх не підняв
         zTimer.Interval = 1000;
@@ -323,6 +336,8 @@ static class Notes
                     case "title": cur.Title = Unesc(v); break;
                     case "text": cur.Text = Unesc(v); break;
                     case "rtf": cur.Rtf = Unesc(v); break;
+                    case "hidden": cur.Hidden = v.Trim() == "1"; break;
+                    case "trashed": { long tk; if (long.TryParse(v.Trim(), out tk) && tk > 0) try { cur.Trashed = new DateTime(tk); } catch (Exception skipEx) { SbLog.Skip(skipEx); } break; }
                 }
             }
         }
@@ -378,10 +393,19 @@ static class Notes
         }
     }
 
+    // прямокутники нотаток на робочому столі
+    public static List<Rectangle> DeskRects()
+    {
+        List<Rectangle> l = new List<Rectangle>();
+        foreach (NoteForm f in forms.Values) if (f != null && !f.IsDisposed && f.Visible) l.Add(f.Bounds);
+        return l;
+    }
+
     public static void Save()
     {
         if (path.Length == 0) return;
         dirty = false;
+        DeskIcons.Later(1500);              // нотатку посунули, закріпили чи додали - значки з-під неї
         try
         {
             foreach (NoteForm f in forms.Values) f.Pull();
@@ -416,6 +440,8 @@ static class Notes
                 sb.AppendLine("title=" + Esc(n.Title));
                 sb.AppendLine("text=" + Esc(n.Text));
                 sb.AppendLine("rtf=" + Esc(n.Rtf));
+                if (n.Hidden) sb.AppendLine("hidden=1");
+                if (n.InTrash) sb.AppendLine("trashed=" + n.Trashed.Ticks);
                 sb.AppendLine();
             }
             SafeFile.Write(path, sb.ToString(), new UTF8Encoding(true));
@@ -473,11 +499,59 @@ static class Notes
         Notify();
     }
 
-    public static void Delete(Note n)
+    // прибрати вікно нотатки з робочого столу (сама нотатка лишається)
+    static void CloseForm(Note n)
     {
         NoteForm f;
-        if (forms.TryGetValue(n, out f)) { forms.Remove(n); try { f.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
+        if (forms.TryGetValue(n, out f))
+        {
+            try { f.Pull(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            forms.Remove(n);
+            try { f.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        }
+    }
+
+    // назовсім (з кошика)
+    public static void Delete(Note n)
+    {
+        CloseForm(n);
         All.Remove(n);
+        Save();
+        Notify();
+    }
+
+    // у кошик: зникає з робочого столу, відновлюється протягом TrashDays днів
+    public static void Trash(Note n)
+    {
+        CloseForm(n);
+        n.Trashed = DateTime.Now;
+        Save();
+        Notify();
+    }
+
+    public static void Restore(Note n)
+    {
+        n.Trashed = DateTime.MinValue;
+        if (n.OnDesk && !forms.ContainsKey(n)) { n.R = Visible(n.R); Open(n); }
+        Save();
+        Notify();
+    }
+
+    public static void EmptyTrash()
+    {
+        foreach (Note n in All.ToArray()) if (n.InTrash) CloseForm(n);
+        All.RemoveAll(delegate (Note x) { return x.InTrash; });
+        Save();
+        Notify();
+    }
+
+    // приховати чи повернути на робочий стіл
+    public static void SetHidden(Note n, bool hidden)
+    {
+        if (n.Hidden == hidden) return;
+        n.Hidden = hidden;
+        if (hidden) CloseForm(n);
+        else if (n.OnDesk && !forms.ContainsKey(n)) { n.R = Visible(n.R); Open(n); }
         Save();
         Notify();
     }
@@ -498,8 +572,8 @@ static class Notes
         if (forms.TryGetValue(n, out f) && f != null && !f.IsDisposed) f.Reveal();
     }
 
-    public static void LockAll() { foreach (Note n in All) SetLocked(n, true); }
-    public static void UnlockAll() { foreach (Note n in All) SetLocked(n, false); }
+    public static void LockAll() { foreach (Note n in All.ToArray()) if (n.OnDesk) SetLocked(n, true); }
+    public static void UnlockAll() { foreach (Note n in All.ToArray()) if (n.OnDesk) SetLocked(n, false); }
     public static void Modified() { Notify(); }
 
     public static void SetNoteTheme(Note n, string id)

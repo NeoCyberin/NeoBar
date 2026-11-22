@@ -4633,9 +4633,6 @@
 < Закріпити текст на робочому столі
 > Fijar el texto al escritorio
 
-< Видалити нотатку
-> Eliminar nota
-
 < Розмір тексту нотатки: малий, стандартний, великий
 > Tamaño del texto de la nota: pequeño, estándar, grande
 
@@ -4665,9 +4662,6 @@
 
 < Налаштувати тему «
 > Personalizar el tema «
-
-< Видалити цю нотатку?
-> ¿Eliminar esta nota?
 
 < Смайли
 > Emoticonos
@@ -5049,9 +5043,6 @@
 
 < Чекати
 > Esperar
-
-< Хеш-сума й шифрування в контекстному меню файлів
-> Hash y cifrado en el menú contextual del archivo
 
 < Не вдалося змінити меню: 
 > No se pudo cambiar el menú: 
@@ -10135,9 +10126,6 @@
 < Перезапустити NeoBar
 > Reiniciar NeoBar
 
-< Клік по нотатці - показати її; перемикач - закріпити на шпалерах або редагувати.
-> Haz clic en una nota para mostrarla; el interruptor la fija al fondo o permite editarla.
-
 < Перетягніть файл сюди
 > Suelta aquí un archivo
 
@@ -11694,3 +11682,243 @@
 
 < у групу «{0}»
 > al grupo «{0}»
+
+< «Відновити» повертає нотатку туди, де вона була.
+> «Restaurar» devuelve la nota a donde estaba.
+
+< » назовсім? Відновити її вже не вийде.
+> » definitivamente? Después no se podrá restaurar.
+
+< Інший…
+> Otro…
+
+< Видалити «{0}» із сейфа назовсім?
+> ¿Eliminar «{0}» de la caja fuerte definitivamente?
+
+< Видалити назовсім нотатки з кошика ({0})?
+> ¿Eliminar definitivamente las notas de la papelera ({0})?
+
+< Видаляти оригінали після додавання (лише перевірені копії)
+> Eliminar los originales tras añadir (solo copias verificadas)
+
+< Відкрити сейф
+> Abrir la caja fuerte
+
+< Відкритих копій, ще зайнятих програмами: {0} - їх приберу пізніше; закрийте ці програми.
+> Copias abiertas aún en uso por programas: {0}; se eliminarán más tarde; cierre esos programas.
+
+< Відкрито тимчасову копію - її буде стерто, коли сейф замкнеться. Зміни в ній у сейф не потрапляють: щоб зберегти, додайте файл знову.
+> Se abrió una copia temporal; se borrará al bloquear la caja fuerte. Sus cambios no entran en la caja: para guardarlos, añada el archivo de nuevo.
+
+< Додано файлів: {0}.
+> Archivos añadidos: {0}.
+
+< Додати в сейф…
+> Añadir a la caja fuerte…
+
+< Додати й видалити
+> Añadir y eliminar
+
+< Додати теку…
+> Añadir carpeta…
+
+< Замкнути
+> Bloquear
+
+< Зберегти все…
+> Guardar todo…
+
+< Збережено файлів: {0} - у «{1}».
+> Archivos guardados: {0}, en «{1}».
+
+< Змінити пароль…
+> Cambiar contraseña…
+
+< Значки не під віджетами
+> Iconos fuera de los widgets
+
+< Значки робочого столу
+> Iconos del escritorio
+
+< Значок робочого столу, що опинився під віджетом NeoBar чи нотаткою, переставляється на найближче вільне місце. Не працює, коли у Windows увімкнено «Упорядковувати значки автоматично»
+> Un icono del escritorio que queda bajo un widget de NeoBar o una nota se mueve al hueco libre más cercano. No funciona si en Windows está activado «Organizar iconos automáticamente»
+
+< Клік по нотатці - показати її; перемикач - закріпити на шпалерах; око - приховати; кошик - прибрати.
+> Clic en una nota: mostrarla; el interruptor la fija al fondo; el ojo la oculta; la papelera la quita.
+
+< Кошик порожній
+> La papelera está vacía
+
+< Куди зберегти розшифровані файли
+> Dónde guardar los archivos descifrados
+
+< Лише додати
+> Solo añadir
+
+< Не вдалося дістатися до значків робочого столу (Провідник не відповів) - значки з-під віджетів не відсуваються. Подробиці - у журналі віджетів.
+> No se pudo acceder a los iconos del escritorio (el Explorador no respondió): los iconos no se apartan de los widgets. Detalles en el registro de widgets.
+
+< Не вдалося: {0}
+> Falló: {0}
+
+< Неправильний поточний пароль.
+> La contraseña actual es incorrecta.
+
+< Новий пароль замінить старий; файли перешифровувати не треба. Забутий пароль не відновити.
+> La nueva contraseña sustituye a la anterior; no hace falta volver a cifrar los archivos. Una contraseña olvidada no se puede recuperar.
+
+< Новий:
+> Nueva:
+
+< Нотатки в кошику зникають назовсім через {0} днів.
+> Las notas de la papelera se eliminan definitivamente tras {0} días.
+
+< Оригіналів видалено: {0}.
+> Originales eliminados: {0}.
+
+< Очистити кошик
+> Vaciar papelera
+
+< Пароль змінено. Файли не перешифровувались - змінився лише ключ до них.
+> Contraseña cambiada. Los archivos no se volvieron a cifrar: solo cambió su clave.
+
+< Пароль неможливо відновити: забудете - файли в сейфі втрачено назавжди.
+> La contraseña no se puede recuperar: si la olvida, los archivos de la caja fuerte se pierden para siempre.
+
+< Перелік файлів сейфа пошкоджено.
+> La lista de archivos de la caja fuerte está dañada.
+
+< Перетягніть сюди файли чи теки
+> Arrastre aquí archivos o carpetas
+
+< Поточний:
+> Actual:
+
+< Прибрати зі столу: приховати або в кошик
+> Quitar del escritorio: ocultar o a la papelera
+
+< Прибрати нотатку з робочого столу?
+> ¿Quitar la nota del escritorio?
+
+< Прихована лишається в списку нотаток; з кошика її можна відновити протягом {0} днів.
+> Una nota oculta sigue en la lista de notas; desde la papelera se puede restaurar durante {0} días.
+
+< Прихована нотатка нікуди не зникає - вона просто не займає місце на робочому столі.
+> Una nota oculta no desaparece: simplemente no ocupa espacio en el escritorio.
+
+< Прихованих нотаток немає
+> No hay notas ocultas
+
+< Приховані
+> Ocultas
+
+< Приховані нотатки не показуються на робочому столі, але зберігаються тут. «Показати» повертає нотатку на стіл.
+> Las notas ocultas no aparecen en el escritorio, pero se guardan aquí. «Mostrar» devuelve la nota al escritorio.
+
+< Приховати нотатку
+> Ocultar nota
+
+< Продовжити?
+> ¿Continuar?
+
+< Після додавання оригінали буде видалено назовсім (не в кошик), але лише ті, чию копію в сейфі перевірено.\n\nНа SSD залишки видаленого файла інколи можна відновити спеціальними програмами.
+> Tras añadirlos, los originales se eliminarán definitivamente (no a la papelera), pero solo aquellos cuya copia en la caja fuerte se haya verificado.\n\nEn un SSD, a veces se pueden recuperar restos de un archivo eliminado con programas especiales.
+
+< Сейф
+> Caja fuerte
+
+< Сейф - тека, де файли лежать лише зашифрованими (AES-256): без пароля їх не прочитати, навіть назви. Перетягніть файли сюди чи виберіть «Додати в сейф» у контекстному меню файла.
+> La caja fuerte es una carpeta donde los archivos se guardan solo cifrados (AES-256): sin la contraseña no se pueden leer, ni siquiera sus nombres. Arrastre archivos aquí o elija «Añadir a la caja fuerte» en el menú contextual de un archivo.
+
+< Сейф замкнено.
+> La caja fuerte está bloqueada.
+
+< Сейф замкнено. Введіть пароль, щоб побачити й відкрити файли.
+> La caja fuerte está bloqueada. Escriba la contraseña para ver y abrir los archivos.
+
+< Сейф замкнено: {0} хв без дій.
+> Caja fuerte bloqueada: {0} min sin actividad.
+
+< Сейф замкнено: екран вимкнено чи комп'ютер заблоковано.
+> Caja fuerte bloqueada: pantalla apagada o PC bloqueado.
+
+< Сейф замкнеться сам: коли закриєте вікно, вимкнеться екран чи після {0} хв без дій.
+> La caja fuerte se bloquea sola: al cerrar la ventana, al apagarse la pantalla o tras {0} min sin actividad.
+
+< Сейф пошкоджено.
+> La caja fuerte está dañada.
+
+< Сейф створено. Перетягніть сюди файли або натисніть «Додати файли…».
+> Caja fuerte creada. Arrastre archivos aquí o pulse «Añadir archivos…».
+
+< Сейф ще працює з файлами. Зупинити й закрити?
+> La caja fuerte aún trabaja con archivos. ¿Detener y cerrar?
+
+< Створити сейф
+> Crear caja fuerte
+
+< Тека сейфа:
+> Carpeta de la caja:
+
+< Тека сейфа: наявний сейф відкриється, у порожній теці буде створено новий
+> Carpeta de la caja fuerte: una existente se abrirá; en una carpeta vacía se creará una nueva
+
+< Тека, яку додати в сейф
+> Carpeta que añadir a la caja fuerte
+
+< У Windows увімкнено «Упорядковувати значки автоматично» - значки розставляє сама Windows, тому NeoBar не може відсувати їх з-під віджетів. Вимкнути: правий клік на робочому столі → «Вигляд» → «Упорядковувати значки автоматично».
+> En Windows está activado «Organizar iconos automáticamente»: Windows coloca los iconos por sí mismo, así que NeoBar no puede apartarlos de los widgets. Para desactivarlo: clic derecho en el escritorio → Ver → Organizar iconos automáticamente.
+
+< У кошик
+> A la papelera
+
+< У цій теці вже є сейф.
+> Ya hay una caja fuerte en esta carpeta.
+
+< Файл «{0}» у сейфі змінено чи пошкоджено.
+> El archivo «{0}» de la caja fuerte se modificó o está dañado.
+
+< Файл «{0}» у сейфі обрізано.
+> El archivo «{0}» de la caja fuerte está truncado.
+
+< Файл «{0}» у сейфі пошкоджено.
+> El archivo «{0}» de la caja fuerte está dañado.
+
+< Файли, які додати в сейф
+> Archivos que añadir a la caja fuerte
+
+< Файлів чекає на додавання: {0}. Відкрийте сейф паролем.
+> Archivos esperando a añadirse: {0}. Abra la caja fuerte con la contraseña.
+
+< Файлів: {0} · {1}
+> Archivos: {0} · {1}
+
+< Хеш-сума, шифрування й сейф у контекстному меню файлів
+> Hash, cifrado y caja fuerte en el menú contextual de archivos
+
+< Це не сейф NeoBar або його пошкоджено.
+> No es una caja fuerte de NeoBar o está dañada.
+
+< Ще раз:
+> Repetir:
+
+< відкриваю…
+> abriendo…
+
+< додаю…
+> añadiendo…
+
+< змінюю пароль…
+> cambiando la contraseña…
+
+< прихована
+> oculta
+
+< розшифровую…
+> descifrando…
+
+< створюю сейф…
+> creando la caja fuerte…
+
+< у кошику з {0} · зникне через {1} дн.
+> en la papelera desde {0} · se elimina en {1} d

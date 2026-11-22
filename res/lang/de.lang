@@ -4633,9 +4633,6 @@
 < Закріпити текст на робочому столі
 > Text an den Desktop anheften
 
-< Видалити нотатку
-> Notiz löschen
-
 < Розмір тексту нотатки: малий, стандартний, великий
 > Textgröße der Notiz: klein, Standard, groß
 
@@ -4665,9 +4662,6 @@
 
 < Налаштувати тему «
 > Design anpassen «
-
-< Видалити цю нотатку?
-> Diese Notiz löschen?
 
 < Смайли
 > Smileys
@@ -5049,9 +5043,6 @@
 
 < Чекати
 > Warten
-
-< Хеш-сума й шифрування в контекстному меню файлів
-> Hash und Verschlüsselung im Kontextmenü der Datei
 
 < Не вдалося змінити меню: 
 > Das Menü konnte nicht geändert werden: 
@@ -10135,9 +10126,6 @@
 < Перезапустити NeoBar
 > NeoBar neu starten
 
-< Клік по нотатці - показати її; перемикач - закріпити на шпалерах або редагувати.
-> Klick auf eine Notiz zeigt sie an; der Schalter heftet sie ans Hintergrundbild oder macht sie bearbeitbar.
-
 < Перетягніть файл сюди
 > Datei hierher ziehen
 
@@ -11694,3 +11682,243 @@
 
 < у групу «{0}»
 > in die Gruppe „{0}“
+
+< «Відновити» повертає нотатку туди, де вона була.
+> „Wiederherstellen“ bringt die Notiz dorthin zurück, wo sie war.
+
+< » назовсім? Відновити її вже не вийде.
+> “ endgültig löschen? Wiederherstellen ist danach nicht mehr möglich.
+
+< Інший…
+> Anderer…
+
+< Видалити «{0}» із сейфа назовсім?
+> „{0}“ endgültig aus dem Tresor löschen?
+
+< Видалити назовсім нотатки з кошика ({0})?
+> Notizen im Papierkorb endgültig löschen ({0})?
+
+< Видаляти оригінали після додавання (лише перевірені копії)
+> Originale nach dem Hinzufügen löschen (nur geprüfte Kopien)
+
+< Відкрити сейф
+> Tresor öffnen
+
+< Відкритих копій, ще зайнятих програмами: {0} - їх приберу пізніше; закрийте ці програми.
+> Geöffnete Kopien, die noch von Programmen verwendet werden: {0} - sie werden später entfernt; schließen Sie diese Programme.
+
+< Відкрито тимчасову копію - її буде стерто, коли сейф замкнеться. Зміни в ній у сейф не потрапляють: щоб зберегти, додайте файл знову.
+> Eine temporäre Kopie wurde geöffnet - sie wird gelöscht, wenn der Tresor gesperrt wird. Änderungen daran landen nicht im Tresor: Zum Speichern die Datei erneut hinzufügen.
+
+< Додано файлів: {0}.
+> Dateien hinzugefügt: {0}.
+
+< Додати в сейф…
+> Zum Tresor hinzufügen…
+
+< Додати й видалити
+> Hinzufügen und löschen
+
+< Додати теку…
+> Ordner hinzufügen…
+
+< Замкнути
+> Sperren
+
+< Зберегти все…
+> Alle speichern…
+
+< Збережено файлів: {0} - у «{1}».
+> Dateien gespeichert: {0} - in „{1}“.
+
+< Змінити пароль…
+> Passwort ändern…
+
+< Значки не під віджетами
+> Symbole nicht unter Widgets
+
+< Значки робочого столу
+> Desktopsymbole
+
+< Значок робочого столу, що опинився під віджетом NeoBar чи нотаткою, переставляється на найближче вільне місце. Не працює, коли у Windows увімкнено «Упорядковувати значки автоматично»
+> Ein Desktopsymbol unter einem NeoBar-Widget oder einer Notiz wird an den nächsten freien Platz verschoben. Funktioniert nicht, wenn in Windows „Symbole automatisch anordnen“ aktiv ist
+
+< Клік по нотатці - показати її; перемикач - закріпити на шпалерах; око - приховати; кошик - прибрати.
+> Klick auf eine Notiz zeigt sie; der Schalter heftet sie ans Hintergrundbild; das Auge blendet sie aus; der Papierkorb entfernt sie.
+
+< Кошик порожній
+> Der Papierkorb ist leer
+
+< Куди зберегти розшифровані файли
+> Wo die entschlüsselten Dateien speichern
+
+< Лише додати
+> Nur hinzufügen
+
+< Не вдалося дістатися до значків робочого столу (Провідник не відповів) - значки з-під віджетів не відсуваються. Подробиці - у журналі віджетів.
+> Die Desktopsymbole waren nicht erreichbar (Explorer hat nicht geantwortet) - Symbole werden nicht unter Widgets hervorgeholt. Details im Widget-Protokoll.
+
+< Не вдалося: {0}
+> Fehlgeschlagen: {0}
+
+< Неправильний поточний пароль.
+> Das aktuelle Passwort ist falsch.
+
+< Новий пароль замінить старий; файли перешифровувати не треба. Забутий пароль не відновити.
+> Das neue Passwort ersetzt das alte; die Dateien müssen nicht neu verschlüsselt werden. Ein vergessenes Passwort lässt sich nicht wiederherstellen.
+
+< Новий:
+> Neu:
+
+< Нотатки в кошику зникають назовсім через {0} днів.
+> Notizen im Papierkorb werden nach {0} Tagen endgültig gelöscht.
+
+< Оригіналів видалено: {0}.
+> Originale gelöscht: {0}.
+
+< Очистити кошик
+> Papierkorb leeren
+
+< Пароль змінено. Файли не перешифровувались - змінився лише ключ до них.
+> Passwort geändert. Die Dateien wurden nicht neu verschlüsselt - nur ihr Schlüssel hat sich geändert.
+
+< Пароль неможливо відновити: забудете - файли в сейфі втрачено назавжди.
+> Das Passwort lässt sich nicht wiederherstellen: Vergessen Sie es, sind die Dateien im Tresor für immer verloren.
+
+< Перелік файлів сейфа пошкоджено.
+> Die Dateiliste des Tresors ist beschädigt.
+
+< Перетягніть сюди файли чи теки
+> Dateien oder Ordner hierher ziehen
+
+< Поточний:
+> Aktuell:
+
+< Прибрати зі столу: приховати або в кошик
+> Vom Desktop entfernen: ausblenden oder in den Papierkorb
+
+< Прибрати нотатку з робочого столу?
+> Notiz vom Desktop entfernen?
+
+< Прихована лишається в списку нотаток; з кошика її можна відновити протягом {0} днів.
+> Eine ausgeblendete Notiz bleibt in der Notizliste; aus dem Papierkorb lässt sie sich innerhalb von {0} Tagen wiederherstellen.
+
+< Прихована нотатка нікуди не зникає - вона просто не займає місце на робочому столі.
+> Eine ausgeblendete Notiz verschwindet nicht - sie belegt nur keinen Platz auf dem Desktop.
+
+< Прихованих нотаток немає
+> Keine ausgeblendeten Notizen
+
+< Приховані
+> Ausgeblendet
+
+< Приховані нотатки не показуються на робочому столі, але зберігаються тут. «Показати» повертає нотатку на стіл.
+> Ausgeblendete Notizen erscheinen nicht auf dem Desktop, bleiben aber hier gespeichert. „Anzeigen“ bringt eine Notiz zurück auf den Desktop.
+
+< Приховати нотатку
+> Notiz ausblenden
+
+< Продовжити?
+> Fortfahren?
+
+< Після додавання оригінали буде видалено назовсім (не в кошик), але лише ті, чию копію в сейфі перевірено.\n\nНа SSD залишки видаленого файла інколи можна відновити спеціальними програмами.
+> Nach dem Hinzufügen werden die Originale endgültig gelöscht (nicht in den Papierkorb), aber nur die, deren Kopie im Tresor geprüft wurde.\n\nAuf einer SSD lassen sich Reste gelöschter Dateien manchmal mit Spezialprogrammen wiederherstellen.
+
+< Сейф
+> Tresor
+
+< Сейф - тека, де файли лежать лише зашифрованими (AES-256): без пароля їх не прочитати, навіть назви. Перетягніть файли сюди чи виберіть «Додати в сейф» у контекстному меню файла.
+> Der Tresor ist ein Ordner, in dem Dateien nur verschlüsselt liegen (AES-256): Ohne Passwort sind sie nicht lesbar, nicht einmal die Namen. Ziehen Sie Dateien hierher oder wählen Sie „Zum Tresor hinzufügen“ im Kontextmenü einer Datei.
+
+< Сейф замкнено.
+> Der Tresor ist gesperrt.
+
+< Сейф замкнено. Введіть пароль, щоб побачити й відкрити файли.
+> Der Tresor ist gesperrt. Geben Sie das Passwort ein, um die Dateien zu sehen und zu öffnen.
+
+< Сейф замкнено: {0} хв без дій.
+> Der Tresor wurde gesperrt: {0} Min. ohne Aktivität.
+
+< Сейф замкнено: екран вимкнено чи комп'ютер заблоковано.
+> Der Tresor wurde gesperrt: Bildschirm aus oder PC gesperrt.
+
+< Сейф замкнеться сам: коли закриєте вікно, вимкнеться екран чи після {0} хв без дій.
+> Der Tresor sperrt sich selbst: beim Schließen des Fensters, wenn der Bildschirm ausgeht oder nach {0} Min. ohne Aktivität.
+
+< Сейф пошкоджено.
+> Der Tresor ist beschädigt.
+
+< Сейф створено. Перетягніть сюди файли або натисніть «Додати файли…».
+> Tresor erstellt. Ziehen Sie Dateien hierher oder klicken Sie auf „Dateien hinzufügen…“.
+
+< Сейф ще працює з файлами. Зупинити й закрити?
+> Der Tresor arbeitet noch mit Dateien. Anhalten und schließen?
+
+< Створити сейф
+> Tresor erstellen
+
+< Тека сейфа:
+> Tresorordner:
+
+< Тека сейфа: наявний сейф відкриється, у порожній теці буде створено новий
+> Tresorordner: Ein vorhandener Tresor wird geöffnet, in einem leeren Ordner wird ein neuer erstellt
+
+< Тека, яку додати в сейф
+> Ordner, der zum Tresor hinzugefügt wird
+
+< У Windows увімкнено «Упорядковувати значки автоматично» - значки розставляє сама Windows, тому NeoBar не може відсувати їх з-під віджетів. Вимкнути: правий клік на робочому столі → «Вигляд» → «Упорядковувати значки автоматично».
+> In Windows ist „Symbole automatisch anordnen“ aktiv - Windows ordnet die Symbole selbst an, daher kann NeoBar sie nicht unter Widgets hervorholen. Ausschalten: Rechtsklick auf den Desktop → Ansicht → Symbole automatisch anordnen.
+
+< У кошик
+> In den Papierkorb
+
+< У цій теці вже є сейф.
+> In diesem Ordner gibt es bereits einen Tresor.
+
+< Файл «{0}» у сейфі змінено чи пошкоджено.
+> Die Datei „{0}“ im Tresor wurde verändert oder beschädigt.
+
+< Файл «{0}» у сейфі обрізано.
+> Die Datei „{0}“ im Tresor ist abgeschnitten.
+
+< Файл «{0}» у сейфі пошкоджено.
+> Die Datei „{0}“ im Tresor ist beschädigt.
+
+< Файли, які додати в сейф
+> Dateien, die zum Tresor hinzugefügt werden
+
+< Файлів чекає на додавання: {0}. Відкрийте сейф паролем.
+> Dateien warten aufs Hinzufügen: {0}. Öffnen Sie den Tresor mit dem Passwort.
+
+< Файлів: {0} · {1}
+> Dateien: {0} · {1}
+
+< Хеш-сума, шифрування й сейф у контекстному меню файлів
+> Prüfsumme, Verschlüsselung und Tresor im Kontextmenü von Dateien
+
+< Це не сейф NeoBar або його пошкоджено.
+> Das ist kein NeoBar-Tresor, oder er ist beschädigt.
+
+< Ще раз:
+> Wiederholen:
+
+< відкриваю…
+> wird geöffnet…
+
+< додаю…
+> wird hinzugefügt…
+
+< змінюю пароль…
+> Passwort wird geändert…
+
+< прихована
+> ausgeblendet
+
+< розшифровую…
+> wird entschlüsselt…
+
+< створюю сейф…
+> Tresor wird erstellt…
+
+< у кошику з {0} · зникне через {1} дн.
+> im Papierkorb seit {0} · wird in {1} T. gelöscht

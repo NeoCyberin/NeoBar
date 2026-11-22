@@ -302,9 +302,13 @@ sealed partial class NeoBar : Form
         Seasons.Start(this);
         Dice.Changed += DiceRedraw;
         UiWatch.Start(Handle);
+        // копії файлів сейфа, що лишились відкритими після збою чи вимкнення, - стерти
+        System.Threading.ThreadPool.QueueUserWorkItem(delegate { Vault.CleanTemp(); });
         ScreenState.Changed += OnAway;
         ScreenState.Start();
         NewApps.Configure(this, cfg.OfferNew);
+        DeskIcons.Bind(this);
+        DeskIcons.Configure(cfg.IconsAvoid, DeskBlocks);
         Watch.FromCfg(cfg);
         VendorGpu.SetPrefer(cfg.GpuSensor);
         Sensors.Configure(cfg.SensMs, cfg.SensAway);
@@ -349,6 +353,17 @@ sealed partial class NeoBar : Form
     void OnDisplayChanged(object sender, EventArgs e)
     {
         if (IsHandleCreated) BeginInvoke(new Action(delegate { DropBackdrop(); ApplyMode(true); }));
+        DeskIcons.Later(3000);
+    }
+
+    // де на робочому столі віджети й нотатки (значки з-під них переставляються - DeskIcons)
+    static List<Rectangle> DeskBlocks()
+    {
+        List<Rectangle> l = new List<Rectangle>();
+        foreach (DeskSpec d in ClockData.Desk)
+            if (d.Form != null && !d.Form.IsDisposed && d.Form.Visible) l.Add(d.Form.Bounds);
+        l.AddRange(Notes.DeskRects());
+        return l;
     }
 
     void OnPrefChanged(object sender, UserPreferenceChangedEventArgs e)
@@ -1047,7 +1062,7 @@ sealed partial class NeoBar : Form
             Widgets.WUpdated = DateTime.MinValue;
         }
         foreach (Entry e in entries) e.Sig = "";
-        if (IsHandleCreated) NewApps.Configure(this, cfg.OfferNew);
+        if (IsHandleCreated) { NewApps.Configure(this, cfg.OfferNew); DeskIcons.Configure(cfg.IconsAvoid, DeskBlocks); }
         AfterReloadWidgets();
         if (wkinds.Count > 0 && !suspended)
         {

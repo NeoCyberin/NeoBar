@@ -214,6 +214,7 @@ sealed partial class SettingsForm
         nGap.Value = Math.Max(nGap.Minimum, Math.Min(nGap.Maximum, c.CornerGap));
         chFs.Checked = c.FsHide;
         chOfferNew.Checked = c.OfferNew;
+        chIconsAvoid.Checked = c.IconsAvoid;
         trayKeys.Clear();
         trayCols.Clear();
         foreach (string it in c.Tray)
@@ -343,6 +344,7 @@ sealed partial class SettingsForm
         c.CornerGap = (int)nGap.Value;
         c.FsHide = chFs.Checked;
         c.OfferNew = chOfferNew.Checked;
+        c.IconsAvoid = chIconsAvoid.Checked;
         c.Tray.Clear();
         foreach (string k in trayKeys)
         {

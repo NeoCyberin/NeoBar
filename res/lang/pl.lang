@@ -4633,9 +4633,6 @@
 < Закріпити текст на робочому столі
 > Przypnij tekst do pulpitu
 
-< Видалити нотатку
-> Usuń notatkę
-
 < Розмір тексту нотатки: малий, стандартний, великий
 > Rozmiar tekstu notatki: mały, standardowy, duży
 
@@ -4665,9 +4662,6 @@
 
 < Налаштувати тему «
 > Dostosuj motyw «
-
-< Видалити цю нотатку?
-> Usunąć tę notatkę?
 
 < Смайли
 > Buźki
@@ -5049,9 +5043,6 @@
 
 < Чекати
 > Czekaj
-
-< Хеш-сума й шифрування в контекстному меню файлів
-> Skrót i szyfrowanie w menu kontekstowym pliku
 
 < Не вдалося змінити меню: 
 > Nie udało się zmienić menu: 
@@ -10135,9 +10126,6 @@
 < Перезапустити NeoBar
 > Uruchom ponownie NeoBar
 
-< Клік по нотатці - показати її; перемикач - закріпити на шпалерах або редагувати.
-> Kliknij notatkę, aby ją pokazać; przełącznik przypina ją do tapety lub pozwala edytować.
-
 < Перетягніть файл сюди
 > Upuść plik tutaj
 
@@ -11694,3 +11682,243 @@
 
 < у групу «{0}»
 > do grupy „{0}”
+
+< «Відновити» повертає нотатку туди, де вона була.
+> „Przywróć” odkłada notatkę tam, gdzie była.
+
+< » назовсім? Відновити її вже не вийде.
+> ” na zawsze? Nie da się jej już przywrócić.
+
+< Інший…
+> Inny…
+
+< Видалити «{0}» із сейфа назовсім?
+> Usunąć „{0}” z sejfu na zawsze?
+
+< Видалити назовсім нотатки з кошика ({0})?
+> Usunąć na zawsze notatki z kosza ({0})?
+
+< Видаляти оригінали після додавання (лише перевірені копії)
+> Usuwaj oryginały po dodaniu (tylko sprawdzone kopie)
+
+< Відкрити сейф
+> Otwórz sejf
+
+< Відкритих копій, ще зайнятих програмами: {0} - їх приберу пізніше; закрийте ці програми.
+> Otwarte kopie wciąż używane przez programy: {0} - usunę je później; zamknij te programy.
+
+< Відкрито тимчасову копію - її буде стерто, коли сейф замкнеться. Зміни в ній у сейф не потрапляють: щоб зберегти, додайте файл знову.
+> Otwarto tymczasową kopię - zostanie wymazana przy zamknięciu sejfu. Zmiany w niej nie trafiają do sejfu: aby je zachować, dodaj plik ponownie.
+
+< Додано файлів: {0}.
+> Dodano plików: {0}.
+
+< Додати в сейф…
+> Dodaj do sejfu…
+
+< Додати й видалити
+> Dodaj i usuń
+
+< Додати теку…
+> Dodaj folder…
+
+< Замкнути
+> Zamknij
+
+< Зберегти все…
+> Zapisz wszystko…
+
+< Збережено файлів: {0} - у «{1}».
+> Zapisano plików: {0} - w „{1}”.
+
+< Змінити пароль…
+> Zmień hasło…
+
+< Значки не під віджетами
+> Ikony nie pod widżetami
+
+< Значки робочого столу
+> Ikony pulpitu
+
+< Значок робочого столу, що опинився під віджетом NeoBar чи нотаткою, переставляється на найближче вільне місце. Не працює, коли у Windows увімкнено «Упорядковувати значки автоматично»
+> Ikona pulpitu, która znajdzie się pod widżetem NeoBar lub notatką, jest przenoszona w najbliższe wolne miejsce. Nie działa, gdy w Windows włączono „Autorozmieszczanie ikon”
+
+< Клік по нотатці - показати її; перемикач - закріпити на шпалерах; око - приховати; кошик - прибрати.
+> Klik w notatkę - pokaż ją; przełącznik - przypnij do tapety; oko - ukryj; kosz - usuń.
+
+< Кошик порожній
+> Kosz jest pusty
+
+< Куди зберегти розшифровані файли
+> Gdzie zapisać odszyfrowane pliki
+
+< Лише додати
+> Tylko dodaj
+
+< Не вдалося дістатися до значків робочого столу (Провідник не відповів) - значки з-під віджетів не відсуваються. Подробиці - у журналі віджетів.
+> Nie udało się dostać do ikon pulpitu (Eksplorator nie odpowiedział) - ikony nie są odsuwane spod widżetów. Szczegóły w dzienniku widżetów.
+
+< Не вдалося: {0}
+> Nie udało się: {0}
+
+< Неправильний поточний пароль.
+> Obecne hasło jest nieprawidłowe.
+
+< Новий пароль замінить старий; файли перешифровувати не треба. Забутий пароль не відновити.
+> Nowe hasło zastąpi stare; plików nie trzeba szyfrować ponownie. Zapomnianego hasła nie da się odzyskać.
+
+< Новий:
+> Nowe:
+
+< Нотатки в кошику зникають назовсім через {0} днів.
+> Notatki w koszu znikają na zawsze po {0} dniach.
+
+< Оригіналів видалено: {0}.
+> Usunięto oryginałów: {0}.
+
+< Очистити кошик
+> Opróżnij kosz
+
+< Пароль змінено. Файли не перешифровувались - змінився лише ключ до них.
+> Hasło zmienione. Pliki nie były szyfrowane ponownie - zmienił się tylko klucz do nich.
+
+< Пароль неможливо відновити: забудете - файли в сейфі втрачено назавжди.
+> Hasła nie da się odzyskać: zapomnisz - pliki w sejfie przepadną na zawsze.
+
+< Перелік файлів сейфа пошкоджено.
+> Lista plików sejfu jest uszkodzona.
+
+< Перетягніть сюди файли чи теки
+> Przeciągnij tu pliki lub foldery
+
+< Поточний:
+> Obecne:
+
+< Прибрати зі столу: приховати або в кошик
+> Usuń z pulpitu: ukryj lub do kosza
+
+< Прибрати нотатку з робочого столу?
+> Usunąć notatkę z pulpitu?
+
+< Прихована лишається в списку нотаток; з кошика її можна відновити протягом {0} днів.
+> Ukryta zostaje na liście notatek; z kosza można ją przywrócić przez {0} dni.
+
+< Прихована нотатка нікуди не зникає - вона просто не займає місце на робочому столі.
+> Ukryta notatka nigdzie nie znika - po prostu nie zajmuje miejsca na pulpicie.
+
+< Прихованих нотаток немає
+> Brak ukrytych notatek
+
+< Приховані
+> Ukryte
+
+< Приховані нотатки не показуються на робочому столі, але зберігаються тут. «Показати» повертає нотатку на стіл.
+> Ukryte notatki nie są widoczne na pulpicie, ale są tu przechowywane. „Pokaż” przywraca notatkę na pulpit.
+
+< Приховати нотатку
+> Ukryj notatkę
+
+< Продовжити?
+> Kontynuować?
+
+< Після додавання оригінали буде видалено назовсім (не в кошик), але лише ті, чию копію в сейфі перевірено.\n\nНа SSD залишки видаленого файла інколи можна відновити спеціальними програмами.
+> Po dodaniu oryginały zostaną usunięte na zawsze (nie do kosza), ale tylko te, których kopię w sejfie sprawdzono.\n\nNa SSD resztki usuniętego pliku czasem da się odzyskać specjalnymi programami.
+
+< Сейф
+> Sejf
+
+< Сейф - тека, де файли лежать лише зашифрованими (AES-256): без пароля їх не прочитати, навіть назви. Перетягніть файли сюди чи виберіть «Додати в сейф» у контекстному меню файла.
+> Sejf to folder, w którym pliki leżą tylko zaszyfrowane (AES-256): bez hasła nie da się ich odczytać, nawet nazw. Przeciągnij tu pliki lub wybierz „Dodaj do sejfu” w menu kontekstowym pliku.
+
+< Сейф замкнено.
+> Sejf jest zamknięty.
+
+< Сейф замкнено. Введіть пароль, щоб побачити й відкрити файли.
+> Sejf jest zamknięty. Wpisz hasło, aby zobaczyć i otworzyć pliki.
+
+< Сейф замкнено: {0} хв без дій.
+> Sejf zamknięty: {0} min bez działań.
+
+< Сейф замкнено: екран вимкнено чи комп'ютер заблоковано.
+> Sejf zamknięty: ekran wyłączony lub komputer zablokowany.
+
+< Сейф замкнеться сам: коли закриєте вікно, вимкнеться екран чи після {0} хв без дій.
+> Sejf zamknie się sam: gdy zamkniesz okno, wyłączy się ekran lub po {0} min bez działań.
+
+< Сейф пошкоджено.
+> Sejf jest uszkodzony.
+
+< Сейф створено. Перетягніть сюди файли або натисніть «Додати файли…».
+> Sejf utworzony. Przeciągnij tu pliki lub kliknij „Dodaj pliki…”.
+
+< Сейф ще працює з файлами. Зупинити й закрити?
+> Sejf wciąż pracuje z plikami. Zatrzymać i zamknąć?
+
+< Створити сейф
+> Utwórz sejf
+
+< Тека сейфа:
+> Folder sejfu:
+
+< Тека сейфа: наявний сейф відкриється, у порожній теці буде створено новий
+> Folder sejfu: istniejący sejf się otworzy, w pustym folderze zostanie utworzony nowy
+
+< Тека, яку додати в сейф
+> Folder do dodania do sejfu
+
+< У Windows увімкнено «Упорядковувати значки автоматично» - значки розставляє сама Windows, тому NeoBar не може відсувати їх з-під віджетів. Вимкнути: правий клік на робочому столі → «Вигляд» → «Упорядковувати значки автоматично».
+> W Windows włączono „Autorozmieszczanie ikon” - ikony rozmieszcza sam Windows, więc NeoBar nie może odsuwać ich spod widżetów. Wyłączenie: prawy klik na pulpicie → Widok → Autorozmieszczanie ikon.
+
+< У кошик
+> Do kosza
+
+< У цій теці вже є сейф.
+> W tym folderze jest już sejf.
+
+< Файл «{0}» у сейфі змінено чи пошкоджено.
+> Plik „{0}” w sejfie został zmieniony lub uszkodzony.
+
+< Файл «{0}» у сейфі обрізано.
+> Plik „{0}” w sejfie jest ucięty.
+
+< Файл «{0}» у сейфі пошкоджено.
+> Plik „{0}” w sejfie jest uszkodzony.
+
+< Файли, які додати в сейф
+> Pliki do dodania do sejfu
+
+< Файлів чекає на додавання: {0}. Відкрийте сейф паролем.
+> Plików czeka na dodanie: {0}. Otwórz sejf hasłem.
+
+< Файлів: {0} · {1}
+> Plików: {0} · {1}
+
+< Хеш-сума, шифрування й сейф у контекстному меню файлів
+> Suma kontrolna, szyfrowanie i sejf w menu kontekstowym plików
+
+< Це не сейф NeoBar або його пошкоджено.
+> To nie jest sejf NeoBar albo jest uszkodzony.
+
+< Ще раз:
+> Powtórz:
+
+< відкриваю…
+> otwieram…
+
+< додаю…
+> dodaję…
+
+< змінюю пароль…
+> zmieniam hasło…
+
+< прихована
+> ukryta
+
+< розшифровую…
+> odszyfrowuję…
+
+< створюю сейф…
+> tworzę sejf…
+
+< у кошику з {0} · зникне через {1} дн.
+> w koszu od {0} · zniknie za {1} dn.
