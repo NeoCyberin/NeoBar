@@ -450,6 +450,7 @@ sealed partial class NeoBar
 
     public void TogglePinMode() { TogglePin(); }
     public void OpenSettingsTab(int tab) { OpenSettings(null, tab); }
+    public void OpenSettingsAt(Entry e) { if (e != null) OpenSettings(e, 0); else OpenSettings(null, SettingsForm.PgItems); }
 
     // вікно профілю біля аватара; повторний клік закриває
     ProfileWindow profWin;
