@@ -283,28 +283,43 @@ sealed class NoteBox : RichTextBox
         {
             CreateParams cp = base.CreateParams;
             cp.Style |= 0x02000000;           // WS_CLIPCHILDREN: накладки з емодзі не затираються перемальовкою тексту
+            cp.Style |= 0x0040;               // ES_AUTOVSCROLL: без системної смуги поле саме прокручується за курсором
             return cp;
         }
     }
 
-    [StructLayout(LayoutKind.Sequential)] struct SI { public int cbSize; public uint fMask; public int nMin, nMax; public uint nPage; public int nPos, nTrackPos; }
     [StructLayout(LayoutKind.Sequential)] struct PT { public int X, Y; }
-    [DllImport("user32.dll")] static extern bool GetScrollInfo(IntPtr h, int bar, ref SI si);
     [DllImport("user32.dll", EntryPoint = "SendMessageW")] static extern IntPtr SendPt(IntPtr h, int msg, IntPtr w, ref PT l);
     int wheelAcc;
 
     // Коліщатко: власна прокрутка в пікселях. Поле тексту само крутить цілими рядками й не доходить до кінця,
     // якщо залишок менший за рядок: останній рядок лишався під панеллю форматування, і довкрутити
     // його можна було лише смугою. Тут прокрутка завжди доходить рівно до низу тексту.
+    // Прокрутка без системної смуги: висота тексту - за положенням останнього символу.
+    // pos - зсув зверху, content - уся висота тексту, page - видима висота (усе в пікселях)
+    public bool Metrics(out int pos, out int content, out int page)
+    {
+        pos = content = 0; page = ClientSize.Height;
+        if (!IsHandleCreated) return false;
+        PT p = new PT();
+        SendPt(Handle, 0x04DD, IntPtr.Zero, ref p);                          // EM_GETSCROLLPOS
+        pos = p.Y;
+        int n = TextLength;
+        if (n > 0)
+        {
+            Point last = GetPositionFromCharIndex(n - 1);
+            content = pos + last.Y + Math.Max(8, Font.Height) + 4;
+        }
+        return page > 0;
+    }
+
     bool Wheel(ref Message m)
     {
         if ((Control.ModifierKeys & Keys.Control) != 0) return false;        // Ctrl+коліщатко - масштаб, як було
-        SI si = new SI();
-        si.cbSize = Marshal.SizeOf(typeof(SI));
-        si.fMask = 0x7;                                                      // SIF_RANGE | SIF_PAGE | SIF_POS
-        if (!GetScrollInfo(Handle, 1, ref si) || si.nPage == 0) return false;
-        int maxPos = si.nMax - (int)si.nPage + 1;
-        if (maxPos <= si.nMin) { wheelAcc = 0; return true; }               // усе вміщається - крутити нічого
+        int cur, content, page;
+        if (!Metrics(out cur, out content, out page)) return false;
+        int maxPos = Math.Max(0, content - page);
+        if (maxPos <= 0 && cur <= 0) { wheelAcc = 0; return true; }        // усе вміщається - крутити нічого
         wheelAcc += (short)((long)m.WParam >> 16);
         int lines = SystemInformation.MouseWheelScrollLines;
         if (lines <= 0) lines = 3;
@@ -313,7 +328,7 @@ sealed class NoteBox : RichTextBox
         wheelAcc = 0;
         PT p = new PT();
         SendPt(Handle, 0x04DD, IntPtr.Zero, ref p);                          // EM_GETSCROLLPOS
-        int y = Math.Max(si.nMin, Math.Min(maxPos, p.Y - px));
+        int y = Math.Max(0, Math.Min(Math.Max(maxPos, 0), p.Y - px));
         if (y == p.Y) return true;
         p.Y = y;
         SendPt(Handle, 0x04DE, IntPtr.Zero, ref p);                          // EM_SETSCROLLPOS
@@ -393,16 +408,7 @@ sealed class NoteScroll : Control
     bool drag, hover;
     int dragOff;
 
-    [StructLayout(LayoutKind.Sequential)] struct SCROLLINFO { public int cbSize; public uint fMask; public int nMin, nMax; public uint nPage; public int nPos, nTrackPos; }
     [StructLayout(LayoutKind.Sequential)] struct POINT { public int X, Y; }
-    [DllImport("user32.dll")] static extern bool GetScrollInfo(IntPtr h, int bar, ref SCROLLINFO si);
-    [StructLayout(LayoutKind.Sequential)]
-    struct SCROLLBARINFO
-    {
-        public int cbSize; public int l, t, r, b; public int dxyLineButton, xyThumbTop, xyThumbBottom, reserved;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)] public int[] rgstate;
-    }
-    [DllImport("user32.dll")] static extern bool GetScrollBarInfo(IntPtr h, int obj, ref SCROLLBARINFO sbi);
     [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
     [DllImport("user32.dll", EntryPoint = "SendMessageW")] static extern IntPtr SendPoint(IntPtr h, int msg, IntPtr w, ref POINT l);
 
@@ -419,22 +425,10 @@ sealed class NoteScroll : Control
     bool Info(out int min, out int max, out int page, out int pos)
     {
         min = max = page = pos = 0;
-        if (!box.IsHandleCreated) return false;
-        SCROLLINFO si = new SCROLLINFO();
-        si.cbSize = Marshal.SizeOf(typeof(SCROLLINFO));
-        si.fMask = 0x17;                    // SIF_ALL
-        if (!GetScrollInfo(box.Handle, 1, ref si)) return false;
-        min = si.nMin; max = si.nMax; page = (int)si.nPage; pos = si.nPos;
-        if (page <= 0 || max - min + 1 <= page) return false;
-        // текст вміщається: поле з «завжди видимою» смугою вимикає її, але діапазон лишає трохи більшим за сторінку
-        try
-        {
-            SCROLLBARINFO sb = new SCROLLBARINFO();
-            sb.cbSize = Marshal.SizeOf(typeof(SCROLLBARINFO));
-            if (GetScrollBarInfo(box.Handle, unchecked((int)0xFFFFFFFB), ref sb) && sb.rgstate != null && (sb.rgstate[0] & 0x1) != 0) return false;   // OBJID_VSCROLL, STATE_SYSTEM_UNAVAILABLE
-        }
-        catch (Exception skipEx) { SbLog.Skip(skipEx); }
-        return max - min + 1 - page > Notes.Px(6);
+        int content;
+        if (!box.Metrics(out pos, out content, out page)) return false;
+        max = Math.Max(content, pos + page) - 1;        // як у SCROLLINFO: діапазон min..max, сторінка page
+        return max + 1 - page > Notes.Px(6);
     }
 
     Rectangle Track() { return new Rectangle(0, Notes.Px(2), Width, Math.Max(1, Height - Notes.Px(8))); }       // знизу - відступ від панелі форматування
@@ -484,7 +478,13 @@ sealed class NoteScroll : Control
         Rectangle th = Thumb(out min, out span, out free);
         if (th.IsEmpty) return;
         if (th.Contains(e.Location)) { drag = true; dragOff = e.Y - th.Y; Capture = true; }
-        else { SendMessage(box.Handle, 0x115, new IntPtr(e.Y < th.Y ? 2 : 3), IntPtr.Zero); box.RaiseView(); }      // WM_VSCROLL: SB_PAGEUP / SB_PAGEDOWN
+        else
+        {
+            // клік повз повзунок - на сторінку вгору чи вниз
+            int pos, content, page;
+            if (box.Metrics(out pos, out content, out page))
+                ScrollTo(Math.Max(0, Math.Min(Math.Max(0, content - page), pos + (e.Y < th.Y ? -page : page) * 9 / 10)));
+        }
         Invalidate();
     }
 
