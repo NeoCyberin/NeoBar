@@ -137,6 +137,12 @@ sealed class NoteForm : Form
         toolbar = new BufPanel();
         toolbar.Dock = DockStyle.Bottom;
         toolbar.Height = ToolH;
+        // тонка лінія між текстом і панеллю форматування - видно, де закінчується текст
+        toolbar.Paint += delegate (object so, PaintEventArgs pe)
+        {
+            NoteTheme tt = Notes.ThemeOf(n);
+            using (Pen pn = new Pen(Util.Blend(tt.Body, tt.Fg, 0.16f), 1f)) pe.Graphics.DrawLine(pn, Px(8), 0, toolbar.Width - Px(8), 0);
+        };
         int bw = Px(38), bh = Px(32), by = (ToolH - bh) / 2, x = Px(6);
         bZ = Tb(Glyph.Size, ref x, bw, bh, by, L.T("Розмір тексту нотатки: малий, стандартний, великий"));
         bB = Tb(Glyph.Bold, ref x, bw, bh, by, L.T("Жирний (Ctrl+B)"));
@@ -203,7 +209,14 @@ sealed class NoteForm : Form
         box.BorderStyle = BorderStyle.None;
         box.Multiline = true;
         box.WordWrap = true;
-        box.DetectUrls = false;
+        // посилання підсвічуються; у редагуванні відкриваються Ctrl+кліком, на закріпленій нотатці - звичайним кліком
+        box.DetectUrls = true;
+        box.LinkClicked += delegate (object so, LinkClickedEventArgs le)
+        {
+            if ((Control.ModifierKeys & Keys.Control) != 0) { OpenLink(le.LinkText); return; }
+            // звичайний клік по посиланню - просто поставити курсор (поле тексту саме цього не робить)
+            try { box.Select(box.GetCharIndexFromPosition(box.PointToClient(Cursor.Position)), 0); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        };
         box.AcceptsTab = true;
         box.HideSelection = false;
         box.ScrollBars = RichTextBoxScrollBars.ForcedVertical;        // завжди є - ширина тексту не стрибає; сама смуга - за краєм boxHost
@@ -260,6 +273,8 @@ sealed class NoteForm : Form
 
         VisibleChanged += delegate { if (Visible) QueueEmoji(true); };
         Move += delegate { if (ready && busy == 0 && !n.Locked && Visible) { PullRect(); Notes.Touch(); } };
+        // шар посилань - лише разом із видимою закріпленою нотаткою (у грі нотатки ховаються - і він теж)
+        VisibleChanged += delegate { if (links != null) { if (Visible && n.Locked) links.Put(Bounds); else links.Hide(); } };
         Resize += delegate { if (ready && busy == 0 && !n.Locked && Visible) { PullRect(); Notes.Touch(); if (!sizing) UpdateRegion(); } };
     }
 
@@ -1198,6 +1213,79 @@ sealed class NoteForm : Form
         catch { ok = false; }
         if (!ok) LockOpaque(tr);
         SendToBottom();
+        BuildLinks();
+    }
+
+    // ---------- посилання на закріпленій нотатці ----------
+    // Закріплена нотатка пропускає кліки до робочого столу. Над посиланнями ставиться майже прозорий шар
+    // (окреме вікно над нотаткою, альфа 1 лише там, де посилання): клік по посиланню відкриває його,
+    // а повз - іде на робочий стіл, як і раніше.
+    LinkLayer links;
+
+    static readonly System.Text.RegularExpressions.Regex UrlRx =
+        new System.Text.RegularExpressions.Regex(@"(?:https?://|www\.)[^\s<>""«»]+", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    internal static void OpenLink(string url)
+    {
+        url = (url ?? "").Trim();
+        if (url.StartsWith("www.", StringComparison.OrdinalIgnoreCase)) url = "https://" + url;
+        // лише веб-посилання: file:, javascript: тощо з нотатки не запускаються
+        if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return;
+        try { using (System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true })) { } }
+        catch (Exception ex) { SbLog.Skip(ex); }
+    }
+
+    void DropLinks()
+    {
+        if (links == null) return;
+        try { links.Close(); links.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        links = null;
+    }
+
+    void BuildLinks()
+    {
+        DropLinks();
+        if (!n.Locked || !Visible) return;
+        string text = box.Text;
+        System.Text.RegularExpressions.MatchCollection mc = UrlRx.Matches(text);
+        if (mc.Count == 0) return;
+        List<KeyValuePair<Rectangle, string>> spots = new List<KeyValuePair<Rectangle, string>>();
+        IntPtr hb = box.Handle;
+        int first = (int)Win.SendMessage(hb, 0x00CE, 0, 0);                 // EM_GETFIRSTVISIBLELINE: знімок - з початку тексту
+        if (first > 0) Win.SendMessage(hb, 0x00B6, 0, -first);
+        try
+        {
+            int ox = BodyPad, oy = BodyPad + PinTitleH();
+            int lh = Math.Max(Px(12), box.Font.Height);
+            foreach (System.Text.RegularExpressions.Match m in mc)
+            {
+                string url = m.Value.TrimEnd('.', ',', ';', ':', '!', '?', ')', ']', '}', '\'', '"');
+                int s = m.Index, e = m.Index + url.Length;
+                // по символу: рядки посилання (довге переноситься на кілька рядків)
+                int x0 = 0, y0 = int.MinValue, x1 = 0;
+                for (int i = s; i <= e; i++)
+                {
+                    Point p = i < e ? box.GetPositionFromCharIndex(i) : new Point(int.MinValue, int.MinValue);
+                    if (i == e || p.Y != y0)
+                    {
+                        if (y0 != int.MinValue)
+                        {
+                            Rectangle r = new Rectangle(ox + x0, oy + y0, Math.Max(Px(6), x1 - x0), lh);
+                            if (r.Bottom > 0 && r.Top < Height) spots.Add(new KeyValuePair<Rectangle, string>(r, url));
+                        }
+                        if (i == e) break;
+                        x0 = p.X; y0 = p.Y;
+                    }
+                    Point q = i + 1 < text.Length ? box.GetPositionFromCharIndex(i + 1) : p;
+                    x1 = q.Y == p.Y && q.X > p.X ? q.X : p.X + lh / 2;
+                }
+            }
+        }
+        finally { if (first > 0) Win.SendMessage(hb, 0x00B6, 0, first); }
+        if (spots.Count == 0) return;
+        links = new LinkLayer(spots);
+        links.Show(this);
+        links.Put(Bounds);
     }
 
     // піксельне зображення тексту на тематичному фоні (прозорий лише фон); null - не вдалося
@@ -1316,6 +1404,7 @@ sealed class NoteForm : Form
 
     void ApplyUnlocked()
     {
+        DropLinks();
         ResetLayered(false);
         EndPreview();
         MinimumSize = new Size(MinW, MinH);
@@ -1476,6 +1565,19 @@ sealed class NoteForm : Form
         const int SC_MINIMIZE = 0xF020;
 
         if (m.Msg == WM_SYSCOMMAND && ((int)m.WParam & 0xFFF0) == SC_MINIMIZE) return;   // нотатку не згортаємо
+        // WM_MOVING: нотатку тягнуть - прив'язка до країв екрана, інших віджетів чи сітки
+        if (m.Msg == 0x0216 && m.LParam != IntPtr.Zero && n != null && !n.Locked)
+        {
+            try
+            {
+                int l = Marshal.ReadInt32(m.LParam, 0), tp = Marshal.ReadInt32(m.LParam, 4), rr = Marshal.ReadInt32(m.LParam, 8), b = Marshal.ReadInt32(m.LParam, 12);
+                Point s = DeskSnap.Snap(Rectangle.FromLTRB(l, tp, rr, b), this);
+                Marshal.WriteInt32(m.LParam, 0, s.X); Marshal.WriteInt32(m.LParam, 4, s.Y);
+                Marshal.WriteInt32(m.LParam, 8, s.X + rr - l); Marshal.WriteInt32(m.LParam, 12, s.Y + b - tp);
+                m.Result = (IntPtr)1;
+            }
+            catch (Exception skipEx) { SbLog.Skip(skipEx); }
+        }
         if (n != null && n.Locked && m.Msg == WM_MOUSEACTIVATE)
         {
             m.Result = (IntPtr)MA_NOACTIVATE;
@@ -1486,9 +1588,69 @@ sealed class NoteForm : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) { try { tip.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
+        if (disposing) { DropLinks(); try { tip.Dispose(); } catch (Exception skipEx) { SbLog.Skip(skipEx); } }
         base.Dispose(disposing);
         try { RichFmt.FreeHFont(titleHF); titleHF = IntPtr.Zero; } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+    }
+}
+
+// ---------- шар посилань над закріпленою нотаткою ----------
+// Вікно з попіксельною прозорістю: альфа 1 (непомітно) лише над посиланнями - клік там приходить сюди,
+// а в прозорих місцях (альфа 0) іде крізь вікно на робочий стіл.
+sealed class LinkLayer : Form
+{
+    readonly List<KeyValuePair<Rectangle, string>> spots;
+
+    public LinkLayer(List<KeyValuePair<Rectangle, string>> s)
+    {
+        spots = s;
+        FormBorderStyle = FormBorderStyle.None;
+        ShowInTaskbar = false;
+        StartPosition = FormStartPosition.Manual;
+        Cursor = Cursors.Hand;
+    }
+
+    protected override CreateParams CreateParams
+    {
+        get
+        {
+            CreateParams cp = base.CreateParams;
+            cp.ExStyle |= 0x00080000 | 0x00000080 | 0x08000000;      // WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE
+            return cp;
+        }
+    }
+
+    protected override bool ShowWithoutActivation { get { return true; } }
+
+    // поставити над нотаткою (r - її межі) і намалювати «ловці» кліків
+    public void Put(Rectangle r)
+    {
+        if (r.Width <= 0 || r.Height <= 0) return;
+        int w = r.Width, h = r.Height;
+        byte[] pm = new byte[w * h * 4];
+        foreach (KeyValuePair<Rectangle, string> kv in spots)
+        {
+            Rectangle q = Rectangle.Intersect(kv.Key, new Rectangle(0, 0, w, h));
+            for (int y = q.Top; y < q.Bottom; y++)
+                for (int x = q.Left; x < q.Right; x++) pm[(y * w + x) * 4 + 3] = 1;       // попередньо помножене: колір 0, альфа 1
+        }
+        Bounds = r;
+        if (!Visible) Show();
+        NoteForm.PresentTo(Handle, pm, w, h, r.X, r.Y);
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        if (m.Msg == 0x0021) { m.Result = (IntPtr)3; return; }       // WM_MOUSEACTIVATE -> MA_NOACTIVATE
+        base.WndProc(ref m);
+    }
+
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+        base.OnMouseUp(e);
+        if (e.Button != MouseButtons.Left) return;
+        foreach (KeyValuePair<Rectangle, string> kv in spots)
+            if (kv.Key.Contains(e.Location)) { NoteForm.OpenLink(kv.Value); return; }
     }
 }
 

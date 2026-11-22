@@ -393,6 +393,14 @@ static class Notes
         }
     }
 
+    // нотатки на робочому столі: вікно й прямокутник
+    public static List<KeyValuePair<Form, Rectangle>> DeskForms()
+    {
+        List<KeyValuePair<Form, Rectangle>> l = new List<KeyValuePair<Form, Rectangle>>();
+        foreach (NoteForm f in forms.Values) if (f != null && !f.IsDisposed && f.Visible) l.Add(new KeyValuePair<Form, Rectangle>(f, f.Bounds));
+        return l;
+    }
+
     // прямокутники нотаток на робочому столі
     public static List<Rectangle> DeskRects()
     {

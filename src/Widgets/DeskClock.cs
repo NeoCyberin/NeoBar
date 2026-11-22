@@ -1081,7 +1081,18 @@ sealed class DeskClock : LayeredForm
             if (h != hover) { hover = h; Redraw(); }
             return;
         }
-        Location = new Point(Location.X + e.X - dragFrom.X, Location.Y + e.Y - dragFrom.Y);
+        // прив'язка: вміст віджета (без шапки й рамки) - до країв екрана, сусідніх віджетів чи сітки
+        Point want = new Point(Location.X + e.X - dragFrom.X, Location.Y + e.Y - dragFrom.Y);
+        Size cs = Want();
+        Point s = DeskSnap.Snap(new Rectangle(want.X + dx0, want.Y + T0, cs.Width, cs.Height), this);
+        Point loc = new Point(s.X - dx0, s.Y - T0);
+        if (loc != Location) Location = loc;
+    }
+
+    // де вміст віджета на екрані (для прив'язки інших)
+    public Rectangle Card
+    {
+        get { Size cs = Want(); return new Rectangle(Left + dx0, Top + T0, cs.Width, cs.Height); }
     }
 
     protected override void OnMouseLeave(EventArgs e)

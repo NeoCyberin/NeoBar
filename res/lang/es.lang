@@ -11922,3 +11922,9 @@
 
 < у кошику з {0} · зникне через {1} дн.
 > en la papelera desde {0} · se elimina en {1} d
+
+< Прив'язувати віджети до сітки
+> Ajustar widgets a una cuadrícula
+
+< Під час перетягування віджети й нотатки прилипають до країв екрана, до сусідніх віджетів і до сітки - легко ставити рівно. З Alt - без прив'язки
+> Al arrastrarlos, los widgets y las notas se ajustan a los bordes de la pantalla, a los widgets vecinos y a una cuadrícula: fácil alinearlos. Con Alt, sin ajuste

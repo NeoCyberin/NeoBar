@@ -287,8 +287,48 @@ sealed class NoteBox : RichTextBox
         }
     }
 
+    [StructLayout(LayoutKind.Sequential)] struct SI { public int cbSize; public uint fMask; public int nMin, nMax; public uint nPage; public int nPos, nTrackPos; }
+    [StructLayout(LayoutKind.Sequential)] struct PT { public int X, Y; }
+    [DllImport("user32.dll")] static extern bool GetScrollInfo(IntPtr h, int bar, ref SI si);
+    [DllImport("user32.dll", EntryPoint = "SendMessageW")] static extern IntPtr SendPt(IntPtr h, int msg, IntPtr w, ref PT l);
+    int wheelAcc;
+
+    // Коліщатко: власна прокрутка в пікселях. Поле тексту само крутить цілими рядками й не доходить до кінця,
+    // якщо залишок менший за рядок: останній рядок лишався під панеллю форматування, і довкрутити
+    // його можна було лише смугою. Тут прокрутка завжди доходить рівно до низу тексту.
+    bool Wheel(ref Message m)
+    {
+        if ((Control.ModifierKeys & Keys.Control) != 0) return false;        // Ctrl+коліщатко - масштаб, як було
+        SI si = new SI();
+        si.cbSize = Marshal.SizeOf(typeof(SI));
+        si.fMask = 0x7;                                                      // SIF_RANGE | SIF_PAGE | SIF_POS
+        if (!GetScrollInfo(Handle, 1, ref si) || si.nPage == 0) return false;
+        int maxPos = si.nMax - (int)si.nPage + 1;
+        if (maxPos <= si.nMin) { wheelAcc = 0; return true; }               // усе вміщається - крутити нічого
+        wheelAcc += (short)((long)m.WParam >> 16);
+        int lines = SystemInformation.MouseWheelScrollLines;
+        if (lines <= 0) lines = 3;
+        int px = (int)((long)wheelAcc * lines * Math.Max(8, Font.Height) / 120);
+        if (px == 0) return true;
+        wheelAcc = 0;
+        PT p = new PT();
+        SendPt(Handle, 0x04DD, IntPtr.Zero, ref p);                          // EM_GETSCROLLPOS
+        int y = Math.Max(si.nMin, Math.Min(maxPos, p.Y - px));
+        if (y == p.Y) return true;
+        p.Y = y;
+        SendPt(Handle, 0x04DE, IntPtr.Zero, ref p);                          // EM_SETSCROLLPOS
+        RaiseView();
+        return true;
+    }
+
     protected override void WndProc(ref Message m)
     {
+        if (m.Msg == 0x20A && IsHandleCreated)
+        {
+            bool done = false;
+            try { done = Wheel(ref m); } catch (Exception skipEx) { SbLog.Skip(skipEx); }
+            if (done) { m.Result = IntPtr.Zero; return; }
+        }
         base.WndProc(ref m);
         // 0x115 WM_VSCROLL, 0x20A WM_MOUSEWHEEL, 0x0B6 EM_LINESCROLL, 0x0B7 EM_SCROLLCARET (автопрокрутка до курсора),
         // 0x05 WM_SIZE, 0x0F WM_PAINT (будь-яке перемалювання тексту: позиції символів могли змінитися)

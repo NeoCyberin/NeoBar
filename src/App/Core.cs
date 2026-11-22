@@ -102,6 +102,7 @@ sealed class Cfg
     public bool FsHide = true;         // ховатися під час повноекранних програм
     public bool OfferNew = true;       // нова програма в меню «Пуск» - запропонувати додати на панель
     public bool IconsAvoid = true;     // значки робочого столу переставляти з-під віджетів і нотаток
+    public bool DeskSnap = true;       // віджети й нотатки під час перетягування прилипають до країв, сусідів і сітки
     public bool UpdCheck = true;       // при запуску дивитися на GitHub, чи вийшла нова версія
     public bool Hotkeys = true;
     public bool SearchSuggest = true;       // пошук пропонує додати знайдені програми на панель
@@ -348,6 +349,7 @@ static class Store
             case "fshide": cfg.FsHide = B(val); break;
             case "offernew": cfg.OfferNew = B(val); break;
             case "iconsavoid": cfg.IconsAvoid = B(val); break;
+            case "desksnap": cfg.DeskSnap = B(val); break;
             case "desknotefont": cfg.DeskNoteFont = B(val); break;
             case "logkeep": cfg.LogKeep = val.Trim().ToLowerInvariant(); break;
             case "walerts": cfg.WAlerts = B(val); break;
@@ -540,6 +542,7 @@ static class Store
         sb.AppendLine("@fshide " + Yn(c.FsHide));
         sb.AppendLine("@offernew " + Yn(c.OfferNew));
         sb.AppendLine("@iconsavoid " + Yn(c.IconsAvoid));
+        sb.AppendLine("@desksnap " + Yn(c.DeskSnap));
         sb.AppendLine("@desknotefont " + Yn(c.DeskNoteFont));
         sb.AppendLine("@logkeep " + c.LogKeep);
         sb.AppendLine("@walerts " + Yn(c.WAlerts));

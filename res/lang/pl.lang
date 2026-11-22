@@ -11922,3 +11922,9 @@
 
 < у кошику з {0} · зникне через {1} дн.
 > w koszu od {0} · zniknie za {1} dn.
+
+< Прив'язувати віджети до сітки
+> Przyciągaj widżety do siatki
+
+< Під час перетягування віджети й нотатки прилипають до країв екрана, до сусідніх віджетів і до сітки - легко ставити рівно. З Alt - без прив'язки
+> Podczas przeciągania widżety i notatki przyciągają się do krawędzi ekranu, sąsiednich widżetów i siatki - łatwo ustawić je równo. Z Alt - bez przyciągania

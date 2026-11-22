@@ -215,6 +215,7 @@ sealed partial class SettingsForm
         chFs.Checked = c.FsHide;
         chOfferNew.Checked = c.OfferNew;
         chIconsAvoid.Checked = c.IconsAvoid;
+        chDeskSnap.Checked = c.DeskSnap;
         trayKeys.Clear();
         trayCols.Clear();
         foreach (string it in c.Tray)
@@ -345,6 +346,7 @@ sealed partial class SettingsForm
         c.FsHide = chFs.Checked;
         c.OfferNew = chOfferNew.Checked;
         c.IconsAvoid = chIconsAvoid.Checked;
+        c.DeskSnap = chDeskSnap.Checked;
         c.Tray.Clear();
         foreach (string k in trayKeys)
         {

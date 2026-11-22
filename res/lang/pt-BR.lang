@@ -11922,3 +11922,9 @@
 
 < у кошику з {0} · зникне через {1} дн.
 > na lixeira desde {0} · some em {1} d
+
+< Прив'язувати віджети до сітки
+> Encaixar widgets numa grade
+
+< Під час перетягування віджети й нотатки прилипають до країв екрана, до сусідніх віджетів і до сітки - легко ставити рівно. З Alt - без прив'язки
+> Ao arrastar, widgets e notas se encaixam nas bordas da tela, nos widgets vizinhos e numa grade - fácil alinhá-los. Com Alt, sem encaixe
