@@ -187,7 +187,7 @@ static class SbCrypt
         return res;
     }
 
-    static byte[] Rand(int n)
+    internal static byte[] Rand(int n)
     {
         byte[] b = new byte[n];
         using (RandomNumberGenerator r = RandomNumberGenerator.Create()) r.GetBytes(b);
@@ -209,7 +209,7 @@ static class SbCrypt
         Array.Clear(dk, 0, dk.Length);
     }
 
-    static Aes MakeAes(byte[] key, byte[] iv)
+    internal static Aes MakeAes(byte[] key, byte[] iv)
     {
         Aes a = Aes.Create();
         a.KeySize = 256; a.Mode = CipherMode.CBC; a.Padding = PaddingMode.PKCS7;
@@ -217,7 +217,7 @@ static class SbCrypt
         return a;
     }
 
-    static bool Same(byte[] a, int ao, byte[] b, int n)
+    internal static bool Same(byte[] a, int ao, byte[] b, int n)
     {
         int d = 0;
         for (int i = 0; i < n; i++) d |= a[ao + i] ^ b[i];

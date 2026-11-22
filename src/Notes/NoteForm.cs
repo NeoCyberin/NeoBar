@@ -131,7 +131,7 @@ sealed class NoteForm : Form
         tip.SetToolTip(bTheme, L.T("Тема нотатки (права кнопка миші по шапці - теж)"));
         tip.SetToolTip(bar, L.T("Прозорість фону (текст лишається чітким)"));
         tip.SetToolTip(bLock, L.T("Закріпити текст на робочому столі"));
-        tip.SetToolTip(bClose, L.T("Видалити нотатку"));
+        tip.SetToolTip(bClose, L.T("Прибрати зі столу: приховати або в кошик"));
 
         // ----- панель інструментів -----
         toolbar = new BufPanel();
@@ -1076,6 +1076,9 @@ sealed class NoteForm : Form
         m.Items.Add(cust);
         m.Items.Add(new ToolStripSeparator());
         m.Items.Add(L.T("Зберегти нотатку у файл…"), null, delegate { Export(); });
+        m.Items.Add(new ToolStripSeparator());
+        m.Items.Add(L.T("Приховати нотатку"), null, delegate { Notes.SetHidden(n, true); });
+        m.Items.Add(L.T("У кошик"), null, delegate { Notes.Trash(n); });
         m.Closed += delegate { BeginInvoke(new Action(m.Dispose)); };
         m.Show(host, at);
     }
@@ -1103,10 +1106,14 @@ sealed class NoteForm : Form
         }
     }
 
+    // хрестик: прибрати зі столу - сховати (лишиться в списку нотаток) або в кошик (відновлюється 30 днів)
     void AskDelete()
     {
-        if (SbDialog.Ask(this, "NeoBar", L.T("Видалити цю нотатку?"), L.T("Видалити"), L.T("Скасувати")) == 0)
-            Notes.Delete(n);
+        int r = SbDialog.Ask(this, "NeoBar", L.T("Прибрати нотатку з робочого столу?") + "\n" +
+            L.F("Прихована лишається в списку нотаток; з кошика її можна відновити протягом {0} днів.", Notes.TrashDays),
+            L.T("Приховати"), L.T("У кошик"), L.T("Скасувати"));
+        if (r == 0) Notes.SetHidden(n, true);
+        else if (r == 1) Notes.Trash(n);
     }
 
     // ---------- стани: редагування / закріплено ----------

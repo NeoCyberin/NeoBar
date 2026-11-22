@@ -30,7 +30,7 @@ static class ShellMenu
 
     // дві незалежні групи пунктів: "crypt" - хеш-сума, шифрування, розшифрування («Безпека» → «Шифрування»);
     // "sec" - перевірка файла на підозрілість (вікно «Безпека»). Спільне підменю «NeoBar» є, поки ввімкнена хоч одна
-    static readonly string[] CryptVerbs = { "1hash", "2enc", "3dec" };
+    static readonly string[] CryptVerbs = { "1hash", "2enc", "3dec", "3safe" };
     static readonly string[] SecVerbs = { "4scan" };
 
     static bool HasKey(string sub)
@@ -69,6 +69,7 @@ static class ShellMenu
                     Verb(sh, "1hash", L.T("Хеш-сума"), "hash", null);
                     Verb(sh, "2enc", L.T("Зашифрувати…"), "enc", null);
                     Verb(sh, "3dec", L.T("Розшифрувати…"), "dec", "System.FileExtension:=.nbenc OR System.FileExtension:=.zip");
+                    Verb(sh, "3safe", L.T("Додати в сейф…"), "safe", null);
                 }
                 if (sec) Verb(sh, "4scan", L.T("Перевірити на підозрілість"), "scan", null);
             }
@@ -137,7 +138,8 @@ static class ShellMenu
             if (!c && !s) return;
             string cmd = null;
             using (RegistryKey k = Registry.CurrentUser.OpenSubKey(Root + @"\shell\" + (c ? "1hash" : "4scan") + @"\command")) if (k != null) cmd = k.GetValue("") as string;
-            if (cmd != Cmd(c ? "hash" : "scan")) { Install(c, s); Notify(); }
+            // новий пункт («Додати в сейф») у старому меню - теж оновити
+            if (cmd != Cmd(c ? "hash" : "scan") || (c && !HasKey(Root + @"\shell\3safe"))) { Install(c, s); Notify(); }
         }
         catch (Exception ex) { Util.ErrorLog(ex); }
     }
@@ -157,7 +159,7 @@ static class ShellMenu
 }
 
 // ======================================================================
-//  Окремий процес для пунктів контекстного меню («NeoBar.exe --tool hash|enc|dec|scan файл»).
+//  Окремий процес для пунктів контекстного меню («NeoBar.exe --tool hash|enc|dec|safe|scan файл»).
 //  Панель для цього не потрібна. Коли вибрано кілька файлів, Провідник запускає по процесу на файл -
 //  перший стає «господарем» вікна, решта передають йому шлях через іменований канал і закриваються.
 // ======================================================================
@@ -301,6 +303,7 @@ static class ToolHost
                 Place(crypt);
             }
             if (verb == "hash") crypt.HashFile(path);
+            else if (verb == "safe") crypt.AddToVault(new string[] { path });
             else crypt.AddFiles(new string[] { path });
             Front(crypt);
         }

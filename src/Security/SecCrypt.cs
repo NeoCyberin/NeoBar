@@ -12,7 +12,7 @@ using System.Windows.Forms;
 // ======================================================================
 sealed partial class SecWindow
 {
-    int crSub;                  // підвкладка: 0 - хеш-сума, 1 - текст, 2 - файли
+    int crSub;                  // підвкладка: 0 - хеш-сума, 1 - текст, 2 - файли, 3 - сейф (SecVault.cs)
     TextBox tbCmp, tbIn, tbOut, tbPw, tbFpw, tbFpw2;
     Font mono;
     readonly System.Windows.Forms.Timer fast = new System.Windows.Forms.Timer();
@@ -53,19 +53,21 @@ sealed partial class SecWindow
         tbOut.Font = mono;
         tbCmp.Font = mono;
         foreach (TextBox t in new TextBox[] { tbPw, tbFpw, tbFpw2 }) t.UseSystemPasswordChar = true;
+        VaultSetup();
         tbCmp.TextChanged += delegate { Invalidate(); };
         tbFpw.TextChanged += delegate { Invalidate(); };
         tbFpw2.TextChanged += delegate { Invalidate(); };
         tbPw.TextChanged += delegate { Invalidate(); };
         fast.Interval = 120;
         // таймер поступу працює лише під час обчислень (вмикає Busy())
-        fast.Tick += delegate { if (hBusy || tBusy || fBusy) Invalidate(); else fast.Stop(); };
+        fast.Tick += delegate { if (hBusy || tBusy || fBusy || vBusy) Invalidate(); else fast.Stop(); };
     }
 
     void Busy() { if (!fast.Enabled) fast.Start(); }
 
     void CrClosed()
     {
+        VaultClosed();
         hStop = true; fStop = true;
         fast.Stop(); fast.Dispose();
         mono.Dispose();
@@ -73,6 +75,7 @@ sealed partial class SecWindow
 
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
+        if (vBusy && Ask(L.T("Сейф"), L.T("Сейф ще працює з файлами. Зупинити й закрити?"), L.T("Зупинити"), L.T("Чекати")) != 0) { e.Cancel = true; return; }
         if (fBusy && Ask(L.T("Шифрування"), L.T("Ще обробляються файли. Зупинити й закрити?\n\nНезавершений файл буде видалено, оригінали не зачіпаються."), L.T("Зупинити"), L.T("Чекати")) != 0) { e.Cancel = true; return; }
         base.OnFormClosing(e);
     }
@@ -93,11 +96,12 @@ sealed partial class SecWindow
 
     void HideInputs()
     {
-        foreach (TextBox t in new TextBox[] { tbCmp, tbIn, tbOut, tbPw, tbFpw, tbFpw2 }) if (t.Visible) t.Visible = false;
+        foreach (TextBox t in new TextBox[] { tbCmp, tbIn, tbOut, tbPw, tbFpw, tbFpw2, tbV1, tbV2, tbV3 }) if (t.Visible) t.Visible = false;
     }
 
     void CrDropped(string[] f)
     {
+        if (crSub == 3) { AddToVault(f); return; }
         if (crSub == 0)
         {
             foreach (string p in f) if (File.Exists(p)) { HashFile(p); return; }
@@ -168,8 +172,8 @@ sealed partial class SecWindow
     {
         FitTo(r, r.Y + Px(640), Px(640));           // однакова висота для всіх підвкладок - вікно не стрибає
         // підвкладки
-        string[] subs = { L.T("Хеш-сума"), L.T("Текст"), L.T("Файли") };
-        int cw = (r.Width - Px(16)) / 3;
+        string[] subs = { L.T("Хеш-сума"), L.T("Текст"), L.T("Файли"), L.T("Сейф") };
+        int cw = (r.Width - Px(8) * (subs.Length - 1)) / subs.Length;
         for (int i = 0; i < subs.Length; i++)
         {
             int k = i;
@@ -179,10 +183,11 @@ sealed partial class SecWindow
         int bottom = r.Bottom - Px(30);
         if (crSub == 0) PaintHash(g, new Rectangle(r.X, r.Y, r.Width, bottom - r.Y - Px(8)));
         else if (crSub == 1) PaintText(g, new Rectangle(r.X, r.Y, r.Width, bottom - r.Y - Px(8)));
+        else if (crSub == 3) PaintVault(g, new Rectangle(r.X, r.Y, r.Width, bottom - r.Y - Px(8)));
         else PaintFiles(g, new Rectangle(r.X, r.Y, r.Width, bottom - r.Y - Px(8)));
         Rectangle sw = new Rectangle(r.X, bottom, r.Width, Px(28));
         if (NoteLive) TxtL(g, Note, F, sw, NoteBad ? P.Bad : P.Good);
-        else Switch(g, sw, L.T("Хеш-сума й шифрування в контекстному меню файлів"), ShellMenu.Has("crypt"), delegate
+        else Switch(g, sw, L.T("Хеш-сума, шифрування й сейф у контекстному меню файлів"), ShellMenu.Has("crypt"), delegate
         {
             bool was = ShellMenu.Has("crypt");
             string err = ShellMenu.Toggle("crypt");
@@ -193,7 +198,7 @@ sealed partial class SecWindow
 
     void PaintHash(Graphics g, Rectangle r)
     {
-        foreach (TextBox t in new TextBox[] { tbIn, tbOut, tbPw, tbFpw, tbFpw2 }) if (t.Visible) t.Visible = false;
+        foreach (TextBox t in new TextBox[] { tbIn, tbOut, tbPw, tbFpw, tbFpw2, tbV1, tbV2, tbV3 }) if (t.Visible) t.Visible = false;
         int y = r.Y;
         Rectangle top;
         if (hFile.Length == 0)
@@ -271,7 +276,7 @@ sealed partial class SecWindow
     // ---------- текст ----------
     void PaintText(Graphics g, Rectangle r)
     {
-        foreach (TextBox t in new TextBox[] { tbCmp, tbFpw, tbFpw2 }) if (t.Visible) t.Visible = false;
+        foreach (TextBox t in new TextBox[] { tbCmp, tbFpw, tbFpw2, tbV1, tbV2, tbV3 }) if (t.Visible) t.Visible = false;
         int y = r.Y;
         TxtL(g, L.T("Текст (або зашифрований блок «") + SbCrypt.TextTag + L.T("…» для розшифрування):"), F, new Rectangle(r.X, y, r.Width, Px(22)), P.Fg);
         y += Px(26);
@@ -355,7 +360,7 @@ sealed partial class SecWindow
 
     void PaintFiles(Graphics g, Rectangle r)
     {
-        foreach (TextBox t in new TextBox[] { tbCmp, tbIn, tbOut, tbPw }) if (t.Visible) t.Visible = false;
+        foreach (TextBox t in new TextBox[] { tbCmp, tbIn, tbOut, tbPw, tbV1, tbV2, tbV3 }) if (t.Visible) t.Visible = false;
         int y = r.Y;
         // кнопки списку
         int bw = Px(150);

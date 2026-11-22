@@ -1117,6 +1117,7 @@ sealed class DeskClock : LayeredForm
             spec.X = Left + dx0; spec.Y = Top + T0;
             ClockData.Save();
             KeepBottom();
+            DeskIcons.Later(800);
         }
         if (tclick) { if (spec.Kind == "fw") FwClick(); else TrashClick(); }
     }

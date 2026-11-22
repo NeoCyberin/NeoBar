@@ -4633,9 +4633,6 @@
 < Закріпити текст на робочому столі
 > Fissa il testo al desktop
 
-< Видалити нотатку
-> Elimina nota
-
 < Розмір тексту нотатки: малий, стандартний, великий
 > Dimensione del testo della nota: piccola, standard, grande
 
@@ -4665,9 +4662,6 @@
 
 < Налаштувати тему «
 > Personalizza il tema «
-
-< Видалити цю нотатку?
-> Eliminare questa nota?
 
 < Смайли
 > Faccine
@@ -5049,9 +5043,6 @@
 
 < Чекати
 > Attendi
-
-< Хеш-сума й шифрування в контекстному меню файлів
-> Hash e cifratura nel menu contestuale del file
 
 < Не вдалося змінити меню: 
 > Impossibile modificare il menu: 
@@ -10135,9 +10126,6 @@
 < Перезапустити NeoBar
 > Riavvia NeoBar
 
-< Клік по нотатці - показати її; перемикач - закріпити на шпалерах або редагувати.
-> Clic su una nota per mostrarla; l’interruttore la fissa allo sfondo o la rende modificabile.
-
 < Перетягніть файл сюди
 > Trascina qui un file
 
@@ -11694,3 +11682,243 @@
 
 < у групу «{0}»
 > nel gruppo «{0}»
+
+< «Відновити» повертає нотатку туди, де вона була.
+> «Ripristina» rimette la nota dov'era.
+
+< » назовсім? Відновити її вже не вийде.
+> » definitivamente? Non sarà più possibile ripristinarla.
+
+< Інший…
+> Altro…
+
+< Видалити «{0}» із сейфа назовсім?
+> Eliminare «{0}» dalla cassaforte definitivamente?
+
+< Видалити назовсім нотатки з кошика ({0})?
+> Eliminare definitivamente le note nel cestino ({0})?
+
+< Видаляти оригінали після додавання (лише перевірені копії)
+> Elimina gli originali dopo l'aggiunta (solo copie verificate)
+
+< Відкрити сейф
+> Apri la cassaforte
+
+< Відкритих копій, ще зайнятих програмами: {0} - їх приберу пізніше; закрийте ці програми.
+> Copie aperte ancora in uso da programmi: {0} - verranno rimosse più tardi; chiudi quei programmi.
+
+< Відкрито тимчасову копію - її буде стерто, коли сейф замкнеться. Зміни в ній у сейф не потрапляють: щоб зберегти, додайте файл знову.
+> È stata aperta una copia temporanea: verrà cancellata quando la cassaforte si blocca. Le modifiche non finiscono nella cassaforte: per salvarle, aggiungi di nuovo il file.
+
+< Додано файлів: {0}.
+> File aggiunti: {0}.
+
+< Додати в сейф…
+> Aggiungi alla cassaforte…
+
+< Додати й видалити
+> Aggiungi ed elimina
+
+< Додати теку…
+> Aggiungi cartella…
+
+< Замкнути
+> Blocca
+
+< Зберегти все…
+> Salva tutto…
+
+< Збережено файлів: {0} - у «{1}».
+> File salvati: {0} - in «{1}».
+
+< Змінити пароль…
+> Cambia password…
+
+< Значки не під віджетами
+> Icone non sotto i widget
+
+< Значки робочого столу
+> Icone del desktop
+
+< Значок робочого столу, що опинився під віджетом NeoBar чи нотаткою, переставляється на найближче вільне місце. Не працює, коли у Windows увімкнено «Упорядковувати значки автоматично»
+> Un'icona del desktop finita sotto un widget di NeoBar o una nota viene spostata nel punto libero più vicino. Non funziona se in Windows è attivo «Disponi icone automaticamente»
+
+< Клік по нотатці - показати її; перемикач - закріпити на шпалерах; око - приховати; кошик - прибрати.
+> Clic su una nota: mostrarla; l'interruttore la fissa allo sfondo; l'occhio la nasconde; il cestino la rimuove.
+
+< Кошик порожній
+> Il cestino è vuoto
+
+< Куди зберегти розшифровані файли
+> Dove salvare i file decifrati
+
+< Лише додати
+> Solo aggiungi
+
+< Не вдалося дістатися до значків робочого столу (Провідник не відповів) - значки з-під віджетів не відсуваються. Подробиці - у журналі віджетів.
+> Impossibile raggiungere le icone del desktop (Esplora risorse non ha risposto): le icone non vengono spostate da sotto i widget. Dettagli nel registro dei widget.
+
+< Не вдалося: {0}
+> Non riuscito: {0}
+
+< Неправильний поточний пароль.
+> La password attuale è errata.
+
+< Новий пароль замінить старий; файли перешифровувати не треба. Забутий пароль не відновити.
+> La nuova password sostituisce la vecchia; non serve ricifrare i file. Una password dimenticata non si recupera.
+
+< Новий:
+> Nuova:
+
+< Нотатки в кошику зникають назовсім через {0} днів.
+> Le note nel cestino vengono eliminate definitivamente dopo {0} giorni.
+
+< Оригіналів видалено: {0}.
+> Originali eliminati: {0}.
+
+< Очистити кошик
+> Svuota cestino
+
+< Пароль змінено. Файли не перешифровувались - змінився лише ключ до них.
+> Password cambiata. I file non sono stati ricifrati: è cambiata solo la loro chiave.
+
+< Пароль неможливо відновити: забудете - файли в сейфі втрачено назавжди.
+> La password non si recupera: se la dimentichi, i file nella cassaforte sono persi per sempre.
+
+< Перелік файлів сейфа пошкоджено.
+> L'elenco dei file della cassaforte è danneggiato.
+
+< Перетягніть сюди файли чи теки
+> Trascina qui file o cartelle
+
+< Поточний:
+> Attuale:
+
+< Прибрати зі столу: приховати або в кошик
+> Rimuovi dal desktop: nascondi o sposta nel cestino
+
+< Прибрати нотатку з робочого столу?
+> Rimuovere la nota dal desktop?
+
+< Прихована лишається в списку нотаток; з кошика її можна відновити протягом {0} днів.
+> Una nota nascosta resta nell'elenco; dal cestino si può ripristinare entro {0} giorni.
+
+< Прихована нотатка нікуди не зникає - вона просто не займає місце на робочому столі.
+> Una nota nascosta non sparisce: semplicemente non occupa spazio sul desktop.
+
+< Прихованих нотаток немає
+> Nessuna nota nascosta
+
+< Приховані
+> Nascoste
+
+< Приховані нотатки не показуються на робочому столі, але зберігаються тут. «Показати» повертає нотатку на стіл.
+> Le note nascoste non compaiono sul desktop ma restano qui. «Mostra» rimette la nota sul desktop.
+
+< Приховати нотатку
+> Nascondi nota
+
+< Продовжити?
+> Continuare?
+
+< Після додавання оригінали буде видалено назовсім (не в кошик), але лише ті, чию копію в сейфі перевірено.\n\nНа SSD залишки видаленого файла інколи можна відновити спеціальними програмами.
+> Dopo l'aggiunta gli originali verranno eliminati definitivamente (non nel cestino), ma solo quelli la cui copia nella cassaforte è stata verificata.\n\nSu un SSD i resti di un file eliminato a volte si possono recuperare con programmi appositi.
+
+< Сейф
+> Cassaforte
+
+< Сейф - тека, де файли лежать лише зашифрованими (AES-256): без пароля їх не прочитати, навіть назви. Перетягніть файли сюди чи виберіть «Додати в сейф» у контекстному меню файла.
+> La cassaforte è una cartella dove i file sono conservati solo cifrati (AES-256): senza password non si possono leggere, nemmeno i nomi. Trascina qui i file o scegli «Aggiungi alla cassaforte» nel menu contestuale di un file.
+
+< Сейф замкнено.
+> La cassaforte è bloccata.
+
+< Сейф замкнено. Введіть пароль, щоб побачити й відкрити файли.
+> La cassaforte è bloccata. Inserisci la password per vedere e aprire i file.
+
+< Сейф замкнено: {0} хв без дій.
+> Cassaforte bloccata: {0} min senza attività.
+
+< Сейф замкнено: екран вимкнено чи комп'ютер заблоковано.
+> Cassaforte bloccata: schermo spento o PC bloccato.
+
+< Сейф замкнеться сам: коли закриєте вікно, вимкнеться екран чи після {0} хв без дій.
+> La cassaforte si blocca da sola: quando chiudi la finestra, quando lo schermo si spegne o dopo {0} min senza attività.
+
+< Сейф пошкоджено.
+> La cassaforte è danneggiata.
+
+< Сейф створено. Перетягніть сюди файли або натисніть «Додати файли…».
+> Cassaforte creata. Trascina qui i file o fai clic su «Aggiungi file…».
+
+< Сейф ще працює з файлами. Зупинити й закрити?
+> La cassaforte sta ancora lavorando sui file. Fermare e chiudere?
+
+< Створити сейф
+> Crea cassaforte
+
+< Тека сейфа:
+> Cartella cassaforte:
+
+< Тека сейфа: наявний сейф відкриється, у порожній теці буде створено новий
+> Cartella della cassaforte: una esistente verrà aperta, in una cartella vuota ne verrà creata una nuova
+
+< Тека, яку додати в сейф
+> Cartella da aggiungere alla cassaforte
+
+< У Windows увімкнено «Упорядковувати значки автоматично» - значки розставляє сама Windows, тому NeoBar не може відсувати їх з-під віджетів. Вимкнути: правий клік на робочому столі → «Вигляд» → «Упорядковувати значки автоматично».
+> In Windows è attivo «Disponi icone automaticamente»: Windows dispone le icone da solo, quindi NeoBar non può spostarle da sotto i widget. Per disattivarlo: clic destro sul desktop → Visualizza → Disponi icone automaticamente.
+
+< У кошик
+> Nel cestino
+
+< У цій теці вже є сейф.
+> In questa cartella c'è già una cassaforte.
+
+< Файл «{0}» у сейфі змінено чи пошкоджено.
+> Il file «{0}» nella cassaforte è stato modificato o danneggiato.
+
+< Файл «{0}» у сейфі обрізано.
+> Il file «{0}» nella cassaforte è troncato.
+
+< Файл «{0}» у сейфі пошкоджено.
+> Il file «{0}» nella cassaforte è danneggiato.
+
+< Файли, які додати в сейф
+> File da aggiungere alla cassaforte
+
+< Файлів чекає на додавання: {0}. Відкрийте сейф паролем.
+> File in attesa di aggiunta: {0}. Apri la cassaforte con la password.
+
+< Файлів: {0} · {1}
+> File: {0} · {1}
+
+< Хеш-сума, шифрування й сейф у контекстному меню файлів
+> Hash, cifratura e cassaforte nel menu contestuale dei file
+
+< Це не сейф NeoBar або його пошкоджено.
+> Non è una cassaforte di NeoBar oppure è danneggiata.
+
+< Ще раз:
+> Ripeti:
+
+< відкриваю…
+> apertura…
+
+< додаю…
+> aggiunta…
+
+< змінюю пароль…
+> modifica della password…
+
+< прихована
+> nascosta
+
+< розшифровую…
+> decifratura…
+
+< створюю сейф…
+> creazione della cassaforte…
+
+< у кошику з {0} · зникне через {1} дн.
+> nel cestino dal {0} · eliminata tra {1} g

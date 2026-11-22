@@ -689,6 +689,7 @@ static class ClockData
         Desk.Add(d);
         Save();
         ShowDesk();
+        DeskIcons.Later(1500);
         if (bar != null) bar.RefreshDataNeeds();
     }
 

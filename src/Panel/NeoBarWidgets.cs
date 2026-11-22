@@ -84,6 +84,7 @@ sealed partial class NeoBar
                 if (s == null) return;
                 if (verb == "scan") s.CheckFile(path);
                 else if (verb == "hash") s.HashFile(path);
+                else if (verb == "safe") s.AddToVault(new string[] { path });
                 else s.AddFiles(new string[] { path });
                 s.Activate();
             }

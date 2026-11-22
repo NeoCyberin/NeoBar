@@ -4633,9 +4633,6 @@
 < Закріпити текст на робочому столі
 > Pin text to the desktop
 
-< Видалити нотатку
-> Delete note
-
 < Розмір тексту нотатки: малий, стандартний, великий
 > Note text size: small, standard, large
 
@@ -4665,9 +4662,6 @@
 
 < Налаштувати тему «
 > Customize theme «
-
-< Видалити цю нотатку?
-> Delete this note?
 
 < Смайли
 > Smileys
@@ -5049,9 +5043,6 @@
 
 < Чекати
 > Wait
-
-< Хеш-сума й шифрування в контекстному меню файлів
-> Hash and encryption in the file context menu
 
 < Не вдалося змінити меню: 
 > Could not change the menu: 
@@ -10135,9 +10126,6 @@
 < Перезапустити NeoBar
 > Restart NeoBar
 
-< Клік по нотатці - показати її; перемикач - закріпити на шпалерах або редагувати.
-> Click a note to show it; the switch pins it to the wallpaper or makes it editable.
-
 < Перетягніть файл сюди
 > Drop a file here
 
@@ -11694,3 +11682,243 @@
 
 < у групу «{0}»
 > to the “{0}” group
+
+< «Відновити» повертає нотатку туди, де вона була.
+> “Restore” puts the note back where it was.
+
+< » назовсім? Відновити її вже не вийде.
+> ” permanently? It can't be restored afterwards.
+
+< Інший…
+> Other…
+
+< Видалити «{0}» із сейфа назовсім?
+> Delete “{0}” from the safe permanently?
+
+< Видалити назовсім нотатки з кошика ({0})?
+> Permanently delete the notes in the trash ({0})?
+
+< Видаляти оригінали після додавання (лише перевірені копії)
+> Delete originals after adding (verified copies only)
+
+< Відкрити сейф
+> Open the safe
+
+< Відкритих копій, ще зайнятих програмами: {0} - їх приберу пізніше; закрийте ці програми.
+> Opened copies still in use by programs: {0} - they will be removed later; close those programs.
+
+< Відкрито тимчасову копію - її буде стерто, коли сейф замкнеться. Зміни в ній у сейф не потрапляють: щоб зберегти, додайте файл знову.
+> A temporary copy was opened - it will be erased when the safe locks. Changes to it don't go into the safe: to keep them, add the file again.
+
+< Додано файлів: {0}.
+> Files added: {0}.
+
+< Додати в сейф…
+> Add to safe…
+
+< Додати й видалити
+> Add and delete
+
+< Додати теку…
+> Add folder…
+
+< Замкнути
+> Lock
+
+< Зберегти все…
+> Save all…
+
+< Збережено файлів: {0} - у «{1}».
+> Files saved: {0} - to “{1}”.
+
+< Змінити пароль…
+> Change password…
+
+< Значки не під віджетами
+> Icons not under widgets
+
+< Значки робочого столу
+> Desktop icons
+
+< Значок робочого столу, що опинився під віджетом NeoBar чи нотаткою, переставляється на найближче вільне місце. Не працює, коли у Windows увімкнено «Упорядковувати значки автоматично»
+> A desktop icon that ends up under a NeoBar widget or note is moved to the nearest free spot. Doesn't work when “Auto arrange icons” is on in Windows
+
+< Клік по нотатці - показати її; перемикач - закріпити на шпалерах; око - приховати; кошик - прибрати.
+> Click a note to show it; the switch pins it to the wallpaper; the eye hides it; the trash removes it.
+
+< Кошик порожній
+> The trash is empty
+
+< Куди зберегти розшифровані файли
+> Where to save the decrypted files
+
+< Лише додати
+> Just add
+
+< Не вдалося дістатися до значків робочого столу (Провідник не відповів) - значки з-під віджетів не відсуваються. Подробиці - у журналі віджетів.
+> Couldn't reach the desktop icons (Explorer didn't respond) - icons aren't moved from under widgets. Details are in the widgets log.
+
+< Не вдалося: {0}
+> Failed: {0}
+
+< Неправильний поточний пароль.
+> The current password is wrong.
+
+< Новий пароль замінить старий; файли перешифровувати не треба. Забутий пароль не відновити.
+> The new password replaces the old one; the files don't need re-encrypting. A forgotten password can't be recovered.
+
+< Новий:
+> New:
+
+< Нотатки в кошику зникають назовсім через {0} днів.
+> Notes in the trash are deleted permanently after {0} days.
+
+< Оригіналів видалено: {0}.
+> Originals deleted: {0}.
+
+< Очистити кошик
+> Empty trash
+
+< Пароль змінено. Файли не перешифровувались - змінився лише ключ до них.
+> Password changed. The files weren't re-encrypted - only the key to them changed.
+
+< Пароль неможливо відновити: забудете - файли в сейфі втрачено назавжди.
+> The password can't be recovered: forget it and the files in the safe are lost forever.
+
+< Перелік файлів сейфа пошкоджено.
+> The safe's file list is damaged.
+
+< Перетягніть сюди файли чи теки
+> Drag files or folders here
+
+< Поточний:
+> Current:
+
+< Прибрати зі столу: приховати або в кошик
+> Remove from the desktop: hide or move to trash
+
+< Прибрати нотатку з робочого столу?
+> Remove the note from the desktop?
+
+< Прихована лишається в списку нотаток; з кошика її можна відновити протягом {0} днів.
+> A hidden note stays in the notes list; from the trash it can be restored within {0} days.
+
+< Прихована нотатка нікуди не зникає - вона просто не займає місце на робочому столі.
+> A hidden note doesn't go anywhere - it just doesn't take up space on the desktop.
+
+< Прихованих нотаток немає
+> No hidden notes
+
+< Приховані
+> Hidden
+
+< Приховані нотатки не показуються на робочому столі, але зберігаються тут. «Показати» повертає нотатку на стіл.
+> Hidden notes aren't shown on the desktop but are kept here. “Show” puts a note back on the desktop.
+
+< Приховати нотатку
+> Hide note
+
+< Продовжити?
+> Continue?
+
+< Після додавання оригінали буде видалено назовсім (не в кошик), але лише ті, чию копію в сейфі перевірено.\n\nНа SSD залишки видаленого файла інколи можна відновити спеціальними програмами.
+> After adding, the originals will be deleted permanently (not to the Recycle Bin), but only those whose copy in the safe was verified.\n\nOn an SSD, remnants of a deleted file can sometimes be recovered with special tools.
+
+< Сейф
+> Safe
+
+< Сейф - тека, де файли лежать лише зашифрованими (AES-256): без пароля їх не прочитати, навіть назви. Перетягніть файли сюди чи виберіть «Додати в сейф» у контекстному меню файла.
+> The safe is a folder where files are stored only encrypted (AES-256): without the password nobody can read them, not even their names. Drag files here or choose “Add to safe” in a file's context menu.
+
+< Сейф замкнено.
+> The safe is locked.
+
+< Сейф замкнено. Введіть пароль, щоб побачити й відкрити файли.
+> The safe is locked. Enter the password to see and open the files.
+
+< Сейф замкнено: {0} хв без дій.
+> The safe locked: {0} min without activity.
+
+< Сейф замкнено: екран вимкнено чи комп'ютер заблоковано.
+> The safe locked: the screen turned off or the PC was locked.
+
+< Сейф замкнеться сам: коли закриєте вікно, вимкнеться екран чи після {0} хв без дій.
+> The safe locks by itself: when you close the window, when the screen turns off or after {0} min without activity.
+
+< Сейф пошкоджено.
+> The safe is damaged.
+
+< Сейф створено. Перетягніть сюди файли або натисніть «Додати файли…».
+> Safe created. Drag files here or click “Add files…”.
+
+< Сейф ще працює з файлами. Зупинити й закрити?
+> The safe is still working with files. Stop and close?
+
+< Створити сейф
+> Create safe
+
+< Тека сейфа:
+> Safe folder:
+
+< Тека сейфа: наявний сейф відкриється, у порожній теці буде створено новий
+> Safe folder: an existing safe will open, a new one will be created in an empty folder
+
+< Тека, яку додати в сейф
+> Folder to add to the safe
+
+< У Windows увімкнено «Упорядковувати значки автоматично» - значки розставляє сама Windows, тому NeoBar не може відсувати їх з-під віджетів. Вимкнути: правий клік на робочому столі → «Вигляд» → «Упорядковувати значки автоматично».
+> “Auto arrange icons” is on in Windows - Windows places the icons itself, so NeoBar can't move them from under widgets. To turn it off: right-click the desktop → View → Auto arrange icons.
+
+< У кошик
+> To trash
+
+< У цій теці вже є сейф.
+> There is already a safe in this folder.
+
+< Файл «{0}» у сейфі змінено чи пошкоджено.
+> The file “{0}” in the safe was changed or damaged.
+
+< Файл «{0}» у сейфі обрізано.
+> The file “{0}” in the safe is truncated.
+
+< Файл «{0}» у сейфі пошкоджено.
+> The file “{0}” in the safe is damaged.
+
+< Файли, які додати в сейф
+> Files to add to the safe
+
+< Файлів чекає на додавання: {0}. Відкрийте сейф паролем.
+> Files waiting to be added: {0}. Open the safe with the password.
+
+< Файлів: {0} · {1}
+> Files: {0} · {1}
+
+< Хеш-сума, шифрування й сейф у контекстному меню файлів
+> Hash, encryption and safe in the file context menu
+
+< Це не сейф NeoBar або його пошкоджено.
+> This isn't a NeoBar safe, or it's damaged.
+
+< Ще раз:
+> Again:
+
+< відкриваю…
+> opening…
+
+< додаю…
+> adding…
+
+< змінюю пароль…
+> changing the password…
+
+< прихована
+> hidden
+
+< розшифровую…
+> decrypting…
+
+< створюю сейф…
+> creating the safe…
+
+< у кошику з {0} · зникне через {1} дн.
+> in the trash since {0} · deleted in {1} d

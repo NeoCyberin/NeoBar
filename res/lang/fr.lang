@@ -4633,9 +4633,6 @@
 < Закріпити текст на робочому столі
 > Épingler le texte au bureau
 
-< Видалити нотатку
-> Supprimer la note
-
 < Розмір тексту нотатки: малий, стандартний, великий
 > Taille du texte de la note : petite, standard, grande
 
@@ -4665,9 +4662,6 @@
 
 < Налаштувати тему «
 > Personnaliser le thème «
-
-< Видалити цю нотатку?
-> Supprimer cette note ?
 
 < Смайли
 > Smileys
@@ -5049,9 +5043,6 @@
 
 < Чекати
 > Attendre
-
-< Хеш-сума й шифрування в контекстному меню файлів
-> Hachage et chiffrement dans le menu contextuel du fichier
 
 < Не вдалося змінити меню: 
 > Impossible de modifier le menu : 
@@ -10135,9 +10126,6 @@
 < Перезапустити NeoBar
 > Redémarrer NeoBar
 
-< Клік по нотатці - показати її; перемикач - закріпити на шпалерах або редагувати.
-> Cliquez sur une note pour l’afficher ; l’interrupteur l’épingle au fond d’écran ou la rend modifiable.
-
 < Перетягніть файл сюди
 > Déposez un fichier ici
 
@@ -11694,3 +11682,243 @@
 
 < у групу «{0}»
 > dans le groupe « {0} »
+
+< «Відновити» повертає нотатку туди, де вона була.
+> « Restaurer » remet la note là où elle était.
+
+< » назовсім? Відновити її вже не вийде.
+>  » définitivement ? Impossible de la restaurer ensuite.
+
+< Інший…
+> Autre…
+
+< Видалити «{0}» із сейфа назовсім?
+> Supprimer « {0} » du coffre définitivement ?
+
+< Видалити назовсім нотатки з кошика ({0})?
+> Supprimer définitivement les notes de la corbeille ({0}) ?
+
+< Видаляти оригінали після додавання (лише перевірені копії)
+> Supprimer les originaux après l'ajout (copies vérifiées uniquement)
+
+< Відкрити сейф
+> Ouvrir le coffre
+
+< Відкритих копій, ще зайнятих програмами: {0} - їх приберу пізніше; закрийте ці програми.
+> Copies ouvertes encore utilisées par des programmes : {0} - elles seront supprimées plus tard ; fermez ces programmes.
+
+< Відкрито тимчасову копію - її буде стерто, коли сейф замкнеться. Зміни в ній у сейф не потрапляють: щоб зберегти, додайте файл знову.
+> Une copie temporaire a été ouverte ; elle sera effacée au verrouillage du coffre. Ses modifications n'entrent pas dans le coffre : pour les garder, ajoutez de nouveau le fichier.
+
+< Додано файлів: {0}.
+> Fichiers ajoutés : {0}.
+
+< Додати в сейф…
+> Ajouter au coffre…
+
+< Додати й видалити
+> Ajouter et supprimer
+
+< Додати теку…
+> Ajouter un dossier…
+
+< Замкнути
+> Verrouiller
+
+< Зберегти все…
+> Tout enregistrer…
+
+< Збережено файлів: {0} - у «{1}».
+> Fichiers enregistrés : {0} - dans « {1} ».
+
+< Змінити пароль…
+> Changer le mot de passe…
+
+< Значки не під віджетами
+> Icônes hors des widgets
+
+< Значки робочого столу
+> Icônes du bureau
+
+< Значок робочого столу, що опинився під віджетом NeoBar чи нотаткою, переставляється на найближче вільне місце. Не працює, коли у Windows увімкнено «Упорядковувати значки автоматично»
+> Une icône du bureau qui se retrouve sous un widget NeoBar ou une note est déplacée vers l'emplacement libre le plus proche. Ne fonctionne pas si « Réorganiser automatiquement les icônes » est activé dans Windows
+
+< Клік по нотатці - показати її; перемикач - закріпити на шпалерах; око - приховати; кошик - прибрати.
+> Cliquez sur une note pour l'afficher ; l'interrupteur l'épingle au fond d'écran ; l'œil la masque ; la corbeille la retire.
+
+< Кошик порожній
+> La corbeille est vide
+
+< Куди зберегти розшифровані файли
+> Où enregistrer les fichiers déchiffrés
+
+< Лише додати
+> Ajouter seulement
+
+< Не вдалося дістатися до значків робочого столу (Провідник не відповів) - значки з-під віджетів не відсуваються. Подробиці - у журналі віджетів.
+> Impossible d'accéder aux icônes du bureau (l'Explorateur n'a pas répondu) : les icônes ne sont pas déplacées de sous les widgets. Détails dans le journal des widgets.
+
+< Не вдалося: {0}
+> Échec : {0}
+
+< Неправильний поточний пароль.
+> Le mot de passe actuel est incorrect.
+
+< Новий пароль замінить старий; файли перешифровувати не треба. Забутий пароль не відновити.
+> Le nouveau mot de passe remplace l'ancien ; inutile de rechiffrer les fichiers. Un mot de passe oublié est irrécupérable.
+
+< Новий:
+> Nouveau :
+
+< Нотатки в кошику зникають назовсім через {0} днів.
+> Les notes de la corbeille sont supprimées définitivement après {0} jours.
+
+< Оригіналів видалено: {0}.
+> Originaux supprimés : {0}.
+
+< Очистити кошик
+> Vider la corbeille
+
+< Пароль змінено. Файли не перешифровувались - змінився лише ключ до них.
+> Mot de passe changé. Les fichiers n'ont pas été rechiffrés : seule leur clé a changé.
+
+< Пароль неможливо відновити: забудете - файли в сейфі втрачено назавжди.
+> Le mot de passe est irrécupérable : oublié, les fichiers du coffre sont perdus pour toujours.
+
+< Перелік файлів сейфа пошкоджено.
+> La liste des fichiers du coffre est endommagée.
+
+< Перетягніть сюди файли чи теки
+> Glissez des fichiers ou des dossiers ici
+
+< Поточний:
+> Actuel :
+
+< Прибрати зі столу: приховати або в кошик
+> Retirer du bureau : masquer ou mettre à la corbeille
+
+< Прибрати нотатку з робочого столу?
+> Retirer la note du bureau ?
+
+< Прихована лишається в списку нотаток; з кошика її можна відновити протягом {0} днів.
+> Une note masquée reste dans la liste ; depuis la corbeille, elle peut être restaurée pendant {0} jours.
+
+< Прихована нотатка нікуди не зникає - вона просто не займає місце на робочому столі.
+> Une note masquée ne disparaît pas : elle n'occupe simplement pas de place sur le bureau.
+
+< Прихованих нотаток немає
+> Aucune note masquée
+
+< Приховані
+> Masquées
+
+< Приховані нотатки не показуються на робочому столі, але зберігаються тут. «Показати» повертає нотатку на стіл.
+> Les notes masquées n'apparaissent pas sur le bureau mais sont conservées ici. « Afficher » remet la note sur le bureau.
+
+< Приховати нотатку
+> Masquer la note
+
+< Продовжити?
+> Continuer ?
+
+< Після додавання оригінали буде видалено назовсім (не в кошик), але лише ті, чию копію в сейфі перевірено.\n\nНа SSD залишки видаленого файла інколи можна відновити спеціальними програмами.
+> Après l'ajout, les originaux seront supprimés définitivement (pas dans la corbeille), mais seulement ceux dont la copie dans le coffre a été vérifiée.\n\nSur un SSD, des restes d'un fichier supprimé peuvent parfois être récupérés avec des outils spécialisés.
+
+< Сейф
+> Coffre
+
+< Сейф - тека, де файли лежать лише зашифрованими (AES-256): без пароля їх не прочитати, навіть назви. Перетягніть файли сюди чи виберіть «Додати в сейф» у контекстному меню файла.
+> Le coffre est un dossier où les fichiers ne sont stockés que chiffrés (AES-256) : sans le mot de passe, impossible de les lire, ni même leurs noms. Glissez des fichiers ici ou choisissez « Ajouter au coffre » dans le menu contextuel d'un fichier.
+
+< Сейф замкнено.
+> Le coffre est verrouillé.
+
+< Сейф замкнено. Введіть пароль, щоб побачити й відкрити файли.
+> Le coffre est verrouillé. Saisissez le mot de passe pour voir et ouvrir les fichiers.
+
+< Сейф замкнено: {0} хв без дій.
+> Coffre verrouillé : {0} min d'inactivité.
+
+< Сейф замкнено: екран вимкнено чи комп'ютер заблоковано.
+> Coffre verrouillé : écran éteint ou PC verrouillé.
+
+< Сейф замкнеться сам: коли закриєте вікно, вимкнеться екран чи після {0} хв без дій.
+> Le coffre se verrouille tout seul : à la fermeture de la fenêtre, quand l'écran s'éteint ou après {0} min d'inactivité.
+
+< Сейф пошкоджено.
+> Le coffre est endommagé.
+
+< Сейф створено. Перетягніть сюди файли або натисніть «Додати файли…».
+> Coffre créé. Glissez des fichiers ici ou cliquez sur « Ajouter des fichiers… ».
+
+< Сейф ще працює з файлами. Зупинити й закрити?
+> Le coffre traite encore des fichiers. Arrêter et fermer ?
+
+< Створити сейф
+> Créer le coffre
+
+< Тека сейфа:
+> Dossier du coffre :
+
+< Тека сейфа: наявний сейф відкриється, у порожній теці буде створено новий
+> Dossier du coffre : un coffre existant s'ouvrira, un nouveau sera créé dans un dossier vide
+
+< Тека, яку додати в сейф
+> Dossier à ajouter au coffre
+
+< У Windows увімкнено «Упорядковувати значки автоматично» - значки розставляє сама Windows, тому NeoBar не може відсувати їх з-під віджетів. Вимкнути: правий клік на робочому столі → «Вигляд» → «Упорядковувати значки автоматично».
+> « Réorganiser automatiquement les icônes » est activé dans Windows : Windows place lui-même les icônes, donc NeoBar ne peut pas les déplacer de sous les widgets. Pour le désactiver : clic droit sur le bureau → Affichage → Réorganiser automatiquement les icônes.
+
+< У кошик
+> À la corbeille
+
+< У цій теці вже є сейф.
+> Ce dossier contient déjà un coffre.
+
+< Файл «{0}» у сейфі змінено чи пошкоджено.
+> Le fichier « {0} » du coffre a été modifié ou endommagé.
+
+< Файл «{0}» у сейфі обрізано.
+> Le fichier « {0} » du coffre est tronqué.
+
+< Файл «{0}» у сейфі пошкоджено.
+> Le fichier « {0} » du coffre est endommagé.
+
+< Файли, які додати в сейф
+> Fichiers à ajouter au coffre
+
+< Файлів чекає на додавання: {0}. Відкрийте сейф паролем.
+> Fichiers en attente d'ajout : {0}. Ouvrez le coffre avec le mot de passe.
+
+< Файлів: {0} · {1}
+> Fichiers : {0} · {1}
+
+< Хеш-сума, шифрування й сейф у контекстному меню файлів
+> Empreinte, chiffrement et coffre dans le menu contextuel des fichiers
+
+< Це не сейф NeoBar або його пошкоджено.
+> Ce n'est pas un coffre NeoBar, ou il est endommagé.
+
+< Ще раз:
+> Encore :
+
+< відкриваю…
+> ouverture…
+
+< додаю…
+> ajout…
+
+< змінюю пароль…
+> changement du mot de passe…
+
+< прихована
+> masquée
+
+< розшифровую…
+> déchiffrement…
+
+< створюю сейф…
+> création du coffre…
+
+< у кошику з {0} · зникне через {1} дн.
+> dans la corbeille depuis le {0} · supprimée dans {1} j
