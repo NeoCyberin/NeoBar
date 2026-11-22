@@ -216,7 +216,9 @@ sealed class NoteForm : Form
         };
         box.AcceptsTab = true;
         box.HideSelection = false;
-        box.ScrollBars = RichTextBoxScrollBars.ForcedVertical;        // завжди є - ширина тексту не стрибає; сама смуга - за краєм boxHost
+        // без системної смуги прокрутки: її заміняє власна тонка (NoteScroll), прокрутка - EM_SETSCROLLPOS.
+        // Раніше системна смуга ховалась за краєм поля і під час зміни розміру вилазила разом з обрізаним текстом
+        box.ScrollBars = RichTextBoxScrollBars.None;
         box.BulletIndent = Px(16);
         box.HandleCreated += delegate
         {
@@ -297,11 +299,11 @@ sealed class NoteForm : Form
         if (bodyPanel.Bounds != br) bodyPanel.Bounds = br;
     }
 
-    // поле тексту ширше за контейнер на ширину системної смуги прокрутки - вона опиняється за краєм і не видна
+    // поле тексту - на всю ширину контейнера (системної смуги немає)
     void LayoutBox()
     {
         Size cs = boxHost.ClientSize;
-        Rectangle want = new Rectangle(0, 0, cs.Width + SystemInformation.VerticalScrollBarWidth, box.IsHandleCreated ? box.Height : cs.Height);
+        Rectangle want = new Rectangle(0, 0, cs.Width, box.IsHandleCreated ? box.Height : cs.Height);
         if (box.Left != 0 || box.Top != 0 || box.Width != want.Width) box.Bounds = want;
         FitLines();
         vbar.Invalidate();
