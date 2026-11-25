@@ -11928,3 +11928,6 @@
 
 < Віджети й нотатки рухаються вільно, але біля краю екрана чи сусіднього віджета прилипають, а коли їх відпустити - стають на сітку. З Alt - без прив'язки
 > Widgets und Notizen bewegen sich frei, haften aber an Bildschirmrändern oder benachbarten Widgets und rasten beim Loslassen im Raster ein. Mit Alt ohne Einrasten
+
+< Термінал Windows
+> Windows-Terminal

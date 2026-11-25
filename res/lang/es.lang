@@ -11928,3 +11928,6 @@
 
 < Віджети й нотатки рухаються вільно, але біля краю екрана чи сусіднього віджета прилипають, а коли їх відпустити - стають на сітку. З Alt - без прив'язки
 > Los widgets y las notas se mueven libremente, pero se pegan cerca de un borde de la pantalla o de un widget vecino y, al soltarlos, se ajustan a una cuadrícula. Con Alt, sin ajuste
+
+< Термінал Windows
+> Terminal de Windows

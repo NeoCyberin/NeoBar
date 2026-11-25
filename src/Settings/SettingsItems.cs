@@ -109,20 +109,23 @@ sealed partial class SettingsForm
         List<bool> have = new List<bool>();
         List<string> present = new List<string>();
         foreach (Entry pe in list) if (pe.Kind == Kind.Item) present.Add(TargetKey(pe.Target));
-        foreach (string[] s in SysCatalog.Items) { names.Add(s[0]); have.Add(present.Contains(TargetKey(s[1]))); }
+        // лише те, що є на цьому комп'ютері (Термінал Windows - не скрізь)
+        List<string[]> cat = new List<string[]>();
+        foreach (string[] s in SysCatalog.Items) if (SysCatalog.Available(s)) cat.Add(s);
+        foreach (string[] s in cat) { names.Add(s[0]); have.Add(present.Contains(TargetKey(s[1]))); }
         List<int> gone = new List<int>();
         List<int> sel = Pick(this, L.T("Системні елементи"), L.T("Місця й утиліти Windows. Позначені вже є на панелі - зніміть галку, щоб їх прибрати."), names, false, have, gone);
         if (gone.Count > 0)
         {
             List<string> keys = new List<string>();
-            foreach (int gi in gone) keys.Add(TargetKey(SysCatalog.Items[gi][1]));
+            foreach (int gi in gone) keys.Add(TargetKey(cat[gi][1]));
             list.RemoveAll(delegate (Entry pe) { return pe.Kind == Kind.Item && !pe.Auto && keys.Contains(TargetKey(pe.Target)); });
             RefreshSel(null);
         }
         List<Entry> es = new List<Entry>();
         foreach (int i in sel)
         {
-            string[] s = SysCatalog.Items[i];
+            string[] s = cat[i];
             Entry e = MakeEntry(Kind.Item, s[0], s[1]);
             e.IconSpec = "theme:" + s[2];
             es.Add(e);
