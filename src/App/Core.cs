@@ -174,6 +174,7 @@ static class SysCatalog
         new string[] { L.T("Параметри Windows"), "ms-settings:", "settings" },
         new string[] { L.T("Диспетчер завдань"), "taskmgr.exe", "taskmgr" },
         new string[] { L.T("Командний рядок"), "cmd.exe", "terminal" },
+        new string[] { L.T("Термінал Windows"), TerminalTarget(), "terminal" },
         new string[] { L.T("Калькулятор"), "calc.exe", "calc" },
         new string[] { L.T("Блокнот"), "notepad.exe", "edit" },
         new string[] { L.T("Програми та компоненти"), "appwiz.cpl", "settings" },
@@ -209,6 +210,32 @@ static class SysCatalog
         new string[] { "Windows Update", "ms-settings:windowsupdate", "download" },
         new string[] { L.T("Безпека Windows"), "windowsdefender:", "lock" }
     };
+
+    // Термінал Windows - застосунок із Microsoft Store: запускається за ідентифікатором (працює, навіть якщо
+    // псевдонім wt.exe вимкнено). Якщо стоїть лише Preview - він.
+    const string WtPkg = "Microsoft.WindowsTerminal_8wekyb3d8bbwe", WtPreview = "Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe";
+
+    static string TerminalTarget()
+    {
+        string pkg = !PackageInstalled(WtPkg) && PackageInstalled(WtPreview) ? WtPreview : WtPkg;
+        return @"shell:AppsFolder\" + pkg + "!App";
+    }
+
+    // встановлений застосунок Store: у теці псевдонімів користувача є тека його пакета
+    static bool PackageInstalled(string family)
+    {
+        try { return Directory.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "WindowsApps", family)); }
+        catch { return false; }
+    }
+
+    // чи є елемент на цьому комп'ютері (зараз - лише застосунки Store; решта - частина Windows)
+    public static bool Available(string[] item)
+    {
+        string t = item[1];
+        if (!t.StartsWith(@"shell:AppsFolder\", StringComparison.OrdinalIgnoreCase)) return true;
+        int b = t.IndexOf('!');
+        return b > 17 && PackageInstalled(t.Substring(17, b - 17));
+    }
 
     // CSIDL для системних папок (щоб показувати справжні іконки Windows)
     public static int Csidl(string target)
